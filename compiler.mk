@@ -21,7 +21,7 @@ CSTD := -std=c17
 WARNINGS := -Wall -Wextra -pedantic -Wmissing-prototypes -Wstrict-prototypes -Wold-style-definition
 endif
 
-CFLAGS := 
+CFLAGS :=
 
 ifndef TARGET
 ifdef CC
@@ -29,4 +29,11 @@ $(error Compiler "$(CC)" is not supported)
 else
 $(error CC variable not set)
 endif
+endif
+
+ifneq (,$(findstring mingw,$(CCVERSIONINFO)))
+ISWINDOWS := TRUE
+endif
+ifeq ($(OS),Windows_NT)
+ISWINDOWS := TRUE
 endif

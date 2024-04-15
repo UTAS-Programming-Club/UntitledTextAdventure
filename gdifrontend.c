@@ -1,0 +1,136 @@
+#include <memory.h>
+#include <windows.h>
+#include <strsafe.h>
+
+#include "crossprint.h"
+#include "frontend.h"
+#include "game.h"
+
+// TODO: Switch text rendering from gdi/uniscribe to libschrift for windows versions older than vista.
+
+int CALLBACK EnumFontFamExProcW(const LOGFONTW *, const TEXTMETRICW *, DWORD, LPARAM);
+LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
+
+int CALLBACK EnumFontFamExProcW(const LOGFONTW *pFontInfo, const TEXTMETRICW *pFontAttribs,
+                               DWORD fontType, LPARAM lParam) {
+  UNREFERENCED_PARAMETER(pFontAttribs); // Do not need any info about the physical font
+
+  if (fontType != TRUETYPE_FONTTYPE || pFontInfo->lfWeight != FW_NORMAL || pFontInfo->lfItalic
+      || pFontInfo->lfUnderline || pFontInfo->lfStrikeOut /* || pFontInfo->lfCharSet != ANSI_CHARSET */
+      || pFontInfo->lfOutPrecision != OUT_STROKE_PRECIS /* || wcscmp(pFontInfo->lfFaceName, L"Arial") != 0 */) {
+    return 1;
+  }
+
+  memcpy_s((void *)lParam, sizeof(LOGFONTW), pFontInfo, sizeof *pFontInfo);
+  return 0;
+}
+
+LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+  UNREFERENCED_PARAMETER(wParam); // Not relevant for any messages used
+  UNREFERENCED_PARAMETER(lParam); // Not relevant for any messages used
+
+  switch(msg) {
+    case WM_PAINT: {
+      PAINTSTRUCT ps;
+      HDC hdc = BeginPaint(hWnd, &ps);
+      if (!hdc) {
+        return 0;
+      }
+
+      WCHAR *faceName = L"SYMBOLA";
+      LOGFONTW fontInfo = {0};
+      fontInfo.lfCharSet = ANSI_CHARSET;
+      if (StringCchCopyW(fontInfo.lfFaceName, LF_FACESIZE, faceName)) {
+        goto cleanup_paint;
+      }
+
+      LOGFONTW fullFontInfo = {0};
+      // This returns whatever the final EnumFontFamExProcW call returned
+      // and therefore will return 0 if a font was found and 1 otherwise
+      if (EnumFontFamiliesExW(hdc, &fontInfo, EnumFontFamExProcW, (LPARAM)&fullFontInfo, 0)) {
+        goto cleanup_paint;
+      }
+
+      fullFontInfo.lfHeight        = 40;
+      fullFontInfo.lfWidth         = 0;
+      fullFontInfo.lfOutPrecision  = OUT_TT_ONLY_PRECIS;
+      fullFontInfo.lfClipPrecision = CLIP_DEFAULT_PRECIS;
+      // CLEARTYPE_QUALITY requires truetype hence OUT_TT_ONLY_PRECIS
+      // If the font is an outline font other than truetype then use ANTIALIASED_QUALITY
+      // If on Windows 2000 or older than CLEARTYPE_QUALITY is not supported so use ANTIALIASED_QUALITY
+      // If on Windows NT 3.51 or older than ANTIALIASED_QUALITY is not supported so use PROOF_QUALITY
+      fullFontInfo.lfQuality       = CLEARTYPE_QUALITY;
+
+      HFONT hFont = CreateFontIndirectW(&fullFontInfo);
+      if (!hFont) {
+        goto cleanup_paint;
+      }
+
+      HFONT hOldFont = SelectObject(hdc, hFont);
+      if (!hOldFont) {
+        goto cleanup_font;
+      }
+
+      WCHAR *c16Text = c32toc16(outputgame());
+      RECT textPosition = {0};
+      textPosition.left = 10;
+      textPosition.top = 10;
+      textPosition.right = ps.rcPaint.right - 10;
+      textPosition.bottom = ps.rcPaint.bottom - 10;
+      DrawTextW(hdc, c16Text, -1, &textPosition, 0);
+
+      SelectObject(hdc, hOldFont);
+cleanup_font:
+      DeleteObject(hFont);
+
+cleanup_paint:
+      EndPaint(hWnd, &ps);
+      return 0;
+    }
+    case WM_DESTROY: {
+      PostQuitMessage(0);
+      return 0;
+    }
+  }
+
+  return DefWindowProcW(hWnd, msg, wParam, lParam);
+}
+
+int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLine, int nCmdShow) {
+  UNREFERENCED_PARAMETER(hPrevInstance); // Always NULL on win32
+  UNREFERENCED_PARAMETER(lpCmdLine);     // Don't need command line arguments
+
+  WNDCLASSEXW wnd = {0};
+  wnd.cbSize        = sizeof wnd;
+  wnd.style         = CS_HREDRAW | CS_VREDRAW;
+  wnd.lpfnWndProc   = WndProc;
+  wnd.hInstance     = hInstance;
+  wnd.hIcon         = LoadImageW(NULL, IDI_APPLICATION, IMAGE_ICON, 0, 0,
+                                 LR_DEFAULTSIZE | LR_SHARED);
+  wnd.hCursor       = LoadImageW(NULL, IDC_ARROW, IMAGE_CURSOR, 0, 0,
+                                 LR_DEFAULTSIZE | LR_SHARED);
+  wnd.hbrBackground = GetSysColorBrush(COLOR_WINDOW);
+  wnd.lpszClassName = L"TestClass";
+  if (!wnd.hIcon || !wnd.hCursor || !wnd.hbrBackground || !RegisterClassExW(&wnd)) {
+    return FALSE;
+  }
+
+  HWND hWnd = CreateWindowW(wnd.lpszClassName, L"Test window", WS_OVERLAPPEDWINDOW,
+                            CW_USEDEFAULT, CW_USEDEFAULT, 500, 500, NULL, NULL, hInstance, NULL);
+  if(!hWnd) {
+    return FALSE;
+  }
+
+  ShowWindow(hWnd, nCmdShow);
+  if (!UpdateWindow(hWnd)) {
+    return FALSE;
+  }
+
+  MSG msg;
+  while (GetMessageW(&msg, NULL, 0, 0)) {
+      TranslateMessage(&msg);
+      DispatchMessageW(&msg);
+  }
+
+  return msg.wParam;
+}
