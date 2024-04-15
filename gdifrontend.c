@@ -17,8 +17,8 @@ int CALLBACK EnumFontFamExProcW(const LOGFONTW *pFontInfo, const TEXTMETRICW *pF
   UNREFERENCED_PARAMETER(pFontAttribs); // Do not need any info about the physical font
 
   if (fontType != TRUETYPE_FONTTYPE || pFontInfo->lfWeight != FW_NORMAL || pFontInfo->lfItalic
-      || pFontInfo->lfUnderline || pFontInfo->lfStrikeOut /* || pFontInfo->lfCharSet != ANSI_CHARSET */
-      || pFontInfo->lfOutPrecision != OUT_STROKE_PRECIS /* || wcscmp(pFontInfo->lfFaceName, L"Arial") != 0 */) {
+      || pFontInfo->lfUnderline || pFontInfo->lfStrikeOut
+      || pFontInfo->lfOutPrecision != OUT_STROKE_PRECIS) {
     return 1;
   }
 
@@ -31,7 +31,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   UNREFERENCED_PARAMETER(lParam); // Not relevant for any messages used
 
   switch(msg) {
-    case WM_PAINT: {
+    case WM_PAINT: ;
       PAINTSTRUCT ps;
       HDC hdc = BeginPaint(hWnd, &ps);
       if (!hdc) {
@@ -66,7 +66,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
       if (!hFont) {
         goto cleanup_paint;
       }
-
       HFONT hOldFont = SelectObject(hdc, hFont);
       if (!hOldFont) {
         goto cleanup_font;
@@ -88,11 +87,10 @@ cleanup_font:
 cleanup_paint:
       EndPaint(hWnd, &ps);
       return 0;
-    }
-    case WM_DESTROY: {
+
+    case WM_DESTROY:
       PostQuitMessage(0);
       return 0;
-    }
   }
 
   return DefWindowProcW(hWnd, msg, wParam, lParam);
@@ -104,7 +102,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLin
 
   WNDCLASSEXW wnd = {0};
   wnd.cbSize        = sizeof wnd;
-  wnd.style         = CS_HREDRAW | CS_VREDRAW;
   wnd.lpfnWndProc   = WndProc;
   wnd.hInstance     = hInstance;
   wnd.hIcon         = LoadImageW(NULL, IDI_APPLICATION, IMAGE_ICON, 0, 0,
@@ -113,11 +110,17 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLin
                                  LR_DEFAULTSIZE | LR_SHARED);
   wnd.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
   wnd.lpszClassName = L"Untitled Text Adventure";
-  if (!wnd.hIcon || !wnd.hCursor || !RegisterClassExW(&wnd)) {
+  if (!wnd.hIcon || !wnd.hCursor) {
     return FALSE;
   }
 
-  HWND hWnd = CreateWindowW(wnd.lpszClassName, L"Test window", WS_OVERLAPPEDWINDOW,
+  ATOM class = RegisterClassExW(&wnd);
+  if (!class) {
+    return FALSE;
+  }
+  void *rClass = MAKEINTRESOURCEW(class);
+
+  HWND hWnd = CreateWindowW(rClass, L"Test window", WS_OVERLAPPEDWINDOW,
                             CW_USEDEFAULT, CW_USEDEFAULT, 500, 500, NULL, NULL, hInstance, NULL);
   if(!hWnd) {
     return FALSE;
@@ -134,5 +137,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLin
       DispatchMessageW(&msg);
   }
 
+  UnregisterClassW(rClass, hInstance);
   return msg.wParam;
 }
