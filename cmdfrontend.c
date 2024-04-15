@@ -10,30 +10,37 @@
 #define ESC "\x1B"
 #define CSI ESC "["
 
-static void setupconsole(void) {
+static void SetupConsole(void) {
   printf(CSI "?1049h");
 }
 
-static void resetconsole(void) {
+static void ResetConsole(void) {
   printf(CSI "?1049l");
 }
 
-static void print(const char32_t *text) {
+static void PrintOutputBody(const char32_t *body) {
   printf(CSI "0;0H");
   printf(CSI "0J");
 #if __WCHAR_MAX__ > 0x10000 // unix likes
-  printf("%ls", (wchar_t *)text);
+  printf("%ls", (wchar_t *)body);
 #else // windows
-  wchar_t *wcText = c32towc(text);
-  printf("%ls", wcText);
-  free(wcText);
+  wchar_t *wcBody = c32towc(body);
+  printf("%ls", wcBody);
+  free(wcBody);
 #endif
 }
 
-int main(void) {
-  setupconsole();
-  print(outputgame());
+static void HandleOutput(void) {
+  struct GameOutput output;
+  GetCurrentGameOutput(&output);
+  PrintOutputBody(output.body);
   getchar();
-  resetconsole();
+}
+
+int main(void) {
+  SetupConsole();
+  HandleOutput();
+  CleanupGame();
+  ResetConsole();
   return 0;
 }

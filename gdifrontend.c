@@ -26,6 +26,20 @@ int CALLBACK EnumFontFamExProcW(const LOGFONTW *pFontInfo, const TEXTMETRICW *pF
   return 0;
 }
 
+static void HandleOutput(HDC hdc, PAINTSTRUCT ps) {
+  struct GameOutput output;
+  GetCurrentGameOutput(&output);
+
+  wchar_t *wcText = c32towc(output.body);
+  RECT textPosition = {0};
+  textPosition.left = 10;
+  textPosition.top = 10;
+  textPosition.right = ps.rcPaint.right - 10;
+  textPosition.bottom = ps.rcPaint.bottom - 10;
+  DrawTextW(hdc, wcText, -1, &textPosition, 0);
+  free(wcText);
+}
+
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   UNREFERENCED_PARAMETER(wParam); // Not relevant for any messages used
   UNREFERENCED_PARAMETER(lParam); // Not relevant for any messages used
@@ -71,14 +85,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         goto cleanup_font;
       }
 
-      wchar_t *wcText = c32towc(outputgame());
-      RECT textPosition = {0};
-      textPosition.left = 10;
-      textPosition.top = 10;
-      textPosition.right = ps.rcPaint.right - 10;
-      textPosition.bottom = ps.rcPaint.bottom - 10;
-      DrawTextW(hdc, wcText, -1, &textPosition, 0);
-      free(wcText);
+      HandleOutput(hdc, ps);
 
       SelectObject(hdc, hOldFont);
 cleanup_font:
