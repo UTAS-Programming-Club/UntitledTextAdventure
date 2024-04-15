@@ -8,7 +8,10 @@ BINDIR := $(OUTDIR)/bin/
 LIBDIR := $(OUTDIR)/lib/
 INCDIR := $(OUTDIR)/include/
 
-COMMONOBJS := $(LIBDIR)/alloc.o $(LIBDIR)/crossprint.o $(LIBDIR)/game.o $(LIBDIR)/strings.o
+COMMONOBJS := $(LIBDIR)/alloc.o $(LIBDIR)/game.o
+ifdef ISWINDOWS
+COMMONOBJS += $(LIBDIR)/crossprint.o $(LIBDIR)/strings.o
+endif
 
 build: $(OUTPUT)/$(TARGET)/bin/cmdgame $(OUTPUT)/$(TARGET)/bin/gdigame
 

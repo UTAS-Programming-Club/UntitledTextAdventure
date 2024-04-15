@@ -16,7 +16,14 @@ struct GameOutput {
   struct GameInput *inputs;
 };
 
+enum GameInputOutcome {
+  InvalidInput,
+  GetNextOutput,
+  QuitGame
+};
+
 void GetCurrentGameOutput(struct GameOutput *);
+enum GameInputOutcome HandleGameInput(uint32_t stateID, uint32_t inputID);
 void CleanupGame(void);
 
 #endif // PCGAME_GAME_H
