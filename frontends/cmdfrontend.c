@@ -3,9 +3,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "crossprint.h"
+#include "../backend/game.h"
+#include "../shared/crossprint.h"
 #include "frontend.h"
-#include "game.h"
 
 #define ESC "\x1B"
 #define CSI ESC "["

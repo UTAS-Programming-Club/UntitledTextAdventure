@@ -3,11 +3,12 @@
 #include <stdlib.h>
 #include <strsafe.h>
 
-#include "crossprint.h"
+#include "../backend/game.h"
+#include "../shared/crossprint.h"
 #include "frontend.h"
-#include "game.h"
 
 // TODO: Switch text rendering from gdi/uniscribe to libschrift for windows versions older than vista.
+// TODO: Disable showing console on startup
 
 int CALLBACK EnumFontFamExProcW(const LOGFONTW *, const TEXTMETRICW *, DWORD, LPARAM);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);

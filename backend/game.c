@@ -13,8 +13,6 @@ void GetCurrentGameOutput(struct GameOutput *output) {
   output->inputs = NULL;
 }
 
-// For now this does nothing but in future will cleanup
-// any resources including the input arrays used for
-// GetCurrentOutput.
 void CleanupGame(void) {
+  FreeAll();
 }
