@@ -1,13 +1,12 @@
-#ifndef CROSSPRINT_H
-#define CROSSPRINT_H
+#ifndef PCGAME_CROSSPRINT_H
+#define PCGAME_CROSSPRINT_H
 
 #include <uchar.h>
 
 
-// Both require freeing returned memory
-char *c32toc8(const char32_t *str);
+// Requires freeing returned memory
 #ifdef _WIN32
-char16_t *c32toc16(const char32_t *str);
+wchar_t *c32towc(const char32_t *str);
 #endif
 
-#endif // CROSSPRINT_H
+#endif // PCGAME_CROSSPRINT_H

@@ -9,34 +9,8 @@
 #include "crossprint.h"
 #include "strings.h"
 
-// This is fine under mingw-w64(but unnecessary) but fails under msvc
-#ifndef _WIN32
-// Runs before main to setup this library
-static void __attribute__ ((constructor)) cpinit(void) {
-  setlocale(LC_ALL, "en_US.UTF-8");
-}
-#endif
-
-char *c32toc8(const char32_t *str) {
-  size_t strCodeUnitCount = codeunitcount32(str);
-
-  // From https://en.cppreference.com/w/c/string/multibyte/c32rtomb
-  // TODO: Check if this extra 1 is needed? It might have been from when codeunitcount32 didn't count the null at the end
-  char *pMbStr = malloc((MB_CUR_MAX * strCodeUnitCount + 1) * sizeof(*pMbStr));
-  char *pMbStrCur = pMbStr;
-  for (size_t n = 0; n < strCodeUnitCount; ++n) {
-    size_t byteCount = cpc32rtomb(pMbStrCur, str[n]);
-    if(byteCount == (size_t)-1) {
-      break;
-    }
-    pMbStrCur += byteCount;
-  }
-
-  return pMbStr;
-}
-
 #ifdef _WIN32
-char16_t *c32toc16(const char32_t *str) {
+wchar_t *c32towc(const char32_t *str) {
   size_t strCodeUnitCount = codeunitcount32(str);
 
   // From https://en.cppreference.com/w/c/string/multibyte/c32rtomb

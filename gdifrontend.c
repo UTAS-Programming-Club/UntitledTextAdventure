@@ -1,5 +1,6 @@
 #include <memory.h>
 #include <windows.h>
+#include <stdlib.h>
 #include <strsafe.h>
 
 #include "crossprint.h"
@@ -71,13 +72,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         goto cleanup_font;
       }
 
-      WCHAR *c16Text = c32toc16(outputgame());
+      wchar_t *wcText = c32towc(outputgame());
       RECT textPosition = {0};
       textPosition.left = 10;
       textPosition.top = 10;
       textPosition.right = ps.rcPaint.right - 10;
       textPosition.bottom = ps.rcPaint.bottom - 10;
-      DrawTextW(hdc, c16Text, -1, &textPosition, 0);
+      DrawTextW(hdc, wcText, -1, &textPosition, 0);
+      free(wcText);
 
       SelectObject(hdc, hOldFont);
 cleanup_font:
@@ -109,9 +111,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLin
                                  LR_DEFAULTSIZE | LR_SHARED);
   wnd.hCursor       = LoadImageW(NULL, IDC_ARROW, IMAGE_CURSOR, 0, 0,
                                  LR_DEFAULTSIZE | LR_SHARED);
-  wnd.hbrBackground = GetSysColorBrush(COLOR_WINDOW);
-  wnd.lpszClassName = L"TestClass";
-  if (!wnd.hIcon || !wnd.hCursor || !wnd.hbrBackground || !RegisterClassExW(&wnd)) {
+  wnd.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+  wnd.lpszClassName = L"Untitled Text Adventure";
+  if (!wnd.hIcon || !wnd.hCursor || !RegisterClassExW(&wnd)) {
     return FALSE;
   }
 

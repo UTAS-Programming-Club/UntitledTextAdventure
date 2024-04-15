@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "crossprint.h"
 #include "frontend.h"
@@ -23,9 +24,9 @@ static void print(const char32_t *text) {
 #if __WCHAR_MAX__ > 0x10000 // unix likes
   printf("%ls", (wchar_t *)text);
 #else // windows
-  char16_t *c16Text = c32toc16(text);
-  printf("%ls", (wchar_t *)c16Text);
-  free(c16Text);
+  wchar_t *wcText = c32towc(text);
+  printf("%ls", wcText);
+  free(wcText);
 #endif
 }
 
