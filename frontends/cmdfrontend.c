@@ -5,6 +5,9 @@
 #include <stdlib.h>
 #ifdef _WIN32
 #include <conio.h>
+#else
+#include <termios.h>
+#include <unistd.h>
 #endif
 
 #include "../backend/game.h"
@@ -14,12 +17,41 @@
 #define ESC "\x1B"
 #define CSI ESC "["
 
+#ifndef _WIN32
+static int BackupVEOF = '\4';
+static int BackupVEOL = '\0';
+#endif
+
 static void SetupConsole(void) {
-  printf(CSI "?1049h");
+  printf(CSI "?1049h"); // Switch to alternative buffer
+#ifndef _WIN32
+  struct termios info;
+  tcgetattr(STDIN_FILENO, &info);
+
+  // On some systems VEOF and VEOL are reused as VMIN and VTIME so backup their values first
+  BackupVEOF = info.c_cc[VEOF];
+  BackupVEOL = info.c_cc[VEOL];
+
+  info.c_lflag &= ~ICANON; // Allow reading functions to return before enter is pressed
+  info.c_lflag &= ~ECHO;   // Do not write characters to screen
+  info.c_cc[VMIN] = 1;     // Prevent reading functions returning if no keys are pressed
+  info.c_cc[VTIME] = 0;    // Prevent reading functions returning after some time
+  tcsetattr(STDIN_FILENO, TCSAFLUSH, &info);
+#endif
 }
 
+// TODO: Check if ICANON and ECHO were previously on?
 static void ResetConsole(void) {
-  printf(CSI "?1049l");
+#ifndef _WIN32
+  struct termios info;
+  tcgetattr(STDIN_FILENO, &info);
+  info.c_lflag |= ICANON; // Require enter to be pressed before reading functions return
+  info.c_lflag |= ECHO;   // Print characters to screen
+  info.c_cc[VEOF] = BackupVEOF;
+  info.c_cc[VEOL] = BackupVEOL;
+  tcsetattr(STDIN_FILENO, TCSAFLUSH, &info);
+#endif
+  printf(CSI "?1049l"); // Restore original buffer
 }
 
 static void PrintString(const char32_t *str) {
@@ -44,18 +76,16 @@ static void PrintOutputBody(const char32_t *body) {
 
 // Returns 0 to 8 for inputs 1 to 9 and UINT8_MAX on failure
 static uint8_t GetInput(void) {
-#ifdef _WIN32
   while(true) {
+#ifdef _WIN32
     int input = _getch();
+#else
+    int input = getchar();
+#endif
     if ('1' <= input && input <= '9') {
       return input - '1';
     }
   }
-#else
-  // TODO: Use tcgetattr to match allow any key to return a la https://stackoverflow.com/a/18806671
-  getchar();
-  return UINT8_MAX;
-#endif
 }
 
 static void PrintInputs(uint8_t inputCount, const struct GameInput *inputs) {
@@ -69,7 +99,10 @@ static void PrintInputs(uint8_t inputCount, const struct GameInput *inputs) {
 
 static uint32_t HandleOutput(void) {
   struct GameOutput output;
-  GetCurrentGameOutput(&output);
+  bool succeeded = GetCurrentGameOutput(&output);
+  if (!succeeded) {
+    return UINT32_MAX;
+  }
   PrintOutputBody(output.body);
   PrintInputs(output.inputCount, output.inputs);
   return output.stateID;
@@ -100,6 +133,9 @@ int main(void) {
   uint32_t stateID;
   do {
     stateID = HandleOutput();
+    if (stateID == UINT32_MAX) {
+      break;
+    }
   } while(HandleInput(stateID));
 
   CleanupGame();
