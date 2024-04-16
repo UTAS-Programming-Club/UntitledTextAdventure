@@ -105,19 +105,19 @@ static uint32_t HandleOutput(void) {
   }
   PrintOutputBody(output.body);
   PrintInputs(output.inputCount, output.inputs);
-  return output.stateID;
+  return output.screenID;
 }
 
-static bool HandleInput(uint32_t stateID) {
+static bool HandleInput(uint32_t screenID) {
   uint8_t input = GetInput();
   if (input == UINT8_MAX) {
-    return HandleInput(stateID);
+    return HandleInput(screenID);
   }
 
-  enum GameInputOutcome outcome = HandleGameInput(stateID, input);
+  enum GameInputOutcome outcome = HandleGameInput(screenID, input);
   switch(outcome) {
     case InvalidInput:
-      return HandleInput(stateID);
+      return HandleInput(screenID);
     case GetNextOutput:
       return true;
     case QuitGame:

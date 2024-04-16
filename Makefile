@@ -8,9 +8,9 @@ BINDIR := $(OUTDIR)/bin/
 LIBDIR := $(OUTDIR)/lib/
 INCDIR := $(OUTDIR)/include/
 
-COMMONOBJS := $(LIBDIR)/alloc.o $(LIBDIR)/game.o
+COMMONOBJS := $(LIBDIR)/alloc.o $(LIBDIR)/game.o $(LIBDIR)/strings.o
 ifdef ISWINDOWS
-COMMONOBJS += $(LIBDIR)/crossprint.o $(LIBDIR)/strings.o
+COMMONOBJS += $(LIBDIR)/crossprint.o
 endif
 
 build: $(OUTPUT)/$(TARGET)/bin/cmdgame $(OUTPUT)/$(TARGET)/bin/gdigame
@@ -48,7 +48,7 @@ $(LIBDIR)/gdifrontend.o: frontends/gdifrontend.c frontends/frontend.h | $(LIBDIR
 
 # Executables
 $(OUTPUT)/$(TARGET)/bin/cmdgame: $(LIBDIR)/cmdfrontend.o $(COMMONOBJS) | $(OUTPUT)/$(TARGET)/bin/
-	$(CC) $(CSTD) $(WARNINGS) -o $@ $^ $(CFLAGS)
+	$(CC) $(CSTD) $(WARNINGS) -o $@ $^ $(CFLAGS) -lm
 
 ifdef ISWINDOWS
 $(OUTPUT)/$(TARGET)/bin/gdigame: $(LIBDIR)/gdifrontend.o $(COMMONOBJS) | $(OUTPUT)/$(TARGET)/bin/
