@@ -4,3 +4,6 @@
 [submodule "third_party/arena"]
 	path = third_party/arena
 	url = https://github.com/tsoding/arena.git
+[submodule "third_party/b64.c"]
+	path = third_party/b64.c
+	url = https://github.com/jwerle/b64.c.git
