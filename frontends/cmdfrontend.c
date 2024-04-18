@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -55,12 +56,15 @@ static void ResetConsole(void) {
 }
 
 static void PrintString(const char32_t *str) {
-#if __WCHAR_MAX__ > 0x10000 // unix likes
+#if WCHAR_MAX == INT_LEAST32_MAX || WCHAR_MAX == UINT_LEAST32_MAX // unix likes
+  static_assert(sizeof(wchar_t) == sizeof(char32_t), "Need them to be the same size to print utf-32 chars");
   printf("%ls", (wchar_t *)str);
-#else // windows
+#elif defined(_WIN32) // windows
   wchar_t *wcStr = c32towc(str);
   printf("%ls", wcStr);
   free(wcStr);
+#else
+#error Need utf-32 printing support
 #endif
 }
 
@@ -128,6 +132,9 @@ static bool HandleInput(uint32_t screenID) {
 }
 
 int main(void) {
+  if (!SetupGame()) {
+    return 1;
+  }
   SetupConsole();
 
   uint32_t stateID;
@@ -138,7 +145,7 @@ int main(void) {
     }
   } while(HandleInput(stateID));
 
-  CleanupGame();
   ResetConsole();
+  CleanupGame();
   return 0;
 }

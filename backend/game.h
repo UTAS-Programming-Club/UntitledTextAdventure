@@ -23,6 +23,7 @@ enum GameInputOutcome {
   QuitGame
 };
 
+bool SetupGame(void);
 bool GetCurrentGameOutput(struct GameOutput *);
 enum GameInputOutcome HandleGameInput(uint32_t stateID, uint32_t inputID);
 void CleanupGame(void);

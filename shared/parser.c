@@ -126,7 +126,7 @@ bool GetGameScreen(uint32_t screenID, struct GameScreen *screen) {
   }
 
   cJSON *jsonScreen = GetGameScreenJson(screenID);
-  if (!screen) {
+  if (!jsonScreen) {
     return false;
   }
 

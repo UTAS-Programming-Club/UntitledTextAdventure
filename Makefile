@@ -8,7 +8,7 @@ BINDIR := $(OUTDIR)/bin/
 LIBDIR := $(OUTDIR)/lib/
 INCDIR := $(OUTDIR)/include/
 
-COMMONOBJS := $(LIBDIR)/alloc.o $(LIBDIR)/game.o $(LIBDIR)/strings.o
+COMMONOBJS := $(LIBDIR)/alloc.o $(LIBDIR)/b64_buffer.o $(LIBDIR)/b64_decode.o $(LIBDIR)/base64_backend.o $(LIBDIR)/cJSON.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/screens.o $(LIBDIR)/strings.o
 ifdef ISWINDOWS
 COMMONOBJS += $(LIBDIR)/crossprint.o
 endif
@@ -39,6 +39,9 @@ $(LIBDIR)/alloc.o: backend/alloc.c backend/alloc.h $(INCDIR)/arena.h | $(LIBDIR)
 	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS) -I $(INCDIR)
 
 $(LIBDIR)/game.o: backend/game.c backend/game.h | $(LIBDIR)
+	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS)
+
+$(LIBDIR)/screens.o: backend/screens.c backend/screens.h | $(LIBDIR)
 	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS)
 
 $(LIBDIR)/base64_preptext.o: shared/base64.c shared/base64.h shared/strings.h $(INCDIR)/b64.h | $(LIBDIR)
