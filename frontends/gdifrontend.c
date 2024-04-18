@@ -29,7 +29,9 @@ int CALLBACK EnumFontFamExProcW(const LOGFONTW *pFontInfo, const TEXTMETRICW *pF
 
 static void HandleOutput(HDC hdc, PAINTSTRUCT ps) {
   struct GameOutput output;
-  GetCurrentGameOutput(&output);
+  if (!GetCurrentGameOutput(&output)) {
+    return;
+  }
 
   wchar_t *wcText = c32towc(output.body);
   RECT textPosition = {0};
@@ -108,6 +110,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLin
   UNREFERENCED_PARAMETER(hPrevInstance); // Always NULL on win32
   UNREFERENCED_PARAMETER(lpCmdLine);     // Don't need command line arguments
 
+  if (!SetupGame()) {
+    return 1;
+  }
+
   WNDCLASSEXW wnd = {0};
   wnd.cbSize        = sizeof wnd;
   wnd.lpfnWndProc   = WndProc;
@@ -146,5 +152,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLin
   }
 
   UnregisterClassW(rClass, hInstance);
+  CleanupGame();
   return msg.wParam;
 }
