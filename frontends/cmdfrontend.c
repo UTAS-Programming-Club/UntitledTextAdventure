@@ -128,10 +128,9 @@ static bool HandleInput(uint32_t screenID) {
     case GetNextOutput:
       return true;
     case QuitGame:
+    default:
       return false;
   }
-
-  return false;
 }
 
 int main(void) {

@@ -121,14 +121,11 @@ bool CreateMainMenuScreen(struct GameOutput *output) {
     if (!GetGameScreenButton(output->screenID, i, &button)) {
       return false;
     }
-    output->inputs[i].inputID = i;
     output->inputs[i].title = button.title;
   }
 
   if (debugButtonCount == 2) {
-    output->inputs[i].inputID = i;
     output->inputs[i++].title = U64toS32(writtenCharCount);
-    output->inputs[i].inputID = i;
     output->inputs[i].title = U64toS32(allocatedCharCount);
   }
 
@@ -164,32 +161,25 @@ bool CreateTestScreen(struct GameOutput *output) {
     if (!GetGameScreenButton(output->screenID, i, &button)) {
       return false;
     }
-    output->inputs[i].inputID = i;
     output->inputs[i].title = button.title;
   }
 
   return true;
 }
 
-
+// TODO: Merge input functions
 enum GameInputOutcome HandleMainMenuScreenInput(uint8_t inputID) {
-  // TODO: Move to json
-  switch(inputID) {
-    case MAIN_MENU_START_BUTTON:
-      return GetNextOutput;
-    case MAIN_MENU_QUIT_BUTTON:
-      return QuitGame;
+  struct GameScreenButton button;
+  if (!GetGameScreenButton(MAIN_MENU_SCREEN_ID, inputID, &button)) {
+    return InvalidInput;
   }
-
-  return InvalidInput;
+  return button.outcome;
 }
 
 enum GameInputOutcome HandleTestScreenInput(uint8_t inputID) {
-  // TODO: Move to json
-  switch(inputID) {
-    case MAIN_MENU_START_BUTTON:
-      return GetNextOutput;
+  struct GameScreenButton button;
+  if (!GetGameScreenButton(TEST_SCREEN_ID, inputID, &button)) {
+    return InvalidInput;
   }
-
-  return InvalidInput;
+  return button.outcome;
 }

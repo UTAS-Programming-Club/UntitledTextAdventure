@@ -36,8 +36,17 @@ enum GameInputOutcome HandleGameInput(uint32_t screenID, uint32_t inputID) {
   }
 
   // TODO: Fix this, return more data from HandleXInput?
-  if (outcome == GetNextOutput) {
-    ScreenID = ScreenID ? 0 : 1;
+  switch (outcome) {
+    case GotoTestScreen:
+      ScreenID = TEST_SCREEN_ID;
+      outcome = GetNextOutput;
+      break;
+    case GotoMainMenuScreen:
+      ScreenID = MAIN_MENU_SCREEN_ID;
+      outcome = GetNextOutput;
+      break;
+    default:
+      break;
   }
 
   return outcome;

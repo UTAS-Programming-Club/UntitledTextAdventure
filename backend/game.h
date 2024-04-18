@@ -6,7 +6,6 @@
 #include <uchar.h>
 
 struct GameInput {
-  uint8_t inputID;
   char32_t *title;
 };
 
@@ -18,9 +17,11 @@ struct GameOutput {
 };
 
 enum GameInputOutcome {
-  InvalidInput,
-  GetNextOutput,
-  QuitGame
+  InvalidInput       = 0, // Do not use in json or use in screens.c
+  GetNextOutput      = 1, // Do not use in json or use in screens.c
+  QuitGame           = 2,
+  GotoTestScreen     = 3, // -> GetNextOutput
+  GotoMainMenuScreen = 4, // -> GetNextOutput
 };
 
 bool SetupGame(void);

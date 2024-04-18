@@ -180,11 +180,20 @@ bool GetGameScreenButton(uint32_t screenID, uint8_t buttonID, struct GameScreenB
 
   cJSON *jsonTitle = cJSON_GetObjectItemCaseSensitive(jsonButton, "title");
   char *base64Title = cJSON_GetStringValue(jsonTitle);
+  if (!base64Title) {
+    return false;
+  }
 
   button->title = c32base64toc32(base64Title);
   if (! button->title) {
     return false;
   }
+
+  cJSON *jsonOutcome = cJSON_GetObjectItemCaseSensitive(jsonButton, "outcome");
+  if (!cJSON_IsNumber(jsonOutcome)){
+    return false;
+  }
+  button->outcome = cJSON_GetNumberValue(jsonOutcome);
 
   return true;
 }

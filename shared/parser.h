@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "../backend/game.h"
+
 struct GameScreen {
   char32_t *body;
   char32_t *extraText;
@@ -11,6 +13,7 @@ struct GameScreen {
 
 struct GameScreenButton {
   char32_t *title;
+  enum GameInputOutcome outcome;
 };
 
 bool LoadGameData(char *);
