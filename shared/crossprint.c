@@ -29,7 +29,6 @@ wchar_t *c32towc(const char32_t *str) {
   size_t mbStrCodeUnitCount = pMbStrCur - pMbStr;
   int wStrLen = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, pMbStr, (int)mbStrCodeUnitCount, NULL, 0);
   if (wStrLen == 0) {
-    strCodeUnitCount = EOF;
     goto cleanup_mbstr;
   }
   ++wStrLen;
@@ -37,7 +36,6 @@ wchar_t *c32towc(const char32_t *str) {
   wchar_t *pWStr = malloc(wStrLen * sizeof(*pWStr));
   int ret = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, pMbStr, (int)mbStrCodeUnitCount, pWStr, wStrLen);
   if (!ret) {
-    strCodeUnitCount = EOF;
     goto cleanup_wstr;
   }
   // Is this needed?

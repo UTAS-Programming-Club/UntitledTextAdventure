@@ -7,6 +7,9 @@
 #include "../shared/crossprint.h"
 #include "frontend.h"
 
+static uint32_t ScreenID = UINT32_MAX;
+static HWND *buttonHandles = NULL;
+
 // TODO: Switch text rendering from gdi/uniscribe to libschrift for windows versions older than vista.
 // TODO: Disable showing console on startup
 
@@ -27,13 +30,19 @@ int CALLBACK EnumFontFamExProcW(const LOGFONTW *pFontInfo, const TEXTMETRICW *pF
   return 0;
 }
 
-static void HandleOutput(HDC hdc, PAINTSTRUCT ps) {
+static void HandleOutput(HWND hWnd, HDC hdc, PAINTSTRUCT ps) {
+  static size_t buttonHandleCount = 0;
+
   struct GameOutput output;
   if (!GetCurrentGameOutput(&output)) {
     return;
   }
 
   wchar_t *wcText = c32towc(output.body);
+  if (!wcText) {
+    return;
+  }
+
   RECT textPosition = {0};
   textPosition.left = 10;
   textPosition.top = 10;
@@ -41,6 +50,51 @@ static void HandleOutput(HDC hdc, PAINTSTRUCT ps) {
   textPosition.bottom = ps.rcPaint.bottom - 10;
   DrawTextW(hdc, wcText, -1, &textPosition, 0);
   free(wcText);
+
+  if (ScreenID == output.screenID) {
+    return;
+  }
+  ScreenID = output.screenID;
+
+  if (buttonHandles) {
+    for (size_t i = 0; i < buttonHandleCount; ++i) {
+      DestroyWindow(buttonHandles[i]);
+    }
+  }
+  if (buttonHandleCount < output.inputCount) {
+    buttonHandleCount = output.inputCount;
+    buttonHandles = realloc(buttonHandles, buttonHandleCount * sizeof *buttonHandles);
+    if (!buttonHandles) {
+      return;
+    }
+  }
+
+  RECT clientSize = {0};
+  if (!GetClientRect(hWnd, &clientSize)) {
+    return;
+  }
+
+  int buttonWidth = 100;
+  int buttonHeight = 20;
+  int firstButtonCentreX = clientSize.right / (output.inputCount + 1);
+  int buttonCentreY = clientSize.bottom - buttonHeight;
+
+  HINSTANCE wndInst = (HINSTANCE)GetWindowLongPtrW(hWnd, GWLP_HINSTANCE);
+
+  for (uint8_t i = 0; i < output.inputCount; ++i) {
+    wcText = c32towc(output.inputs[i].title);
+    if (!wcText) {
+      return;
+    }
+    int buttonTopLeftX = (i + 1) * firstButtonCentreX - buttonWidth / 2;
+    int buttonTopLeftY = buttonCentreY - buttonHeight / 2;
+
+    HWND hBtn = CreateWindowW(L"BUTTON", wcText, WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                  buttonTopLeftX, buttonTopLeftY, buttonWidth, buttonHeight, hWnd, (HMENU)(intptr_t)i,
+                  wndInst, NULL);
+    buttonHandles[i] = hBtn;
+    free(wcText);
+  }
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -88,7 +142,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         goto cleanup_font;
       }
 
-      HandleOutput(hdc, ps);
+      HandleOutput(hWnd, hdc, ps);
 
       SelectObject(hdc, hOldFont);
 cleanup_font:
@@ -98,7 +152,26 @@ cleanup_paint:
       EndPaint(hWnd, &ps);
       return 0;
 
+    case WM_COMMAND:
+      if (HIWORD(wParam) != BN_CLICKED) {
+        return 0;
+      }
+
+      enum GameInputOutcome outcome = HandleGameInput(ScreenID, LOWORD(wParam));
+      switch(outcome) {
+        case GetNextOutput:
+          InvalidateRect(hWnd, NULL, TRUE);
+          break;
+        case QuitGame:
+          DestroyWindow(hWnd);
+          break;
+        default:
+          break;
+      }
+      return 0;
+
     case WM_DESTROY:
+      free(buttonHandles);
       PostQuitMessage(0);
       return 0;
   }
@@ -116,6 +189,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLin
 
   WNDCLASSEXW wnd = {0};
   wnd.cbSize        = sizeof wnd;
+  wnd.style         = CS_VREDRAW | CS_HREDRAW;
   wnd.lpfnWndProc   = WndProc;
   wnd.hInstance     = hInstance;
   wnd.hIcon         = LoadImageW(NULL, IDI_APPLICATION, IMAGE_ICON, 0, 0,

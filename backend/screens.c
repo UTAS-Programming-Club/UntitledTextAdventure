@@ -136,6 +136,42 @@ bool CreateMainMenuScreen(struct GameOutput *output) {
   return true;
 }
 
+bool CreateTestScreen(struct GameOutput *output) {
+  if (!output) {
+    return false;
+  }
+  output->screenID = TEST_SCREEN_ID;
+
+  struct GameScreen screen;
+  if (!GetGameScreen(output->screenID, &screen)) {
+    return false;
+  }
+  output->body = screen.body;
+
+  uint8_t buttonCount = GetGameScreenButtonCount(output->screenID);
+  if (buttonCount == UINT8_MAX) {
+    return false;
+  }
+  output->inputCount = buttonCount;
+
+  output->inputs = Allocate(output->inputCount * sizeof *output->inputs);
+  if (!output->inputs) {
+    return false;
+  }
+
+  for (uint8_t i = 0; i < buttonCount; ++i) {
+    struct GameScreenButton button;
+    if (!GetGameScreenButton(output->screenID, i, &button)) {
+      return false;
+    }
+    output->inputs[i].inputID = i;
+    output->inputs[i].title = button.title;
+  }
+
+  return true;
+}
+
+
 enum GameInputOutcome HandleMainMenuScreenInput(uint8_t inputID) {
   // TODO: Move to json
   switch(inputID) {
@@ -143,6 +179,16 @@ enum GameInputOutcome HandleMainMenuScreenInput(uint8_t inputID) {
       return GetNextOutput;
     case MAIN_MENU_QUIT_BUTTON:
       return QuitGame;
+  }
+
+  return InvalidInput;
+}
+
+enum GameInputOutcome HandleTestScreenInput(uint8_t inputID) {
+  // TODO: Move to json
+  switch(inputID) {
+    case MAIN_MENU_START_BUTTON:
+      return GetNextOutput;
   }
 
   return InvalidInput;

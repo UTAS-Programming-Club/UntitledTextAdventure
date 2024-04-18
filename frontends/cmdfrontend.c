@@ -61,6 +61,9 @@ static void PrintString(const char32_t *str) {
   printf("%ls", (wchar_t *)str);
 #elif defined(_WIN32) // windows
   wchar_t *wcStr = c32towc(str);
+  if (!wcStr) {
+    return;
+  }
   printf("%ls", wcStr);
   free(wcStr);
 #else
