@@ -7,12 +7,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <uchar.h>
-#if _WIN32
-#else
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
-#endif
 
 #include "parser.h"
 #include "../shared/base64.h"
@@ -21,9 +18,6 @@ static void *Data = NULL;
 static cJSON *GameData = NULL;
 
 static bool LoadFile(char *path, size_t *size, void **data) {
-#ifdef _WIN32
-#error Memory mapping windows files is not currently supported
-#else
   bool success = false;
 
   if (!data) {
@@ -54,15 +48,10 @@ static bool LoadFile(char *path, size_t *size, void **data) {
 cleanup:
   close(fd);
   return success;
-#endif
 }
 
 static void UnloadFile(void *data) {
-#ifdef _WIN32
-#error Memory mapping windows files is not currently supported
-#else
   free(data);
-#endif
 }
 
 bool LoadGameData(char *path) {
