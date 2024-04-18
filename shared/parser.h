@@ -14,10 +14,12 @@ struct GameScreen {
 struct GameScreenButton {
   char32_t *title;
   enum GameInputOutcome outcome;
+  uint32_t newScreen; // Only used(and set correctly) if outcome == GotoScreen
 };
 
 bool LoadGameData(char *);
 uint32_t GetGameScreenCount(void);
+uint32_t GetMainMenuScreenID(void);
 bool GetGameScreen(uint32_t, struct GameScreen *);
 bool GetGameScreenButton(uint32_t, uint8_t, struct GameScreenButton *);
 uint8_t GetGameScreenButtonCount(uint32_t);

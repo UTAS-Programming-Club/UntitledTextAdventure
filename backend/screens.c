@@ -68,13 +68,14 @@ cleanup:
   return strSize;
 }
 
-bool CreateMainMenuScreen(struct GameOutput *output) {
+// TODO: Merge common stuff with CreateScreen
+bool CreateMainMenuScreen(uint32_t screenID, struct GameOutput *output) {
   static uint32_t reloadCount = 0;
 
   if (!output) {
     return false;
   }
-  output->screenID = MAIN_MENU_SCREEN_ID;
+  output->screenID = screenID;
 
   struct GameScreen screen;
   if (!GetGameScreen(output->screenID, &screen)) {
@@ -133,11 +134,11 @@ bool CreateMainMenuScreen(struct GameOutput *output) {
   return true;
 }
 
-bool CreateTestScreen(struct GameOutput *output) {
+bool CreateScreen(uint32_t screenID, struct GameOutput *output) {
   if (!output) {
     return false;
   }
-  output->screenID = TEST_SCREEN_ID;
+  output->screenID = screenID;
 
   struct GameScreen screen;
   if (!GetGameScreen(output->screenID, &screen)) {
@@ -167,19 +168,10 @@ bool CreateTestScreen(struct GameOutput *output) {
   return true;
 }
 
-// TODO: Merge input functions
-enum GameInputOutcome HandleMainMenuScreenInput(uint8_t inputID) {
-  struct GameScreenButton button;
-  if (!GetGameScreenButton(MAIN_MENU_SCREEN_ID, inputID, &button)) {
-    return InvalidInput;
+struct GameScreenButton *HandleScreenInput(uint32_t screenID, uint8_t inputID) {
+  static struct GameScreenButton button;
+  if (!GetGameScreenButton(screenID, inputID, &button)) {
+    return NULL;
   }
-  return button.outcome;
-}
-
-enum GameInputOutcome HandleTestScreenInput(uint8_t inputID) {
-  struct GameScreenButton button;
-  if (!GetGameScreenButton(TEST_SCREEN_ID, inputID, &button)) {
-    return InvalidInput;
-  }
-  return button.outcome;
+  return &button;
 }

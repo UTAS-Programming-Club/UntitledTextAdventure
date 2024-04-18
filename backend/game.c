@@ -5,51 +5,42 @@
 #include "screens.h"
 #include "../shared/parser.h"
 
-static int32_t ScreenID = 0;
+static uint32_t MainMenuScreenID = INVALID_SCREEN_ID;
+static uint32_t ScreenID = INVALID_SCREEN_ID;
 
 bool SetupGame(void) {
-  return LoadGameData("GameData.json");
+  if (!LoadGameData("GameData.json")) {
+    return false;
+  }
+  MainMenuScreenID = GetMainMenuScreenID();
+  ScreenID = MainMenuScreenID;
+  if (MainMenuScreenID == INVALID_SCREEN_ID) {
+    return false;
+  }
+  return true;
 }
 
 // TODO: Add more screens
-// TODO: Seperate hardcoded IDs from json indexes. Add id field for both screens and buttons?
 bool GetCurrentGameOutput(struct GameOutput *output) {
-  switch (ScreenID) {
-    case MAIN_MENU_SCREEN_ID:
-      return CreateMainMenuScreen(output);
-    case TEST_SCREEN_ID:
-      return CreateTestScreen(output);
+  if (ScreenID == MainMenuScreenID) {
+    return CreateMainMenuScreen(ScreenID, output);
+  } else {
+    return CreateScreen(ScreenID, output);
   }
-
-  return false;
 }
 
 enum GameInputOutcome HandleGameInput(uint32_t screenID, uint32_t inputID) {
-  enum GameInputOutcome outcome = InvalidInput;
-  switch (screenID) {
-    case MAIN_MENU_SCREEN_ID:
-      outcome = HandleMainMenuScreenInput(inputID);
-      break;
-    case TEST_SCREEN_ID:
-      outcome = HandleTestScreenInput(inputID);
-      break;
+  struct GameScreenButton *button = HandleScreenInput(screenID, inputID);
+  if (!button) {
+    return InvalidInput;
   }
 
-  // TODO: Fix this, return more data from HandleXInput?
-  switch (outcome) {
-    case GotoTestScreen:
-      ScreenID = TEST_SCREEN_ID;
-      outcome = GetNextOutput;
-      break;
-    case GotoMainMenuScreen:
-      ScreenID = MAIN_MENU_SCREEN_ID;
-      outcome = GetNextOutput;
-      break;
-    default:
-      break;
+  if (button->outcome == GotoScreen) {
+    ScreenID = button->newScreen;
+    return GetNextOutput;
   }
 
-  return outcome;
+  return button->outcome;
 }
 
 void CleanupGame(void) {

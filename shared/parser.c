@@ -16,6 +16,7 @@
 
 static void *Data = NULL;
 static cJSON *GameData = NULL;
+static uint32_t MainMenuScreenID = INVALID_SCREEN_ID;
 
 static bool LoadFile(char *path, size_t *size, void **data) {
   bool success = false;
@@ -109,6 +110,28 @@ static cJSON *GetGameScreenJson(uint32_t screenID) {
   return screen;
 }
 
+uint32_t GetMainMenuScreenID(void) {
+  if (MainMenuScreenID != INVALID_SCREEN_ID) {
+    return MainMenuScreenID;
+  }
+
+  uint32_t screenCount = GetGameScreenCount();
+  for (uint32_t i = 0; i < screenCount; ++i) {
+    cJSON *screen = GetGameScreenJson(i);
+    if (!screen) {
+      return INVALID_SCREEN_ID;
+    }
+
+    cJSON *mainMenu = cJSON_GetObjectItemCaseSensitive(screen, "mainMenu");
+    if (cJSON_IsBool(mainMenu)) {
+      MainMenuScreenID = i;
+      return MainMenuScreenID;
+    }
+  }
+
+  return INVALID_SCREEN_ID;
+}
+
 bool GetGameScreen(uint32_t screenID, struct GameScreen *screen) {
   if (!screen) {
     return NULL;
@@ -190,10 +213,20 @@ bool GetGameScreenButton(uint32_t screenID, uint8_t buttonID, struct GameScreenB
   }
 
   cJSON *jsonOutcome = cJSON_GetObjectItemCaseSensitive(jsonButton, "outcome");
-  if (!cJSON_IsNumber(jsonOutcome)){
+  if (!cJSON_IsNumber(jsonOutcome)) {
     return false;
   }
   button->outcome = cJSON_GetNumberValue(jsonOutcome);
+
+  if (button->outcome == GotoScreen) {
+    cJSON *jsonNewScreen = cJSON_GetObjectItemCaseSensitive(jsonButton, "newScreen");
+    if (!cJSON_IsNumber(jsonNewScreen)) {
+      return false;
+    }
+    button->newScreen = cJSON_GetNumberValue(jsonNewScreen);
+  } else {
+    button->newScreen = INVALID_SCREEN_ID;
+  }
 
   return true;
 }

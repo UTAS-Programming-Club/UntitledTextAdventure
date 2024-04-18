@@ -16,12 +16,13 @@ struct GameOutput {
   struct GameInput *inputs;
 };
 
+#define INVALID_SCREEN_ID UINT32_MAX
+
 enum GameInputOutcome {
   InvalidInput       = 0, // Do not use in json or use in screens.c
   GetNextOutput      = 1, // Do not use in json or use in screens.c
   QuitGame           = 2,
-  GotoTestScreen     = 3, // -> GetNextOutput
-  GotoMainMenuScreen = 4, // -> GetNextOutput
+  GotoScreen         = 3, // -> GetNextOutput, Needs newScreen field from json
 };
 
 bool SetupGame(void);
