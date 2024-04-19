@@ -1,29 +1,89 @@
 ﻿{
   "screens": [
     {
+      "COMMENT: ID": 0,
       "mainMenu": true,
+      "COMMENT: body": "Untitled text adventure game\n----------------------------\nBy the UTAS Programming Club\n\nCurrently unimplemented :(",
       "body": "VQAAAG4AAAB0AAAAaQAAAHQAAABsAAAAZQAAAGQAAAAgAAAAdAAAAGUAAAB4AAAAdAAAACAAAABhAAAAZAAAAHYAAABlAAAAbgAAAHQAAAB1AAAAcgAAAGUAAAAgAAAAZwAAAGEAAABtAAAAZQAAAAoAAAAtAAAALQAAAC0AAAAtAAAALQAAAC0AAAAtAAAALQAAAC0AAAAtAAAALQAAAC0AAAAtAAAALQAAAC0AAAAtAAAALQAAAC0AAAAtAAAALQAAAC0AAAAtAAAALQAAAC0AAAAtAAAALQAAAC0AAAAtAAAACgAAAEIAAAB5AAAAIAAAAHQAAABoAAAAZQAAACAAAABVAAAAVAAAAEEAAABTAAAAIAAAAFAAAAByAAAAbwAAAGcAAAByAAAAYQAAAG0AAABtAAAAaQAAAG4AAABnAAAAIAAAAEMAAABsAAAAdQAAAGIAAAAKAAAACgAAAEMAAAB1AAAAcgAAAHIAAABlAAAAbgAAAHQAAABsAAAAeQAAACAAAAB1AAAAbgAAAGkAAABtAAAAcAAAAGwAAABlAAAAbQAAAGUAAABuAAAAdAAAAGUAAABkAAAAIAAAADoAAAAoAAAAAAAAAA==",
+      "COMMENT: extraText": "\nReload Count: ",
       "extraText": "CgAAAFIAAABlAAAAbAAAAG8AAABhAAAAZAAAACAAAABDAAAAbwAAAHUAAABuAAAAdAAAADoAAAAgAAAAAAAAAA==",
       "buttons": [
         {
+          "COMMENT: title": "Start Game",
           "title": "UwAAAHQAAABhAAAAcgAAAHQAAAAgAAAARwAAAGEAAABtAAAAZQAAAAAAAAA=",
           "outcome": 3,
           "newScreen": 1
         },
         {
+          "COMMENT: title": "Quit Game",
           "title": "UQAAAHUAAABpAAAAdAAAACAAAABHAAAAYQAAAG0AAABlAAAAAAAAAA==",
           "outcome": 2
         }
       ]
     },
     {
-      "body": "VAAAAGUAAABzAAAAdAAAACAAAABzAAAAYwAAAHIAAABlAAAAZQAAAG4AAAAAAAAA",
+      "COMMENT: ID": 1,
+      "COMMENT: body": "Test page 1",
+      "body": "VAAAAGUAAABzAAAAdAAAACAAAABwAAAAYQAAAGcAAABlAAAAIAAAADEAAAAAAAAA",
       "extraText": "",
       "buttons": [
         {
+          "COMMENT: title": "Back",
           "title": "QgAAAGEAAABjAAAAawAAAAAAAAA=",
           "outcome": 3,
           "newScreen": 0
+        },
+        {
+          "COMMENT: title": "Forward",
+          "title": "RgAAAG8AAAByAAAAdwAAAGEAAAByAAAAZAAAAAAAAAA=",
+          "outcome": 3,
+          "newScreen": 2
+        },
+        {
+          "COMMENT: title": "Unused",
+          "title": "VQAAAG4AAAB1AAAAcwAAAGUAAABkAAAAAAAAAA==",
+          "outcome": 3,
+          "newScreen": 1
+        },
+        {
+          "COMMENT: title": "Unused",
+          "title": "VQAAAG4AAAB1AAAAcwAAAGUAAABkAAAAAAAAAA==",
+          "outcome": 3,
+          "newScreen": 1
+        }
+      ]
+    },
+    {
+      "COMMENT: ID": 2,
+      "COMMENT: body": "Test page 2",
+      "body": "VAAAAGUAAABzAAAAdAAAACAAAABwAAAAYQAAAGcAAABlAAAAIAAAADIAAAAAAAAA",
+      "extraText": "",
+      "buttons": [
+        {
+          "COMMENT: title": "Back",
+          "title": "QgAAAGEAAABjAAAAawAAAAAAAAA=",
+          "outcome": 3,
+          "newScreen": 1
+        },
+        {
+          "COMMENT: title": "Forward",
+          "title": "RgAAAG8AAAByAAAAdwAAAGEAAAByAAAAZAAAAAAAAAA=",
+          "outcome": 3,
+          "newScreen": 3
+        }
+      ]
+    },
+    {
+      "COMMENT: ID": 3,
+      "COMMENT: body": "Test page 2",
+      "body": "VAAAAGUAAABzAAAAdAAAACAAAABwAAAAYQAAAGcAAABlAAAAIAAAADMAAAAAAAAA",
+      "extraText": "",
+      "buttons": [
+        {
+          "COMMENT: title": "Back",
+          "title": "QgAAAGEAAABjAAAAawAAAAAAAAA=",
+          "outcome": 3,
+          "newScreen": 2
         }
       ]
     }

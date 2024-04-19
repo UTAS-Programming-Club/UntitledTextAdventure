@@ -7,7 +7,8 @@
 #include "../shared/crossprint.h"
 #include "frontend.h"
 
-static uint32_t ScreenID = UINT32_MAX;
+static struct GameOutput Output = {0};
+static BOOL NeedRedrawButtons = FALSE;
 static HWND *buttonHandles = NULL;
 
 // TODO: Switch text rendering from gdi/uniscribe to libschrift for windows versions older than vista.
@@ -33,12 +34,7 @@ int CALLBACK EnumFontFamExProcW(const LOGFONTW *pFontInfo, const TEXTMETRICW *pF
 static void HandleOutput(HWND hWnd, HDC hdc, PAINTSTRUCT ps) {
   static size_t buttonHandleCount = 0;
 
-  struct GameOutput output;
-  if (!GetCurrentGameOutput(&output)) {
-    return;
-  }
-
-  wchar_t *wcText = c32towc(output.body);
+  wchar_t *wcText = c32towc(Output.body);
   if (!wcText) {
     return;
   }
@@ -51,18 +47,19 @@ static void HandleOutput(HWND hWnd, HDC hdc, PAINTSTRUCT ps) {
   DrawTextW(hdc, wcText, -1, &textPosition, 0);
   free(wcText);
 
-  if (ScreenID == output.screenID) {
+  if (!NeedRedrawButtons) {
     return;
   }
-  ScreenID = output.screenID;
+  NeedRedrawButtons = FALSE;
 
   if (buttonHandles) {
     for (size_t i = 0; i < buttonHandleCount; ++i) {
       DestroyWindow(buttonHandles[i]);
     }
   }
-  if (buttonHandleCount < output.inputCount) {
-    buttonHandleCount = output.inputCount;
+
+  if (buttonHandleCount < Output.inputCount) {
+    buttonHandleCount = Output.inputCount;
     buttonHandles = realloc(buttonHandles, buttonHandleCount * sizeof *buttonHandles);
     if (!buttonHandles) {
       return;
@@ -76,22 +73,38 @@ static void HandleOutput(HWND hWnd, HDC hdc, PAINTSTRUCT ps) {
 
   int buttonWidth = 100;
   int buttonHeight = 20;
-  int firstButtonCentreX = clientSize.right / (output.inputCount + 1);
-  int buttonCentreY = clientSize.bottom - buttonHeight;
+  int maxButtonsPerRow = 3;
+  int rowVerticalSeperation = 10;
+
+  int buttonsPerRow = maxButtonsPerRow <= Output.inputCount ? maxButtonsPerRow : Output.inputCount;
+  int extraRowCount = Output.inputCount / maxButtonsPerRow;
+  int buttonVerticalSeperation = buttonHeight + rowVerticalSeperation;
+
+  int firstButtonCentreX = clientSize.right / (buttonsPerRow + 1);
+  int firstButtonCentreY = clientSize.bottom - buttonHeight
+                           - buttonVerticalSeperation * extraRowCount;
+
+  int buttonCornerOffsetX = buttonWidth / 2;
+  int firstButtonCornerTopRowY = firstButtonCentreY - buttonHeight / 2;
 
   HINSTANCE wndInst = (HINSTANCE)GetWindowLongPtrW(hWnd, GWLP_HINSTANCE);
 
-  for (uint8_t i = 0; i < output.inputCount; ++i) {
-    wcText = c32towc(output.inputs[i].title);
+  for (uint8_t i = 0; i < Output.inputCount; ++i) {
+    wcText = c32towc(Output.inputs[i].title);
     if (!wcText) {
       return;
     }
-    int buttonTopLeftX = (i + 1) * firstButtonCentreX - buttonWidth / 2;
-    int buttonTopLeftY = buttonCentreY - buttonHeight / 2;
 
-    HWND hBtn = CreateWindowW(L"BUTTON", wcText, WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                  buttonTopLeftX, buttonTopLeftY, buttonWidth, buttonHeight, hWnd, (HMENU)(intptr_t)i,
-                  wndInst, NULL);
+    // TODO: Use remaining buttons mod buttonsPerRow as buttonsPerRow so that buttons in the bottom
+    // row are spaced according to how many are in that row and now how many are in previous rows
+    int buttonTopLeftX = (i % buttonsPerRow + 1) * firstButtonCentreX - buttonCornerOffsetX;
+    int buttonTopLeftY = firstButtonCornerTopRowY + buttonVerticalSeperation * (i / buttonsPerRow);
+
+    // TODO: Fix tabbing not working despite WS_TABSTOP
+    HWND hBtn = CreateWindowW(L"BUTTON", wcText,
+                              WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                              buttonTopLeftX, buttonTopLeftY, buttonWidth, buttonHeight, hWnd,
+                              (HMENU)(intptr_t)i, wndInst, NULL);
     buttonHandles[i] = hBtn;
     free(wcText);
   }
@@ -157,10 +170,13 @@ cleanup_paint:
         return 0;
       }
 
-      enum GameInputOutcome outcome = HandleGameInput(ScreenID, LOWORD(wParam));
+      enum GameInputOutcome outcome = HandleGameInput(Output.screenID, LOWORD(wParam));
       switch(outcome) {
         case GetNextOutput:
-          InvalidateRect(hWnd, NULL, TRUE);
+          if (GetCurrentGameOutput(&Output)) {
+            NeedRedrawButtons = TRUE;
+            InvalidateRect(hWnd, NULL, TRUE);
+          }
           break;
         case QuitGame:
           DestroyWindow(hWnd);
@@ -183,9 +199,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLin
   UNREFERENCED_PARAMETER(hPrevInstance); // Always NULL on win32
   UNREFERENCED_PARAMETER(lpCmdLine);     // Don't need command line arguments
 
-  if (!SetupGame()) {
+  if (!SetupGame() || !GetCurrentGameOutput(&Output)) {
     return 1;
   }
+  NeedRedrawButtons = TRUE;
 
   WNDCLASSEXW wnd = {0};
   wnd.cbSize        = sizeof wnd;
@@ -208,7 +225,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLin
   }
   void *rClass = MAKEINTRESOURCEW(class);
 
-  HWND hWnd = CreateWindowW(rClass, L"Test window", WS_OVERLAPPEDWINDOW,
+  HWND hWnd = CreateWindowW(rClass, L"Test window",
+                            WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
                             CW_USEDEFAULT, CW_USEDEFAULT, 500, 500, NULL, NULL, hInstance, NULL);
   if(!hWnd) {
     return FALSE;

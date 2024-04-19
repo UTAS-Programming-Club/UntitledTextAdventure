@@ -12,11 +12,13 @@ bool SetupGame(void) {
   if (!LoadGameData("GameData.json")) {
     return false;
   }
+
   MainMenuScreenID = GetMainMenuScreenID();
   ScreenID = MainMenuScreenID;
   if (MainMenuScreenID == INVALID_SCREEN_ID) {
     return false;
   }
+
   return true;
 }
 
