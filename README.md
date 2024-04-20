@@ -1,6 +1,6 @@
 # Untitled Text Adventure
 
-# Targets:
+## Targets:
 The plan is to implement the game in c with three frontends:
 1. Console program  
    This will likely need full unicode and ansi sequences as we do not wanted to be limited in usable characters and want to have some support for simple images displayed via a image to text library which requires colour text printing.
@@ -32,14 +32,20 @@ We have only just started so everything we have is a bit rough. So any contribut
 ## Basic build instructions
 All of these are build from wsl with windows builds copied to windows first to avoid very slow startup. Additionally they clean the project and then clear the screen which I find makes reading the build output easier for debugging but is probably not desired by others. They will need to be modified for other systems.
 DEBUG:
+```sh
 make CC=x86_64-w64-mingw32-gcc-10-win32 clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 debug && cp out/x86_64-w64-mingw32/bin/*game.exe /mnt/c/Projects/PCGAME/Windows/ && /mnt/c/Projects/PCGame/Windows/cmdgame.exe
 make CC=x86_64-w64-mingw32-gcc-10-win32 clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 debug && cp out/x86_64-w64-mingw32/bin/*game.exe /mnt/c/Projects/PCGAME/Windows/ && /mnt/c/Projects/PCGame/Windows/gdigame.exe
+```
 
 RELEASE:
+```sh
 make CC=gcc clean && clear && make CC=gcc release && ./out/x86_64-pc-linux-gnu/bin/cmdgame
 make CC=x86_64-w64-mingw32-gcc-10-win32 clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 WINDRES=x86_64-w64-mingw32-windres release && cp out/x86_64-w64-mingw32/bin/*game.exe /mnt/c/Projects/PCGAME/Windows/ && /mnt/c/Projects/PCGame/Windows/cmdgame.exe
 make CC=x86_64-w64-mingw32-gcc-10-win32 clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 WINDRES=x86_64-w64-mingw32-windres release && cp out/x86_64-w64-mingw32/bin/*game.exe /mnt/c/Projects/PCGAME/Windows/ && /mnt/c/Projects/PCGame/Windows/gdigame.exe
+```
 
 TOOLS:
+```sh
 make CC=gcc clean && clear && make CC=gcc tools && ./out/x86_64-pc-linux-gnu/bin/preptext "Some text"
 make CC=gcc clean && clear && make CC=gcc tools && ./out/x86_64-pc-linux-gnu/bin/printgamedata GameData.json
+```
