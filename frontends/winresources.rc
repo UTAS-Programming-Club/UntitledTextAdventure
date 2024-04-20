@@ -1,0 +1,4 @@
+#include "../shared/winresources.h"
+
+GAMEDATA GAMEDATA_TYPE "GameData.json"
+

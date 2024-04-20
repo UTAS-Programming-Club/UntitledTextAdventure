@@ -111,11 +111,11 @@ static void HandleOutput(HWND hWnd, HDC hdc, PAINTSTRUCT ps) {
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-  UNREFERENCED_PARAMETER(wParam); // Not relevant for any messages used
-  UNREFERENCED_PARAMETER(lParam); // Not relevant for any messages used
-
   switch(msg) {
-    case WM_PAINT: ;
+    case WM_PAINT:
+      // Force BeginPaint to allow drawing to the entire screen
+      InvalidateRect(hWnd, NULL, TRUE);
+
       PAINTSTRUCT ps;
       HDC hdc = BeginPaint(hWnd, &ps);
       if (!hdc) {
@@ -199,8 +199,11 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLin
   UNREFERENCED_PARAMETER(hPrevInstance); // Always NULL on win32
   UNREFERENCED_PARAMETER(lpCmdLine);     // Don't need command line arguments
 
-  if (!SetupGame() || !GetCurrentGameOutput(&Output)) {
+  if (!SetupGame()) {
     return 1;
+  }
+  if (!GetCurrentGameOutput(&Output)) {
+    CleanupGame();
   }
   NeedRedrawButtons = TRUE;
 

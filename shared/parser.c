@@ -10,7 +10,12 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
+#include "fileloading.h"
+#include "winresources.h"
 #include "parser.h"
 #include "../shared/base64.h"
 
@@ -18,50 +23,13 @@ static void *Data = NULL;
 static cJSON *GameData = NULL;
 static uint32_t MainMenuScreenID = INVALID_SCREEN_ID;
 
-static bool LoadFile(char *path, size_t *size, void **data) {
-  bool success = false;
-
-  if (!data) {
-    return false;
-  }
-
-  int fd = open(path, O_RDONLY);
-  if (fd == -1) {
-    goto cleanup;
-  }
-
-  struct stat st;
-  if (fstat(fd, &st)) {
-    goto cleanup;
-  }
-
-  static_assert(sizeof(off_t) <= sizeof(size_t));
-  *size = st.st_size;
-  *data = malloc(*size);
-
-  // If this file gets large then switch to mmap and possibly a streaming json library
-  if (read(fd, *data, *size) == -1) {
-    goto cleanup;
-  }
-
-  success = true;
-
-cleanup:
-  close(fd);
-  return success;
-}
-
-static void UnloadFile(void *data) {
-  free(data);
-}
-
 bool LoadGameData(char *path) {
   if (!path) {
     return false;
   }
 
   size_t size;
-  if (!LoadFile(path, &size, &Data)) {
+  if (!LoadFile(path, &size, &Data, GAMEDATA, GAMEDATA_RESTYPE)) {
     return false;
   }
 
@@ -237,7 +205,7 @@ void UnloadGameData(void) {
     GameData = NULL;
   }
   if (Data) {
-    UnloadFile(Data);
+    UnloadFile(Data, GAMEDATA, GAMEDATA_RESTYPE);
     Data = NULL;
   }
 }

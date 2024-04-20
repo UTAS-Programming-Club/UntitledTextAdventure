@@ -1,5 +1,6 @@
 # Untitled Text Adventure
 
+# Targets:
 The plan is to implement the game in c with three frontends:
 1. Console program  
    This will likely need full unicode and ansi sequences as we do not wanted to be limited in usable characters and want to have some support for simple images displayed via a image to text library which requires colour text printing.
@@ -19,3 +20,26 @@ The plan is to implement the game in c with three frontends:
    The club has been working on a [discord bot](https://github.com/UTAS-Programming-Club/DiscordBot) and we are interested in having a (potentially) cut down version of the game available as a commmand.
 
 We have only just started so everything we have is a bit rough. So any contributions are welcome. There are a number of TODOs in various places for you don't know what to work on.
+
+## General TODOs:
+* Trim comments from release GameData.json
+* Embed GameData.json in unix like cmd build
+* Switch gdi to libschrift for text rendering for < vista rendering(2000 and xp can work as is but not worth it)
+* Add python/crescent frontend
+* After adding libschrift switch to utf-8
+
+
+## Basic build instructions
+All of these are build from wsl with windows builds copied to windows first to avoid very slow startup. Additionally they clean the project and then clear the screen which I find makes reading the build output easier for debugging but is probably not desired by others. They will need to be modified for other systems.
+DEBUG:
+make CC=x86_64-w64-mingw32-gcc-10-win32 clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 debug && cp out/x86_64-w64-mingw32/bin/*game.exe /mnt/c/Projects/PCGAME/Windows/ && /mnt/c/Projects/PCGame/Windows/cmdgame.exe
+make CC=x86_64-w64-mingw32-gcc-10-win32 clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 debug && cp out/x86_64-w64-mingw32/bin/*game.exe /mnt/c/Projects/PCGAME/Windows/ && /mnt/c/Projects/PCGame/Windows/gdigame.exe
+
+RELEASE:
+make CC=gcc clean && clear && make CC=gcc release && ./out/x86_64-pc-linux-gnu/bin/cmdgame
+make CC=x86_64-w64-mingw32-gcc-10-win32 clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 WINDRES=x86_64-w64-mingw32-windres release && cp out/x86_64-w64-mingw32/bin/*game.exe /mnt/c/Projects/PCGAME/Windows/ && /mnt/c/Projects/PCGame/Windows/cmdgame.exe
+make CC=x86_64-w64-mingw32-gcc-10-win32 clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 WINDRES=x86_64-w64-mingw32-windres release && cp out/x86_64-w64-mingw32/bin/*game.exe /mnt/c/Projects/PCGAME/Windows/ && /mnt/c/Projects/PCGame/Windows/gdigame.exe
+
+TOOLS:
+make CC=gcc clean && clear && make CC=gcc tools && ./out/x86_64-pc-linux-gnu/bin/preptext "Some text"
+make CC=gcc clean && clear && make CC=gcc tools && ./out/x86_64-pc-linux-gnu/bin/printgamedata GameData.json
