@@ -173,12 +173,14 @@ cleanup_paint:
       enum GameInputOutcome outcome = HandleGameInput(Output.screenID, LOWORD(wParam));
       switch(outcome) {
         case GetNextOutput:
+          FreeScreen(&Output);
           if (GetCurrentGameOutput(&Output)) {
             NeedRedrawButtons = TRUE;
             InvalidateRect(hWnd, NULL, TRUE);
           }
           break;
         case QuitGame:
+          FreeScreen(output);
           DestroyWindow(hWnd);
           break;
         default:

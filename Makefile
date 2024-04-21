@@ -22,6 +22,11 @@ endif
 
 endif
 
+# Makes valgrind work better
+ifneq (,$(findstring debug,$(MAKECMDGOALS)))
+CFLAGS += -g
+endif
+
 debug: CFLAGS += -D _DEBUG
 debug release: $(OUTPUT)/$(TARGET)/bin/cmdgame $(OUTPUT)/$(TARGET)/bin/gdigame
 tools: $(OUTPUT)/$(TARGET)/bin/preptext $(OUTPUT)/$(TARGET)/bin/printgamedata

@@ -37,12 +37,14 @@ enum GameInputOutcome HandleGameInput(uint32_t screenID, uint32_t inputID) {
     return InvalidInput;
   }
 
-  if (button->outcome == GotoScreen) {
+  enum GameInputOutcome outcome = button->outcome;
+  if (outcome == GotoScreen) {
     ScreenID = button->newScreen;
-    return GetNextOutput;
+    outcome = GetNextOutput;
   }
 
-  return button->outcome;
+  FreeGameScreenButton(button);
+  return outcome;
 }
 
 void CleanupGame(void) {

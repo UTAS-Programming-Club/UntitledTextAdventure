@@ -12,6 +12,7 @@
 #endif
 
 #include "../backend/game.h"
+#include "../backend/screens.h"
 #include "../shared/crossprint.h"
 #include "frontend.h"
 
@@ -104,31 +105,32 @@ static void PrintInputs(uint8_t inputCount, const struct GameInput *inputs) {
   }
 }
 
-static uint32_t HandleOutput(void) {
-  struct GameOutput output;
-  bool succeeded = GetCurrentGameOutput(&output);
+static bool HandleOutput(struct GameOutput *output) {
+  bool succeeded = GetCurrentGameOutput(output);
   if (!succeeded) {
-    return UINT32_MAX;
+    return false;
   }
-  PrintOutputBody(output.body);
-  PrintInputs(output.inputCount, output.inputs);
-  return output.screenID;
+  PrintOutputBody(output->body);
+  PrintInputs(output->inputCount, output->inputs);
+  return true;
 }
 
-static bool HandleInput(uint32_t screenID) {
+static bool HandleInput(struct GameOutput *output) {
   uint8_t input = GetInput();
   if (input == UINT8_MAX) {
-    return HandleInput(screenID);
+    return HandleInput(output);
   }
 
-  enum GameInputOutcome outcome = HandleGameInput(screenID, input);
+  enum GameInputOutcome outcome = HandleGameInput(output->screenID, input);
   switch(outcome) {
     case InvalidInput:
-      return HandleInput(screenID);
+      return HandleInput(output);
     case GetNextOutput:
+      FreeScreen(output);
       return true;
     case QuitGame:
     default:
+      FreeScreen(output);
       return false;
   }
 }
@@ -139,14 +141,14 @@ int main(void) {
   }
   SetupConsole();
 
-  uint32_t stateID;
+  struct GameOutput output;
   do {
-    stateID = HandleOutput();
-    if (stateID == UINT32_MAX) {
+    if (!HandleOutput(&output)) {
       break;
     }
-  } while(HandleInput(stateID));
+  } while(HandleInput(&output));
 
+  // TODO: Make sure this happens, even on crash. atexit + signal handler?
   ResetConsole();
   CleanupGame();
   return 0;

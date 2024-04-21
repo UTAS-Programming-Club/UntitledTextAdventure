@@ -102,7 +102,7 @@ uint32_t GetMainMenuScreenID(void) {
 
 bool GetGameScreen(uint32_t screenID, struct GameScreen *screen) {
   if (!screen) {
-    return NULL;
+    return false;
   }
 
   cJSON *jsonScreen = GetGameScreenJson(screenID);
@@ -129,6 +129,7 @@ bool GetGameScreen(uint32_t screenID, struct GameScreen *screen) {
 
   screen->extraText = c32base64toc32(base64ExtraText);
   if (!screen->extraText) {
+    free(screen->body);
     return false;
   }
 
@@ -176,12 +177,13 @@ bool GetGameScreenButton(uint32_t screenID, uint8_t buttonID, struct GameScreenB
   }
 
   button->title = c32base64toc32(base64Title);
-  if (! button->title) {
+  if (!button->title) {
     return false;
   }
 
   cJSON *jsonOutcome = cJSON_GetObjectItemCaseSensitive(jsonButton, "outcome");
   if (!cJSON_IsNumber(jsonOutcome)) {
+    free(button->title);
     return false;
   }
   button->outcome = cJSON_GetNumberValue(jsonOutcome);
@@ -189,6 +191,7 @@ bool GetGameScreenButton(uint32_t screenID, uint8_t buttonID, struct GameScreenB
   if (button->outcome == GotoScreen) {
     cJSON *jsonNewScreen = cJSON_GetObjectItemCaseSensitive(jsonButton, "newScreen");
     if (!cJSON_IsNumber(jsonNewScreen)) {
+      free(button->title);
       return false;
     }
     button->newScreen = cJSON_GetNumberValue(jsonNewScreen);
@@ -197,6 +200,11 @@ bool GetGameScreenButton(uint32_t screenID, uint8_t buttonID, struct GameScreenB
   }
 
   return true;
+}
+
+void FreeGameScreenButton(struct GameScreenButton *button) {
+  free(button->title);
+  button->title = NULL;
 }
 
 void UnloadGameData(void) {

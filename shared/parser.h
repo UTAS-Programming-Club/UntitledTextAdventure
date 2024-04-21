@@ -23,6 +23,7 @@ uint32_t GetMainMenuScreenID(void);
 bool GetGameScreen(uint32_t, struct GameScreen *);
 bool GetGameScreenButton(uint32_t, uint8_t, struct GameScreenButton *);
 uint8_t GetGameScreenButtonCount(uint32_t);
+void FreeGameScreenButton(struct GameScreenButton *);
 void UnloadGameData(void);
 
 #endif // PCGAME_PARSER_H

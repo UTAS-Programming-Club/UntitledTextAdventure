@@ -48,6 +48,7 @@ int main(int argc, char *argv[]) {
 
       printf(INDENT "Button %d\n", j);
       printf(INDENT INDENT "Title: \"%ls\"\n", (wchar_t *)button.title);
+      FreeGameScreenButton(&button);
     }
   }
 
