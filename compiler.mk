@@ -7,7 +7,7 @@ ifeq ($(GCCTARGET),)
 GCCTARGET := $(shell $(CC) -dumpmachine)
 endif
 # TODO: download config.sub instead of hardcoding it in the repo
-TARGET := $(shell ./config.sub $(GCCTARGET))
+TARGET := $(shell sh ./config.sub $(GCCTARGET))
 
 CSTD := -std=c17
 WARNINGS := -Wall -Wextra -pedantic -Wmissing-prototypes -Wstrict-prototypes -Wold-style-definition
@@ -23,11 +23,13 @@ endif
 
 CFLAGS :=
 
+ifeq (,$(findstring clean,$(MAKECMDGOALS)))
 ifndef TARGET
 ifdef CC
 $(error Compiler "$(CC)" is not supported)
 else
 $(error CC variable not set)
+endif
 endif
 endif
 
@@ -36,4 +38,8 @@ ISWINDOWS := TRUE
 endif
 ifeq ($(OS),Windows_NT)
 ISWINDOWS := TRUE
+endif
+
+ifneq (,$(findstring cosmo,$(CCVERSIONINFO)))
+ISCOSMO := TRUE
 endif

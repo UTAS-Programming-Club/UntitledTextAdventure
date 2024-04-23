@@ -88,7 +88,10 @@ static uint8_t GetInput(void) {
 #ifdef _WIN32
     int input = _getch();
 #else
-    int input = getchar();
+    // getchar fails with cosmo on windows where it only returns after 2 keys have been pressed with ~ICANON if VMIN==1 so switched to read
+    char buf[1] = {0};
+    read(STDIN_FILENO, buf, sizeof(buf));
+    int input = buf[0];
 #endif
     if ('1' <= input && input <= '9') {
       return input - '1';

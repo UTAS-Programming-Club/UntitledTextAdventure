@@ -1723,7 +1723,7 @@ fi
 
 case $os in
 	# Sometimes we do "kernel-libc", so those need to count as OSes.
-	llvm* | musl* | newlib* | relibc* | uclibc*)
+	cosmo* | llvm* | musl* | newlib* | relibc* | uclibc*)
 		;;
 	# Likewise for "kernel-abi"
 	eabi* | gnueabi*)
@@ -1829,7 +1829,7 @@ esac
 case $kernel-$os-$obj in
 	linux-gnu*- | linux-android*- | linux-dietlibc*- | linux-llvm*- \
 		    | linux-mlibc*- | linux-musl*- | linux-newlib*- \
-		    | linux-relibc*- | linux-uclibc*- )
+		    | linux-cosmo* | linux-relibc*- | linux-uclibc*- )
 		;;
 	uclinux-uclibc*- )
 		;;
@@ -1838,7 +1838,7 @@ case $kernel-$os-$obj in
 	windows*-msvc*-)
 		;;
 	-dietlibc*- | -llvm*- | -mlibc*- | -musl*- | -newlib*- | -relibc*- \
-		    | -uclibc*- )
+		    | -cosmo* | -uclibc*- )
 		# These are just libc implementations, not actual OSes, and thus
 		# require a kernel.
 		echo "Invalid configuration '$1': libc '$os' needs explicit kernel." 1>&2

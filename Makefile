@@ -28,15 +28,20 @@ CFLAGS += -g
 endif
 
 debug: CFLAGS += -D _DEBUG
+ifdef ISCOSMO
+debug release: $(OUTPUT)/$(TARGET)/bin/cmdgame
+else
 debug release: $(OUTPUT)/$(TARGET)/bin/cmdgame $(OUTPUT)/$(TARGET)/bin/gdigame
+endif
 tools: $(OUTPUT)/$(TARGET)/bin/preptext $(OUTPUT)/$(TARGET)/bin/printgamedata
 
 clean:
 	rm -r $(OUTPUT) 2> /dev/null || true
-	make -C third_party/b64.c clean
+	make -C third_party/b64.c clean $(SUBMAKESHELL) $(SUBMAKEPATH)
 
 %/:
 	mkdir -p $@
+
 
 # Headers
 $(INCDIR)/arena.h: third_party/arena/arena.h | $(INCDIR)
@@ -83,15 +88,15 @@ $(LIBDIR)/strings.o: shared/strings.c shared/strings.h | $(LIBDIR)
 
 
 $(LIBDIR)/b64_buffer.o: third_party/b64.c/buffer.c third_party/b64.c/b64.h | $(LIBDIR)
-	make -C third_party/b64.c buffer.o
+	make -C third_party/b64.c buffer.o $(SUBMAKESHELL) $(SUBMAKEPATH) $(SUBMAKECC)
 	mv third_party/b64.c/buffer.o $@
 
 $(LIBDIR)/b64_encode.o: third_party/b64.c/encode.c third_party/b64.c/b64.h | $(LIBDIR)
-	make -C third_party/b64.c encode.o
+	make -C third_party/b64.c encode.o $(SUBMAKESHELL) $(SUBMAKEPATH) $(SUBMAKECC)
 	mv third_party/b64.c/encode.o $@
 
 $(LIBDIR)/b64_decode.o: third_party/b64.c/decode.c third_party/b64.c/b64.h | $(LIBDIR)
-	make -C third_party/b64.c decode.o
+	make -C third_party/b64.c decode.o $(SUBMAKESHELL) $(SUBMAKEPATH) $(SUBMAKECC)
 	mv third_party/b64.c/decode.o $@
 
 

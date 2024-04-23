@@ -37,6 +37,11 @@ make CC=x86_64-w64-mingw32-gcc-10-win32 clean && clear && make CC=x86_64-w64-min
 make CC=x86_64-w64-mingw32-gcc-10-win32 clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 debug && cp out/x86_64-w64-mingw32/bin/*game.exe /mnt/c/Projects/PCGAME/Windows/ && /mnt/c/Projects/PCGame/Windows/gdigame.exe
 ```
 
+DEBUG on windows 10 in powershell:
+```sh
+.\make.bat clean && clear && .\getwindeps.bat && .\make.bat debug && .\third_party\cosmos\bin\apelink.exe -l .\third_party\cosmos\bin\ape-x86_64.elf -o .\out\x86_64-pc-linux-cosmo\bin\cmdgame.com .\out\x86_64-pc-linux-cosmo\bin\cmdgame
+```
+
 RELEASE:
 ```sh
 make CC=gcc clean && clear && make CC=gcc release && ./out/x86_64-pc-linux-gnu/bin/cmdgame
