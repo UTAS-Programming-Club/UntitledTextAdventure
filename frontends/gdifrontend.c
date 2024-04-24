@@ -1,11 +1,216 @@
 #include <memory.h>
-#include <windows.h>
 #include <stdlib.h>
-#include <strsafe.h>
 
 #include "../backend/game.h"
+#include "../backend/screens.h"
 #include "../shared/crossprint.h"
 #include "frontend.h"
+
+#if defined(_WIN32)
+#include <windows.h>
+#include <strsafe.h>
+#elif defined(_COSMO_SOURCE)
+#include <libc/nt/enum/color.h>
+#include <libc/nt/enum/cs.h>
+#include <libc/nt/enum/cw.h>
+#include <libc/nt/enum/idc.h>
+#include <libc/nt/enum/sw.h>
+#include <libc/nt/enum/wm.h>
+#include <libc/nt/enum/ws.h>
+#include <windowsesque.h>
+
+#define COLOR_WINDOW   kNtColorWindow
+#define CS_HREDRAW     kNtCsHredraw
+#define CS_VREDRAW     kNtCsVredraw
+#define CW_USEDEFAULT  kNtCwUsedefault
+#define WM_COMMAND     kNtWmCommand
+#define WM_DESTROY     kNtWmDestroy
+#define WM_PAINT       kNtWmPaint
+#define WS_CAPTION     kNtWsCaption
+#define WS_CHILD       kNtWsChild
+#define WS_MINIMIZEBOX kNtWsMaximizebox
+#define WS_OVERLAPPED  kNtWsOverlapped
+#define WS_SYSMENU     kNtWsSysmenu
+#define WS_TABSTOP     kNtWsTabstop
+#define WS_VISIBLE     kNtWsVisible
+
+typedef struct NtMsg MSG;
+typedef struct NtPaintStruct PAINTSTRUCT;
+typedef struct NtRect RECT;
+typedef struct NtWndClass WNDCLASSW;
+
+#define CreateWindowExW  CreateWindowEx
+#define DefWindowProcW   DefWindowProc
+#define DispatchMessageW DispatchMessage
+#define DrawTextW        DrawText
+#define GetMessageW      GetMessage
+extern BOOL InvalidateRect(HWND, CONST RECT *, BOOL);
+extern HANDLE LoadImage(HINSTANCE, LPCWSTR, UINT, int, int, UINT);
+#define LoadImageW       LoadImage
+#define memcpy_s(d, ds, s, ss) (memcpy(d, s, ss), 0)
+#define RegisterClassW   RegisterClass
+extern BOOL UpdateWindow(HWND);
+
+// From mingw-w64's ntdef.h
+#define UNREFERENCED_PARAMETER(P) {(P) = (P);}
+
+// From mingw-w64's minwindef.h
+#define LOWORD(l) ((WORD) (((DWORD_PTR) (l)) & 0xffff))
+#define HIWORD(l) ((WORD) ((((DWORD_PTR) (l)) >> 16) & 0xffff))
+
+// From mingw-w64's strsafe.h
+HRESULT StringCopyWorkerW(WCHAR *, size_t, CONST WCHAR *);
+HRESULT StringCopyWorkerW(WCHAR *pszDest, size_t cchDest, CONST WCHAR *pszSrc) {
+  HRESULT hr = S_OK;
+  if(cchDest == 0) {
+    hr = (HRESULT)0x80070057; // STRSAFE_E_INVALID_PARAMETER
+  } else {
+    while(cchDest && (*pszSrc != u'\0')) {
+      *pszDest++ = *pszSrc++;
+      --cchDest;
+    }
+    if(cchDest ==  0) {
+      --pszDest;
+      hr = (HRESULT)0x8007007A; //STRSAFE_E_INSUFFICIENT_BUFFER
+    }
+    *pszDest= u'\0';
+  }
+  return hr;
+}
+
+HRESULT StringCchCopyW(WCHAR *, size_t, CONST WCHAR *);
+HRESULT StringCchCopyW(WCHAR *pszDest, size_t cchDest, CONST WCHAR *pszSrc) {
+  if(cchDest > 2147483647) { // STRSAFE_MAX_CCH
+    return (HRESULT)0x80070057; // STRSAFE_E_INVALID_PARAMETER
+  }
+  return StringCopyWorkerW(pszDest,cchDest,pszSrc);
+}
+
+// From mingw-w64's wingdi.h
+#define ANSI_CHARSET          0
+#define CLEARTYPE_QUALITY     5
+#define CLIP_DEFAULT_PRECIS   0
+#define FW_NORMAL           400
+#define LF_FACESIZE          32
+#define OUT_STROKE_PRECIS     3
+#define OUT_TT_ONLY_PRECIS    7
+#define TRUETYPE_FONTTYPE     4
+
+typedef struct {
+  LONG lfHeight;
+  LONG lfWidth;
+  LONG lfEscapement;
+  LONG lfOrientation;
+  LONG lfWeight;
+  BYTE lfItalic;
+  BYTE lfUnderline;
+  BYTE lfStrikeOut;
+  BYTE lfCharSet;
+  BYTE lfOutPrecision;
+  BYTE lfClipPrecision;
+  BYTE lfQuality;
+  BYTE lfPitchAndFamily;
+  WCHAR lfFaceName[LF_FACESIZE];
+} LOGFONTW, *LPLOGFONTW;
+
+typedef struct {
+  LONG tmHeight;
+  LONG tmAscent;
+  LONG tmDescent;
+  LONG tmInternalLeading;
+  LONG tmExternalLeading;
+  LONG tmAveCharWidth;
+  LONG tmMaxCharWidth;
+  LONG tmWeight;
+  LONG tmOverhang;
+  LONG tmDigitizedAspectX;
+  LONG tmDigitizedAspectY;
+  WCHAR tmFirstChar;
+  WCHAR tmLastChar;
+  WCHAR tmDefaultChar;
+  WCHAR tmBreakChar;
+  BYTE tmItalic;
+  BYTE tmUnderlined;
+  BYTE tmStruckOut;
+  BYTE tmPitchAndFamily;
+  BYTE tmCharSet;
+} TEXTMETRICW;
+
+typedef int (CALLBACK *FONTENUMPROCW)(CONST LOGFONTW *, CONST TEXTMETRICW *, DWORD, LPARAM);
+
+// From mingw-w64's winuser.h
+#define BS_PUSHBUTTON 0L
+#define BN_CLICKED 0
+#define GWLP_HINSTANCE (-6)
+#define MAKEINTRESOURCEW(i) ((LPWSTR)((ULONG_PTR)((WORD)(i))))
+#define IDI_APPLICATION MAKEINTRESOURCEW(32512)
+
+// Cosmo doesn't have these functions so need to fetch manually
+typedef HFONT (WINAPI *fCreateFontIndirectW)(CONST LOGFONTW *);
+typedef int (WINAPI *fEnumFontFamiliesExW)(HDC, LPLOGFONTW, FONTENUMPROCW, LPARAM, DWORD);
+typedef LONG_PTR (WINAPI *fGetWindowLongPtrW)(HWND, int);
+
+fCreateFontIndirectW pCreateFontIndirectW = NULL;
+fEnumFontFamiliesExW pEnumFontFamiliesExW = NULL;
+fGetWindowLongPtrW   pGetWindowLongPtrW   = NULL;
+
+static HFONT CreateFontIndirectW(CONST LOGFONTW *lplf) {
+  if (!pCreateFontIndirectW) {
+    HMODULE gdiModule = GetModuleHandleW(u"Gdi32.dll");
+    if (!gdiModule) {
+      // CreateFontIndirectW returns a null pointer when failing
+      return NULL;
+    }
+
+    pCreateFontIndirectW = (fCreateFontIndirectW)GetProcAddress(gdiModule, "CreateFontIndirectW");
+    if (!pCreateFontIndirectW) {
+      return NULL;
+    }
+  }
+
+  return pCreateFontIndirectW(lplf);
+}
+
+static int EnumFontFamiliesExW(HDC hdc, LPLOGFONTW lpLogFont, FONTENUMPROCW lpProc, LPARAM lParam,
+                               DWORD dwFlags) {
+  if (!pEnumFontFamiliesExW) {
+    HMODULE gdiModule = GetModuleHandleW(u"Gdi32.dll");
+    if (!gdiModule) {
+      // EnumFontFamExProcW returns the last result of lpProc which is nonzero when failing
+      return 1;
+    }
+
+    pEnumFontFamiliesExW = (fEnumFontFamiliesExW)GetProcAddress(gdiModule, "EnumFontFamiliesExW");
+    if (!pEnumFontFamiliesExW) {
+      return 1;
+    }
+  }
+
+  return pEnumFontFamiliesExW(hdc, lpLogFont, lpProc, lParam, dwFlags);
+}
+
+static LONG_PTR GetWindowLongPtrW(HWND hWnd, int nIndex) {
+  if (!pGetWindowLongPtrW) {
+    HMODULE userModule = GetModuleHandleW(u"User32.dll");
+    if (!userModule) {
+      SetLastError(ERROR_FUNCTION_NOT_CALLED);
+      // GetWindowLongPtrW returns 0 when failing
+      return 0;
+    }
+
+    pGetWindowLongPtrW = (fGetWindowLongPtrW)GetProcAddress(userModule, "EnumFontFamiliesExW");
+    if (!pGetWindowLongPtrW) {
+      SetLastError(ERROR_FUNCTION_NOT_CALLED);
+      return 0;
+    }
+  }
+
+  return pGetWindowLongPtrW(hWnd, nIndex);
+}
+
+#else
+#error Building the gdi frontend requires windows support
+#endif
 
 static struct GameOutput Output = {0};
 static BOOL NeedRedrawButtons = FALSE;
@@ -14,11 +219,11 @@ static HWND *buttonHandles = NULL;
 // TODO: Switch text rendering from gdi/uniscribe to libschrift for windows versions older than vista.
 // TODO: Disable showing console on startup
 
-int CALLBACK EnumFontFamExProcW(const LOGFONTW *, const TEXTMETRICW *, DWORD, LPARAM);
+int CALLBACK EnumFontFamExProcW(CONST LOGFONTW *, CONST TEXTMETRICW *, DWORD, LPARAM);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
-int CALLBACK EnumFontFamExProcW(const LOGFONTW *pFontInfo, const TEXTMETRICW *pFontAttribs,
-                               DWORD fontType, LPARAM lParam) {
+int CALLBACK EnumFontFamExProcW(CONST LOGFONTW *pFontInfo, CONST TEXTMETRICW *pFontAttribs,
+                                DWORD fontType, LPARAM lParam) {
   UNREFERENCED_PARAMETER(pFontAttribs); // Do not need any info about the physical font
 
   if (fontType != TRUETYPE_FONTTYPE || pFontInfo->lfWeight != FW_NORMAL || pFontInfo->lfItalic
@@ -34,7 +239,7 @@ int CALLBACK EnumFontFamExProcW(const LOGFONTW *pFontInfo, const TEXTMETRICW *pF
 static void HandleOutput(HWND hWnd, HDC hdc, PAINTSTRUCT ps) {
   static size_t buttonHandleCount = 0;
 
-  wchar_t *wcText = c32towc(Output.body);
+  WCHAR *wcText = c32towc(Output.body);
   if (!wcText) {
     return;
   }
@@ -101,10 +306,10 @@ static void HandleOutput(HWND hWnd, HDC hdc, PAINTSTRUCT ps) {
     int buttonTopLeftY = firstButtonCornerTopRowY + buttonVerticalSeperation * (i / buttonsPerRow);
 
     // TODO: Fix tabbing not working despite WS_TABSTOP
-    HWND hBtn = CreateWindowW(L"BUTTON", wcText,
-                              WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                              buttonTopLeftX, buttonTopLeftY, buttonWidth, buttonHeight, hWnd,
-                              (HMENU)(intptr_t)i, wndInst, NULL);
+    HWND hBtn = CreateWindowExW(0,  u"BUTTON", wcText,
+                                WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                                buttonTopLeftX, buttonTopLeftY, buttonWidth, buttonHeight, hWnd,
+                                (HMENU)(intptr_t)i, wndInst, NULL);
     buttonHandles[i] = hBtn;
     free(wcText);
   }
@@ -122,10 +327,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         return 0;
       }
 
-      WCHAR *faceName = L"SYMBOLA";
+      WCHAR *faceName = u"SYMBOLA";
       LOGFONTW fontInfo = {0};
       fontInfo.lfCharSet = ANSI_CHARSET;
-      if (StringCchCopyW(fontInfo.lfFaceName, LF_FACESIZE, faceName)) {
+      if (FAILED(StringCchCopyW(fontInfo.lfFaceName, LF_FACESIZE, faceName))) {
         goto cleanup_paint;
       }
 
@@ -180,7 +385,7 @@ cleanup_paint:
           }
           break;
         case QuitGame:
-          FreeScreen(output);
+          FreeScreen(&Output);
           DestroyWindow(hWnd);
           break;
         default:
@@ -197,9 +402,18 @@ cleanup_paint:
   return DefWindowProcW(hWnd, msg, wParam, lParam);
 }
 
+#if defined(_WIN32)
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLine, int nCmdShow) {
   UNREFERENCED_PARAMETER(hPrevInstance); // Always NULL on win32
   UNREFERENCED_PARAMETER(lpCmdLine);     // Don't need command line arguments
+#elif defined(_COSMO_SOURCE)
+int main(void) {
+  struct NtStartupInfo info;
+  GetStartupInfo(&info);
+
+  HINSTANCE hInstance = (HINSTANCE)GetModuleHandle(NULL);
+  int nCmdShow = info.dwFlags & STARTF_USESHOWWINDOW ? info.wShowWindow : kNtSwNormal;
+#endif
 
   if (!SetupGame()) {
     return 1;
@@ -209,30 +423,34 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLin
   }
   NeedRedrawButtons = TRUE;
 
-  WNDCLASSEXW wnd = {0};
-  wnd.cbSize        = sizeof wnd;
+  WNDCLASSW wnd     = {0};
   wnd.style         = CS_VREDRAW | CS_HREDRAW;
   wnd.lpfnWndProc   = WndProc;
   wnd.hInstance     = hInstance;
+#ifdef _COSMO_SOURCE
+  wnd.hIcon         = LoadIcon(NULL, IDI_APPLICATION);
+  wnd.hCursor       = LoadCursor(NULL, kNtIdcArrow);
+#else
   wnd.hIcon         = LoadImageW(NULL, IDI_APPLICATION, IMAGE_ICON, 0, 0,
                                  LR_DEFAULTSIZE | LR_SHARED);
   wnd.hCursor       = LoadImageW(NULL, IDC_ARROW, IMAGE_CURSOR, 0, 0,
                                  LR_DEFAULTSIZE | LR_SHARED);
+#endif
   wnd.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-  wnd.lpszClassName = L"Untitled Text Adventure";
+  wnd.lpszClassName = u"Untitled Text Adventure";
   if (!wnd.hIcon || !wnd.hCursor) {
     return FALSE;
   }
 
-  ATOM class = RegisterClassExW(&wnd);
+  ATOM class = RegisterClassW(&wnd);
   if (!class) {
     return FALSE;
   }
   void *rClass = MAKEINTRESOURCEW(class);
 
-  HWND hWnd = CreateWindowW(rClass, L"Test window",
-                            WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
-                            CW_USEDEFAULT, CW_USEDEFAULT, 500, 500, NULL, NULL, hInstance, NULL);
+  HWND hWnd = CreateWindowExW(0, rClass, u"Test window",
+                              WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
+                              CW_USEDEFAULT, CW_USEDEFAULT, 500, 500, NULL, NULL, hInstance, NULL);
   if(!hWnd) {
     return FALSE;
   }
@@ -248,7 +466,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLin
       DispatchMessageW(&msg);
   }
 
+  // TODO: Add UnregisterClassW support to cosmo
+#ifndef _COSMO_SOURCE
   UnregisterClassW(rClass, hInstance);
+#endif
   CleanupGame();
   return msg.wParam;
 }

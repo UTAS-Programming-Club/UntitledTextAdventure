@@ -40,6 +40,7 @@ make CC=x86_64-w64-mingw32-gcc-10-win32 clean && clear && make CC=x86_64-w64-min
 DEBUG on windows 10 in powershell:
 ```sh
 .\make.bat clean && clear && .\getwindeps.bat && .\make.bat debug && .\third_party\cosmos\bin\apelink.exe -l .\third_party\cosmos\bin\ape-x86_64.elf -o .\out\x86_64-pc-linux-cosmo\bin\cmdgame.com .\out\x86_64-pc-linux-cosmo\bin\cmdgame
+.\make.bat clean && clear && .\getwindeps.bat && .\make.bat debug && .\third_party\cosmos\bin\apelink.exe -l .\third_party\cosmos\bin\ape-x86_64.elf -o .\out\x86_64-pc-linux-cosmo\bin\gdigame.com .\out\x86_64-pc-linux-cosmo\bin\gdigame
 ```
 
 RELEASE:

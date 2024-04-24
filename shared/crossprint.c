@@ -2,15 +2,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <uchar.h>
-#ifdef _WIN32
+
+#if defined(_WIN32)
 #include <windows.h>
+#elif defined(_COSMO_SOURCE)
+#include <windowsesque.h>
+extern int MultiByteToWideChar(UINT, DWORD, LPCCH, int, LPWSTR, int);
+
+// From mingw-w64's winnls.h
+#define MB_ERR_INVALID_CHARS 0x8
 #endif
 
 #include "crossprint.h"
 #include "strings.h"
 
-#ifdef _WIN32
-wchar_t *c32towc(const char32_t *str) {
+#if defined(_WIN32) || defined(_COSMO_SOURCE)
+WCHAR *c32towc(const char32_t *str) {
   size_t strCodeUnitCount = codeunitcount32(str);
 
   // From https://en.cppreference.com/w/c/string/multibyte/c32rtomb
@@ -33,7 +40,7 @@ wchar_t *c32towc(const char32_t *str) {
   }
   ++wStrLen;
 
-  wchar_t *pWStr = malloc(wStrLen * sizeof(*pWStr));
+  WCHAR *pWStr = malloc(wStrLen * sizeof(*pWStr));
   int ret = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, pMbStr, (int)mbStrCodeUnitCount, pWStr, wStrLen);
   if (!ret) {
     goto cleanup_wstr;

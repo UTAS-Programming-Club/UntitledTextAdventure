@@ -10,7 +10,12 @@ INCDIR := $(OUTDIR)/include/
 
 COMMONOBJS := $(LIBDIR)/alloc.o $(LIBDIR)/b64_buffer.o $(LIBDIR)/b64_decode.o $(LIBDIR)/base64_backend.o $(LIBDIR)/cJSON.o $(LIBDIR)/fileloading_frontend.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/screens.o $(LIBDIR)/strings.o
 
+ifdef ISCOSMO
+CFLAGS += -mcosmo
+COMMONOBJS += $(LIBDIR)/crossprint.o
+else
 ifdef ISWINDOWS
+GDICFLAGS := -municode -l gdi32
 COMMONOBJS += $(LIBDIR)/crossprint.o
 
 ifneq (,$(findstring release,$(MAKECMDGOALS)))
@@ -21,6 +26,7 @@ endif
 endif
 
 endif
+endif
 
 # Makes valgrind work better
 ifneq (,$(findstring debug,$(MAKECMDGOALS)))
@@ -28,11 +34,7 @@ CFLAGS += -g
 endif
 
 debug: CFLAGS += -D _DEBUG
-ifdef ISCOSMO
-debug release: $(OUTPUT)/$(TARGET)/bin/cmdgame
-else
 debug release: $(OUTPUT)/$(TARGET)/bin/cmdgame $(OUTPUT)/$(TARGET)/bin/gdigame
-endif
 tools: $(OUTPUT)/$(TARGET)/bin/preptext $(OUTPUT)/$(TARGET)/bin/printgamedata
 
 clean:
@@ -115,7 +117,7 @@ $(LIBDIR)/cmdfrontend.o: frontends/cmdfrontend.c frontends/frontend.h | $(LIBDIR
 	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS)
 
 $(LIBDIR)/gdifrontend.o: frontends/gdifrontend.c frontends/frontend.h | $(LIBDIR)
-	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS) -municode
+	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS) $(GDICFLAGS)
 
 $(LIBDIR)/winresources.o: frontends/winresources.rc shared/winresources.h GameData.json | $(LIBDIR)
 	$(WINDRES) $< -o $@
@@ -133,7 +135,7 @@ $(OUTPUT)/$(TARGET)/bin/cmdgame: $(LIBDIR)/cmdfrontend.o $(COMMONOBJS) $(WINRESO
 
 ifdef ISWINDOWS
 $(OUTPUT)/$(TARGET)/bin/gdigame: $(LIBDIR)/gdifrontend.o $(COMMONOBJS) $(WINRESOURCES) | $(OUTPUT)/$(TARGET)/bin/
-	$(CC) $(CSTD) $(WARNINGS) -o $@ $^ $(CFLAGS) -municode -l gdi32
+	$(CC) $(CSTD) $(WARNINGS) -o $@ $^ $(CFLAGS) $(GDICFLAGS)
 else
 $(OUTPUT)/$(TARGET)/bin/gdigame:
 endif
