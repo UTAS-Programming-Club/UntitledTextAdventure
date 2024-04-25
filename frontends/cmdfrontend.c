@@ -144,7 +144,7 @@ int main(void) {
   }
   SetupConsole();
 
-  struct GameOutput output;
+  struct GameOutput output = {0};
   do {
     if (!HandleOutput(&output)) {
       break;
@@ -153,6 +153,6 @@ int main(void) {
 
   // TODO: Make sure this happens, even on crash. atexit + signal handler?
   ResetConsole();
-  CleanupGame();
+  CleanupGame(&output);
   return 0;
 }

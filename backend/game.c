@@ -1,6 +1,5 @@
 #include <stdbool.h>
 
-#include "alloc.h"
 #include "game.h"
 #include "screens.h"
 #include "../shared/parser.h"
@@ -24,6 +23,7 @@ bool SetupGame(void) {
 
 // TODO: Add more screens
 bool GetCurrentGameOutput(struct GameOutput *output) {
+  arena_reset(&output->arena);
   if (ScreenID == MainMenuScreenID) {
     return CreateMainMenuScreen(ScreenID, output);
   } else {
@@ -47,7 +47,7 @@ enum GameInputOutcome HandleGameInput(uint32_t screenID, uint32_t inputID) {
   return outcome;
 }
 
-void CleanupGame(void) {
+void CleanupGame(struct GameOutput *output) {
+  arena_free(&output->arena);
   UnloadGameData();
-  FreeAll();
 }

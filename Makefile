@@ -8,7 +8,9 @@ BINDIR := $(OUTDIR)/bin/
 LIBDIR := $(OUTDIR)/lib/
 INCDIR := $(OUTDIR)/include/
 
-COMMONOBJS := $(LIBDIR)/alloc.o $(LIBDIR)/b64_buffer.o $(LIBDIR)/b64_decode.o $(LIBDIR)/base64_backend.o $(LIBDIR)/cJSON.o $(LIBDIR)/fileloading_frontend.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/screens.o $(LIBDIR)/strings.o
+COMMONOBJS := $(LIBDIR)/b64_buffer.o $(LIBDIR)/b64_decode.o $(LIBDIR)/base64_backend.o $(LIBDIR)/cJSON.o $(LIBDIR)/fileloading_frontend.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/screens.o $(LIBDIR)/strings.o
+
+CFLAGS += -I $(INCDIR)
 
 ifdef ISCOSMO
 CFLAGS += -mcosmo
@@ -33,6 +35,7 @@ ifneq (,$(findstring debug,$(MAKECMDGOALS)))
 CFLAGS += -g
 endif
 
+# TODO: Support building specific frontends or tools
 debug: CFLAGS += -D _DEBUG
 debug release: $(OUTPUT)/$(TARGET)/bin/cmdgame $(OUTPUT)/$(TARGET)/bin/gdigame
 tools: $(OUTPUT)/$(TARGET)/bin/preptext $(OUTPUT)/$(TARGET)/bin/printgamedata
@@ -55,11 +58,10 @@ $(INCDIR)/b64.h: third_party/b64.c/b64.h | $(INCDIR)
 $(INCDIR)/cJSON.h: third_party/cJSON/cJSON.h | $(INCDIR)
 	cp $< $@
 
+backend/game.h: $(INCDIR)/arena.h
+
 
 # Objects
-$(LIBDIR)/alloc.o: backend/alloc.c backend/alloc.h $(INCDIR)/arena.h | $(LIBDIR)
-	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS) -I $(INCDIR)
-
 $(LIBDIR)/game.o: backend/game.c backend/game.h | $(LIBDIR)
 	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS)
 
@@ -68,10 +70,10 @@ $(LIBDIR)/screens.o: backend/screens.c backend/screens.h | $(LIBDIR)
 
 
 $(LIBDIR)/base64_backend.o: shared/base64.c shared/base64.h shared/strings.h $(INCDIR)/b64.h | $(LIBDIR)
-	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS) -D BACKEND -I $(INCDIR)
+	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS) -D BACKEND
 
 $(LIBDIR)/base64_preptext.o: shared/base64.c shared/base64.h shared/strings.h $(INCDIR)/b64.h | $(LIBDIR)
-	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS) -D PREPTEXT -I $(INCDIR)
+	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS) -D PREPTEXT
 
 $(LIBDIR)/crossprint.o: shared/crossprint.c shared/crossprint.h | $(LIBDIR)
 	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS)
@@ -83,7 +85,7 @@ $(LIBDIR)/fileloading_printgamedata.o: shared/fileloading.c shared/fileloading.h
 	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS)
 
 $(LIBDIR)/parser.o: shared/parser.c shared/parser.h $(INCDIR)/b64.h $(INCDIR)/cJSON.h | $(LIBDIR)
-	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS) -D BACKEND -I $(INCDIR)
+	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS) -D BACKEND
 
 $(LIBDIR)/strings.o: shared/strings.c shared/strings.h | $(LIBDIR)
 	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS)
@@ -107,13 +109,13 @@ $(LIBDIR)/cJSON.o: third_party/cJSON/cJSON.c third_party/cJSON/cJSON.h | $(LIBDI
 
 
 $(LIBDIR)/preptext.o: tools/preptext.c $(INCDIR)/b64.h | $(LIBDIR)
-	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS) -D PREPTEXT -I $(INCDIR)
+	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS) -D PREPTEXT
 
 $(LIBDIR)/printgamedata.o: tools/printgamedata.c | $(LIBDIR)
 	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS)
 
 
-$(LIBDIR)/cmdfrontend.o: frontends/cmdfrontend.c frontends/frontend.h | $(LIBDIR)
+$(LIBDIR)/cmdfrontend.o: frontends/cmdfrontend.c frontends/frontend.h backend/game.h | $(LIBDIR)
 	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS)
 
 $(LIBDIR)/gdifrontend.o: frontends/gdifrontend.c frontends/frontend.h | $(LIBDIR)

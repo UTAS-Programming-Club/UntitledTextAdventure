@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
 
   printf("Screen count: %" PRIu32 "\n\n", screenCount);
   for (uint32_t i = 0; i < screenCount; ++i) {
-    struct GameScreen screen;
+    struct GameScreen screen = {0};
     if (!GetGameScreen(i, &screen)) {
       continue;
     }

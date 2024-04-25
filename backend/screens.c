@@ -3,7 +3,9 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "alloc.h"
+#define ARENA_IMPLEMENTATION
+#include <arena.h>
+
 #include "game.h"
 #include "screens.h"
 #include "../shared/parser.h"
@@ -27,10 +29,10 @@ static size_t U64toS32NoAlloc(char32_t *buffer, uint64_t number) {
   return numberLength;
 }
 
-static char32_t *U64toS32(uint64_t number) {
+static char32_t *U64toS32(uint64_t number, Arena *arena) {
   char32_t *str;
   size_t numberLength = U64toS32NoAlloc(NULL, number);
-  str = malloc((numberLength + 1) * sizeof *str);
+  str = arena_alloc(arena, (numberLength + 1) * sizeof *str);
   if (!str) {
     return NULL;
   }
@@ -69,6 +71,7 @@ cleanup:
   return strSize;
 }
 
+// TODO: Fix naming, this gives a GameOutput, not a GameScreen
 bool CreateMainMenuScreen(uint32_t screenID, struct GameOutput *output) {
   static uint32_t reloadCount = 0;
   size_t allocatedCharCount = 0;
@@ -79,12 +82,12 @@ bool CreateMainMenuScreen(uint32_t screenID, struct GameOutput *output) {
   }
 
   if (reloadCount) {
-    char32_t *reloadCountStr = U64toS32(reloadCount);
+    char32_t *reloadCountStr = U64toS32(reloadCount, &output->arena);
     if (!reloadCountStr) {
       return false;
     }
 
-    struct GameScreen screen;
+    struct GameScreen screen = {0};
     if (!GetGameScreen(output->screenID, &screen)) {
       return false;
     }
@@ -94,36 +97,60 @@ bool CreateMainMenuScreen(uint32_t screenID, struct GameOutput *output) {
       return false;
     }
 
-    char32_t *str = malloc(allocatedCharCount * sizeof *str);
+    char32_t *str = arena_alloc(&output->arena, allocatedCharCount * sizeof *str);
+    if (!str) {
+      return false;
+    }
+
     if (!S32Merge(allocatedCharCount, str, 3, screen.body, screen.extraText, reloadCountStr)) {
       free(screen.body);
       free(screen.extraText);
-      free(reloadCountStr);
       FreeScreen(output);
-      free(str);
       return false;
     }
     free(screen.body);
     free(screen.extraText);
-    free(reloadCountStr);
-    free(output->body);
+    if (!output->bodyArena) {
+      free(output->body);
+    }
+
     output->body = str;
+    output->bodyArena = true;
   }
   writtenCharCount = codeunitcount32(output->body);
 
   uint8_t debugButtonCount = 0;
-  output->inputCount += debugButtonCount;
+  uint8_t newButtonCount = output->inputCount + debugButtonCount;
 
-  struct GameInput *buttons = realloc(output->inputs, output->inputCount * sizeof *buttons);
+  struct GameInput *buttons;
+  if (output->inputsArrayArena) {
+    buttons = arena_realloc(&output->arena, output->inputs, output->inputCount * sizeof *buttons, newButtonCount * sizeof *buttons);
+  } else {
+    buttons = realloc(output->inputs, output->inputCount * sizeof *buttons);
+  }
+
   if (!buttons) {
+    // TODO: Free anything manually allocated
     return false;
   }
   output->inputs = buttons;
+  output->inputCount = newButtonCount;
 
   uint8_t buttonIndex = output->inputCount - debugButtonCount;
   if (debugButtonCount == 2) {
-    output->inputs[buttonIndex++].title = U64toS32(allocatedCharCount);
-    output->inputs[buttonIndex].title = U64toS32(writtenCharCount);
+    output->inputs[buttonIndex].title = U64toS32(allocatedCharCount, &output->arena);
+    if (!output->inputs[buttonIndex].title) {
+      // TODO: Free anything manually allocated
+      return false;
+    }
+    output->inputs[buttonIndex++].titleArena = true;
+
+    output->inputs[buttonIndex].title = U64toS32(writtenCharCount, &output->arena);
+    if (!output->inputs[buttonIndex].title) {
+      // TODO: Free anything manually allocated
+      return false;
+    }
+    output->inputs[buttonIndex].titleArena = true;
   }
 
   ++reloadCount;
@@ -136,11 +163,12 @@ bool CreateScreen(uint32_t screenID, struct GameOutput *output) {
   }
   output->screenID = screenID;
 
-  struct GameScreen screen;
+  struct GameScreen screen = {0};
   if (!GetGameScreen(output->screenID, &screen)) {
     return false;
   }
   output->body = screen.body;
+  output->bodyArena = false;
   free(screen.extraText);
 
   uint8_t buttonCount = GetGameScreenButtonCount(output->screenID);
@@ -149,7 +177,8 @@ bool CreateScreen(uint32_t screenID, struct GameOutput *output) {
   }
   output->inputCount = buttonCount;
 
-  output->inputs = malloc(output->inputCount * sizeof *output->inputs);
+  output->inputs = arena_alloc(&output->arena, output->inputCount * sizeof *output->inputs);
+  output->inputsArrayArena = true;
   if (!output->inputs) {
     return false;
   }
@@ -160,22 +189,30 @@ bool CreateScreen(uint32_t screenID, struct GameOutput *output) {
       return false;
     }
     output->inputs[i].title = button.title;
+    output->inputs[i].titleArena = false;
   }
 
   return true;
 }
 
+// TODO: Remove once everything is using the arena
 void FreeScreen(struct GameOutput *output) {
-  free(output->body);
-  output->body = NULL;
+  if (!output->bodyArena) {
+    free(output->body);
+    output->body = NULL;
+  }
   for (uint8_t i = 0; i < output->inputCount; ++i) {
     // This only works because FreeGameScreenButton only touches the string at the beginning of
     // GameScreenButton which matches the layout of GameInput
     // TODO: Use GameScreenButton everywhere?
-    FreeGameScreenButton((struct GameScreenButton *)(output->inputs + i));
+    if (!output->inputs[i].titleArena) {
+      FreeGameScreenButton((struct GameScreenButton *)(output->inputs + i));
+    }
   }
-  free(output->inputs);
-  output->inputs = NULL;
+  if (!output->inputsArrayArena) {
+    free(output->inputs);
+    output->inputs = NULL;
+  }
 }
 
 struct GameScreenButton *HandleScreenInput(uint32_t screenID, uint8_t inputID) {

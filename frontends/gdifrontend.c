@@ -419,7 +419,8 @@ int main(void) {
     return 1;
   }
   if (!GetCurrentGameOutput(&Output)) {
-    CleanupGame();
+    CleanupGame(&Output);
+    return 1;
   }
   NeedRedrawButtons = TRUE;
 
@@ -470,6 +471,6 @@ int main(void) {
 #ifndef _COSMO_SOURCE
   UnregisterClassW(rClass, hInstance);
 #endif
-  CleanupGame();
+  CleanupGame(&Output);
   return msg.wParam;
 }
