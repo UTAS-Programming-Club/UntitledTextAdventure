@@ -37,8 +37,9 @@ endif
 
 # TODO: Support building specific frontends or tools
 debug: CFLAGS += -D _DEBUG
-debug release: $(OUTPUT)/$(TARGET)/bin/cmdgame $(OUTPUT)/$(TARGET)/bin/gdigame
-tools: $(OUTPUT)/$(TARGET)/bin/preptext $(OUTPUT)/$(TARGET)/bin/printgamedata
+debug release: $(BINDIR)/cmdgame $(BINDIR)/gdigame
+discord: $(LIBDIR)/game.so
+tools: $(BINDIR)/preptext $(BINDIR)/printgamedata
 
 clean:
 	rm -r $(OUTPUT) 2> /dev/null || true
@@ -124,20 +125,23 @@ $(LIBDIR)/gdifrontend.o: frontends/gdifrontend.c frontends/frontend.h | $(LIBDIR
 $(LIBDIR)/winresources.o: frontends/winresources.rc shared/winresources.h GameData.json | $(LIBDIR)
 	$(WINDRES) $< -o $@
 
+$(LIBDIR)/game.so: $(COMMONOBJS) | $(LIBDIR)
+	$(CC) $(CSTD) $(WARNINGS) -o $@ $^ $(CFLAGS) -shared
+
 
 # Executables
-$(OUTPUT)/$(TARGET)/bin/preptext: $(LIBDIR)/b64_buffer.o $(LIBDIR)/b64_encode.o $(LIBDIR)/base64_preptext.o $(LIBDIR)/preptext.o $(LIBDIR)/strings.o | $(OUTPUT)/$(TARGET)/bin/
+$(BINDIR)/preptext: $(LIBDIR)/b64_buffer.o $(LIBDIR)/b64_encode.o $(LIBDIR)/base64_preptext.o $(LIBDIR)/preptext.o $(LIBDIR)/strings.o | $(BINDIR)
 	$(CC) $(CSTD) $(WARNINGS) -o $@ $^ $(CFLAGS)
 
-$(OUTPUT)/$(TARGET)/bin/printgamedata: $(LIBDIR)/b64_buffer.o $(LIBDIR)/b64_decode.o $(LIBDIR)/base64_backend.o $(LIBDIR)/cJSON.o $(LIBDIR)/fileloading_printgamedata.o $(LIBDIR)/parser.o $(LIBDIR)/printgamedata.o | $(OUTPUT)/$(TARGET)/bin/
+$(BINDIR)/printgamedata: $(LIBDIR)/b64_buffer.o $(LIBDIR)/b64_decode.o $(LIBDIR)/base64_backend.o $(LIBDIR)/cJSON.o $(LIBDIR)/fileloading_printgamedata.o $(LIBDIR)/parser.o $(LIBDIR)/printgamedata.o | $(BINDIR)
 	$(CC) $(CSTD) $(WARNINGS) -o $@ $^ $(CFLAGS)
 
-$(OUTPUT)/$(TARGET)/bin/cmdgame: $(LIBDIR)/cmdfrontend.o $(COMMONOBJS) $(WINRESOURCES) | $(OUTPUT)/$(TARGET)/bin/
+$(BINDIR)/cmdgame: $(LIBDIR)/cmdfrontend.o $(COMMONOBJS) $(WINRESOURCES) | $(BINDIR)
 	$(CC) $(CSTD) $(WARNINGS) -o $@ $^ $(CFLAGS) -lm
 
 ifdef ISWINDOWS
-$(OUTPUT)/$(TARGET)/bin/gdigame: $(LIBDIR)/gdifrontend.o $(COMMONOBJS) $(WINRESOURCES) | $(OUTPUT)/$(TARGET)/bin/
+$(BINDIR)/gdigame: $(LIBDIR)/gdifrontend.o $(COMMONOBJS) $(WINRESOURCES) | $(BINDIR)
 	$(CC) $(CSTD) $(WARNINGS) -o $@ $^ $(CFLAGS) $(GDICFLAGS)
 else
-$(OUTPUT)/$(TARGET)/bin/gdigame:
+$(BINDIR)/gdigame:
 endif
