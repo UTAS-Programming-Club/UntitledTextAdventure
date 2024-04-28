@@ -87,5 +87,16 @@
         }
       ]
     }
+  ],
+  "state": [
+    {
+      "COMMENT: screen": "Main Menu",
+      "screenID": 0,
+      "COMMENT: name": "Reload count",
+      "stateID": 0,
+      "COMMENT: type": "uint32_t",
+      "size": 4,
+      "default": 0
+    }
   ]
 }

@@ -27,6 +27,7 @@ We have only just started so everything we have is a bit rough. So any contribut
 * Switch gdi to libschrift for text rendering for < vista rendering(2000 and xp can work as is but not worth it)
 * Add python/crescent frontend
 * After adding libschrift switch to utf-8
+* Add typedefs for screen, button and state variable ids with defined invalid values
 
 
 ## Basic build instructions

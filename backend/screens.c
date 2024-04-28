@@ -73,7 +73,6 @@ cleanup:
 
 // TODO: Fix naming, this gives a GameOutput, not a GameScreen
 bool CreateMainMenuScreen(uint32_t screenID, struct GameOutput *output) {
-  static uint32_t reloadCount = 0;
   size_t allocatedCharCount = 0;
   size_t writtenCharCount = 0;
 
@@ -81,8 +80,14 @@ bool CreateMainMenuScreen(uint32_t screenID, struct GameOutput *output) {
     return false;
   }
 
-  if (reloadCount) {
-    char32_t *reloadCountStr = U64toS32(reloadCount, &output->arena);
+  size_t reloadCountVarOffset = GetGameStateOffset(screenID, 0);
+  if (reloadCountVarOffset == SIZE_MAX) {
+    return false;
+  }
+  uint32_t *pReloadCount = (uint32_t *)(output->stateData + reloadCountVarOffset);
+
+  if (*pReloadCount) {
+    char32_t *reloadCountStr = U64toS32(*pReloadCount, &output->arena);
     if (!reloadCountStr) {
       return false;
     }
@@ -153,7 +158,7 @@ bool CreateMainMenuScreen(uint32_t screenID, struct GameOutput *output) {
     output->inputs[buttonIndex].titleArena = true;
   }
 
-  ++reloadCount;
+  ++(*pReloadCount);
   return true;
 }
 
@@ -215,10 +220,7 @@ void FreeScreen(struct GameOutput *output) {
   }
 }
 
-struct GameScreenButton *HandleScreenInput(uint32_t screenID, uint8_t inputID) {
-  static struct GameScreenButton button;
-  if (!GetGameScreenButton(screenID, inputID, &button)) {
-    return NULL;
-  }
-  return &button;
+// TODO: Remove this
+bool HandleScreenInput(uint32_t screenID, uint8_t inputID, struct GameScreenButton *button) {
+  return GetGameScreenButton(screenID, inputID, button);
 }

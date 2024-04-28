@@ -26,6 +26,7 @@ struct GameOutput {
   Arena arena;
   bool bodyArena;
   bool inputsArrayArena;
+  unsigned char *stateData;
 // Currently body and inputs[i].title MUST be allocated, this must be fixed if the encoding changes to utf-8 because then most button titles will also be direct copies of cJSON returned data
 };
 
