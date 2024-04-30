@@ -24,7 +24,6 @@ unsigned char *InitGameState(void);
 size_t GetGameStateOffset(uint32_t, uint8_t);
 
 uint32_t GetGameScreenCount(void);
-uint32_t GetMainMenuScreenID(void);
 bool GetGameScreen(uint32_t, struct GameScreen *);
 
 bool GetGameScreenButton(uint32_t, uint8_t, struct GameScreenButton *);

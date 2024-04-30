@@ -1,8 +1,9 @@
-﻿{
+﻿#include "backend/consts.h"
+
+{
   "screens": [
     {
       "COMMENT: ID": 0,
-      "mainMenu": true,
       "COMMENT: body": "Untitled text adventure game\n----------------------------\nBy the UTAS Programming Club\n\nCurrently unimplemented :(",
       "body": "VQAAAG4AAAB0AAAAaQAAAHQAAABsAAAAZQAAAGQAAAAgAAAAdAAAAGUAAAB4AAAAdAAAACAAAABhAAAAZAAAAHYAAABlAAAAbgAAAHQAAAB1AAAAcgAAAGUAAAAgAAAAZwAAAGEAAABtAAAAZQAAAAoAAAAtAAAALQAAAC0AAAAtAAAALQAAAC0AAAAtAAAALQAAAC0AAAAtAAAALQAAAC0AAAAtAAAALQAAAC0AAAAtAAAALQAAAC0AAAAtAAAALQAAAC0AAAAtAAAALQAAAC0AAAAtAAAALQAAAC0AAAAtAAAACgAAAEIAAAB5AAAAIAAAAHQAAABoAAAAZQAAACAAAABVAAAAVAAAAEEAAABTAAAAIAAAAFAAAAByAAAAbwAAAGcAAAByAAAAYQAAAG0AAABtAAAAaQAAAG4AAABnAAAAIAAAAEMAAABsAAAAdQAAAGIAAAAKAAAACgAAAEMAAAB1AAAAcgAAAHIAAABlAAAAbgAAAHQAAABsAAAAeQAAACAAAAB1AAAAbgAAAGkAAABtAAAAcAAAAGwAAABlAAAAbQAAAGUAAABuAAAAdAAAAGUAAABkAAAAIAAAADoAAAAoAAAAAAAAAA==",
       "COMMENT: extraText": "\nReload Count: ",
@@ -12,7 +13,7 @@
           "COMMENT: title": "Start Game",
           "title": "UwAAAHQAAABhAAAAcgAAAHQAAAAgAAAARwAAAGEAAABtAAAAZQAAAAAAAAA=",
           "outcome": 3,
-          "newScreen": 1
+          "newScreen": TEST_1_SCREEN_ID
         },
         {
           "COMMENT: title": "Quit Game",
@@ -31,13 +32,13 @@
           "COMMENT: title": "Back",
           "title": "QgAAAGEAAABjAAAAawAAAAAAAAA=",
           "outcome": 3,
-          "newScreen": 0
+          "newScreen": MAIN_MENU_SCREEN_ID
         },
         {
           "COMMENT: title": "Forward",
           "title": "RgAAAG8AAAByAAAAdwAAAGEAAAByAAAAZAAAAAAAAAA=",
           "outcome": 3,
-          "newScreen": 2
+          "newScreen": TEST_2_SCREEN_ID
         },
         {
           "COMMENT: title": "Unused",
@@ -63,19 +64,19 @@
           "COMMENT: title": "Back",
           "title": "QgAAAGEAAABjAAAAawAAAAAAAAA=",
           "outcome": 3,
-          "newScreen": 1
+          "newScreen": TEST_1_SCREEN_ID
         },
         {
           "COMMENT: title": "Forward",
           "title": "RgAAAG8AAAByAAAAdwAAAGEAAAByAAAAZAAAAAAAAAA=",
           "outcome": 3,
-          "newScreen": 3
+          "newScreen": TEST_3_SCREEN_ID
         }
       ]
     },
     {
       "COMMENT: ID": 3,
-      "COMMENT: body": "Test page 2",
+      "COMMENT: body": "Test page 3",
       "body": "VAAAAGUAAABzAAAAdAAAACAAAABwAAAAYQAAAGcAAABlAAAAIAAAADMAAAAAAAAA",
       "extraText": "",
       "buttons": [
@@ -83,7 +84,7 @@
           "COMMENT: title": "Back",
           "title": "QgAAAGEAAABjAAAAawAAAAAAAAA=",
           "outcome": 3,
-          "newScreen": 2
+          "newScreen": TEST_2_SCREEN_ID
         }
       ]
     }

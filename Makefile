@@ -37,17 +37,20 @@ endif
 
 # TODO: Support building specific frontends or tools
 debug: CFLAGS += -D _DEBUG
-debug release: $(BINDIR)/cmdgame $(BINDIR)/gdigame
-discord: $(LIBDIR)/game.so
-tools: $(BINDIR)/preptext $(BINDIR)/printgamedata
+debug release: $(BINDIR)/cmdgame $(BINDIR)/gdigame GameData.json
+discord: $(LIBDIR)/game.so GameData.json
+tools: $(BINDIR)/preptext $(BINDIR)/printgamedata GameData.json
 
 clean:
-	rm -r $(OUTPUT) 2> /dev/null || true
+	rm -r $(OUTPUT) GameData.json 2> /dev/null || true
 	make -C third_party/b64.c clean $(SUBMAKESHELL) $(SUBMAKEPATH)
 
 %/:
 	mkdir -p $@
 
+
+GameData.json: GameData.in.json
+	$(CC) -E -P -o $@ -xc $<
 
 # Headers
 $(INCDIR)/arena.h: third_party/arena/arena.h | $(INCDIR)

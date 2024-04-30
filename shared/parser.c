@@ -24,7 +24,6 @@
 
 static void *Data = NULL;
 static cJSON *GameData = NULL;
-static uint32_t MainMenuScreenID = INVALID_SCREEN_ID;
 
 bool LoadGameData(char *path) {
   if (!path) {
@@ -38,6 +37,10 @@ bool LoadGameData(char *path) {
 
   GameData = cJSON_ParseWithLength(Data, size);
   if (!GameData) {
+    UnloadFile(Data, GAMEDATA, GAMEDATA_RESTYPE);
+    // TODO: Report erroring line and column numbers
+    // TODO: Show erroring line
+    printf("ERROR: Unable to load %s, error in parsing at position %td.\n", path, cJSON_GetErrorPtr() - (char *)Data);
     return false;
   }
   
@@ -216,28 +219,6 @@ static cJSON *GetGameScreenJson(uint32_t screenID) {
   }
 
   return screen;
-}
-
-uint32_t GetMainMenuScreenID(void) {
-  if (MainMenuScreenID != INVALID_SCREEN_ID) {
-    return MainMenuScreenID;
-  }
-
-  uint32_t screenCount = GetGameScreenCount();
-  for (uint32_t i = 0; i < screenCount; ++i) {
-    cJSON *screen = GetGameScreenJson(i);
-    if (!screen) {
-      return INVALID_SCREEN_ID;
-    }
-
-    cJSON *mainMenu = cJSON_GetObjectItemCaseSensitive(screen, "mainMenu");
-    if (cJSON_IsBool(mainMenu)) {
-      MainMenuScreenID = i;
-      return MainMenuScreenID;
-    }
-  }
-
-  return INVALID_SCREEN_ID;
 }
 
 // Must free screen->body and screen->extraText if this returns true

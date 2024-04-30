@@ -2,6 +2,7 @@
 #include <fcntl.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -39,6 +40,7 @@ bool LoadFile(char *path, size_t *size, void **data, uint16_t resourceID, void *
 
   int fd = open(path, O_RDONLY);
   if (fd == -1) {
+    printf("ERROR: Unable to load %s, file could not be opened. Check if it exists and if you have permission to open it.\n", path);
     goto cleanup;
   }
 

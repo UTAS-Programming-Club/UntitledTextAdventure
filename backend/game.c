@@ -1,11 +1,11 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+#include "consts.h"
 #include "game.h"
 #include "screens.h"
 #include "../shared/parser.h"
 
-static uint32_t MainMenuScreenID = INVALID_SCREEN_ID;
 // TODO: Move to GameOutput struct
 static uint32_t ScreenID = INVALID_SCREEN_ID;
 
@@ -14,12 +14,7 @@ bool SetupGame(void) {
     return false;
   }
 
-  MainMenuScreenID = GetMainMenuScreenID();
-  ScreenID = MainMenuScreenID;
-  if (MainMenuScreenID == INVALID_SCREEN_ID) {
-    return false;
-  }
-
+  ScreenID = MAIN_MENU_SCREEN_ID;
   return true;
 }
 
@@ -38,7 +33,7 @@ bool GetCurrentGameOutput(struct GameOutput *output) {
 
   arena_reset(&output->arena);
 
-  if (ScreenID == MainMenuScreenID) {
+  if (ScreenID == MAIN_MENU_SCREEN_ID) {
     return CreateMainMenuScreen(ScreenID, output);
   } else {
     return CreateScreen(ScreenID, output);
