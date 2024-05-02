@@ -7,9 +7,9 @@
 #include "../shared/parser.h"
 #include "game.h"
 
-bool CreateScreen(uint32_t, struct GameOutput *);
+bool CreateScreen(enum ScreenID, struct GameOutput *);
 void FreeScreen(struct GameOutput *);
-bool CreateMainMenuScreen(uint32_t, struct GameOutput *);
-bool HandleScreenInput(uint32_t, uint8_t, struct GameScreenButton *);
+bool CreateMainMenuScreen(enum ScreenID, struct GameOutput *);
+bool HandleScreenInput(enum ScreenID, uint8_t, struct GameScreenButton *);
 
 #endif // PCGAME_SCREENS_H

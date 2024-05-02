@@ -138,7 +138,7 @@ unsigned char *InitGameState(void) {
   return gameState;
 }
 
-size_t GetGameStateOffset(uint32_t screenID, uint8_t stateID) {
+size_t GetGameStateOffset(enum ScreenID screenID, uint8_t stateID) {
   cJSON *stateVars = cJSON_GetObjectItemCaseSensitive(GameData, "state");
   if (!cJSON_IsArray(stateVars)) {
     return SIZE_MAX;
@@ -158,7 +158,7 @@ size_t GetGameStateOffset(uint32_t screenID, uint8_t stateID) {
       goto loop;
     }
 
-    uint32_t curScreenID = cJSON_GetNumberValue(jsonCurScreenID);
+    enum ScreenID curScreenID = cJSON_GetNumberValue(jsonCurScreenID);
     if (screenID != curScreenID) {
       goto loop;
     }
@@ -184,20 +184,20 @@ loop:
 
 
 // TODO: Change error value to 0
-uint32_t GetGameScreenCount(void) {
+uint16_t GetGameScreenCount(void) {
   if (!GameData) {
-    return UINT32_MAX;
+    return UINT16_MAX;
   }
 
   cJSON *screens = cJSON_GetObjectItemCaseSensitive(GameData, "screens");
   if (!cJSON_IsArray(screens)) {
-    return UINT32_MAX;
+    return UINT16_MAX;
   }
 
   return cJSON_GetArraySize(screens);
 }
 
-static cJSON *GetGameScreenJson(uint32_t screenID) {
+static cJSON *GetGameScreenJson(enum ScreenID screenID) {
   if (!GameData) {
     return NULL;
   }
@@ -222,7 +222,7 @@ static cJSON *GetGameScreenJson(uint32_t screenID) {
 }
 
 // Must free screen->body and screen->extraText if this returns true
-bool GetGameScreen(uint32_t screenID, struct GameScreen *screen) {
+bool GetGameScreen(enum ScreenID screenID, struct GameScreen *screen) {
   if (!screen) {
     return false;
   }
@@ -259,7 +259,8 @@ bool GetGameScreen(uint32_t screenID, struct GameScreen *screen) {
 }
 
 
-uint8_t GetGameScreenButtonCount(uint32_t screenID) {
+// TODO: Change error value to 0
+uint8_t GetGameScreenButtonCount(enum ScreenID screenID) {
   cJSON *screen = GetGameScreenJson(screenID);
   if (!screen) {
     return UINT8_MAX;
@@ -274,7 +275,7 @@ uint8_t GetGameScreenButtonCount(uint32_t screenID) {
 }
 
 // Must free by calling FreeGameScreenButton
-bool GetGameScreenButton(uint32_t screenID, uint8_t buttonID, struct GameScreenButton *button) {
+bool GetGameScreenButton(enum ScreenID screenID, uint8_t buttonID, struct GameScreenButton *button) {
   if (!button) {
     return false;
   }
@@ -313,7 +314,7 @@ bool GetGameScreenButton(uint32_t screenID, uint8_t buttonID, struct GameScreenB
     }
     button->newScreen = cJSON_GetNumberValue(jsonNewScreen);
   } else {
-    button->newScreen = INVALID_SCREEN_ID;
+    button->newScreen = InvaidScreenID;
   }
 
   button->title = c32base64toc32(base64Title);

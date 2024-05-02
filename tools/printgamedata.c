@@ -18,13 +18,13 @@ int main(int argc, char *argv[]) {
   }
 
   LoadGameData(argv[1]);
-  uint32_t screenCount = GetGameScreenCount();
-  if (screenCount == UINT32_MAX) {
+  uint16_t screenCount = GetGameScreenCount();
+  if (screenCount == UINT16_MAX) {
     goto cleanup;
   }
 
   printf("Screen count: %" PRIu32 "\n\n", screenCount);
-  for (uint32_t i = 0; i < screenCount; ++i) {
+  for (enum ScreenID i = 0; i < screenCount; ++i) {
     struct GameScreen screen = {0};
     if (!GetGameScreen(i, &screen)) {
       continue;

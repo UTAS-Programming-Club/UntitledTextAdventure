@@ -42,15 +42,12 @@ discord: $(LIBDIR)/game.so GameData.json
 tools: $(BINDIR)/preptext $(BINDIR)/printgamedata GameData.json
 
 clean:
-	rm -r $(OUTPUT) GameData.json 2> /dev/null || true
+	rm -r $(OUTPUT) GameData.json backend/types.h backend/types.json.h 2> /dev/null || true
 	make -C third_party/b64.c clean $(SUBMAKESHELL) $(SUBMAKEPATH)
 
 %/:
 	mkdir -p $@
 
-
-GameData.json: GameData.in.json
-	$(CC) -E -P -o $@ -xc $<
 
 # Headers
 $(INCDIR)/arena.h: third_party/arena/arena.h | $(INCDIR)
@@ -62,7 +59,16 @@ $(INCDIR)/b64.h: third_party/b64.c/b64.h | $(INCDIR)
 $(INCDIR)/cJSON.h: third_party/cJSON/cJSON.h | $(INCDIR)
 	cp $< $@
 
-backend/game.h: $(INCDIR)/arena.h
+backend/game.h: $(INCDIR)/arena.h backend/types.h
+
+backend/types.h: backend/types.in.h
+	$(CC) -E -P -C -nostdinc -o $@ $<
+
+backend/types.json.h: backend/types.in.h
+	$(CC) -E -P -o $@ $< -D JSON
+
+GameData.json: GameData.in.json backend/types.json.h
+	$(CC) -E -P -o $@ -xc $<
 
 
 # Objects

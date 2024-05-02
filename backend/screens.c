@@ -72,7 +72,7 @@ cleanup:
 }
 
 // TODO: Fix naming, this gives a GameOutput, not a GameScreen
-bool CreateMainMenuScreen(uint32_t screenID, struct GameOutput *output) {
+bool CreateMainMenuScreen(enum ScreenID screenID, struct GameOutput *output) {
   size_t allocatedCharCount = 0;
   size_t writtenCharCount = 0;
 
@@ -162,7 +162,7 @@ bool CreateMainMenuScreen(uint32_t screenID, struct GameOutput *output) {
   return true;
 }
 
-bool CreateScreen(uint32_t screenID, struct GameOutput *output) {
+bool CreateScreen(enum ScreenID screenID, struct GameOutput *output) {
   if (!output) {
     return false;
   }
@@ -221,6 +221,6 @@ void FreeScreen(struct GameOutput *output) {
 }
 
 // TODO: Remove this
-bool HandleScreenInput(uint32_t screenID, uint8_t inputID, struct GameScreenButton *button) {
+bool HandleScreenInput(enum ScreenID screenID, uint8_t inputID, struct GameScreenButton *button) {
   return GetGameScreenButton(screenID, inputID, button);
 }

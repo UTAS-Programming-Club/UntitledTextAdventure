@@ -124,9 +124,9 @@ static bool HandleInput(struct GameOutput *output) {
     return HandleInput(output);
   }
 
-  enum GameInputOutcome outcome = HandleGameInput(output->screenID, input);
+  enum InputOutcome outcome = HandleGameInput(output->screenID, input);
   switch(outcome) {
-    case InvalidInput:
+    case InvalidInputOutcome:
       return HandleInput(output);
     case GetNextOutput:
       FreeScreen(output);

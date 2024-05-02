@@ -1,26 +1,30 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include "consts.h"
+#include "types.h"
 #include "game.h"
 #include "screens.h"
 #include "../shared/parser.h"
 
 // TODO: Move to GameOutput struct
-static uint32_t ScreenID = INVALID_SCREEN_ID;
+static enum ScreenID ScreenID = InvaidScreenID;
 
 bool SetupGame(void) {
   if (!LoadGameData("GameData.json")) {
     return false;
   }
 
-  ScreenID = MAIN_MENU_SCREEN_ID;
+  ScreenID = MainMenu;
   return true;
 }
 
 // TODO: Add more screens
 bool GetCurrentGameOutput(struct GameOutput *output) {
   if (!output) {
+    return false;
+  }
+
+  if (ScreenID == InvaidScreenID) {
     return false;
   }
 
@@ -33,20 +37,20 @@ bool GetCurrentGameOutput(struct GameOutput *output) {
 
   arena_reset(&output->arena);
 
-  if (ScreenID == MAIN_MENU_SCREEN_ID) {
+  if (ScreenID == MainMenu) {
     return CreateMainMenuScreen(ScreenID, output);
   } else {
     return CreateScreen(ScreenID, output);
   }
 }
 
-enum GameInputOutcome HandleGameInput(uint32_t screenID, uint32_t inputID) {
+enum InputOutcome HandleGameInput(enum ScreenID screenID, uint32_t inputID) {
   struct GameScreenButton button = {0};
   if (!HandleScreenInput(screenID, inputID, &button)) {
-    return InvalidInput;
+    return InvalidInputOutcome;
   }
 
-  enum GameInputOutcome outcome = button.outcome;
+  enum InputOutcome outcome = button.outcome;
   if (outcome == GotoScreen) {
     ScreenID = button.newScreen;
     outcome = GetNextOutput;

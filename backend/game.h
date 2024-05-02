@@ -9,6 +9,8 @@
 #include <stdint.h>
 #include <uchar.h>
 
+#include "types.h"
+
 struct GameInput {
 // public, safe to use outside of backend
   char32_t *title;
@@ -18,7 +20,7 @@ struct GameInput {
 
 struct GameOutput {
 // public, safe to use outside of backend
-  uint32_t screenID;
+  enum ScreenID screenID;
   char32_t *body;
   uint8_t inputCount;
   struct GameInput *inputs;
@@ -30,18 +32,9 @@ struct GameOutput {
 // Currently body and inputs[i].title MUST be allocated, this must be fixed if the encoding changes to utf-8 because then most button titles will also be direct copies of cJSON returned data
 };
 
-#define INVALID_SCREEN_ID UINT32_MAX
-
-enum GameInputOutcome {
-  InvalidInput       = 0, // Do not use in json or use in screens.c
-  GetNextOutput      = 1, // Do not use in json or use in screens.c
-  QuitGame           = 2,
-  GotoScreen         = 3, // -> GetNextOutput, Needs newScreen field from json
-};
-
 bool SetupGame(void);
 bool GetCurrentGameOutput(struct GameOutput *);
-enum GameInputOutcome HandleGameInput(uint32_t stateID, uint32_t inputID);
-void CleanupGame(struct GameOutput *output);
+enum InputOutcome HandleGameInput(enum ScreenID, uint32_t);
+void CleanupGame(struct GameOutput *);
 
 #endif // PCGAME_GAME_H
