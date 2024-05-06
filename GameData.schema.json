@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "type": "object",
+  "required": [
+    "screens",
+    "state"
+  ],
+  "properties": {
+    "screens": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "body",
+          "extraText",
+          "buttons"
+        ],
+        "properties": {
+          "body": {
+            "type": "string"
+          },
+          "extraText": {
+            "type": "string"
+          },
+          "buttons": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "title",
+                "outcome"
+              ],
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "outcome": {
+                  "type": "number"
+                },
+                "newScreen": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "state": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "screenID",
+          "stateID",
+          "size",
+          "default"
+        ],
+        "properties": {
+          "screenID": {
+            "type": "number"
+          },
+          "stateID": {
+            "type": "number"
+          },
+          "size": {
+            "type": "number"
+          },
+          "default": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  }
+}

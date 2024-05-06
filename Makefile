@@ -1,5 +1,9 @@
 .PHONY: build clean
 
+ifneq (,$(findstring tools,$(MAKECMDGOALS)))
+NEEDCXX := TRUE
+endif
+
 include compiler.mk
 
 OUTPUT := out/
@@ -39,7 +43,7 @@ endif
 debug: CFLAGS += -D _DEBUG
 debug release: $(BINDIR)/cmdgame $(BINDIR)/gdigame GameData.json
 discord: $(LIBDIR)/game.so GameData.json
-tools: $(BINDIR)/preptext $(BINDIR)/printgamedata GameData.json
+tools: $(BINDIR)/preptext $(BINDIR)/printgamedata $(BINDIR)/jsonvalidator GameData.json
 
 clean:
 	rm -r $(OUTPUT) GameData.json backend/types.h backend/types.json.h 2> /dev/null || true
@@ -59,6 +63,13 @@ $(INCDIR)/b64.h: third_party/b64.c/b64.h | $(INCDIR)
 $(INCDIR)/cJSON.h: third_party/cJSON/cJSON.h | $(INCDIR)
 	cp $< $@
 
+$(INCDIR)/jsoncons: third_party/jsoncons/include/jsoncons | $(INCDIR)
+	cp -r $< $@
+
+$(INCDIR)/jsoncons_ext: third_party/jsoncons/include/jsoncons_ext | $(INCDIR)
+	cp -r $< $@
+
+
 backend/game.h: $(INCDIR)/arena.h backend/types.h
 
 backend/types.h: backend/types.in.h
@@ -73,35 +84,35 @@ GameData.json: GameData.in.json backend/types.json.h
 
 # Objects
 $(LIBDIR)/game.o: backend/game.c backend/game.h | $(LIBDIR)
-	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS)
+	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 $(LIBDIR)/screens.o: backend/screens.c backend/screens.h | $(LIBDIR)
-	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS)
+	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 $(LIBDIR)/specialscreens.o: backend/specialscreens.c backend/specialscreens.h | $(LIBDIR)
-	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS)
+	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 
 $(LIBDIR)/base64_backend.o: shared/base64.c shared/base64.h shared/strings.h $(INCDIR)/b64.h | $(LIBDIR)
-	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS) -D BACKEND
+	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS) -D BACKEND
 
 $(LIBDIR)/base64_preptext.o: shared/base64.c shared/base64.h shared/strings.h $(INCDIR)/b64.h | $(LIBDIR)
-	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS) -D PREPTEXT
+	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS) -D PREPTEXT
 
 $(LIBDIR)/crossprint.o: shared/crossprint.c shared/crossprint.h | $(LIBDIR)
-	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS)
+	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 $(LIBDIR)/fileloading_frontend.o: shared/fileloading.c shared/fileloading.h | $(LIBDIR)
-	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS) -D FRONTEND
+	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS) -D FRONTEND
 
 $(LIBDIR)/fileloading_printgamedata.o: shared/fileloading.c shared/fileloading.h | $(LIBDIR)
-	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS)
+	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
-$(LIBDIR)/parser.o: shared/parser.c shared/parser.h $(INCDIR)/b64.h $(INCDIR)/cJSON.h | $(LIBDIR)
-	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS) -D BACKEND
+$(LIBDIR)/parser.o: shared/parser.c backend/game.h shared/parser.h $(INCDIR)/b64.h $(INCDIR)/cJSON.h | $(LIBDIR)
+	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS) -D BACKEND
 
 $(LIBDIR)/strings.o: shared/strings.c shared/strings.h | $(LIBDIR)
-	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS)
+	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 
 $(LIBDIR)/b64_buffer.o: third_party/b64.c/buffer.c third_party/b64.c/b64.h | $(LIBDIR)
@@ -118,42 +129,48 @@ $(LIBDIR)/b64_decode.o: third_party/b64.c/decode.c third_party/b64.c/b64.h | $(L
 
 
 $(LIBDIR)/cJSON.o: third_party/cJSON/cJSON.c third_party/cJSON/cJSON.h | $(LIBDIR)
-	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS)
+	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 
 $(LIBDIR)/preptext.o: tools/preptext.c $(INCDIR)/b64.h | $(LIBDIR)
-	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS) -D PREPTEXT
+	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS) -D PREPTEXT
 
 $(LIBDIR)/printgamedata.o: tools/printgamedata.c | $(LIBDIR)
-	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS)
+	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
+
+$(LIBDIR)/jsonvalidator.o: tools/jsonvalidator.cpp $(INCDIR)/jsoncons $(INCDIR)/jsoncons_ext | $(LIBDIR)
+	$(CXX) $(CXXSTD) $(CXXWARNINGS) -c -o $@ $< $(CFLAGS)
 
 
 $(LIBDIR)/cmdfrontend.o: frontends/cmdfrontend.c frontends/frontend.h backend/game.h | $(LIBDIR)
-	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS)
+	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 $(LIBDIR)/gdifrontend.o: frontends/gdifrontend.c frontends/frontend.h | $(LIBDIR)
-	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS) $(GDICFLAGS)
+	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS) $(GDICFLAGS)
 
 $(LIBDIR)/winresources.o: frontends/winresources.rc shared/winresources.h GameData.json | $(LIBDIR)
 	$(WINDRES) $< -o $@
 
 $(LIBDIR)/game.so: $(COMMONOBJS) | $(LIBDIR)
-	$(CC) $(CSTD) $(WARNINGS) -o $@ $^ $(CFLAGS) -shared
+	$(CC) $(CSTD) $(CWARNINGS) -o $@ $^ $(CFLAGS) -shared
 
 
 # Executables
 $(BINDIR)/preptext: $(LIBDIR)/b64_buffer.o $(LIBDIR)/b64_encode.o $(LIBDIR)/base64_preptext.o $(LIBDIR)/preptext.o $(LIBDIR)/strings.o | $(BINDIR)
-	$(CC) $(CSTD) $(WARNINGS) -o $@ $^ $(CFLAGS)
+	$(CC) -o $@ $^ $(CFLAGS)
 
 $(BINDIR)/printgamedata: $(LIBDIR)/b64_buffer.o $(LIBDIR)/b64_decode.o $(LIBDIR)/base64_backend.o $(LIBDIR)/cJSON.o $(LIBDIR)/fileloading_printgamedata.o $(LIBDIR)/parser.o $(LIBDIR)/printgamedata.o | $(BINDIR)
-	$(CC) $(CSTD) $(WARNINGS) -o $@ $^ $(CFLAGS)
+	$(CC) -o $@ $^ $(CFLAGS)
+
+$(BINDIR)/jsonvalidator: $(LIBDIR)/jsonvalidator.o | $(BINDIR)
+	$(CXX) -o $@ $^ $(CFLAGS)
 
 $(BINDIR)/cmdgame: $(LIBDIR)/cmdfrontend.o $(COMMONOBJS) $(WINRESOURCES) | $(BINDIR)
-	$(CC) $(CSTD) $(WARNINGS) -o $@ $^ $(CFLAGS) -lm
+	$(CC) -o $@ $^ $(CFLAGS) -lm
 
 ifdef ISWINDOWS
 $(BINDIR)/gdigame: $(LIBDIR)/gdifrontend.o $(COMMONOBJS) $(WINRESOURCES) | $(BINDIR)
-	$(CC) $(CSTD) $(WARNINGS) -o $@ $^ $(CFLAGS) $(GDICFLAGS)
+	$(CC) -o $@ $^ $(CFLAGS) $(GDICFLAGS)
 else
 $(BINDIR)/gdigame:
 endif
