@@ -375,7 +375,7 @@ cleanup_paint:
         return 0;
       }
 
-      enum GameInputOutcome outcome = HandleGameInput(Output.screenID, LOWORD(wParam));
+      enum InputOutcome outcome = HandleGameInput(&Output, LOWORD(wParam));
       switch(outcome) {
         case GetNextOutput:
           FreeScreen(&Output);

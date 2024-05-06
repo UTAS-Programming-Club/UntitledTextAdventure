@@ -8,7 +8,7 @@ BINDIR := $(OUTDIR)/bin/
 LIBDIR := $(OUTDIR)/lib/
 INCDIR := $(OUTDIR)/include/
 
-COMMONOBJS := $(LIBDIR)/b64_buffer.o $(LIBDIR)/b64_decode.o $(LIBDIR)/base64_backend.o $(LIBDIR)/cJSON.o $(LIBDIR)/fileloading_frontend.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/screens.o $(LIBDIR)/strings.o
+COMMONOBJS := $(LIBDIR)/b64_buffer.o $(LIBDIR)/b64_decode.o $(LIBDIR)/base64_backend.o $(LIBDIR)/cJSON.o $(LIBDIR)/fileloading_frontend.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/screens.o $(LIBDIR)/specialscreens.o $(LIBDIR)/strings.o
 
 CFLAGS += -I $(INCDIR)
 
@@ -76,6 +76,9 @@ $(LIBDIR)/game.o: backend/game.c backend/game.h | $(LIBDIR)
 	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS)
 
 $(LIBDIR)/screens.o: backend/screens.c backend/screens.h | $(LIBDIR)
+	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS)
+
+$(LIBDIR)/specialscreens.o: backend/specialscreens.c backend/specialscreens.h | $(LIBDIR)
 	$(CC) $(CSTD) $(WARNINGS) -c -o $@ $< $(CFLAGS)
 
 

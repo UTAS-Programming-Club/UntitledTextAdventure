@@ -4,27 +4,16 @@
 #include "types.h"
 #include "game.h"
 #include "screens.h"
+#include "specialscreens.h"
 #include "../shared/parser.h"
 
-// TODO: Move to GameOutput struct
-static enum ScreenID ScreenID = InvaidScreenID;
-
 bool SetupGame(void) {
-  if (!LoadGameData("GameData.json")) {
-    return false;
-  }
-
-  ScreenID = MainMenu;
-  return true;
+  return LoadGameData("GameData.json");
 }
 
 // TODO: Add more screens
 bool GetCurrentGameOutput(struct GameOutput *output) {
-  if (!output) {
-    return false;
-  }
-
-  if (ScreenID == InvaidScreenID) {
+  if (!output || output->screenID == InvaidScreenID) {
     return false;
   }
 
@@ -37,22 +26,26 @@ bool GetCurrentGameOutput(struct GameOutput *output) {
 
   arena_reset(&output->arena);
 
-  if (ScreenID == MainMenu) {
-    return CreateMainMenuScreen(ScreenID, output);
+  if (!CreateScreen(output)) {
+    return false;
+  }
+
+  if (CustomScreens[output->screenID]) {
+    return CustomScreens[output->screenID](output);
   } else {
-    return CreateScreen(ScreenID, output);
+    return true;
   }
 }
 
-enum InputOutcome HandleGameInput(enum ScreenID screenID, uint32_t inputID) {
+enum InputOutcome HandleGameInput(struct GameOutput *output, uint32_t inputID) {
   struct GameScreenButton button = {0};
-  if (!HandleScreenInput(screenID, inputID, &button)) {
+  if (!HandleScreenInput(output->screenID, inputID, &button)) {
     return InvalidInputOutcome;
   }
 
   enum InputOutcome outcome = button.outcome;
   if (outcome == GotoScreen) {
-    ScreenID = button.newScreen;
+    output->screenID = button.newScreen;
     outcome = GetNextOutput;
   }
 

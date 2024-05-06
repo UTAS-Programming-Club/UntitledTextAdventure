@@ -34,7 +34,7 @@ struct GameOutput {
 
 bool SetupGame(void);
 bool GetCurrentGameOutput(struct GameOutput *);
-enum InputOutcome HandleGameInput(enum ScreenID, uint32_t);
+enum InputOutcome HandleGameInput(struct GameOutput *, uint32_t);
 void CleanupGame(struct GameOutput *);
 
 #endif // PCGAME_GAME_H

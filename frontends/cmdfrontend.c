@@ -82,7 +82,7 @@ static void PrintOutputBody(const char32_t *body) {
   putchar('\n');
 }
 
-// Returns 0 to 8 for inputs 1 to 9 and UINT8_MAX on failure
+// Returns 0 to 8 for inputs 1 to 9
 static uint8_t GetInput(void) {
   while(true) {
 #ifdef _WIN32
@@ -109,8 +109,7 @@ static void PrintInputs(uint8_t inputCount, const struct GameInput *inputs) {
 }
 
 static bool HandleOutput(struct GameOutput *output) {
-  bool succeeded = GetCurrentGameOutput(output);
-  if (!succeeded) {
+  if (!GetCurrentGameOutput(output)) {
     return false;
   }
   PrintOutputBody(output->body);
@@ -124,7 +123,7 @@ static bool HandleInput(struct GameOutput *output) {
     return HandleInput(output);
   }
 
-  enum InputOutcome outcome = HandleGameInput(output->screenID, input);
+  enum InputOutcome outcome = HandleGameInput(output, input);
   switch(outcome) {
     case InvalidInputOutcome:
       return HandleInput(output);
