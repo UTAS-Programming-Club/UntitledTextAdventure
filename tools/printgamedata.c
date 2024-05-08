@@ -3,16 +3,31 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <uchar.h>
 
+#include "../shared/crossprint.h"
 #include "../shared/parser.h"
 
 #define INDENT "  "
 
-int main(int argc, char *argv[]) {
-  // The program cheats and uses %ls(wchar_t print) for char32_t
-  static_assert(sizeof(wchar_t) == sizeof(char32_t));
+static void PrintS32(const char32_t *str) {
+#if WCHAR_MAX == INT_LEAST32_MAX || WCHAR_MAX == UINT_LEAST32_MAX // unix likes
+  static_assert(sizeof(wchar_t) == sizeof(char32_t), "Need them to be the same size to print utf-32 chars");
+  printf("%ls", (wchar_t *)str);
+#elif defined(_WIN32) // windows
+  wchar_t *wcStr = c32towc(str);
+  if (!wcStr) {
+    return;
+  }
+  printf("%ls", wcStr);
+  free(wcStr);
+#else
+#error Need utf-32 printing support
+#endif
+}
 
+int main(int argc, char *argv[]) {
   if (argc != 2) {
     return 1;
   }
@@ -31,8 +46,11 @@ int main(int argc, char *argv[]) {
     }
 
     printf("Screen %d\n", i);
-    printf(INDENT "Body: \"%ls\"\n", (wchar_t *)screen.body);
-    printf(INDENT "Extra text: \"%ls\"\n", (wchar_t *)screen.extraText);
+    printf(INDENT "Body: \"");
+    PrintS32(screen.body);
+    printf("\"\n" INDENT "Extra text: \"");
+    PrintS32(screen.extraText);
+    puts("\"");
 
     uint8_t screenButtonCount = GetGameScreenButtonCount(i);
     if (screenButtonCount == UINT8_MAX) {
@@ -47,7 +65,9 @@ int main(int argc, char *argv[]) {
       }
 
       printf(INDENT "Button %d\n", j);
-      printf(INDENT INDENT "Title: \"%ls\"\n", (wchar_t *)button.title);
+      printf(INDENT INDENT "Title: \"");
+      PrintS32(button.title);
+      puts("\"");
       FreeGameScreenButton(&button);
     }
   }

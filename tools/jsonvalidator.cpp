@@ -36,5 +36,6 @@ int main() {
   std::cout << "Validation complete, " << errorCount << " errors found" << std::endl;
 
 end:
+  gameDataFile.close();
   schemaFile.close();
 }

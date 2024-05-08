@@ -19,10 +19,12 @@ CFLAGS += -I $(INCDIR)
 ifdef ISCOSMO
 CFLAGS += -mcosmo
 COMMONOBJS += $(LIBDIR)/crossprint.o
+EXECSUFFIX :=
 else
 ifdef ISWINDOWS
 GDICFLAGS := -municode -l gdi32
 COMMONOBJS += $(LIBDIR)/crossprint.o
+EXECSUFFIX := .exe
 
 ifneq (,$(findstring release,$(MAKECMDGOALS)))
 WINRESOURCES := $(LIBDIR)/winresources.o
@@ -41,9 +43,9 @@ endif
 
 # TODO: Support building specific frontends or tools
 debug: CFLAGS += -D _DEBUG
-debug release: $(BINDIR)/cmdgame $(BINDIR)/gdigame GameData.json
+debug release: $(BINDIR)/cmdgame$(EXECSUFFIX) $(BINDIR)/gdigame$(EXECSUFFIX) GameData.json
 discord: $(LIBDIR)/game.so GameData.json
-tools: $(BINDIR)/preptext $(BINDIR)/printgamedata $(BINDIR)/jsonvalidator GameData.json
+tools: $(BINDIR)/preptext$(EXECSUFFIX) $(BINDIR)/printgamedata$(EXECSUFFIX) $(BINDIR)/jsonvalidator$(EXECSUFFIX) GameData.json
 
 clean:
 	rm -r $(OUTPUT) GameData.json backend/types.h backend/types.json.h 2> /dev/null || true
@@ -138,8 +140,13 @@ $(LIBDIR)/preptext.o: tools/preptext.c $(INCDIR)/b64.h | $(LIBDIR)
 $(LIBDIR)/printgamedata.o: tools/printgamedata.c | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
+ifdef ISWINDOWS
+$(LIBDIR)/jsonvalidator.o: tools/jsonvalidator.cpp $(INCDIR)/jsoncons $(INCDIR)/jsoncons_ext | $(LIBDIR)
+	$(CXX) $(CXXSTD) $(CXXWARNINGS) -c -o $@ $< $(CFLAGS) -Wa,-mbig-obj
+else
 $(LIBDIR)/jsonvalidator.o: tools/jsonvalidator.cpp $(INCDIR)/jsoncons $(INCDIR)/jsoncons_ext | $(LIBDIR)
 	$(CXX) $(CXXSTD) $(CXXWARNINGS) -c -o $@ $< $(CFLAGS)
+endif
 
 
 $(LIBDIR)/cmdfrontend.o: frontends/cmdfrontend.c frontends/frontend.h backend/game.h | $(LIBDIR)
@@ -156,21 +163,26 @@ $(LIBDIR)/game.so: $(COMMONOBJS) | $(LIBDIR)
 
 
 # Executables
-$(BINDIR)/preptext: $(LIBDIR)/b64_buffer.o $(LIBDIR)/b64_encode.o $(LIBDIR)/base64_preptext.o $(LIBDIR)/preptext.o $(LIBDIR)/strings.o | $(BINDIR)
+$(BINDIR)/preptext$(EXECSUFFIX): $(LIBDIR)/b64_buffer.o $(LIBDIR)/b64_encode.o $(LIBDIR)/base64_preptext.o $(LIBDIR)/preptext.o $(LIBDIR)/strings.o | $(BINDIR)
 	$(CC) -o $@ $^ $(CFLAGS)
 
-$(BINDIR)/printgamedata: $(LIBDIR)/b64_buffer.o $(LIBDIR)/b64_decode.o $(LIBDIR)/base64_backend.o $(LIBDIR)/cJSON.o $(LIBDIR)/fileloading_printgamedata.o $(LIBDIR)/parser.o $(LIBDIR)/printgamedata.o | $(BINDIR)
+ifdef ISWINDOWS
+$(BINDIR)/printgamedata$(EXECSUFFIX): $(LIBDIR)/b64_buffer.o $(LIBDIR)/b64_decode.o $(LIBDIR)/base64_backend.o $(LIBDIR)/cJSON.o $(LIBDIR)/crossprint.o $(LIBDIR)/fileloading_printgamedata.o $(LIBDIR)/parser.o $(LIBDIR)/printgamedata.o $(LIBDIR)/strings.o | $(BINDIR)
 	$(CC) -o $@ $^ $(CFLAGS)
+else
+$(BINDIR)/printgamedata$(EXECSUFFIX): $(LIBDIR)/b64_buffer.o $(LIBDIR)/b64_decode.o $(LIBDIR)/base64_backend.o $(LIBDIR)/cJSON.o $(LIBDIR)/fileloading_printgamedata.o $(LIBDIR)/parser.o $(LIBDIR)/printgamedata.o $(LIBDIR)/strings.o | $(BINDIR)
+	$(CC) -o $@ $^ $(CFLAGS)
+endif
 
-$(BINDIR)/jsonvalidator: $(LIBDIR)/jsonvalidator.o | $(BINDIR)
+$(BINDIR)/jsonvalidator$(EXECSUFFIX): $(LIBDIR)/jsonvalidator.o | $(BINDIR)
 	$(CXX) -o $@ $^ $(CFLAGS)
 
-$(BINDIR)/cmdgame: $(LIBDIR)/cmdfrontend.o $(COMMONOBJS) $(WINRESOURCES) | $(BINDIR)
+$(BINDIR)/cmdgame$(EXECSUFFIX): $(LIBDIR)/cmdfrontend.o $(COMMONOBJS) $(WINRESOURCES) | $(BINDIR)
 	$(CC) -o $@ $^ $(CFLAGS) -lm
 
 ifdef ISWINDOWS
-$(BINDIR)/gdigame: $(LIBDIR)/gdifrontend.o $(COMMONOBJS) $(WINRESOURCES) | $(BINDIR)
+$(BINDIR)/gdigame$(EXECSUFFIX): $(LIBDIR)/gdifrontend.o $(COMMONOBJS) $(WINRESOURCES) | $(BINDIR)
 	$(CC) -o $@ $^ $(CFLAGS) $(GDICFLAGS)
 else
-$(BINDIR)/gdigame:
+$(BINDIR)/gdigame$(EXECSUFFIX):
 endif

@@ -28,31 +28,46 @@ We have only just started so everything we have is a bit rough. So any contribut
 * Add python/crescent frontend
 * After adding libschrift switch to utf-8
 * Add typedefs for screen, button and state variable ids with defined invalid values
-
+* Build instructions for tools and release on windows for both cmd and pwsh, and discord bot
+* Fix pwsh debug build instructions to work on older versions, currently the &&s fails
 
 ## Basic build instructions
 All of these are build from wsl with windows builds copied to windows first to avoid very slow startup. Additionally they clean the project and then clear the screen which I find makes reading the build output easier for debugging but is probably not desired by others. They will need to be modified for other systems.
-DEBUG on wsl:
+Debug game binaries for windows and release binaries for other oses require GameData.json in the starting directory.
+Release game binaries for windows pack the json file into the binary.
+
+Copying wsl mingw output to windows is to get around wsl being slow at starting exes on it's own fs.
+Debug on wsl(making windows binaries):
 ```sh
-make CC=x86_64-w64-mingw32-gcc-10-win32 clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 debug && cp out/x86_64-w64-mingw32/bin/*game.exe /mnt/c/Projects/PCGAME/Windows/ && /mnt/c/Projects/PCGame/Windows/cmdgame.exe
-make CC=x86_64-w64-mingw32-gcc-10-win32 clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 debug && cp out/x86_64-w64-mingw32/bin/*game.exe /mnt/c/Projects/PCGAME/Windows/ && /mnt/c/Projects/PCGame/Windows/gdigame.exe
+make clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 debug && cp out/x86_64-w64-mingw32/bin/cmdgame.exe /mnt/c/Projects/PCGame/Windows/ && /mnt/c/Projects/PCGame/Windows/cmdgame.exe
+make clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 debug && cp out/x86_64-w64-mingw32/bin/gdigame.exe /mnt/c/Projects/PCGame/Windows/ && /mnt/c/Projects/PCGame/Windows/gdigame.exe
 ```
 
-DEBUG on windows 10 in powershell core:
-```sh
+Debug on windows 10 in powershell core:
+```pwsh
 .\make.bat clean && clear && .\getwindeps.bat && .\make.bat debug && .\third_party\cosmos\bin\apelink.exe -l .\third_party\cosmos\bin\ape-x86_64.elf -o .\out\x86_64-pc-linux-cosmo\bin\cmdgame.com .\out\x86_64-pc-linux-cosmo\bin\cmdgame
 .\make.bat clean && clear && .\getwindeps.bat && .\make.bat debug && .\third_party\cosmos\bin\apelink.exe -l .\third_party\cosmos\bin\ape-x86_64.elf -o .\out\x86_64-pc-linux-cosmo\bin\gdigame.com .\out\x86_64-pc-linux-cosmo\bin\gdigame
 ```
 
-RELEASE on wsl(for windows commands) and linux:
+Release on wsl(making windows binaries):
 ```sh
-make CC=gcc clean && clear && make CC=gcc release && ./out/x86_64-pc-linux-gnu/bin/cmdgame
-make CC=x86_64-w64-mingw32-gcc-10-win32 clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 WINDRES=x86_64-w64-mingw32-windres release && cp out/x86_64-w64-mingw32/bin/*game.exe /mnt/c/Projects/PCGAME/Windows/ && /mnt/c/Projects/PCGame/Windows/cmdgame.exe
-make CC=x86_64-w64-mingw32-gcc-10-win32 clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 WINDRES=x86_64-w64-mingw32-windres release && cp out/x86_64-w64-mingw32/bin/*game.exe /mnt/c/Projects/PCGAME/Windows/ && /mnt/c/Projects/PCGame/Windows/gdigame.exe
+make clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 WINDRES=x86_64-w64-mingw32-windres release && cp out/x86_64-w64-mingw32/bin/cmdgame.exe /mnt/c/Projects/PCGame/Windows/ && /mnt/c/Projects/PCGame/Windows/cmdgame.exe
+make clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 WINDRES=x86_64-w64-mingw32-windres release && cp out/x86_64-w64-mingw32/bin/gdigame.exe /mnt/c/Projects/PCGame/Windows/ && /mnt/c/Projects/PCGame/Windows/gdigame.exe
 ```
 
-TOOLS on linux:
+Release on linux and hopefully other unix likes:
 ```sh
-make CC=gcc clean && clear && make CC=gcc tools && ./out/x86_64-pc-linux-gnu/bin/preptext "Some text"
-make CC=gcc clean && clear && make CC=gcc tools && ./out/x86_64-pc-linux-gnu/bin/printgamedata GameData.json
+make clean && clear && make CC=gcc release && ./out/x86_64-pc-linux-gnu/bin/cmdgame
+```
+
+Tools on wsl(making windows binaries):
+```sh
+make clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 CXX=x86_64-w64-mingw32-g++-win32 tools && cp out/x86_64-w64-mingw32/bin/preptext.exe /mnt/c/Projects/PCGame/Windows/ && /mnt/c/Projects/PCGame/Windows/preptext.exe "Some text"
+make clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 CXX=x86_64-w64-mingw32-g++-win32 tools && cp out/x86_64-w64-mingw32/bin/printgamedata.exe /mnt/c/Projects/PCGame/Windows/ && /mnt/c/Projects/PCGame/Windows/printgamedata.exe GameData.json
+```
+
+Tools on linux and hopefully other unix likes:
+```sh
+make clean && clear && make CC=gcc CXX=g++ tools && ./out/x86_64-pc-linux-gnu/bin/preptext "Some text"
+make clean && clear && make CC=gcc CXX=g++ tools && ./out/x86_64-pc-linux-gnu/bin/printgamedata GameData.json
 ```
