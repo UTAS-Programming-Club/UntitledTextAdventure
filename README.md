@@ -30,11 +30,18 @@ We have only just started so everything we have is a bit rough. So any contribut
 * Add typedefs for screen, button and state variable ids with defined invalid values
 * Build instructions for tools and release on windows for both cmd and pwsh, and discord bot
 * Fix pwsh debug build instructions to work on older versions, currently the &&s fails
+* Figure out why newer cosmo build tools fail hang on windows. It might just be make as it has had issues in the past
 
 ## Basic build instructions
 All of these are build from wsl with windows builds copied to windows first to avoid very slow startup. Additionally they clean the project and then clear the screen which I find makes reading the build output easier for debugging but is probably not desired by others. They will need to be modified for other systems.
 Debug game binaries for windows and release binaries for other oses require GameData.json in the starting directory.
 Release game binaries for windows pack the json file into the binary.
+
+Downloading repo:
+```sh
+git clone --recurse-submodules https://github.com/UTAS-Programming-Club/UntitledTextAdventure.git
+```
+Optionally with -jSOME_NUMBER to download submodules in parallel.
 
 Copying wsl mingw output to windows is to get around wsl being slow at starting exes on it's own fs.
 Debug on wsl(making windows binaries):
@@ -45,8 +52,8 @@ make clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 debug && cp out/x
 
 Debug on windows 10 in powershell core:
 ```pwsh
-.\make.bat clean && clear && .\getwindeps.bat && .\make.bat debug && .\third_party\cosmos\bin\apelink.exe -l .\third_party\cosmos\bin\ape-x86_64.elf -o .\out\x86_64-pc-linux-cosmo\bin\cmdgame.com .\out\x86_64-pc-linux-cosmo\bin\cmdgame
-.\make.bat clean && clear && .\getwindeps.bat && .\make.bat debug && .\third_party\cosmos\bin\apelink.exe -l .\third_party\cosmos\bin\ape-x86_64.elf -o .\out\x86_64-pc-linux-cosmo\bin\gdigame.com .\out\x86_64-pc-linux-cosmo\bin\gdigame
+.\getwindeps.bat && .\make.bat clean && clear && .\make.bat debug && .\third_party\cosmos\bin\apelink.exe -l .\third_party\cosmos\bin\ape-x86_64.elf -o .\out\x86_64-pc-linux-cosmo\bin\cmdgame.com .\out\x86_64-pc-linux-cosmo\bin\cmdgame
+.\getwindeps.bat && .\make.bat clean && clear && .\make.bat debug && .\third_party\cosmos\bin\apelink.exe -l .\third_party\cosmos\bin\ape-x86_64.elf -o .\out\x86_64-pc-linux-cosmo\bin\gdigame.com .\out\x86_64-pc-linux-cosmo\bin\gdigame
 ```
 
 Release on wsl(making windows binaries):

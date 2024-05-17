@@ -2,26 +2,24 @@
 @echo off
 
 set COSMOS=third_party\cosmos\bin
+set COSMOS_URL=https://cosmo.zip/pub/cosmos/v/3.3.1/bin
+
+if %1.==-f. del /f /q /s %COSMOS%\.. >nul 2>nul
 
 if not exist %COSMOS% mkdir %COSMOS%
 
 :: For Windows
-if not exist %COSMOS%\make.exe curl.exe -o %COSMOS%\make.exe https://cosmo.zip/pub/cosmos/bin/make
-if not exist %COSMOS%\unzip.exe curl.exe -o %COSMOS%\unzip.exe https://cosmo.zip/pub/cosmos/bin/unzip
+if not exist %COSMOS%\unzip.exe curl.exe -o %COSMOS%\unzip.exe %COSMOS_URL%/unzip
 
 :: For Make and compiler
-if not exist %COSMOS%\cat curl.exe -o %COSMOS%\cat https://cosmo.zip/pub/cosmos/bin/cat
-if not exist %COSMOS%\cp curl.exe -o %COSMOS%\cp https://cosmo.zip/pub/cosmos/bin/cp.ape
-if not exist %COSMOS%\mkdir curl.exe -o %COSMOS%\mkdir https://cosmo.zip/pub/cosmos/bin/mkdir.ape
-if not exist %COSMOS%\mv curl.exe -o %COSMOS%\mv https://cosmo.zip/pub/cosmos/bin/mv.ape
-if not exist %COSMOS%\rm curl.exe -o %COSMOS%\rm https://cosmo.zip/pub/cosmos/bin/rm.ape
-if not exist %COSMOS%\sed curl.exe -o %COSMOS%\sed https://cosmo.zip/pub/cosmos/bin/sed
-if not exist %COSMOS%\sh curl.exe -o %COSMOS%\sh https://cosmo.zip/pub/cosmos/bin/dash
-if not exist %COSMOS%\tr curl.exe -o %COSMOS%\tr https://cosmo.zip/pub/cosmos/bin/tr
-
-:: if not exist %COSMOS%\echo curl.exe -o %COSMOS%\echo https://cosmo.zip/pub/cosmos/bin/echo.ape
-:: if not exist %COSMOS%\ls curl.exe -o %COSMOS%\ls https://cosmo.zip/pub/cosmos/bin/ls
-:: if not exist %COSMOS%\pwd curl.exe -o %COSMOS%\pwd https://cosmo.zip/pub/cosmos/bin/pwd
+if not exist %COSMOS%\cat curl.exe -o %COSMOS%\cat %COSMOS_URL%/cat
+if not exist %COSMOS%\cp curl.exe -o %COSMOS%\cp %COSMOS_URL%/cp.ape
+if not exist %COSMOS%\mkdir curl.exe -o %COSMOS%\mkdir %COSMOS_URL%/mkdir.ape
+if not exist %COSMOS%\mv curl.exe -o %COSMOS%\mv %COSMOS_URL%/mv.ape
+if not exist %COSMOS%\rm curl.exe -o %COSMOS%\rm %COSMOS_URL%/rm.ape
+if not exist %COSMOS%\sed curl.exe -o %COSMOS%\sed %COSMOS_URL%/sed
+if not exist %COSMOS%\sh curl.exe -o %COSMOS%\sh %COSMOS_URL%/dash
+if not exist %COSMOS%\tr curl.exe -o %COSMOS%\tr %COSMOS_URL%/tr
 
 if not exist %COSMOS%\x86_64-unknown-cosmo-cc (
   curl.exe -o %COSMOS%\cosmocc.zip https://cosmo.zip/pub/cosmocc/cosmocc-3.3.3.zip
@@ -37,3 +35,6 @@ if not exist %COSMOS%\x86_64-unknown-cosmo-cc (
   :UnzipDone
   echo >nul
 )
+
+if not exist %COSMOS%\apelink.exe copy %COSMOS%\apelink %COSMOS%\apelink.exe
+if not exist %COSMOS%\make.exe copy %COSMOS%\make %COSMOS%\make.exe
