@@ -15,13 +15,24 @@ INCDIR := $(OUTDIR)/include/
 COMMONOBJS := $(LIBDIR)/b64_buffer.o $(LIBDIR)/b64_decode.o $(LIBDIR)/base64_backend.o $(LIBDIR)/cJSON.o $(LIBDIR)/fileloading_frontend.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/screens.o $(LIBDIR)/specialscreens.o $(LIBDIR)/strings.o
 
 CFLAGS += -I $(INCDIR)
+CXXFLAGS += -I $(INCDIR)
 
 ifdef ISCOSMO
 CFLAGS += -mcosmo
+CXXFLAGS += -mcosmo -fexceptions
 COMMONOBJS += $(LIBDIR)/crossprint.o
-EXECSUFFIX :=
+EXECSUFFIX := .com
+define MAKEEXEC =
+$(APELINK) -l $(x86_64APEELF) -o $(1) $(2)
+endef
 else
+# mingw64 appends .exe if not present so copy will fail
+define MAKEEXEC =
+cp $(2) $(1) 2>/dev/null || true
+endef
+
 ifdef ISWINDOWS
+CXXFLAGS += -Wa,-mbig-obj
 GDICFLAGS := -municode -l gdi32
 COMMONOBJS += $(LIBDIR)/crossprint.o
 EXECSUFFIX := .exe
@@ -36,13 +47,9 @@ endif
 endif
 endif
 
-# Makes valgrind work better
-ifneq (,$(findstring debug,$(MAKECMDGOALS)))
-CFLAGS += -g
-endif
-
 # TODO: Support building specific frontends or tools
-debug: CFLAGS += -D _DEBUG
+debug: CFLAGS += -D _DEBUG -g
+debug: CXXFLAGS += -D _DEBUG -g
 debug release: $(BINDIR)/cmdgame$(EXECSUFFIX) $(BINDIR)/gdigame$(EXECSUFFIX) GameData.json
 discord: $(LIBDIR)/game.so GameData.json
 tools: $(BINDIR)/preptext$(EXECSUFFIX) $(BINDIR)/printgamedata$(EXECSUFFIX) $(BINDIR)/jsonvalidator$(EXECSUFFIX) GameData.json
@@ -75,13 +82,13 @@ $(INCDIR)/jsoncons_ext: third_party/jsoncons/include/jsoncons_ext | $(INCDIR)
 backend/game.h: $(INCDIR)/arena.h backend/types.h
 
 backend/types.h: backend/types.in.h
-	$(CC) -E -P -C -nostdinc -o $@ $<
+	$(CPP) -P -C -nostdinc -o $@ $<
 
 backend/types.json.h: backend/types.in.h
-	$(CC) -E -P -o $@ $< -D JSON
+	$(CPP) -P -o $@ $< -D JSON
 
 GameData.json: GameData.in.json backend/types.json.h
-	$(CC) -E -P -o $@ -xc $<
+	$(CPP) -P -o $@ -xc $<
 
 
 # Objects
@@ -140,13 +147,8 @@ $(LIBDIR)/preptext.o: tools/preptext.c $(INCDIR)/b64.h | $(LIBDIR)
 $(LIBDIR)/printgamedata.o: tools/printgamedata.c | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
-ifdef ISWINDOWS
 $(LIBDIR)/jsonvalidator.o: tools/jsonvalidator.cpp $(INCDIR)/jsoncons $(INCDIR)/jsoncons_ext | $(LIBDIR)
-	$(CXX) $(CXXSTD) $(CXXWARNINGS) -c -o $@ $< $(CFLAGS) -Wa,-mbig-obj
-else
-$(LIBDIR)/jsonvalidator.o: tools/jsonvalidator.cpp $(INCDIR)/jsoncons $(INCDIR)/jsoncons_ext | $(LIBDIR)
-	$(CXX) $(CXXSTD) $(CXXWARNINGS) -c -o $@ $< $(CFLAGS)
-endif
+	$(CXX) $(CXXSTD) $(CXXWARNINGS) -c -o $@ $< $(CXXFLAGS)
 
 
 $(LIBDIR)/cmdfrontend.o: frontends/cmdfrontend.c frontends/frontend.h backend/game.h | $(LIBDIR)
@@ -164,25 +166,29 @@ $(LIBDIR)/game.so: $(COMMONOBJS) | $(LIBDIR)
 
 # Executables
 $(BINDIR)/preptext$(EXECSUFFIX): $(LIBDIR)/b64_buffer.o $(LIBDIR)/b64_encode.o $(LIBDIR)/base64_preptext.o $(LIBDIR)/preptext.o $(LIBDIR)/strings.o | $(BINDIR)
-	$(CC) -o $@ $^ $(CFLAGS)
+	$(CC) -o $(basename $@) $^ $(CFLAGS)
+	$(call MAKEEXEC,$@,$(basename $@))
 
 ifdef ISWINDOWS
 $(BINDIR)/printgamedata$(EXECSUFFIX): $(LIBDIR)/b64_buffer.o $(LIBDIR)/b64_decode.o $(LIBDIR)/base64_backend.o $(LIBDIR)/cJSON.o $(LIBDIR)/crossprint.o $(LIBDIR)/fileloading_printgamedata.o $(LIBDIR)/parser.o $(LIBDIR)/printgamedata.o $(LIBDIR)/strings.o | $(BINDIR)
-	$(CC) -o $@ $^ $(CFLAGS)
 else
 $(BINDIR)/printgamedata$(EXECSUFFIX): $(LIBDIR)/b64_buffer.o $(LIBDIR)/b64_decode.o $(LIBDIR)/base64_backend.o $(LIBDIR)/cJSON.o $(LIBDIR)/fileloading_printgamedata.o $(LIBDIR)/parser.o $(LIBDIR)/printgamedata.o $(LIBDIR)/strings.o | $(BINDIR)
-	$(CC) -o $@ $^ $(CFLAGS)
 endif
+	$(CC) -o $(basename $@) $^ $(CFLAGS)
+	$(call MAKEEXEC,$@,$(basename $@))
 
 $(BINDIR)/jsonvalidator$(EXECSUFFIX): $(LIBDIR)/jsonvalidator.o | $(BINDIR)
-	$(CXX) -o $@ $^ $(CFLAGS)
+	$(CXX) -o $(basename $@) $^ $(CXXFLAGS)
+	$(call MAKEEXEC,$@,$(basename $@))
 
 $(BINDIR)/cmdgame$(EXECSUFFIX): $(LIBDIR)/cmdfrontend.o $(COMMONOBJS) $(WINRESOURCES) | $(BINDIR)
-	$(CC) -o $@ $^ $(CFLAGS) -lm
+	$(CC) -o $(basename $@) $^ $(CFLAGS) -lm
+	$(call MAKEEXEC,$@,$(basename $@))
 
 ifdef ISWINDOWS
 $(BINDIR)/gdigame$(EXECSUFFIX): $(LIBDIR)/gdifrontend.o $(COMMONOBJS) $(WINRESOURCES) | $(BINDIR)
-	$(CC) -o $@ $^ $(CFLAGS) $(GDICFLAGS)
+	$(CC) -o $(basename $@) $^ $(CFLAGS) $(GDICFLAGS)
+	$(call MAKEEXEC,$@,$(basename $@))
 else
 $(BINDIR)/gdigame$(EXECSUFFIX):
 endif

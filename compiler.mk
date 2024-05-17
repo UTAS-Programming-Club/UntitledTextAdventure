@@ -48,6 +48,7 @@ CXXWARNINGS := -Wall -Wextra -pedantic
 endif
 
 CFLAGS :=
+CXXFLAGS :=
 
 ifeq (,$(findstring clean,$(MAKECMDGOALS)))
 ifndef TARGET

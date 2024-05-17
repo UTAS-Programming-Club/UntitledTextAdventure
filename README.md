@@ -31,6 +31,8 @@ We have only just started so everything we have is a bit rough. So any contribut
 * Build instructions for tools and release on windows for both cmd and pwsh, and discord bot
 * Fix pwsh debug build instructions to work on older versions, currently the &&s fails
 * Figure out why newer cosmo build tools fail hang on windows. It might just be make as it has had issues in the past
+* Support building tools and cmdgame with cosmo on OSes other than windows
+* Hide "fatal error: no input files" errors at the top of all make calls
 
 ## Basic build instructions
 All of these are build from wsl with windows builds copied to windows first to avoid very slow startup. Additionally they clean the project and then clear the screen which I find makes reading the build output easier for debugging but is probably not desired by others. They will need to be modified for other systems.
@@ -52,8 +54,8 @@ make clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 debug && cp out/x
 
 Debug on windows 10 in powershell core:
 ```pwsh
-.\getwindeps.bat && .\make.bat clean && clear && .\make.bat debug && .\third_party\cosmos\bin\apelink.exe -l .\third_party\cosmos\bin\ape-x86_64.elf -o .\out\x86_64-pc-linux-cosmo\bin\cmdgame.com .\out\x86_64-pc-linux-cosmo\bin\cmdgame
-.\getwindeps.bat && .\make.bat clean && clear && .\make.bat debug && .\third_party\cosmos\bin\apelink.exe -l .\third_party\cosmos\bin\ape-x86_64.elf -o .\out\x86_64-pc-linux-cosmo\bin\gdigame.com .\out\x86_64-pc-linux-cosmo\bin\gdigame
+.\getwindeps.bat && .\make.bat clean && clear && .\make.bat debug && .\out\x86_64-pc-linux-cosmo\bin\cmdgame.com
+.\getwindeps.bat && .\make.bat clean && clear && .\make.bat debug && .\out\x86_64-pc-linux-cosmo\bin\gdigame.com
 ```
 
 Release on wsl(making windows binaries):
@@ -62,6 +64,7 @@ make clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 WINDRES=x86_64-w6
 make clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 WINDRES=x86_64-w64-mingw32-windres release && cp out/x86_64-w64-mingw32/bin/gdigame.exe /mnt/c/Projects/PCGame/Windows/ && /mnt/c/Projects/PCGame/Windows/gdigame.exe
 ```
 
+Needs gnu make.
 Release on linux and hopefully other unix likes:
 ```sh
 make clean && clear && make CC=gcc release && ./out/x86_64-pc-linux-gnu/bin/cmdgame
@@ -69,12 +72,22 @@ make clean && clear && make CC=gcc release && ./out/x86_64-pc-linux-gnu/bin/cmdg
 
 Tools on wsl(making windows binaries):
 ```sh
+make clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 CXX=x86_64-w64-mingw32-g++-win32 tools && cp out/x86_64-w64-mingw32/bin/jsonvalidator.exe /mnt/c/Projects/PCGame/Windows/ && /mnt/c/Projects/PCGame/Windows/jsonvalidator.exe
 make clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 CXX=x86_64-w64-mingw32-g++-win32 tools && cp out/x86_64-w64-mingw32/bin/preptext.exe /mnt/c/Projects/PCGame/Windows/ && /mnt/c/Projects/PCGame/Windows/preptext.exe "Some text"
 make clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 CXX=x86_64-w64-mingw32-g++-win32 tools && cp out/x86_64-w64-mingw32/bin/printgamedata.exe /mnt/c/Projects/PCGame/Windows/ && /mnt/c/Projects/PCGame/Windows/printgamedata.exe GameData.json
 ```
 
+Needs gnu make.
 Tools on linux and hopefully other unix likes:
 ```sh
+make clean && clear && make CC=gcc CXX=g++ tools && ./out/x86_64-pc-linux-gnu/bin/jsonvalidator
 make clean && clear && make CC=gcc CXX=g++ tools && ./out/x86_64-pc-linux-gnu/bin/preptext "Some text"
 make clean && clear && make CC=gcc CXX=g++ tools && ./out/x86_64-pc-linux-gnu/bin/printgamedata GameData.json
+```
+
+Tools on windows 10 in powershell core:
+```pwsh
+.\getwindeps.bat && .\make.bat clean && clear && .\make.bat tools && .\out\x86_64-pc-linux-cosmo\bin\jsonvalidator.com
+.\getwindeps.bat && .\make.bat clean && clear && .\make.bat tools && .\out\x86_64-pc-linux-cosmo\bin\preptext.com "Some text"
+.\getwindeps.bat && .\make.bat clean && clear && .\make.bat tools && .\out\x86_64-pc-linux-cosmo\bin\printgamedata.com GameData.json
 ```
