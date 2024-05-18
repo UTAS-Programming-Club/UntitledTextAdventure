@@ -244,6 +244,16 @@ bool GetGameScreen(enum ScreenID screenID, struct GameScreen *screen) {
     return false;
   }
 
+  cJSON *jsonCustomScreenID = cJSON_GetObjectItemCaseSensitive(jsonScreen, "customScreenID");
+  if (!jsonCustomScreenID) {
+    screen->customScreenID = InvalidCustomScreenID;
+  } else {
+    if (!cJSON_IsNumber(jsonCustomScreenID)) {
+      return false;
+    }
+    screen->customScreenID = cJSON_GetNumberValue(jsonCustomScreenID);
+  }
+
   screen->body = c32base64toc32(base64Body);
   if (!screen->body) {
     return false;
@@ -314,7 +324,7 @@ bool GetGameScreenButton(enum ScreenID screenID, uint8_t buttonID, struct GameSc
     }
     button->newScreen = cJSON_GetNumberValue(jsonNewScreen);
   } else {
-    button->newScreen = InvaidScreenID;
+    button->newScreen = InvalidScreenID;
   }
 
   button->title = c32base64toc32(base64Title);

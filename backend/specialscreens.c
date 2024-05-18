@@ -130,11 +130,7 @@ static bool CreateMainMenuScreen(struct GameOutput *output) {
 }
 
 
-// TODO: Remote the need for all the NULLs
-// Must match the order of the ScreenID enum in types.h
+// Must match the order of the CustomScreenID enum in types.h
 bool (*CustomScreens[])(struct GameOutput *) = {
   CreateMainMenuScreen,
-  NULL,
-  NULL,
-  NULL,
 };

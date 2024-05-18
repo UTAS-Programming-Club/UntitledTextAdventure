@@ -23,6 +23,7 @@ bool CreateScreen(struct GameOutput *output) {
   output->body = screen.body;
   output->bodyArena = false;
   free(screen.extraText);
+  output->customScreenID = screen.customScreenID;
 
   uint8_t buttonCount = GetGameScreenButtonCount(output->screenID);
   if (buttonCount == UINT8_MAX) {

@@ -9,6 +9,7 @@
 struct GameScreen {
   char32_t *body;
   char32_t *extraText;
+  enum CustomScreenID customScreenID;
 };
 
 struct GameScreenButton {

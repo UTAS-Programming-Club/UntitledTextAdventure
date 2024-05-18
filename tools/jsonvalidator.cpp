@@ -12,7 +12,9 @@ int main() {
   std::ifstream gameDataFile("GameData.json");
 
   ojson schema = ojson::parse(schemaFile);
-  jsonschema::json_schema<ojson> compiledSchema = jsonschema::make_json_schema(std::move(schema));
+  jsonschema::json_schema<ojson> compiledSchema = jsonschema::make_json_schema(
+    std::move(schema)
+  );
 
   ojson gameData;
   uint_fast32_t errorCount = 0;

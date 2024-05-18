@@ -13,7 +13,7 @@ bool SetupGame(void) {
 
 // TODO: Add more screens
 bool GetCurrentGameOutput(struct GameOutput *output) {
-  if (!output || output->screenID == InvaidScreenID) {
+  if (!output || output->screenID == InvalidScreenID) {
     return false;
   }
 
@@ -30,8 +30,8 @@ bool GetCurrentGameOutput(struct GameOutput *output) {
     return false;
   }
 
-  if (CustomScreens[output->screenID]) {
-    return CustomScreens[output->screenID](output);
+  if (InvalidCustomScreenID != output->customScreenID) {
+    return CustomScreens[output->customScreenID](output);
   } else {
     return true;
   }
