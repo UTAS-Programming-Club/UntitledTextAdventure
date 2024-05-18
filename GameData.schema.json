@@ -4,7 +4,8 @@
   "additionalProperties": false,
   "required": [
     "screens",
-    "state"
+    "state",
+    "rooms"
   ],
   "properties": {
     "screens": {
@@ -74,6 +75,33 @@
             "type": "number"
           },
           "default": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "rooms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "type": "number"
+          },
+          "north": {
+            "type": "number"
+          },
+          "east": {
+            "type": "number"
+          },
+          "south": {
+            "type": "number"
+          },
+          "west": {
             "type": "number"
           }
         }

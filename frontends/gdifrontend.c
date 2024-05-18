@@ -382,8 +382,9 @@ cleanup_paint:
           if (GetCurrentGameOutput(&Output)) {
             NeedRedrawButtons = TRUE;
             InvalidateRect(hWnd, NULL, TRUE);
+            break;
           }
-          break;
+          // fall through
         case QuitGame:
           FreeScreen(&Output);
           DestroyWindow(hWnd);

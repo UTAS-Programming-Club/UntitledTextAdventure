@@ -9,6 +9,5 @@
 
 bool CreateScreen(struct GameOutput *);
 void FreeScreen(struct GameOutput *);
-bool HandleScreenInput(enum ScreenID, uint8_t, struct GameScreenButton *);
 
 #endif // PCGAME_SCREENS_H

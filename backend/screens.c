@@ -68,8 +68,3 @@ void FreeScreen(struct GameOutput *output) {
     output->inputs = NULL;
   }
 }
-
-// TODO: Remove this
-bool HandleScreenInput(enum ScreenID screenID, uint8_t inputID, struct GameScreenButton *button) {
-  return GetGameScreenButton(screenID, inputID, button);
-}

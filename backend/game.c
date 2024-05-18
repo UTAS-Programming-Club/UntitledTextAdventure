@@ -39,14 +39,23 @@ bool GetCurrentGameOutput(struct GameOutput *output) {
 
 enum InputOutcome HandleGameInput(struct GameOutput *output, uint32_t inputID) {
   struct GameScreenButton button = {0};
-  if (!HandleScreenInput(output->screenID, inputID, &button)) {
+  if (!GetGameScreenButton(output->screenID, inputID, &button)) {
     return InvalidInputOutcome;
   }
 
   enum InputOutcome outcome = button.outcome;
-  if (outcome == GotoScreen) {
-    output->screenID = button.newScreen;
-    outcome = GetNextOutput;
+  switch (outcome) {
+    case GotoScreen:
+      output->screenID = button.newScreen;
+      // fall through
+    case GameGoNorth:
+    case GameGoEast:
+    case GameGoSouth:
+    case GameGoWest:
+      outcome = GetNextOutput;
+      break;
+    default:
+      break;
   }
 
   FreeGameScreenButton(&button);
