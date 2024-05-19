@@ -38,6 +38,8 @@ We have only just started so everything we have is a bit rough. So any contribut
 All of these are build from wsl with windows builds copied to windows first to avoid very slow startup. Additionally they clean the project and then clear the screen which I find makes reading the build output easier for debugging but is probably not desired by others. They will need to be modified for other systems.
 Debug game binaries for windows and release binaries for other oses require GameData.json in the starting directory.
 Release game binaries for windows pack the json file into the binary.
+Only tested with gcc but should work with clang. Unlikely to work with msvc as is.
+Requires gnu make, will accept contributions to support other versions of make.
 
 Downloading repo:
 ```sh
@@ -52,7 +54,9 @@ make clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 debug && cp out/x
 make clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 debug && cp out/x86_64-w64-mingw32/bin/gdigame.exe /mnt/c/Projects/PCGame/Windows/ && /mnt/c/Projects/PCGame/Windows/gdigame.exe
 ```
 
-Debug on windows 10 in powershell core:
+For cmd replace `clear` with `cls`.
+For older versions of powershell either run the commands seperately or switch to cmd or powershell core.
+Debug on windows 10/11 in powershell core:
 ```pwsh
 .\getwindeps.bat && .\make.bat clean && clear && .\make.bat debug && .\out\x86_64-pc-linux-cosmo\bin\cmdgame.com
 .\getwindeps.bat && .\make.bat clean && clear && .\make.bat debug && .\out\x86_64-pc-linux-cosmo\bin\gdigame.com
@@ -64,8 +68,7 @@ make clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 WINDRES=x86_64-w6
 make clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 WINDRES=x86_64-w64-mingw32-windres release && cp out/x86_64-w64-mingw32/bin/gdigame.exe /mnt/c/Projects/PCGame/Windows/ && /mnt/c/Projects/PCGame/Windows/gdigame.exe
 ```
 
-Needs gnu make.
-Release on linux and hopefully other unix likes:
+Release on linux, hopefully other unix likes and possibly cygwin or msys2:
 ```sh
 make clean && clear && make CC=gcc release && ./out/x86_64-pc-linux-gnu/bin/cmdgame
 ```
@@ -77,14 +80,15 @@ make clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 CXX=x86_64-w64-mi
 make clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 CXX=x86_64-w64-mingw32-g++-win32 tools && cp out/x86_64-w64-mingw32/bin/printgamedata.exe /mnt/c/Projects/PCGame/Windows/ && /mnt/c/Projects/PCGame/Windows/printgamedata.exe GameData.json
 ```
 
-Needs gnu make.
-Tools on linux and hopefully other unix likes:
+Tools on linux, hopefully other unix likes and possibly cygwin or msys2:
 ```sh
 make clean && clear && make CC=gcc CXX=g++ tools && ./out/x86_64-pc-linux-gnu/bin/jsonvalidator
 make clean && clear && make CC=gcc CXX=g++ tools && ./out/x86_64-pc-linux-gnu/bin/preptext "Some text"
 make clean && clear && make CC=gcc CXX=g++ tools && ./out/x86_64-pc-linux-gnu/bin/printgamedata GameData.json
 ```
 
+For cmd replace `clear` with `cls`.
+For older versions of powershell either run the commands seperately or switch to cmd or powershell core.
 Tools on windows 10 in powershell core:
 ```pwsh
 .\getwindeps.bat && .\make.bat clean && clear && .\make.bat tools && .\out\x86_64-pc-linux-cosmo\bin\jsonvalidator.com

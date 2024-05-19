@@ -127,10 +127,10 @@ static bool HandleInput(struct GameOutput *output) {
   switch(outcome) {
     case InvalidInputOutcome:
       return HandleInput(output);
-    case GetNextOutput:
+    case GetNextOutputOutcome:
       FreeScreen(output);
       return true;
-    case QuitGame:
+    case QuitGameOutcome:
     default:
       FreeScreen(output);
       return false;

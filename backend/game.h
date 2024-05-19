@@ -18,18 +18,24 @@ struct GameInput {
   bool titleArena;
 };
 
+struct RoomInfo {
+  enum RoomType type;
+  RoomID roomID;
+};
+
 struct GameOutput {
 // public, safe to use outside of backend
-  enum ScreenID screenID;
+  enum Screen screenID;
   char32_t *body;
   uint8_t inputCount;
   struct GameInput *inputs;
+  struct RoomInfo roomInfo;
 // implementation, do not use outside of backend
   Arena arena;
   bool bodyArena;
   bool inputsArrayArena;
   unsigned char *stateData;
-  enum CustomScreenID customScreenID;
+  enum CustomScreenCode customScreenCodeID;
 // Currently body and inputs[i].title MUST be allocated, this must be fixed if the encoding changes to utf-8 because then most button titles will also be direct copies of cJSON returned data
 };
 

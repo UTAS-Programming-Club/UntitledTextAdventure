@@ -9,26 +9,26 @@
 struct GameScreen {
   char32_t *body;
   char32_t *extraText;
-  enum CustomScreenID customScreenID;
+  enum CustomScreenCode customScreenCodeID;
 };
 
 struct GameScreenButton {
   char32_t *title;
   enum InputOutcome outcome;
-  enum ScreenID newScreen; // Only used(and set correctly) if outcome == GotoScreen
+  enum Screen newScreenID; // Only set if outcome == GotoScreenOutcome
 };
 
 bool LoadGameData(char *);
 void UnloadGameData(void);
 
 unsigned char *InitGameState(void);
-size_t GetGameStateOffset(enum ScreenID, uint8_t);
+size_t GetGameStateOffset(enum Screen, uint8_t);
 
 uint16_t GetGameScreenCount(void);
-bool GetGameScreen(enum ScreenID, struct GameScreen *);
+bool GetGameScreen(enum Screen, struct GameScreen *);
 
-bool GetGameScreenButton(enum ScreenID, uint8_t, struct GameScreenButton *);
-uint8_t GetGameScreenButtonCount(enum ScreenID);
+bool GetGameScreenButton(enum Screen, uint8_t, struct GameScreenButton *);
+uint8_t GetGameScreenButtonCount(enum Screen);
 void FreeGameScreenButton(struct GameScreenButton *);
 
 #endif // PCGAME_PARSER_H

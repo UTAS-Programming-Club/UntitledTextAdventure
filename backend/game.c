@@ -11,9 +11,8 @@ bool SetupGame(void) {
   return LoadGameData("GameData.json");
 }
 
-// TODO: Add more screens
 bool GetCurrentGameOutput(struct GameOutput *output) {
-  if (!output || output->screenID == InvalidScreenID) {
+  if (!output || output->screenID == InvalidScreen) {
     return false;
   }
 
@@ -30,8 +29,8 @@ bool GetCurrentGameOutput(struct GameOutput *output) {
     return false;
   }
 
-  if (InvalidCustomScreenID != output->customScreenID) {
-    return CustomScreens[output->customScreenID](output);
+  if (InvalidCustomScreenCode != output->customScreenCodeID) {
+    return CustomScreenCode[output->customScreenCodeID](output);
   } else {
     return true;
   }
@@ -45,14 +44,14 @@ enum InputOutcome HandleGameInput(struct GameOutput *output, uint32_t inputID) {
 
   enum InputOutcome outcome = button.outcome;
   switch (outcome) {
-    case GotoScreen:
-      output->screenID = button.newScreen;
+    case GotoScreenOutcome:
+      output->screenID = button.newScreenID;
       // fall through
-    case GameGoNorth:
-    case GameGoEast:
-    case GameGoSouth:
-    case GameGoWest:
-      outcome = GetNextOutput;
+    case GameGoNorthOutcome:
+    case GameGoEastOutcome:
+    case GameGoSouthOutcome:
+    case GameGoWestOutcome:
+      outcome = GetNextOutputOutcome;
       break;
     default:
       break;

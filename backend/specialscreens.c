@@ -129,8 +129,42 @@ static bool CreateMainMenuScreen(struct GameOutput *output) {
   return true;
 }
 
+static bool CreateGameScreen(struct GameOutput *output) {
+  static char32_t bodyBeginning[] = U"This is the game, you are in room ";
+  static char32_t bodyEnding[] = U".";
 
-// Must match the order of the CustomScreenID enum in types.h
-bool (*CustomScreens[])(struct GameOutput *) = {
+  char32_t *roomIDStr = U64toS32(output->roomInfo.roomID, &output->arena);
+  if (!roomIDStr) {
+    return false;
+  }
+
+  size_t allocatedCharCount = S32Merge(0, NULL, 3, bodyBeginning, roomIDStr, bodyEnding);
+  if (!allocatedCharCount) {
+    return false;
+  }
+
+  char32_t *str = arena_alloc(&output->arena, allocatedCharCount * sizeof *str);
+  if (!str) {
+    return false;
+  }
+
+  if (!S32Merge(allocatedCharCount, str, 3, bodyBeginning, roomIDStr, bodyEnding)) {
+    FreeScreen(output);
+    return false;
+  }
+  if (!output->bodyArena) {
+    free(output->body);
+  }
+
+  output->body = str;
+  output->bodyArena = true;
+
+  return true;
+}
+
+
+// Must match the order of the CustomScreenCode enum in types.h
+bool (*CustomScreenCode[])(struct GameOutput *) = {
   CreateMainMenuScreen,
+  CreateGameScreen,
 };

@@ -25,7 +25,7 @@
           "extraText": {
             "type": "string"
           },
-          "customScreenID": {
+          "customScreenCode": {
             "type": "number"
           },
           "buttons": {

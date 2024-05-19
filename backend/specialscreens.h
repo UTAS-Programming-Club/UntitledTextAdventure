@@ -5,6 +5,6 @@
 
 #include "game.h"
 
-extern bool (*CustomScreens[])(struct GameOutput *);
+extern bool (*CustomScreenCode[])(struct GameOutput *);
 
 #endif // PCGAME_SPECIAL_SCREENS_H

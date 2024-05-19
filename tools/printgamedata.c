@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
   }
 
   printf("Screen count: %" PRIu32 "\n\n", screenCount);
-  for (enum ScreenID i = 0; i < screenCount; ++i) {
+  for (enum Screen i = 0; i < screenCount; ++i) {
     struct GameScreen screen = {0};
     if (!GetGameScreen(i, &screen)) {
       continue;

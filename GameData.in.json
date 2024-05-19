@@ -8,13 +8,13 @@
       "body": "VQAAAG4AAAB0AAAAaQAAAHQAAABsAAAAZQAAAGQAAAAgAAAAdAAAAGUAAAB4AAAAdAAAACAAAABhAAAAZAAAAHYAAABlAAAAbgAAAHQAAAB1AAAAcgAAAGUAAAAgAAAAZwAAAGEAAABtAAAAZQAAAAoAAAAtAAAALQAAAC0AAAAtAAAALQAAAC0AAAAtAAAALQAAAC0AAAAtAAAALQAAAC0AAAAtAAAALQAAAC0AAAAtAAAALQAAAC0AAAAtAAAALQAAAC0AAAAtAAAALQAAAC0AAAAtAAAALQAAAC0AAAAtAAAACgAAAEIAAAB5AAAAIAAAAHQAAABoAAAAZQAAACAAAABVAAAAVAAAAEEAAABTAAAAIAAAAFAAAAByAAAAbwAAAGcAAAByAAAAYQAAAG0AAABtAAAAaQAAAG4AAABnAAAAIAAAAEMAAABsAAAAdQAAAGIAAAAKAAAACgAAAEMAAAB1AAAAcgAAAHIAAABlAAAAbgAAAHQAAABsAAAAeQAAACAAAAB1AAAAbgAAAGkAAABtAAAAcAAAAGwAAABlAAAAbQAAAGUAAABuAAAAdAAAAGUAAABkAAAAIAAAADoAAAAoAAAAAAAAAA==",
       // extraText: \nReload Count:
       "extraText": "CgAAAFIAAABlAAAAbAAAAG8AAABhAAAAZAAAACAAAABDAAAAbwAAAHUAAABuAAAAdAAAADoAAAAgAAAAAAAAAA==",
-      "customScreenID": MainMenuCustomScreen,
+      "customScreenCode": MainMenuCustomScreenCode,
       "buttons": [
         {
           // title: Start Game
           "title": "UwAAAHQAAABhAAAAcgAAAHQAAAAgAAAARwAAAGEAAABtAAAAZQAAAAAAAAA=",
-          "outcome": GotoScreen,
-          "newScreen": GameScreenID
+          "outcome": GotoScreenOutcome,
+          "newScreen": GameScreen
         },
         {
           // title: Quit Game
@@ -27,39 +27,40 @@
       // ID: 1
       "body": "AAAAAA==",
       "extraText": "AAAAAA==",
+      "customScreenCode": GameCustomScreenCode,
       "buttons": [
         {
           // title: Go North
           "title": "RwAAAG8AAAAgAAAATgAAAG8AAAByAAAAdAAAAGgAAAAAAAAA",
-          "outcome": GameGoNorth
+          "outcome": GameGoNorthOutcome
         },
         {
           // title: Go East
           "title": "RwAAAG8AAAAgAAAARQAAAGEAAABzAAAAdAAAAAAAAAA=",
-          "outcome": GameGoEast
+          "outcome": GameGoEastOutcome
         },
         {
           // title: "Go South"
           "title": "RwAAAG8AAAAgAAAAUwAAAG8AAAB1AAAAdAAAAGgAAAAAAAAA",
-          "outcome": GameGoSouth
+          "outcome": GameGoSouthOutcome
         },
         {
           // title: "Go West"
           "title": "RwAAAG8AAAAgAAAAVwAAAGUAAABzAAAAdAAAAAAAAAA=",
-          "outcome": GameGoWest
+          "outcome": GameGoWestOutcome
         },
         {
           // title: Return to Main Menu
           "title": "UgAAAGUAAAB0AAAAdQAAAHIAAABuAAAAIAAAAHQAAABvAAAAIAAAAE0AAABhAAAAaQAAAG4AAAAgAAAATQAAAGUAAABuAAAAdQAAAAAAAAA=",
-          "outcome": GotoScreen,
-          "newScreen": MainMenuScreenID
+          "outcome": GotoScreenOutcome,
+          "newScreen": MainMenuScreen
         }
       ]
     }
   ],
   "state": [
     {
-      "screenID": MainMenuScreenID,
+      "screenID": MainMenuScreen,
       // name: Reload count
       "stateID": 0,
       // type: uint32_t
@@ -70,25 +71,25 @@
   "rooms": [
     {
       // ID: 0
-      "type": 0,
+      "type": EmptyRoomType,
       "north": 1,
       "east": 3
     },
     {
       // ID: 1
-      "type": 0,
+      "type": EmptyRoomType,
       "east": 2,
       "south": 0
     },
     {
       // ID: 2
-      "type": 0,
+      "type": EmptyRoomType,
       "south": 3,
       "west": 1
     },
     {
       // ID: 3
-      "type": 0,
+      "type": EmptyRoomType,
       "north": 2,
       "west": 0
     }
