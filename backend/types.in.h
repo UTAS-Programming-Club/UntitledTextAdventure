@@ -56,9 +56,10 @@ JSON_ENUM_START(RoomType)
   JSON_ENUM_ITEM(InvalidRoomType, 255)
 JSON_ENUM_END
 
+// RoomType is a uint16_t, [0, 65535]
 // Must match indices in rooms array in GameData.in.json
 // Screen 0 is the default room and is shown when GameScreen becomes the current screen
-C_EMIT(typedef uint16_t RoomID;)
+C_EMIT(typedef uint_fast16_t RoomID;)
 EMIT(#define InvalidRoomID 65535)
 
 // TODO: Add enum for state vars

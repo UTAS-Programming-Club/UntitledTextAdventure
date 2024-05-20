@@ -14,13 +14,19 @@
 struct GameInput {
 // public, safe to use outside of backend
   char32_t *title;
+  bool visible;
 // implementation, do not use outside of backend
   bool titleArena;
+  enum InputOutcome outcome;
 };
 
 struct RoomInfo {
   enum RoomType type;
   RoomID roomID;
+  RoomID northRoomID;
+  RoomID eastRoomID;
+  RoomID southRoomID;
+  RoomID westRoomID;
 };
 
 struct GameOutput {
@@ -41,7 +47,7 @@ struct GameOutput {
 
 bool SetupGame(void);
 bool GetCurrentGameOutput(struct GameOutput *);
-enum InputOutcome HandleGameInput(struct GameOutput *, uint32_t);
+enum InputOutcome HandleGameInput(struct GameOutput *, uint8_t);
 void CleanupGame(struct GameOutput *);
 
 #endif // PCGAME_GAME_H

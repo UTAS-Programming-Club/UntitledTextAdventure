@@ -31,4 +31,6 @@ bool GetGameScreenButton(enum Screen, uint8_t, struct GameScreenButton *);
 uint8_t GetGameScreenButtonCount(enum Screen);
 void FreeGameScreenButton(struct GameScreenButton *);
 
+bool GetGameRoom(struct RoomInfo *);
+
 #endif // PCGAME_PARSER_H

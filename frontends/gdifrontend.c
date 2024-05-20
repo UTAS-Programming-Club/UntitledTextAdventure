@@ -263,8 +263,16 @@ static void HandleOutput(HWND hWnd, HDC hdc, PAINTSTRUCT ps) {
     }
   }
 
-  if (buttonHandleCount < Output.inputCount) {
-    buttonHandleCount = Output.inputCount;
+  uint8_t inputCount = 0;
+  for (uint8_t i = 0; i < Output.inputCount; ++i) {
+    if (!Output.inputs[i].visible) {
+      continue;
+    }
+    ++inputCount;
+  }
+
+  if (buttonHandleCount < inputCount) {
+    buttonHandleCount = inputCount;
     buttonHandles = realloc(buttonHandles, buttonHandleCount * sizeof *buttonHandles);
     if (!buttonHandles) {
       return;
@@ -280,9 +288,9 @@ static void HandleOutput(HWND hWnd, HDC hdc, PAINTSTRUCT ps) {
   int buttonHeight = 20;
   int maxButtonsPerRow = 3;
   int rowVerticalSeperation = 10;
-
-  int buttonsPerRow = maxButtonsPerRow <= Output.inputCount ? maxButtonsPerRow : Output.inputCount;
-  int extraRowCount = Output.inputCount / maxButtonsPerRow;
+  int buttonsPerRow = maxButtonsPerRow <= inputCount ? maxButtonsPerRow : inputCount;
+  // Fails if inputCount is 0 which should not happen
+  int extraRowCount = (inputCount - 1) / maxButtonsPerRow;
   int buttonVerticalSeperation = buttonHeight + rowVerticalSeperation;
 
   int firstButtonCentreX = clientSize.right / (buttonsPerRow + 1);
@@ -294,7 +302,11 @@ static void HandleOutput(HWND hWnd, HDC hdc, PAINTSTRUCT ps) {
 
   HINSTANCE wndInst = (HINSTANCE)GetWindowLongPtrW(hWnd, GWLP_HINSTANCE);
 
-  for (uint8_t i = 0; i < Output.inputCount; ++i) {
+  for (uint8_t i = 0, visibleInputCount = 0; i < Output.inputCount; ++i) {
+    if (!Output.inputs[i].visible) {
+      continue;
+    }
+
     wcText = c32towc(Output.inputs[i].title);
     if (!wcText) {
       return;
@@ -302,16 +314,17 @@ static void HandleOutput(HWND hWnd, HDC hdc, PAINTSTRUCT ps) {
 
     // TODO: Use remaining buttons mod buttonsPerRow as buttonsPerRow so that buttons in the bottom
     // row are spaced according to how many are in that row and now how many are in previous rows
-    int buttonTopLeftX = (i % buttonsPerRow + 1) * firstButtonCentreX - buttonCornerOffsetX;
-    int buttonTopLeftY = firstButtonCornerTopRowY + buttonVerticalSeperation * (i / buttonsPerRow);
+    int buttonTopLeftX = (visibleInputCount % buttonsPerRow + 1) * firstButtonCentreX - buttonCornerOffsetX;
+    int buttonTopLeftY = firstButtonCornerTopRowY + buttonVerticalSeperation * (visibleInputCount / buttonsPerRow);
 
     // TODO: Fix tabbing not working despite WS_TABSTOP
     HWND hBtn = CreateWindowExW(0,  u"BUTTON", wcText,
                                 WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
                                 buttonTopLeftX, buttonTopLeftY, buttonWidth, buttonHeight, hWnd,
-                                (HMENU)(intptr_t)i, wndInst, NULL);
-    buttonHandles[i] = hBtn;
+                                (HMENU)(intptr_t)visibleInputCount, wndInst, NULL);
+    buttonHandles[visibleInputCount] = hBtn;
     free(wcText);
+    ++visibleInputCount;
   }
 }
 
@@ -377,7 +390,7 @@ cleanup_paint:
 
       enum InputOutcome outcome = HandleGameInput(&Output, LOWORD(wParam));
       switch(outcome) {
-        case GetNextOutput:
+        case GetNextOutputOutcome:
           FreeScreen(&Output);
           if (GetCurrentGameOutput(&Output)) {
             NeedRedrawButtons = TRUE;
@@ -385,7 +398,7 @@ cleanup_paint:
             break;
           }
           // fall through
-        case QuitGame:
+        case QuitGameOutcome:
           FreeScreen(&Output);
           DestroyWindow(hWnd);
           break;

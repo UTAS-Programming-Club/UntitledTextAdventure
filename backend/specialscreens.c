@@ -133,6 +133,10 @@ static bool CreateGameScreen(struct GameOutput *output) {
   static char32_t bodyBeginning[] = U"This is the game, you are in room ";
   static char32_t bodyEnding[] = U".";
 
+  if (!GetGameRoom(&output->roomInfo)) {
+    return false;
+  }
+
   char32_t *roomIDStr = U64toS32(output->roomInfo.roomID, &output->arena);
   if (!roomIDStr) {
     return false;
@@ -158,6 +162,25 @@ static bool CreateGameScreen(struct GameOutput *output) {
 
   output->body = str;
   output->bodyArena = true;
+
+  for (uint8_t i = 0; i < output->inputCount; ++i) {
+    switch (output->inputs[i].outcome) {
+      case GameGoNorthOutcome:
+        output->inputs[i].visible = InvalidRoomID != output->roomInfo.northRoomID;
+        break;
+      case GameGoEastOutcome:
+        output->inputs[i].visible = InvalidRoomID != output->roomInfo.eastRoomID;
+        break;
+      case GameGoSouthOutcome:
+        output->inputs[i].visible = InvalidRoomID != output->roomInfo.southRoomID;
+        break;
+      case GameGoWestOutcome:
+        output->inputs[i].visible = InvalidRoomID != output->roomInfo.westRoomID;
+        break;
+      default:
+        break;
+    }
+  }
 
   return true;
 }

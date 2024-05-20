@@ -44,6 +44,8 @@ bool CreateScreen(struct GameOutput *output) {
     }
     output->inputs[i].title = button.title;
     output->inputs[i].titleArena = false;
+    output->inputs[i].visible = true;
+    output->inputs[i].outcome = button.outcome;
   }
 
   return true;

@@ -183,7 +183,7 @@ loop:
 }
 
 
-// TODO: Change error value to 0
+// TODO: Change error value to 0? Would require making 0 screens not allowed which is reasonable
 uint16_t GetGameScreenCount(void) {
   if (!GameData) {
     return UINT16_MAX;
@@ -208,7 +208,6 @@ static cJSON *GetGameScreenJson(enum Screen screenID) {
   }
 
   cJSON *screens = cJSON_GetObjectItemCaseSensitive(GameData, "screens");
-  // TODO: Check if cJSON_GetArrayItem does this check
   if (!cJSON_IsArray(screens)) {
     return NULL;
   }
@@ -269,7 +268,7 @@ bool GetGameScreen(enum Screen screenID, struct GameScreen *screen) {
 }
 
 
-// TODO: Change error value to 0
+// TODO: Change error value to 0? Would require making 0 buttons not allowed which is reasonable
 uint8_t GetGameScreenButtonCount(enum Screen screenID) {
   cJSON *screen = GetGameScreenJson(screenID);
   if (!screen) {
@@ -335,4 +334,79 @@ bool GetGameScreenButton(enum Screen screenID, uint8_t buttonID, struct GameScre
 void FreeGameScreenButton(struct GameScreenButton *button) {
   free(button->title);
   button->title = NULL;
+}
+
+
+bool GetGameRoom(struct RoomInfo *room) {
+  if (!GameData) {
+    return false;
+  }
+
+  // cJSON_GetArrayItem uses int, likely fine as INT_MAX >= 2^15 - 1
+  // Need pragra to avoid warning about size check being redundant,
+  // it's not as 2^16 - 1 > 2^15 - 1
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wtype-limits"
+  if (!room || InvalidRoomID == room->roomID || room->roomID > INT_MAX) {
+#pragma GCC diagnostic pop
+    return false;
+  }
+
+  cJSON *rooms = cJSON_GetObjectItemCaseSensitive(GameData, "rooms");
+  if (!cJSON_IsArray(rooms)) {
+    return false;
+  }
+
+  cJSON *roomJson = cJSON_GetArrayItem(rooms, room->roomID);
+  if (!cJSON_IsObject(roomJson)) {
+    return false;
+  }
+
+  cJSON *jsonType = cJSON_GetObjectItemCaseSensitive(roomJson, "type");
+  if (!cJSON_IsNumber(jsonType)) {
+    return false;
+  }
+  room->type = cJSON_GetNumberValue(jsonType);
+
+  cJSON *jsonNorth = cJSON_GetObjectItemCaseSensitive(roomJson, "north");
+    if (!jsonNorth) {
+    room->northRoomID = InvalidCustomScreenCode;
+  } else {
+    if (!cJSON_IsNumber(jsonNorth)) {
+      return false;
+    }
+    room->northRoomID = cJSON_GetNumberValue(jsonNorth);
+  }
+
+  cJSON *jsonEast = cJSON_GetObjectItemCaseSensitive(roomJson, "east");
+    if (!jsonEast) {
+    room->eastRoomID = InvalidCustomScreenCode;
+  } else {
+    if (!cJSON_IsNumber(jsonEast)) {
+      return false;
+    }
+    room->eastRoomID = cJSON_GetNumberValue(jsonEast);
+  }
+
+  cJSON *jsonSouth = cJSON_GetObjectItemCaseSensitive(roomJson, "south");
+    if (!jsonSouth) {
+    room->southRoomID = InvalidCustomScreenCode;
+  } else {
+    if (!cJSON_IsNumber(jsonSouth)) {
+      return false;
+    }
+    room->southRoomID = cJSON_GetNumberValue(jsonSouth);
+  }
+
+  cJSON *jsonWest = cJSON_GetObjectItemCaseSensitive(roomJson, "west");
+    if (!jsonWest) {
+    room->westRoomID = InvalidCustomScreenCode;
+  } else {
+    if (!cJSON_IsNumber(jsonWest)) {
+      return false;
+    }
+    room->westRoomID = cJSON_GetNumberValue(jsonWest);
+  }
+
+  return true;
 }

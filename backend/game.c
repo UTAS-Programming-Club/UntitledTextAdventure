@@ -36,7 +36,24 @@ bool GetCurrentGameOutput(struct GameOutput *output) {
   }
 }
 
-enum InputOutcome HandleGameInput(struct GameOutput *output, uint32_t inputID) {
+static uint8_t MapInputIndex(struct GameOutput *output, uint8_t inputIndex) {
+  for (uint8_t i = 0, visibleInputCount = 0; i < output->inputCount; ++i) {
+    if (!output->inputs[i].visible) {
+      continue;
+    }
+
+    if (inputIndex == visibleInputCount) {
+      return i;
+    }
+
+    ++visibleInputCount;
+  }
+  return UINT8_MAX;
+}
+
+enum InputOutcome HandleGameInput(struct GameOutput *output, uint8_t inputIndex) {
+  uint8_t inputID = MapInputIndex(output, inputIndex);
+
   struct GameScreenButton button = {0};
   if (!GetGameScreenButton(output->screenID, inputID, &button)) {
     return InvalidInputOutcome;

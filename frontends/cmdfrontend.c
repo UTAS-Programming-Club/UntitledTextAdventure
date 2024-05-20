@@ -101,10 +101,15 @@ static uint8_t GetInput(void) {
 
 static void PrintInputs(uint8_t inputCount, const struct GameInput *inputs) {
   puts("\nUse the numbers below to make a selection.");
-  for (uint8_t i = 0; i < inputCount; ++i) {
-    printf("%" PRIu8 ". ", i + 1);
+  // TODO: Find a better way to do this. Perhaps actually remove unused buttons fron inputs in game.c?
+  for (uint8_t i = 0, visibleInputCount = 0; i < inputCount; ++i) {
+    if (!inputs[i].visible) {
+      continue;
+    }
+    printf("%" PRIu8 ". ", visibleInputCount + 1);
     PrintString(inputs[i].title);
     putchar('\n');
+    ++visibleInputCount;
   }
 }
 
