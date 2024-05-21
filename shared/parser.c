@@ -22,8 +22,53 @@
 #include "parser.h"
 #include "../shared/base64.h"
 
+#define CAT_(a, b) a ## b
+#define CAT(a, b) CAT_(a, b)
+
+#define JSON_GETJSONARRAYERROR(var, obj, name, err) \
+  var = cJSON_GetObjectItemCaseSensitive(obj, name); \
+  if (!cJSON_IsArray(var)) { \
+    return err; \
+  }
+
+#define JSON_GETJSONARRAYITEMOBJERROR(var, arr, idx, err) \
+  var = cJSON_GetArrayItem(arr, idx); \
+  if (!cJSON_IsObject(var)) { \
+    return false; \
+  }
+
+#define JSON_GETSTRINGVALUEERROR(var, obj, name, err) \
+  cJSON *CAT(json, __LINE__) = cJSON_GetObjectItemCaseSensitive(obj, name); \
+  var = cJSON_GetStringValue(CAT(json, __LINE__)); \
+  if (!var) { \
+    return err; \
+  }
+
+#define JSON_GETNUMBERVALUEERROR(var, obj, name, err) \
+  cJSON *CAT(json, __LINE__) = cJSON_GetObjectItemCaseSensitive(obj, name); \
+  if (!cJSON_IsNumber(CAT(json, __LINE__))) { \
+    return err; \
+  } \
+  var = cJSON_GetNumberValue(CAT(json, __LINE__));
+
 static void *Data = NULL;
 static cJSON *GameData = NULL;
+static const double invalidOptNumberVal = -1.0;
+
+static inline double cJSON_GetOptNumberValue(const cJSON *const object, const char *const string,
+                                             double missingVal, double invalidVal) {
+  cJSON *jsonVar = cJSON_GetObjectItemCaseSensitive(object, string);
+  if (!jsonVar) {
+    return missingVal;
+  }
+
+  if (!cJSON_IsNumber(jsonVar)) {
+    return invalidVal;
+  }
+
+  return cJSON_GetNumberValue(jsonVar);
+}
+
 
 bool LoadGameData(char *path) {
   if (!path) {
@@ -65,17 +110,15 @@ void UnloadGameData(void) {
 // TODO: Support loading data from "save", the plan is to use a password system so no actual saves per se
 // Must be freed at the end of the program
 unsigned char *InitGameState(void) {
-  cJSON *stateVars = cJSON_GetObjectItemCaseSensitive(GameData, "state");
-  if (!cJSON_IsArray(stateVars)) {
-    return NULL;
-  }
+  cJSON *jsonStateVars;
+  JSON_GETJSONARRAYERROR(jsonStateVars, GameData, "state", NULL);
 
   size_t totalSize = 0;
   size_t stateSize;
 
-  cJSON *stateVar;
-  cJSON_ArrayForEach(stateVar, stateVars) {
-    cJSON *jsonStateSize = cJSON_GetObjectItemCaseSensitive(stateVar, "size");
+  cJSON *jsonStateVar;
+  cJSON_ArrayForEach(jsonStateVar, jsonStateVars) {
+    cJSON *jsonStateSize = cJSON_GetObjectItemCaseSensitive(jsonStateVar, "size");
     if (!cJSON_IsNumber(jsonStateSize)) {
       continue;
     }
@@ -106,15 +149,15 @@ unsigned char *InitGameState(void) {
   }
 
   size_t currentOffset = 0;
-  cJSON_ArrayForEach(stateVar, stateVars) {
-    cJSON *jsonStateSize = cJSON_GetObjectItemCaseSensitive(stateVar, "size");
+  cJSON_ArrayForEach(jsonStateVar, jsonStateVars) {
+    cJSON *jsonStateSize = cJSON_GetObjectItemCaseSensitive(jsonStateVar, "size");
     if (!cJSON_IsNumber(jsonStateSize)) {
       continue;
     }
     stateSize = cJSON_GetNumberValue(jsonStateSize);
 
-    cJSON *defaultValue = cJSON_GetObjectItemCaseSensitive(stateVar, "default");
-    if (!cJSON_IsNumber(defaultValue)) {
+    cJSON *jsonDefaultValue = cJSON_GetObjectItemCaseSensitive(jsonStateVar, "default");
+    if (!cJSON_IsNumber(jsonDefaultValue)) {
       continue;
     }
 
@@ -122,7 +165,7 @@ unsigned char *InitGameState(void) {
     // and so any excess writing is irrelevant. Doing it this way avoids branching to check the var
     // size. The buffer is large enough so that even overestimating the size of the final variable
     // is safe.
-    *((uint64_t *)gameState + currentOffset) = cJSON_GetNumberValue(defaultValue);
+    *((uint64_t *)gameState + currentOffset) = cJSON_GetNumberValue(jsonDefaultValue);
 #ifdef DEBUG_STATE
     printf("Set state variable at offset %zu, remainder %zu of size %zu(8) to %" PRIx64 "\n",
            currentOffset, totalSize - currentOffset, stateSize,
@@ -139,21 +182,19 @@ unsigned char *InitGameState(void) {
 }
 
 size_t GetGameStateOffset(enum Screen screenID, uint8_t stateID) {
-  cJSON *stateVars = cJSON_GetObjectItemCaseSensitive(GameData, "state");
-  if (!cJSON_IsArray(stateVars)) {
-    return SIZE_MAX;
-  }
+  cJSON *jsonStateVars;
+  JSON_GETJSONARRAYERROR(jsonStateVars, GameData, "state", SIZE_MAX);
 
   size_t currentOffset = 0;
-  cJSON *stateVar;
+  cJSON *jsonStateVar;
 
-  cJSON_ArrayForEach(stateVar, stateVars) {
-    cJSON *jsonStateSize = cJSON_GetObjectItemCaseSensitive(stateVar, "size");
+  cJSON_ArrayForEach(jsonStateVar, jsonStateVars) {
+    cJSON *jsonStateSize = cJSON_GetObjectItemCaseSensitive(jsonStateVar, "size");
     if (!cJSON_IsNumber(jsonStateSize)) {
       goto loop;
     }
 
-    cJSON *jsonCurScreenID = cJSON_GetObjectItemCaseSensitive(stateVar, "screenID");
+    cJSON *jsonCurScreenID = cJSON_GetObjectItemCaseSensitive(jsonStateVar, "screenID");
     if (!cJSON_IsNumber(jsonCurScreenID)) {
       goto loop;
     }
@@ -163,7 +204,7 @@ size_t GetGameStateOffset(enum Screen screenID, uint8_t stateID) {
       goto loop;
     }
 
-    cJSON *jsonCurStateID = cJSON_GetObjectItemCaseSensitive(stateVar, "stateID");
+    cJSON *jsonCurStateID = cJSON_GetObjectItemCaseSensitive(jsonStateVar, "stateID");
     if (!cJSON_IsNumber(jsonCurStateID)) {
       goto loop;
     }
@@ -189,35 +230,25 @@ uint16_t GetGameScreenCount(void) {
     return UINT16_MAX;
   }
 
-  cJSON *screens = cJSON_GetObjectItemCaseSensitive(GameData, "screens");
-  if (!cJSON_IsArray(screens)) {
-    return UINT16_MAX;
-  }
+  cJSON *jsonScreens;
+  JSON_GETJSONARRAYERROR(jsonScreens, GameData, "screens", UINT16_MAX);
 
-  return cJSON_GetArraySize(screens);
+  return cJSON_GetArraySize(jsonScreens);
 }
 
 static cJSON *GetGameScreenJson(enum Screen screenID) {
-  if (!GameData) {
+  // cJSON_GetArrayItem uses int, likely fine as INT_MAX >= 2^15 - 1
+  if (!GameData || screenID > INT_MAX) {
     return NULL;
   }
 
-  // cJSON_GetArrayItem uses int, likely fine as INT_MAX >= 2^15
-  if (screenID > INT_MAX) {
-    return NULL;
-  }
+  cJSON *jsonScreens;
+  JSON_GETJSONARRAYERROR(jsonScreens, GameData, "screens", NULL);
 
-  cJSON *screens = cJSON_GetObjectItemCaseSensitive(GameData, "screens");
-  if (!cJSON_IsArray(screens)) {
-    return NULL;
-  }
+  cJSON *jsonScreen;
+  JSON_GETJSONARRAYITEMOBJERROR(jsonScreen, jsonScreens, screenID, NULL);
 
-  cJSON *screen = cJSON_GetArrayItem(screens, screenID);
-  if (!cJSON_IsObject(screen)) {
-    return NULL;
-  }
-
-  return screen;
+  return jsonScreen;
 }
 
 // Must free screen->body and screen->extraText if this returns true
@@ -231,26 +262,15 @@ bool GetGameScreen(enum Screen screenID, struct GameScreen *screen) {
     return false;
   }
 
-  cJSON *jsonBody = cJSON_GetObjectItemCaseSensitive(jsonScreen, "body");
-  char *base64Body = cJSON_GetStringValue(jsonBody);
-  if (!base64Body) {
-    return false;
-  }
+  char *base64Body;
+  JSON_GETSTRINGVALUEERROR(base64Body, jsonScreen, "body", false);
 
-  cJSON *jsonExtraText = cJSON_GetObjectItemCaseSensitive(jsonScreen, "extraText");
-  char *base64ExtraText = cJSON_GetStringValue(jsonExtraText);
-  if (!base64ExtraText) {
-    return false;
-  }
+  char *base64ExtraText;
+  JSON_GETSTRINGVALUEERROR(base64ExtraText, jsonScreen, "extraText", false);
 
-  cJSON *jsonCustomScreenCode = cJSON_GetObjectItemCaseSensitive(jsonScreen, "customScreenCode");
-  if (!jsonCustomScreenCode) {
-    screen->customScreenCodeID = InvalidCustomScreenCode;
-  } else {
-    if (!cJSON_IsNumber(jsonCustomScreenCode)) {
-      return false;
-    }
-    screen->customScreenCodeID = cJSON_GetNumberValue(jsonCustomScreenCode);
+  screen->customScreenCodeID = cJSON_GetOptNumberValue(jsonScreen, "customScreenCode", InvalidCustomScreenCode, invalidOptNumberVal);
+  if (invalidOptNumberVal == screen->customScreenCodeID) {
+    return false;
   }
 
   screen->body = c32base64toc32(base64Body);
@@ -270,17 +290,15 @@ bool GetGameScreen(enum Screen screenID, struct GameScreen *screen) {
 
 // TODO: Change error value to 0? Would require making 0 buttons not allowed which is reasonable
 uint8_t GetGameScreenButtonCount(enum Screen screenID) {
-  cJSON *screen = GetGameScreenJson(screenID);
-  if (!screen) {
+  cJSON *jsonScreen = GetGameScreenJson(screenID);
+  if (!jsonScreen) {
     return UINT8_MAX;
   }
 
-  cJSON *buttons = cJSON_GetObjectItemCaseSensitive(screen, "buttons");
-  if (!cJSON_IsArray(buttons)) {
-    return UINT8_MAX;
-  }
+  cJSON *jsonButtons;
+  JSON_GETJSONARRAYERROR(jsonButtons, jsonScreen, "buttons", UINT8_MAX);
 
-  return cJSON_GetArraySize(buttons);
+  return cJSON_GetArraySize(jsonButtons);
 }
 
 // Must free by calling FreeGameScreenButton
@@ -289,41 +307,25 @@ bool GetGameScreenButton(enum Screen screenID, uint8_t buttonID, struct GameScre
     return false;
   }
 
-  cJSON *screen = GetGameScreenJson(screenID);
-  if (!screen) {
+  cJSON *jsonScreen = GetGameScreenJson(screenID);
+  if (!jsonScreen) {
     return false;
   }
 
-  cJSON *buttons = cJSON_GetObjectItemCaseSensitive(screen, "buttons");
-  if (!cJSON_IsArray(buttons)) {
-    return false;
-  }
+  cJSON *jsonButtons;
+  JSON_GETJSONARRAYERROR(jsonButtons, jsonScreen, "buttons", false);
 
-  cJSON *jsonButton = cJSON_GetArrayItem(buttons, buttonID);
-  if (!cJSON_IsObject(screen)) {
-    return false;
-  }
+  cJSON *jsonButton;
+  JSON_GETJSONARRAYITEMOBJERROR(jsonButton, jsonButtons, buttonID, false);
 
-  cJSON *jsonTitle = cJSON_GetObjectItemCaseSensitive(jsonButton, "title");
-  char *base64Title = cJSON_GetStringValue(jsonTitle);
-  if (!base64Title) {
-    return false;
-  }
+  char *base64Title;
+  JSON_GETSTRINGVALUEERROR(base64Title, jsonButton, "title", false);
 
-  cJSON *jsonOutcome = cJSON_GetObjectItemCaseSensitive(jsonButton, "outcome");
-  if (!cJSON_IsNumber(jsonOutcome)) {
-    return false;
-  }
-  button->outcome = cJSON_GetNumberValue(jsonOutcome);
+  button->outcome = cJSON_GetOptNumberValue(jsonButton, "outcome", InvalidInputOutcome, invalidOptNumberVal);
 
-  if (GotoScreenOutcome == button->outcome) {
-    cJSON *jsonNewScreen = cJSON_GetObjectItemCaseSensitive(jsonButton, "newScreen");
-    if (!cJSON_IsNumber(jsonNewScreen)) {
-      return false;
-    }
-    button->newScreenID = cJSON_GetNumberValue(jsonNewScreen);
-  } else {
-    button->newScreenID = InvalidScreen;
+  button->newScreenID = cJSON_GetOptNumberValue(jsonButton, "newScreen", InvalidScreen, invalidOptNumberVal);
+  if (invalidOptNumberVal == button->newScreenID) {
+    return false;
   }
 
   button->title = c32base64toc32(base64Title);
@@ -352,60 +354,21 @@ bool GetGameRoom(struct RoomInfo *room) {
     return false;
   }
 
-  cJSON *rooms = cJSON_GetObjectItemCaseSensitive(GameData, "rooms");
-  if (!cJSON_IsArray(rooms)) {
+  cJSON *jsonRooms;
+  JSON_GETJSONARRAYERROR(jsonRooms, GameData, "rooms", false);
+
+  cJSON *jsonRoom;
+  JSON_GETJSONARRAYITEMOBJERROR(jsonRoom, jsonRooms, room->roomID, false);
+
+  JSON_GETNUMBERVALUEERROR(room->type, jsonRoom, "type", false);
+
+  room->northRoomID = cJSON_GetOptNumberValue(jsonRoom, "north", InvalidRoomID, invalidOptNumberVal);
+  room->eastRoomID = cJSON_GetOptNumberValue(jsonRoom, "east", InvalidRoomID, invalidOptNumberVal);
+  room->southRoomID = cJSON_GetOptNumberValue(jsonRoom, "south", InvalidRoomID, invalidOptNumberVal);
+  room->westRoomID = cJSON_GetOptNumberValue(jsonRoom, "west", InvalidRoomID, invalidOptNumberVal);
+  if (invalidOptNumberVal == room->northRoomID || invalidOptNumberVal == room->eastRoomID
+  || invalidOptNumberVal == room->southRoomID || invalidOptNumberVal == room->westRoomID) {
     return false;
-  }
-
-  cJSON *roomJson = cJSON_GetArrayItem(rooms, room->roomID);
-  if (!cJSON_IsObject(roomJson)) {
-    return false;
-  }
-
-  cJSON *jsonType = cJSON_GetObjectItemCaseSensitive(roomJson, "type");
-  if (!cJSON_IsNumber(jsonType)) {
-    return false;
-  }
-  room->type = cJSON_GetNumberValue(jsonType);
-
-  cJSON *jsonNorth = cJSON_GetObjectItemCaseSensitive(roomJson, "north");
-    if (!jsonNorth) {
-    room->northRoomID = InvalidCustomScreenCode;
-  } else {
-    if (!cJSON_IsNumber(jsonNorth)) {
-      return false;
-    }
-    room->northRoomID = cJSON_GetNumberValue(jsonNorth);
-  }
-
-  cJSON *jsonEast = cJSON_GetObjectItemCaseSensitive(roomJson, "east");
-    if (!jsonEast) {
-    room->eastRoomID = InvalidCustomScreenCode;
-  } else {
-    if (!cJSON_IsNumber(jsonEast)) {
-      return false;
-    }
-    room->eastRoomID = cJSON_GetNumberValue(jsonEast);
-  }
-
-  cJSON *jsonSouth = cJSON_GetObjectItemCaseSensitive(roomJson, "south");
-    if (!jsonSouth) {
-    room->southRoomID = InvalidCustomScreenCode;
-  } else {
-    if (!cJSON_IsNumber(jsonSouth)) {
-      return false;
-    }
-    room->southRoomID = cJSON_GetNumberValue(jsonSouth);
-  }
-
-  cJSON *jsonWest = cJSON_GetObjectItemCaseSensitive(roomJson, "west");
-    if (!jsonWest) {
-    room->westRoomID = InvalidCustomScreenCode;
-  } else {
-    if (!cJSON_IsNumber(jsonWest)) {
-      return false;
-    }
-    room->westRoomID = cJSON_GetNumberValue(jsonWest);
   }
 
   return true;

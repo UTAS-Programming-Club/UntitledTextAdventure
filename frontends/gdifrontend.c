@@ -288,6 +288,7 @@ static void HandleOutput(HWND hWnd, HDC hdc, PAINTSTRUCT ps) {
   int buttonHeight = 20;
   int maxButtonsPerRow = 3;
   int rowVerticalSeperation = 10;
+
   int buttonsPerRow = maxButtonsPerRow <= inputCount ? maxButtonsPerRow : inputCount;
   // Fails if inputCount is 0 which should not happen
   int extraRowCount = (inputCount - 1) / maxButtonsPerRow;
