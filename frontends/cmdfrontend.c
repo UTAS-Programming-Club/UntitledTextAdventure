@@ -4,11 +4,11 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #ifdef _WIN32
-#include <conio.h>
+#include <windows.h>
 #else
 #include <termios.h>
-#include <unistd.h>
 #endif
 
 #include "../backend/game.h"
@@ -19,40 +19,103 @@
 #define ESC "\x1B"
 #define CSI ESC "["
 
-#ifndef _WIN32
-static int BackupVEOF = '\4';
-static int BackupVEOL = '\0';
+static bool BackupsMade;
+#ifdef _WIN32
+static DWORD BackupMode;
+#else
+static tcflag_t BackupLFlag;
+static int BackupVEOF;
+static int BackupVEOL;
 #endif
 
-static void SetupConsole(void) {
+static bool SetupConsole(void) {
   printf(CSI "?1049h"); // Switch to alternative buffer
-#ifndef _WIN32
-  struct termios info;
-  tcgetattr(STDIN_FILENO, &info);
 
+#ifdef _WIN32
+  // Disable line buffering
+  // Required for older mintty(I think) e.g. git bash(does non bmp unicode work there?) and mobaxterm
+  if (setvbuf(stdout, NULL, _IONBF, 0)) {
+    return false;
+  }
+
+  // From https://stackoverflow.com/a/9218551
+  // Required for older mintty(I think) e.g. git bash and mobaxterm
+  HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
+  if (INVALID_HANDLE_VALUE == hStdin) {
+    return false;
+  }
+
+  DWORD mode;
+  if (!GetConsoleMode(hStdin, &mode)) {
+    printf("WTF, %ld\n", GetLastError());
+    // For some reason on mobaxterm this fails with ERROR_INVALID_HANDLE, hStdin looks normal
+
+#ifdef __MINGW64_VERSION_MAJOR
+    return true;
+#endif
+    return false;
+  }
+
+  BackupMode = mode;
+  BackupsMade = true;
+
+  mode &= ~ENABLE_LINE_INPUT; // Allow reading functions to return before enter is pressed
+  mode &= ~ENABLE_ECHO_INPUT; // Do not write characters to screen
+  if (!SetConsoleMode(hStdin, mode)) {
+    return false;
+  }
+#else
+  struct termios info;
+  if (tcgetattr(STDIN_FILENO, &info)) {
+    return false;
+  }
+
+  BackupLFlag = info.c_lflag;
   // On some systems VEOF and VEOL are reused as VMIN and VTIME so backup their values first
   BackupVEOF = info.c_cc[VEOF];
   BackupVEOL = info.c_cc[VEOL];
+  BackupsMade = true;
 
   info.c_lflag &= ~ICANON; // Allow reading functions to return before enter is pressed
   info.c_lflag &= ~ECHO;   // Do not write characters to screen
   info.c_cc[VMIN] = 1;     // Prevent reading functions returning if no keys are pressed
   info.c_cc[VTIME] = 0;    // Prevent reading functions returning after some time
-  tcsetattr(STDIN_FILENO, TCSAFLUSH, &info);
+  if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &info)) {
+    return false;
+  }
 #endif
+
+  return true;
 }
 
 // TODO: Check if ICANON and ECHO were previously on?
 static void ResetConsole(void) {
-#ifndef _WIN32
+  if (!BackupsMade) {
+    goto end;
+  }
+
+#ifdef _WIN32
+  // From https://stackoverflow.com/a/9218551
+  // Required for older mintty(I think) e.g. git bash and mobaxterm
+  HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
+  if (INVALID_HANDLE_VALUE == hStdin) {
+    goto end;
+  }
+
+  SetConsoleMode(hStdin, BackupMode);
+#else
   struct termios info;
-  tcgetattr(STDIN_FILENO, &info);
-  info.c_lflag |= ICANON; // Require enter to be pressed before reading functions return
-  info.c_lflag |= ECHO;   // Print characters to screen
+  if (tcgetattr(STDIN_FILENO, &info)) {
+    goto end;
+  }
+
+  info.c_lflag = BackupLFlag;
   info.c_cc[VEOF] = BackupVEOF;
   info.c_cc[VEOL] = BackupVEOL;
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &info);
 #endif
+
+end:
   printf(CSI "?1049l"); // Restore original buffer
 }
 
@@ -85,14 +148,10 @@ static void PrintOutputBody(const char32_t *body) {
 // Returns 0 to 8 for inputs 1 to 9
 static uint8_t GetInput(void) {
   while(true) {
-#ifdef _WIN32
-    int input = _getch();
-#else
     // getchar fails with cosmo on windows where it only returns after 2 keys have been pressed with ~ICANON if VMIN==1 so switched to read
     char buf[1] = {0};
     read(STDIN_FILENO, buf, sizeof(buf));
     int input = buf[0];
-#endif
     if ('1' <= input && input <= '9') {
       return input - '1';
     }
@@ -143,10 +202,16 @@ static bool HandleInput(struct GameOutput *output) {
 }
 
 int main(void) {
-  if (!SetupGame()) {
-    return 1;
+  int res = 1;
+
+  if (!SetupConsole()) {
+    goto end;
   }
-  SetupConsole();
+
+  // TODO: Split UnloadGameData from CleanupGame
+  if (!SetupGame()) {
+    goto end;
+  }
 
   struct GameOutput output = {0};
   do {
@@ -155,8 +220,11 @@ int main(void) {
     }
   } while(HandleInput(&output));
 
+  res = 0;
+
   // TODO: Make sure this happens, even on crash. atexit + signal handler?
-  ResetConsole();
   CleanupGame(&output);
-  return 0;
+end:
+  ResetConsole();
+  return res;
 }
