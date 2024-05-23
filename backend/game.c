@@ -63,11 +63,22 @@ enum InputOutcome HandleGameInput(struct GameOutput *output, uint8_t inputIndex)
   switch (outcome) {
     case GotoScreenOutcome:
       output->screenID = button.newScreenID;
-      // fall through
+      outcome = GetNextOutputOutcome;
+      break;
     case GameGoNorthOutcome:
+      output->roomInfo.roomID = output->roomInfo.northRoomID;
+      outcome = GetNextOutputOutcome;
+      break;
     case GameGoEastOutcome:
+      output->roomInfo.roomID = output->roomInfo.eastRoomID;
+      outcome = GetNextOutputOutcome;
+      break;
     case GameGoSouthOutcome:
+      output->roomInfo.roomID = output->roomInfo.southRoomID;
+      outcome = GetNextOutputOutcome;
+      break;
     case GameGoWestOutcome:
+      output->roomInfo.roomID = output->roomInfo.westRoomID;
       outcome = GetNextOutputOutcome;
       break;
     default:
