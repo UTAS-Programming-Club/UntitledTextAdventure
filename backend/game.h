@@ -29,14 +29,21 @@ struct RoomInfo {
   RoomID westRoomID;
 };
 
+struct PlayerInfo {
+  PlayerHealth health;
+  PlayerAgility agility;
+};
+
 struct GameOutput {
 // public, safe to use outside of backend
   enum Screen screenID;
   char32_t *body;
   uint8_t inputCount;
   struct GameInput *inputs;
-  struct RoomInfo roomInfo;
 // implementation, do not use outside of backend
+  struct RoomInfo roomInfo;
+  struct PlayerInfo playerInfo;
+  bool startedGame;
   Arena arena;
   bool bodyArena;
   bool inputsArrayArena;

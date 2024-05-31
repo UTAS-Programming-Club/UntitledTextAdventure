@@ -50,6 +50,16 @@
           "outcome": GameGoWestOutcome
         },
         {
+          // title: Get Agility or something
+          "title": "RwAAAGUAAAB0AAAAIAAAAEEAAABnAAAAaQAAAGwAAABpAAAAdAAAAHkAAAAgAAAAbwAAAHIAAAAgAAAAcwAAAG8AAABtAAAAZQAAAHQAAABoAAAAaQAAAG4AAABnAAAAAAAAAA==",
+          "outcome": GameTest1Outcome
+        },
+        {
+          // title: Something
+          "title": "UwAAAG8AAABtAAAAZQAAAHQAAABoAAAAaQAAAG4AAABnAAAAAAAAAA==",
+          "outcome": GameTest2Outcome
+        },
+        {
           // title: Return to Main Menu
           "title": "UgAAAGUAAAB0AAAAdQAAAHIAAABuAAAAIAAAAHQAAABvAAAAIAAAAE0AAABhAAAAaQAAAG4AAAAgAAAATQAAAGUAAABuAAAAdQAAAAAAAAA=",
           "outcome": GotoScreenOutcome,
@@ -72,26 +82,23 @@
     {
       // ID: 0
       "type": EmptyRoomType,
-      "north": 1,
-      "east": 3
+      "north": 1
     },
     {
       // ID: 1
-      "type": EmptyRoomType,
-      "east": 2,
+      "type": Test1RoomType,
+      "north": 2,
       "south": 0
     },
     {
       // ID: 2
-      "type": EmptyRoomType,
-      "south": 3,
-      "west": 1
+      "type": Test2RoomType,
+      "south": 1
     },
     {
       // ID: 3
       "type": EmptyRoomType,
-      "north": 2,
-      "west": 0
+      "south": 2
     }
   ]
 }

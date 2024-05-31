@@ -80,11 +80,20 @@ cleanup:
 }
 
 
+static void StartGame(struct GameOutput *output) {
+  output->roomInfo.roomID = DefaultRoomID;
+  output->playerInfo.health = DefaultPlayerHealth;
+  output->playerInfo.agility = DefaultPlayerAgility;
+}
+
+
 static bool CreateMainMenuScreen(struct GameOutput *output) {
   size_t reloadCountVarOffset = GetGameStateOffset(output->screenID, 0);
   if (reloadCountVarOffset == SIZE_MAX) {
     return false;
   }
+
+  output->startedGame = false;
 
   uint32_t *pReloadCount = (uint32_t *)(output->stateData + reloadCountVarOffset);
 
@@ -133,16 +142,53 @@ static bool CreateGameScreen(struct GameOutput *output) {
   static char32_t bodyBeginning[] = U"This is the game, you are in room ";
   static char32_t bodyEnding[] = U".";
 
+  if (!output->startedGame) {
+    StartGame(output);
+  }
+  output->startedGame = true;
+
   if (!GetGameRoom(&output->roomInfo)) {
     return false;
   }
 
-  char32_t *roomIDStr = U64toS32(output->roomInfo.roomID, &output->arena);
+  char32_t *roomIDStr = U64toS32(output->roomInfo.roomID + 1, &output->arena);
   if (!roomIDStr) {
     return false;
   }
 
-  size_t allocatedCharCount = S32Merge(0, NULL, 3, bodyBeginning, roomIDStr, bodyEnding);
+  char32_t *test2RoomStr = U"";
+  if (Test2RoomType == output->roomInfo.type) {
+    PlayerAgility requiredAgility = 50;
+
+    char32_t test2RoomBeginning[] = U"\nThis room is agility gated.\n";
+    char32_t test2RoomMiddle[] = U" is required while you have ";
+
+    char32_t *requiredAgilityStr = U64toS32(requiredAgility, &output->arena);
+    if (!requiredAgilityStr) {
+      return false;
+    }
+  
+    char32_t *currentAgilityStr = U64toS32(output->playerInfo.agility, &output->arena);
+    if (!roomIDStr) {
+      return false;
+    }
+
+    size_t allocatedCharCount = S32Merge(0, NULL, 5, test2RoomBeginning, requiredAgilityStr, test2RoomMiddle, currentAgilityStr, bodyEnding);
+    if (!allocatedCharCount) {
+      return false;
+    }
+
+    test2RoomStr = arena_alloc(&output->arena, allocatedCharCount * sizeof *test2RoomStr);
+    if (!test2RoomStr) {
+      return false;
+    }
+
+    if (!S32Merge(allocatedCharCount, test2RoomStr, 5, test2RoomBeginning, requiredAgilityStr, test2RoomMiddle, currentAgilityStr, bodyEnding)) {
+      return false;
+    }
+  }
+
+  size_t allocatedCharCount = S32Merge(0, NULL, 4, bodyBeginning, roomIDStr, bodyEnding, test2RoomStr);
   if (!allocatedCharCount) {
     return false;
   }
@@ -152,7 +198,7 @@ static bool CreateGameScreen(struct GameOutput *output) {
     return false;
   }
 
-  if (!S32Merge(allocatedCharCount, str, 3, bodyBeginning, roomIDStr, bodyEnding)) {
+  if (!S32Merge(allocatedCharCount, str, 4, bodyBeginning, roomIDStr, bodyEnding, test2RoomStr)) {
     FreeScreen(output);
     return false;
   }
@@ -176,6 +222,12 @@ static bool CreateGameScreen(struct GameOutput *output) {
         break;
       case GameGoWestOutcome:
         output->inputs[i].visible = InvalidRoomID != output->roomInfo.westRoomID;
+        break;
+      case GameTest1Outcome:
+        output->inputs[i].visible = Test1RoomType == output->roomInfo.type;
+        break;
+      case GameTest2Outcome:
+        output->inputs[i].visible = Test2RoomType == output->roomInfo.type;
         break;
       default:
         break;

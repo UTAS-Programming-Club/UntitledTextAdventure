@@ -22,7 +22,7 @@ CSTD := -std=c17
 CWARNINGS := -Wall -Wextra -pedantic -Wmissing-prototypes -Wstrict-prototypes -Wold-style-definition
 endif
 
-ifneq (,$(findstring gcc,$(CXXVERSIONINFO)))
+ifneq (,$(findstring g++,$(CXXVERSIONINFO)))
 GCCTARGET := $(shell $(CXX) -print-multiarch)
 ifeq ($(GCCTARGET),)
 GCCTARGET := $(shell $(CXX) -dumpmachine)

@@ -81,6 +81,17 @@ enum InputOutcome HandleGameInput(struct GameOutput *output, uint8_t inputIndex)
       output->roomInfo.roomID = output->roomInfo.westRoomID;
       outcome = GetNextOutputOutcome;
       break;
+    case GameTest1Outcome: ;
+      PlayerAgility newAgility = output->playerInfo.agility + 25;
+      output->playerInfo.agility = newAgility > MaxPlayerAgility ? MaxPlayerAgility : newAgility;
+      outcome = GetNextOutputOutcome;
+      break;
+    case GameTest2Outcome:
+      if (50 <= output->playerInfo.agility) {
+        output->roomInfo.roomID = 3;
+      }
+      outcome = GetNextOutputOutcome;
+      break;
     default:
       break;
   }
