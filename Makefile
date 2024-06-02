@@ -2,7 +2,7 @@
 
 ifneq (,$(findstring tools,$(MAKECMDGOALS)))
 NEEDCXX := TRUE
-endif
+endif # tools build
 
 include compiler.mk
 
@@ -12,7 +12,7 @@ BINDIR := $(OUTDIR)/bin/
 LIBDIR := $(OUTDIR)/lib/
 INCDIR := $(OUTDIR)/include/
 
-COMMONOBJS := $(LIBDIR)/b64_buffer.o $(LIBDIR)/b64_decode.o $(LIBDIR)/base64_backend.o $(LIBDIR)/cJSON.o $(LIBDIR)/fileloading_frontend.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/screens.o $(LIBDIR)/specialscreens.o $(LIBDIR)/strings.o
+COMMONOBJS := $(LIBDIR)/cJSON.o $(LIBDIR)/fileloading_frontend.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/screens.o $(LIBDIR)/specialscreens.o
 
 CFLAGS += -I $(INCDIR)
 CXXFLAGS += -I $(INCDIR)
@@ -25,7 +25,7 @@ EXECSUFFIX := .com
 define MAKEEXEC =
 $(APELINK) -l $(x86_64APEELF) -o $(1) $(2)
 endef
-else
+else # !ISCOSMO
 # mingw64 appends .exe if not present so copy will fail
 define MAKEEXEC =
 cp $(2) $(1) 2>/dev/null || true
@@ -41,22 +41,21 @@ ifneq (,$(findstring release,$(MAKECMDGOALS)))
 WINRESOURCES := $(LIBDIR)/winresources.o
 ifndef WINDRES
 $(error making release builds on windows requires the WINDRES environment variable to be set)
-endif
-endif
+endif # WINDRES
+endif # release build
 
-endif
-endif
+endif # ISWINDOWS
+endif # ISCOSMO/!ISCOSMO
 
 # TODO: Support building specific frontends or tools
 debug: CFLAGS += -D _DEBUG -g
 debug: CXXFLAGS += -D _DEBUG -g
 debug release: $(BINDIR)/cmdgame$(EXECSUFFIX) $(BINDIR)/gdigame$(EXECSUFFIX) GameData.json
 discord: $(LIBDIR)/game.so GameData.json
-tools: $(BINDIR)/preptext$(EXECSUFFIX) $(BINDIR)/printgamedata$(EXECSUFFIX) $(BINDIR)/jsonvalidator$(EXECSUFFIX) GameData.json
+tools: $(BINDIR)/printgamedata$(EXECSUFFIX) $(BINDIR)/jsonvalidator$(EXECSUFFIX) GameData.json
 
 clean:
 	rm -r $(OUTPUT) GameData.json backend/types.h backend/types.json.h 2> /dev/null || true
-	make -C third_party/b64.c clean $(SUBMAKESHELL) $(SUBMAKEPATH)
 
 %/:
 	mkdir -p $@
@@ -64,9 +63,6 @@ clean:
 
 # Headers
 $(INCDIR)/arena.h: third_party/arena/arena.h | $(INCDIR)
-	cp $< $@
-
-$(INCDIR)/b64.h: third_party/b64.c/b64.h | $(INCDIR)
 	cp $< $@
 
 $(INCDIR)/cJSON.h: third_party/cJSON/cJSON.h | $(INCDIR)
@@ -102,12 +98,6 @@ $(LIBDIR)/specialscreens.o: backend/specialscreens.c backend/specialscreens.h | 
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 
-$(LIBDIR)/base64_backend.o: shared/base64.c shared/base64.h shared/strings.h $(INCDIR)/b64.h | $(LIBDIR)
-	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS) -D BACKEND
-
-$(LIBDIR)/base64_preptext.o: shared/base64.c shared/base64.h shared/strings.h $(INCDIR)/b64.h | $(LIBDIR)
-	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS) -D PREPTEXT
-
 $(LIBDIR)/crossprint.o: shared/crossprint.c shared/crossprint.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
@@ -117,32 +107,13 @@ $(LIBDIR)/fileloading_frontend.o: shared/fileloading.c shared/fileloading.h | $(
 $(LIBDIR)/fileloading_printgamedata.o: shared/fileloading.c shared/fileloading.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
-$(LIBDIR)/parser.o: shared/parser.c backend/game.h shared/parser.h $(INCDIR)/b64.h $(INCDIR)/cJSON.h | $(LIBDIR)
+$(LIBDIR)/parser.o: shared/parser.c backend/game.h shared/parser.h $(INCDIR)/cJSON.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS) -D BACKEND
-
-$(LIBDIR)/strings.o: shared/strings.c shared/strings.h | $(LIBDIR)
-	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
-
-
-$(LIBDIR)/b64_buffer.o: third_party/b64.c/buffer.c third_party/b64.c/b64.h | $(LIBDIR)
-	make -C third_party/b64.c buffer.o $(SUBMAKESHELL) $(SUBMAKEPATH) $(SUBMAKECC)
-	mv third_party/b64.c/buffer.o $@
-
-$(LIBDIR)/b64_encode.o: third_party/b64.c/encode.c third_party/b64.c/b64.h | $(LIBDIR)
-	make -C third_party/b64.c encode.o $(SUBMAKESHELL) $(SUBMAKEPATH) $(SUBMAKECC)
-	mv third_party/b64.c/encode.o $@
-
-$(LIBDIR)/b64_decode.o: third_party/b64.c/decode.c third_party/b64.c/b64.h | $(LIBDIR)
-	make -C third_party/b64.c decode.o $(SUBMAKESHELL) $(SUBMAKEPATH) $(SUBMAKECC)
-	mv third_party/b64.c/decode.o $@
 
 
 $(LIBDIR)/cJSON.o: third_party/cJSON/cJSON.c third_party/cJSON/cJSON.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
-
-$(LIBDIR)/preptext.o: tools/preptext.c $(INCDIR)/b64.h | $(LIBDIR)
-	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS) -D PREPTEXT
 
 $(LIBDIR)/printgamedata.o: tools/printgamedata.c | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
@@ -165,15 +136,11 @@ $(LIBDIR)/game.so: $(COMMONOBJS) | $(LIBDIR)
 
 
 # Executables
-$(BINDIR)/preptext$(EXECSUFFIX): $(LIBDIR)/b64_buffer.o $(LIBDIR)/b64_encode.o $(LIBDIR)/base64_preptext.o $(LIBDIR)/preptext.o $(LIBDIR)/strings.o | $(BINDIR)
-	$(CC) -o $(basename $@) $^ $(CFLAGS)
-	$(call MAKEEXEC,$@,$(basename $@))
-
 ifdef ISWINDOWS
-$(BINDIR)/printgamedata$(EXECSUFFIX): $(LIBDIR)/b64_buffer.o $(LIBDIR)/b64_decode.o $(LIBDIR)/base64_backend.o $(LIBDIR)/cJSON.o $(LIBDIR)/crossprint.o $(LIBDIR)/fileloading_printgamedata.o $(LIBDIR)/parser.o $(LIBDIR)/printgamedata.o $(LIBDIR)/strings.o | $(BINDIR)
-else
-$(BINDIR)/printgamedata$(EXECSUFFIX): $(LIBDIR)/b64_buffer.o $(LIBDIR)/b64_decode.o $(LIBDIR)/base64_backend.o $(LIBDIR)/cJSON.o $(LIBDIR)/fileloading_printgamedata.o $(LIBDIR)/parser.o $(LIBDIR)/printgamedata.o $(LIBDIR)/strings.o | $(BINDIR)
-endif
+$(BINDIR)/printgamedata$(EXECSUFFIX): $(LIBDIR)/cJSON.o $(LIBDIR)/crossprint.o $(LIBDIR)/fileloading_printgamedata.o $(LIBDIR)/parser.o $(LIBDIR)/printgamedata.o | $(BINDIR)
+else # !ISWINDOWS
+$(BINDIR)/printgamedata$(EXECSUFFIX): $(LIBDIR)/cJSON.o $(LIBDIR)/fileloading_printgamedata.o $(LIBDIR)/parser.o $(LIBDIR)/printgamedata.o | $(BINDIR)
+endif # ISWINDOWS/!ISWINDOWS
 	$(CC) -o $(basename $@) $^ $(CFLAGS)
 	$(call MAKEEXEC,$@,$(basename $@))
 
@@ -189,6 +156,6 @@ ifdef ISWINDOWS
 $(BINDIR)/gdigame$(EXECSUFFIX): $(LIBDIR)/gdifrontend.o $(COMMONOBJS) $(WINRESOURCES) | $(BINDIR)
 	$(CC) -o $(basename $@) $^ $(CFLAGS) $(GDICFLAGS)
 	$(call MAKEEXEC,$@,$(basename $@))
-else
+else # !ISWINDOWS
 $(BINDIR)/gdigame$(EXECSUFFIX):
-endif
+endif # ISWINDOWS/!ISWINDOWS

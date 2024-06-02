@@ -239,7 +239,8 @@ int CALLBACK EnumFontFamExProcW(CONST LOGFONTW *pFontInfo, CONST TEXTMETRICW *pF
 static void HandleOutput(HWND hWnd, HDC hdc, PAINTSTRUCT ps) {
   static size_t buttonHandleCount = 0;
 
-  WCHAR *wcText = c32towc(Output.body);
+  // TODO: Free previous string
+  WCHAR *wcText = s8tows(Output.body);
   if (!wcText) {
     return;
   }
@@ -308,7 +309,8 @@ static void HandleOutput(HWND hWnd, HDC hdc, PAINTSTRUCT ps) {
       continue;
     }
 
-    wcText = c32towc(Output.inputs[i].title);
+  // TODO: Free previous strings
+    wcText = s8tows(Output.inputs[i].title);
     if (!wcText) {
       return;
     }
@@ -392,7 +394,6 @@ cleanup_paint:
       enum InputOutcome outcome = HandleGameInput(&Output, LOWORD(wParam));
       switch(outcome) {
         case GetNextOutputOutcome:
-          FreeScreen(&Output);
           if (GetCurrentGameOutput(&Output)) {
             NeedRedrawButtons = TRUE;
             InvalidateRect(hWnd, NULL, TRUE);
@@ -400,7 +401,6 @@ cleanup_paint:
           }
           // fall through
         case QuitGameOutcome:
-          FreeScreen(&Output);
           DestroyWindow(hWnd);
           break;
         default:

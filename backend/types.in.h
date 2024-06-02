@@ -59,6 +59,7 @@ JSON_ENUM_END
 // RoomType is a uint16_t, [0, 65535]
 // Must match indices in rooms array in GameData.in.json
 // Screen 0 is the default room and is shown when GameScreen becomes the current screen
+EMIT(#define PRIRoomID PRIuFAST16)
 C_EMIT(typedef uint_fast16_t RoomID;)
 EMIT(#define InvalidRoomID 65535)
 

@@ -4,54 +4,45 @@
   "screens": [
     {
       // ID: 0
-      // body: Untitled text adventure game\n----------------------------\nBy the UTAS Programming Club\n\nCurrently unimplemented :(
-      "body": "VQAAAG4AAAB0AAAAaQAAAHQAAABsAAAAZQAAAGQAAAAgAAAAdAAAAGUAAAB4AAAAdAAAACAAAABhAAAAZAAAAHYAAABlAAAAbgAAAHQAAAB1AAAAcgAAAGUAAAAgAAAAZwAAAGEAAABtAAAAZQAAAAoAAAAtAAAALQAAAC0AAAAtAAAALQAAAC0AAAAtAAAALQAAAC0AAAAtAAAALQAAAC0AAAAtAAAALQAAAC0AAAAtAAAALQAAAC0AAAAtAAAALQAAAC0AAAAtAAAALQAAAC0AAAAtAAAALQAAAC0AAAAtAAAACgAAAEIAAAB5AAAAIAAAAHQAAABoAAAAZQAAACAAAABVAAAAVAAAAEEAAABTAAAAIAAAAFAAAAByAAAAbwAAAGcAAAByAAAAYQAAAG0AAABtAAAAaQAAAG4AAABnAAAAIAAAAEMAAABsAAAAdQAAAGIAAAAKAAAACgAAAEMAAAB1AAAAcgAAAHIAAABlAAAAbgAAAHQAAABsAAAAeQAAACAAAAB1AAAAbgAAAGkAAABtAAAAcAAAAGwAAABlAAAAbQAAAGUAAABuAAAAdAAAAGUAAABkAAAAIAAAADoAAAAoAAAAAAAAAA==",
-      // extraText: \nReload Count:
-      "extraText": "CgAAAFIAAABlAAAAbAAAAG8AAABhAAAAZAAAACAAAABDAAAAbwAAAHUAAABuAAAAdAAAADoAAAAgAAAAAAAAAA==",
+      "body": "Untitled text adventure game\n----------------------------\nBy the UTAS Programming Club\n\nCurrently unimplemented :(",
+      "extraText": "\nReload Count:",
       "customScreenCode": MainMenuCustomScreenCode,
       "buttons": [
         {
-          // title: Start Game
-          "title": "UwAAAHQAAABhAAAAcgAAAHQAAAAgAAAARwAAAGEAAABtAAAAZQAAAAAAAAA=",
+          "title": "Start Game",
           "outcome": GotoScreenOutcome,
           "newScreen": GameScreen
         },
         {
-          // title: Quit Game
-          "title": "UQAAAHUAAABpAAAAdAAAACAAAABHAAAAYQAAAG0AAABlAAAAAAAAAA==",
+          "title": "Quit Game",
           "outcome": 2
         }
       ]
     },
     {
       // ID: 1
-      "body": "AAAAAA==",
-      "extraText": "AAAAAA==",
+      "body": "",
+      "extraText": "",
       "customScreenCode": GameCustomScreenCode,
       "buttons": [
         {
-          // title: Go North
-          "title": "RwAAAG8AAAAgAAAATgAAAG8AAAByAAAAdAAAAGgAAAAAAAAA",
+          "title": "Go North",
           "outcome": GameGoNorthOutcome
         },
         {
-          // title: Go East
-          "title": "RwAAAG8AAAAgAAAARQAAAGEAAABzAAAAdAAAAAAAAAA=",
+          "title": "Go East",
           "outcome": GameGoEastOutcome
         },
         {
-          // title: "Go South"
-          "title": "RwAAAG8AAAAgAAAAUwAAAG8AAAB1AAAAdAAAAGgAAAAAAAAA",
+          "title": "Go South",
           "outcome": GameGoSouthOutcome
         },
         {
-          // title: "Go West"
-          "title": "RwAAAG8AAAAgAAAAVwAAAGUAAABzAAAAdAAAAAAAAAA=",
+          "title": "Go West",
           "outcome": GameGoWestOutcome
         },
         {
-          // title: Return to Main Menu
-          "title": "UgAAAGUAAAB0AAAAdQAAAHIAAABuAAAAIAAAAHQAAABvAAAAIAAAAE0AAABhAAAAaQAAAG4AAAAgAAAATQAAAGUAAABuAAAAdQAAAAAAAAA=",
+          "title": "Return to Main Menu",
           "outcome": GotoScreenOutcome,
           "newScreen": MainMenuScreen
         }

@@ -1,8 +1,6 @@
 #ifndef PCGAME_CROSSPRINT_H
 #define PCGAME_CROSSPRINT_H
 
-#include <uchar.h>
-
 #if defined(_WIN32)
 #include <windows.h>
 #elif defined(_COSMO_SOURCE)
@@ -11,7 +9,7 @@
 
 // Requires freeing returned memory
 #if defined(_WIN32) || defined(_COSMO_SOURCE)
-WCHAR *c32towc(const char32_t *str);
+WCHAR *s8tows(const char *str);
 #endif
 
 #endif // PCGAME_CROSSPRINT_H

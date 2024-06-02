@@ -85,7 +85,6 @@ enum InputOutcome HandleGameInput(struct GameOutput *output, uint8_t inputIndex)
       break;
   }
 
-  FreeGameScreenButton(&button);
   return outcome;
 }
 

@@ -8,6 +8,5 @@
 #include "game.h"
 
 bool CreateScreen(struct GameOutput *);
-void FreeScreen(struct GameOutput *);
 
 #endif // PCGAME_SCREENS_H

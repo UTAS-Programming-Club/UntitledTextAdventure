@@ -2,14 +2,12 @@
 
 #include <assert.h>
 #include <cJSON.h>
-#include <b64.h>
 #include <inttypes.h>
 #include <limits.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <uchar.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -20,7 +18,6 @@
 #include "fileloading.h"
 #include "winresources.h"
 #include "parser.h"
-#include "../shared/base64.h"
 
 #define CAT_(a, b) a ## b
 #define CAT(a, b) CAT_(a, b)
@@ -251,7 +248,6 @@ static cJSON *GetGameScreenJson(enum Screen screenID) {
   return jsonScreen;
 }
 
-// Must free screen->body and screen->extraText if this returns true
 bool GetGameScreen(enum Screen screenID, struct GameScreen *screen) {
   if (!screen) {
     return false;
@@ -262,25 +258,12 @@ bool GetGameScreen(enum Screen screenID, struct GameScreen *screen) {
     return false;
   }
 
-  char *base64Body;
-  JSON_GETSTRINGVALUEERROR(base64Body, jsonScreen, "body", false);
+  JSON_GETSTRINGVALUEERROR(screen->body, jsonScreen, "body", false);
 
-  char *base64ExtraText;
-  JSON_GETSTRINGVALUEERROR(base64ExtraText, jsonScreen, "extraText", false);
+  JSON_GETSTRINGVALUEERROR(screen->extraText, jsonScreen, "extraText", false);
 
   screen->customScreenCodeID = cJSON_GetOptNumberValue(jsonScreen, "customScreenCode", InvalidCustomScreenCode, invalidOptNumberVal);
   if (invalidOptNumberVal == screen->customScreenCodeID) {
-    return false;
-  }
-
-  screen->body = c32base64toc32(base64Body);
-  if (!screen->body) {
-    return false;
-  }
-
-  screen->extraText = c32base64toc32(base64ExtraText);
-  if (!screen->extraText) {
-    free(screen->body);
     return false;
   }
 
@@ -301,7 +284,6 @@ uint8_t GetGameScreenButtonCount(enum Screen screenID) {
   return cJSON_GetArraySize(jsonButtons);
 }
 
-// Must free by calling FreeGameScreenButton
 bool GetGameScreenButton(enum Screen screenID, uint8_t buttonID, struct GameScreenButton *button) {
   if (!button) {
     return false;
@@ -318,8 +300,7 @@ bool GetGameScreenButton(enum Screen screenID, uint8_t buttonID, struct GameScre
   cJSON *jsonButton;
   JSON_GETJSONARRAYITEMOBJERROR(jsonButton, jsonButtons, buttonID, false);
 
-  char *base64Title;
-  JSON_GETSTRINGVALUEERROR(base64Title, jsonButton, "title", false);
+  JSON_GETSTRINGVALUEERROR(button->title, jsonButton, "title", false);
 
   button->outcome = cJSON_GetOptNumberValue(jsonButton, "outcome", InvalidInputOutcome, invalidOptNumberVal);
 
@@ -328,14 +309,7 @@ bool GetGameScreenButton(enum Screen screenID, uint8_t buttonID, struct GameScre
     return false;
   }
 
-  button->title = c32base64toc32(base64Title);
-  return button->title != NULL;
-}
-
-// Safe even if GetGameScreenButton failed
-void FreeGameScreenButton(struct GameScreenButton *button) {
-  free(button->title);
-  button->title = NULL;
+  return true;
 }
 
 

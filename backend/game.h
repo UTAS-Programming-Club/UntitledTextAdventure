@@ -7,16 +7,14 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <uchar.h>
 
 #include "types.h"
 
 struct GameInput {
 // public, safe to use outside of backend
-  char32_t *title;
+  char *title; // utf-8
   bool visible;
 // implementation, do not use outside of backend
-  bool titleArena;
   enum InputOutcome outcome;
 };
 
@@ -32,14 +30,12 @@ struct RoomInfo {
 struct GameOutput {
 // public, safe to use outside of backend
   enum Screen screenID;
-  char32_t *body;
+  char *body; // utf-8
   uint8_t inputCount;
   struct GameInput *inputs;
   struct RoomInfo roomInfo;
 // implementation, do not use outside of backend
   Arena arena;
-  bool bodyArena;
-  bool inputsArrayArena;
   unsigned char *stateData;
   enum CustomScreenCode customScreenCodeID;
 // Currently body and inputs[i].title MUST be allocated, this must be fixed if the encoding changes to utf-8 because then most button titles will also be direct copies of cJSON returned data

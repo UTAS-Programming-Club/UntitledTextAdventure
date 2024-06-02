@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <wchar.h>
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -88,7 +89,6 @@ static bool SetupConsole(void) {
   return true;
 }
 
-// TODO: Check if ICANON and ECHO were previously on?
 static void ResetConsole(void) {
   if (!BackupsMade) {
     goto end;
@@ -119,24 +119,21 @@ end:
   printf(CSI "?1049l"); // Restore original buffer
 }
 
-static void PrintString(const char32_t *str) {
-#if WCHAR_MAX == INT_LEAST32_MAX || WCHAR_MAX == UINT_LEAST32_MAX // unix likes
-  static_assert(sizeof(wchar_t) == sizeof(char32_t), "Need them to be the same size to print utf-32 chars");
-  printf("%ls", (wchar_t *)str);
-#elif defined(_WIN32) // windows
-  wchar_t *wcStr = c32towc(str);
+static void PrintString(const char *str) {
+#ifndef _WIN32
+  printf("%s", str);
+#else
+  wchar_t *wcStr = s8tows(str);
   if (!wcStr) {
     return;
   }
   printf("%ls", wcStr);
   free(wcStr);
-#else
-#error Need utf-32 printing support
 #endif
 }
 
 // TODO: Enable ansi sequences on windows 10/11 for conhost, its on by default for terminal
-static void PrintOutputBody(const char32_t *body) {
+static void PrintOutputBody(const char *body) {
   printf(CSI "?25l"); // Hide cursor
   printf(CSI "0;0H"); // Move cursor to 0, 0
   printf(CSI "0J");   // Erase entire screen
@@ -192,11 +189,9 @@ static bool HandleInput(struct GameOutput *output) {
     case InvalidInputOutcome:
       return HandleInput(output);
     case GetNextOutputOutcome:
-      FreeScreen(output);
       return true;
     case QuitGameOutcome:
     default:
-      FreeScreen(output);
       return false;
   }
 }
