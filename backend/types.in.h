@@ -19,6 +19,7 @@
 EMIT(#ifndef PCGAME_TYPES_H)
 EMIT(#define PCGAME_TYPES_H)
 
+C_EMIT(#include <inttypes.h>)
 C_EMIT(#include <stdint.h>)
 
 // ScreenID is a uint16_t, [0, 65535]

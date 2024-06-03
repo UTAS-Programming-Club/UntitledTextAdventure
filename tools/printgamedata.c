@@ -1,4 +1,3 @@
-#include <assert.h>
 #include <inttypes.h>
 #include <stddef.h>
 #include <stdio.h>

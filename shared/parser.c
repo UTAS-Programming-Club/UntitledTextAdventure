@@ -1,6 +1,5 @@
 //#define DEBUG_STATE
 
-#include <assert.h>
 #include <cJSON.h>
 #include <inttypes.h>
 #include <limits.h>
