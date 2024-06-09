@@ -10,28 +10,30 @@ The plan is to implement the game in c with three frontends:
    * MacOS(aarch64, x86_64)
    * NetBSD(x86_64)
    * OpenBSD(x86_64)
-   * Windows 10/11(x86_64) with Windows Terminal  
+   * Windows 10/11(x86_64) with Windows Terminal, we are looking into using [mintty](https://github.com/mintty/mintty) to support older versions of Windows but have had some issues
+
    However we may not be able to test all of these platforms ourselves.
+
 2. Windows GDI program  
+   NOTE: This frontend is proving to be an issue to get working and may be replaced with mintty in combination with the command line one.  
    This is mostly to work around issues with displaying Unicode characters outside of the BMP on Windows.
    We plan to use [libschrift](https://github.com/tomolt/libschrift) for Unicode support on < Windows 2000. Will also be useful for Windows 2000 and Windows XP where non BMP character printing is supported but disabled on some releases without registry editing.
-   A prototype of text printing has been tested on both Windows NT 4.0 and Windows XP so provided we can made everything else work most(if not all) versions of windows can be supported with minimal extra work.
+   A prototype of text printing has been tested on both Windows NT 4.0 and Windows XP so provided we can made everything else work most(if not all) versions of Windows can be supported with minimal extra work.
 3. Discord bot  
-   The club has been working on a [discord bot](https://github.com/UTAS-Programming-Club/DiscordBot) and we are interested in having a (potentially) cut down version of the game available as a commmand.
+   The club has been working on a [discord bot](https://github.com/UTAS-Programming-Club/DiscordBot), and we are interested in having a (potentially) cut-down version of the game available as a command.  
+   An wrapper for an out of date version of the backend is currently available in that repo.
 
 We have only just started so everything we have is a bit rough. So any contributions are welcome. There are a number of TODOs in various places for you don't know what to work on.
 
 ## General TODOs:
-* Trim comments from release GameData.json
 * Embed GameData.json in unix like cmd build
 * Switch gdi to libschrift for text rendering for < vista rendering(2000 and xp can work as is but not worth it)
 * Add python/crescent frontend
-* After adding libschrift switch to utf-8
 * Add typedefs for screen, button and state variable ids with defined invalid values
 * Build instructions for tools and release on windows for both cmd and pwsh, and discord bot
 * Fix pwsh debug build instructions to work on older versions, currently the &&s fails
 * Figure out why newer cosmo build tools fail hang on windows. It might just be make as it has had issues in the past
-* Support building tools and cmdgame with cosmo on OSes other than windows
+* Support building tools and cmdgame with cosmo on OSes other than Windows
 * Hide "fatal error: no input files" errors at the top of all make calls
 
 ## Basic build instructions
