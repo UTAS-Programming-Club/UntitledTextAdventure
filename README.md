@@ -10,7 +10,7 @@ The plan is to implement the game in c with three frontends:
    * MacOS(aarch64, x86_64)
    * NetBSD(x86_64)
    * OpenBSD(x86_64)
-   * Windows 10/11(x86_64) with Windows Terminal
+   * Windows 10/11(x86_64) with Windows Terminal  
    However we may not be able to test all of these platforms ourselves.
 2. Windows GDI program  
    This is mostly to work around issues with displaying Unicode characters outside of the BMP on Windows.
