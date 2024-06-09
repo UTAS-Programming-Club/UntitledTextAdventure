@@ -77,14 +77,12 @@ make clean && clear && make CC=gcc release && ./out/x86_64-pc-linux-gnu/bin/cmdg
 Tools on wsl(making windows binaries):
 ```sh
 make clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 CXX=x86_64-w64-mingw32-g++-win32 tools && cp out/x86_64-w64-mingw32/bin/jsonvalidator.exe /mnt/c/Projects/PCGame/Windows/ && /mnt/c/Projects/PCGame/Windows/jsonvalidator.exe
-make clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 CXX=x86_64-w64-mingw32-g++-win32 tools && cp out/x86_64-w64-mingw32/bin/preptext.exe /mnt/c/Projects/PCGame/Windows/ && /mnt/c/Projects/PCGame/Windows/preptext.exe "Some text"
 make clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 CXX=x86_64-w64-mingw32-g++-win32 tools && cp out/x86_64-w64-mingw32/bin/printgamedata.exe /mnt/c/Projects/PCGame/Windows/ && /mnt/c/Projects/PCGame/Windows/printgamedata.exe GameData.json
 ```
 
 Tools on linux, hopefully other unix likes and possibly cygwin or msys2:
 ```sh
 make clean && clear && make CC=gcc CXX=g++ tools && ./out/x86_64-pc-linux-gnu/bin/jsonvalidator
-make clean && clear && make CC=gcc CXX=g++ tools && ./out/x86_64-pc-linux-gnu/bin/preptext "Some text"
 make clean && clear && make CC=gcc CXX=g++ tools && ./out/x86_64-pc-linux-gnu/bin/printgamedata GameData.json
 ```
 
@@ -93,6 +91,5 @@ For older versions of powershell either run the commands seperately or switch to
 Tools on windows 10 in powershell core:
 ```pwsh
 .\getwindeps.bat && .\make.bat clean && clear && .\make.bat tools && .\out\x86_64-pc-linux-cosmo\bin\jsonvalidator.com
-.\getwindeps.bat && .\make.bat clean && clear && .\make.bat tools && .\out\x86_64-pc-linux-cosmo\bin\preptext.com "Some text"
 .\getwindeps.bat && .\make.bat clean && clear && .\make.bat tools && .\out\x86_64-pc-linux-cosmo\bin\printgamedata.com GameData.json
 ```
