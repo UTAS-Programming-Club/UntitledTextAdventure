@@ -22,7 +22,7 @@ if not exist %COSMOS%\sh curl.exe -o %COSMOS%\sh https://cosmo.zip/pub/cosmos/v/
 if not exist %COSMOS%\tr curl.exe -o %COSMOS%\tr %COSMOS_URL%/tr
 
 if not exist %COSMOS%\x86_64-unknown-cosmo-cc (
-  curl.exe -o %COSMOS%\cosmocc.zip https://cosmo.zip/pub/cosmocc/cosmocc-3.3.6.zip
+  curl.exe -o %COSMOS%\cosmocc.zip https://cosmo.zip/pub/cosmocc/cosmocc-4.0.0.zip
   REM From https://stackoverflow.com/a/52517718
   REM Run unzip as admin which is required to create symlinks
   cd /d "%~dp0" && ( if exist "%temp%\getadmin.vbs" del "%temp%\getadmin.vbs" ) && fsutil dirty query %systemdrive% 1>nul 2>nul || (  echo Set UAC = CreateObject^("Shell.Application"^) : UAC.ShellExecute "cmd.exe", "/c cd ""%~sdp0"" && %COSMOS%\unzip.exe %COSMOS%\cosmocc.zip -d %COSMOS%\..\ && del %COSMOS%\cosmocc.zip", "", "runas", 1 >> "%temp%\getadmin.vbs" && "%temp%\getadmin.vbs" )
