@@ -21,7 +21,7 @@ struct GameScreenButton {
 bool LoadGameData(char *);
 void UnloadGameData(void);
 
-bool LoadGameRooms(uint8_t *floorSize, struct RoomInfo **);
+bool LoadGameRooms(uint_fast8_t *floorSize, struct RoomInfo **);
 
 unsigned char *InitGameState(void);
 size_t GetGameStateOffset(enum Screen, uint8_t);

@@ -9,7 +9,7 @@
 #include "../frontends/frontend.h"
 #include "../shared/parser.h"
 
-uint8_t FloorSize = 0;
+uint_fast8_t FloorSize = 0;
 static struct RoomInfo *Rooms = NULL;
 
 static inline uint64_t Min(uint64_t a, uint64_t b) {

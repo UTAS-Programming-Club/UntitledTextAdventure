@@ -122,7 +122,7 @@ void UnloadGameData(void) {
 }
 
 
-bool LoadGameRooms(uint8_t *floorSize, struct RoomInfo **rooms) {
+bool LoadGameRooms(uint_fast8_t *floorSize, struct RoomInfo **rooms) {
   if (!GameData || !floorSize || !rooms) {
     return false;
   }
