@@ -8,6 +8,7 @@ out/
 third_party/cosmos/
 GameData.json
 Map.txt
+stderr.txt
 
 # Created by https://www.toptal.com/developers/gitignore/api/c
 # Edit at https://www.toptal.com/developers/gitignore?templates=c

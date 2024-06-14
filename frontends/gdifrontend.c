@@ -417,6 +417,29 @@ cleanup_paint:
   return DefWindowProcW(hWnd, msg, wParam, lParam);
 }
 
+// TODO: Empty file on first write?
+void PrintError(const char *error, ...) {
+  FILE *fp = fopen("stderr.txt", "a");
+  bool usingStderr = false;
+  if (!fp) {
+    fp = stderr;
+    usingStderr = true;
+  }
+
+  fputs("ERROR: ", fp);
+
+  va_list args;
+  va_start(args, error);
+  vfprintf(fp, error, args);
+  va_end(args);
+
+  fputs(".\n", fp);
+
+  if (!usingStderr) {
+    fclose(fp);
+  }
+}
+
 #if defined(_WIN32)
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLine, int nCmdShow) {
   UNREFERENCED_PARAMETER(hPrevInstance); // Always NULL on win32
