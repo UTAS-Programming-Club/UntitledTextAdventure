@@ -28,7 +28,6 @@ struct RoomInfo {
   RoomCoord y;
 };
 extern uint8_t FloorSize;
-extern struct RoomInfo *Rooms;
 
 struct GameOutput {
 // public, safe to use outside of backend
