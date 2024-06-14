@@ -36,8 +36,8 @@
 // TODO: Indicate room type
 // TODO: Indicate player position
 #ifdef _DEBUG
-static void WriteRoomRow(FILE *fp, uint_fast8_t roomRow,
-                         uint_fast8_t roomColumn, uint_fast8_t outputRow) {
+static void WriteRoomRow(FILE *fp, RoomCoord roomRow, RoomCoord roomColumn,
+                         uint_fast8_t outputRow) {
   // Top Grid Row
   if (FloorSize - 1 == roomRow && 0 == roomColumn && 0 == outputRow) {
     fputs(TopLeftLine HorLine HorLine, fp);
@@ -87,9 +87,9 @@ static void WriteMap(void) {
     return;
   }
 
-  for (uint_fast8_t roomRow = FloorSize - 1; roomRow != UINT_FAST8_MAX; --roomRow) {
+  for (RoomCoord roomRow = FloorSize - 1; roomRow != InvalidRoomCoord; --roomRow) {
     for (uint_fast8_t outputRow = 0; outputRow < RoomGridSize; ++outputRow) {
-      for (uint_fast8_t roomColumn = 0; roomColumn < FloorSize; ++roomColumn) {
+      for (RoomCoord roomColumn = 0; roomColumn < FloorSize; ++roomColumn) {
         WriteRoomRow(fp, roomRow, roomColumn, outputRow);
       }
     }

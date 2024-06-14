@@ -163,9 +163,9 @@ bool LoadGameRooms(uint8_t *floorSize, struct RoomInfo **rooms) {
 // TODO: Support loading data from "save", the plan is to use a password system so no actual saves per se
 // Must be freed at the end of the program
 unsigned char *InitGameState(void) {
-  // if (!GameData) {
-  //   return NULL;
-  // }
+  if (!GameData) {
+    return NULL;
+  }
 
   cJSON *jsonStateVars;
   JSON_GETJSONARRAYERROR(jsonStateVars, GameData, "state", NULL);
