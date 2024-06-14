@@ -10,6 +10,7 @@
 #include <windows.h>
 #endif
 
+#include "../frontends/frontend.h"
 #include "fileloading.h"
 
 #define UNUSED(x) (void)(x)
@@ -40,7 +41,7 @@ bool LoadFile(char *path, size_t *size, void **data, uint16_t resourceID, void *
 
   int fd = open(path, O_RDONLY);
   if (fd == -1) {
-    printf("ERROR: Unable to load %s, file could not be opened. Check if it exists and if you have permission to open it.\n", path);
+    PrintError("Unable to load %s, file could not be opened. Check if it exists and if you have permission to open it", path);
     goto cleanup;
   }
 

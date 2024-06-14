@@ -14,6 +14,7 @@
 #include <windows.h>
 #endif
 
+#include "../frontends/frontend.h"
 #include "fileloading.h"
 #include "winresources.h"
 #include "parser.h"
@@ -101,7 +102,7 @@ bool LoadGameData(char *path) {
     UnloadFile(Data, GAMEDATA, GAMEDATA_RESTYPE);
     // TODO: Report erroring line and column numbers
     // TODO: Show erroring line
-    fprintf(stderr, "ERROR: Unable to load %s, error in parsing at position %td.\n", path, cJSON_GetErrorPtr() - (char *)Data);
+    PrintError("Unable to load %s, error in parsing at position %td", path, cJSON_GetErrorPtr() - (char *)Data);
     return false;
   }
 

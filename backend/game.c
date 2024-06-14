@@ -6,6 +6,7 @@
 #include "game.h"
 #include "screens.h"
 #include "specialscreens.h"
+#include "../frontends/frontend.h"
 #include "../shared/parser.h"
 
 uint8_t FloorSize = 0;
@@ -17,12 +18,12 @@ static inline uint64_t Min(uint64_t a, uint64_t b) {
 
 bool SetupBackend(void) {
   if (!LoadGameData("GameData.json")) {
-    fprintf(stderr, "ERROR: Failed to load GameData.json\n");
+    PrintError("Failed to load GameData.json");
     return false;
   }
 
   if (!Rooms && !LoadGameRooms(&FloorSize, &Rooms)) {
-    fprintf(stderr, "ERROR: Failed to load rooms from GameData.json\n");
+    PrintError("Failed to load rooms from GameData.json");
     return false;
   }
 

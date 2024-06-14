@@ -1,4 +1,5 @@
 #include <inttypes.h>
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -193,6 +194,17 @@ static bool HandleInput(struct GameOutput *output) {
     default:
       return false;
   }
+}
+
+void PrintError(const char *error, ...) {
+  fputs("ERROR: ", stderr);
+
+  va_list args;
+  va_start(args, error);
+  vfprintf(stderr, error, args);
+  va_end(args);
+
+  fputs(".\n", stderr);
 }
 
 int main(void) {
