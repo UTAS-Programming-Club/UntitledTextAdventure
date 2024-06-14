@@ -5,7 +5,7 @@
     {
       // ID: 0
       "body": "Untitled text adventure game\n----------------------------\nBy the UTAS Programming Club\n\nCurrently unimplemented :(",
-      "extraText": "\nReload Count:",
+      "extraText": "\nReload Count: ",
       "customScreenCode": MainMenuCustomScreenCode,
       "buttons": [
         {
@@ -59,30 +59,25 @@
       "default": 0
     }
   ],
-  "rooms": [
-    {
-      // ID: 0
-      "type": EmptyRoomType,
-      "north": 1,
-      "east": 3
-    },
-    {
-      // ID: 1
-      "type": EmptyRoomType,
-      "east": 2,
-      "south": 0
-    },
-    {
-      // ID: 2
-      "type": EmptyRoomType,
-      "south": 3,
-      "west": 1
-    },
-    {
-      // ID: 3
-      "type": EmptyRoomType,
-      "north": 2,
-      "west": 0
-    }
-  ]
+  "rooms": {
+    "floorSize": 5,
+    "rooms": [
+      {
+        "type": EmptyRoomType,
+        "position": [0, 0]
+      },
+      {
+        "type": EmptyRoomType,
+        "position": [0, 1]
+      },
+      {
+        "type": EmptyRoomType,
+        "position": [1, 0]
+      },
+      {
+        "type": EmptyRoomType,
+        "position": [1, 1]
+      }
+    ]
+  }
 }

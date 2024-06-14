@@ -430,7 +430,7 @@ int main(void) {
   int nCmdShow = info.dwFlags & STARTF_USESHOWWINDOW ? info.wShowWindow : kNtSwNormal;
 #endif
 
-  if (!SetupGame()) {
+  if (!SetupBackend()) {
     return 1;
   }
   if (!GetCurrentGameOutput(&Output)) {
@@ -487,5 +487,6 @@ int main(void) {
   UnregisterClassW(rClass, hInstance);
 #endif
   CleanupGame(&Output);
+  CleanupBackend();
   return msg.wParam;
 }

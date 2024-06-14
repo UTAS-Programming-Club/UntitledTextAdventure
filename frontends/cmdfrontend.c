@@ -198,13 +198,8 @@ static bool HandleInput(struct GameOutput *output) {
 int main(void) {
   int res = 1;
 
-  if (!SetupConsole()) {
-    goto end;
-  }
-
-  // TODO: Split UnloadGameData from CleanupGame
-  if (!SetupGame()) {
-    goto end;
+  if (!SetupConsole() || !SetupBackend()) {
+    goto reset_console;
   }
 
   struct GameOutput output = {0};
@@ -218,7 +213,8 @@ int main(void) {
 
   // TODO: Make sure this happens, even on crash. atexit + signal handler?
   CleanupGame(&output);
-end:
+  CleanupBackend();
+reset_console:
   ResetConsole();
   return res;
 }

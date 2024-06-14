@@ -21,6 +21,8 @@ struct GameScreenButton {
 bool LoadGameData(char *);
 void UnloadGameData(void);
 
+bool LoadGameRooms(uint8_t *floorSize, struct RoomInfo **);
+
 unsigned char *InitGameState(void);
 size_t GetGameStateOffset(enum Screen, uint8_t);
 
@@ -31,7 +33,5 @@ bool GetGameScreen(enum Screen, struct GameScreen *);
 bool GetGameScreenButton(enum Screen, uint8_t, struct GameScreenButton *);
 // Returns UINT8_MAX on error
 uint8_t GetGameScreenButtonCount(enum Screen);
-
-bool GetGameRoom(struct RoomInfo *);
 
 #endif // PCGAME_PARSER_H

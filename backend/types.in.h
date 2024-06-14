@@ -33,9 +33,11 @@ JSON_ENUM_END
 
 // InputOutcome is a uint16_t, [0, 65535]
 JSON_ENUM_START(InputOutcome)
+  // Can be given to frontend
   JSON_ENUM_ITEM(InvalidInputOutcome,  0) // Do not use in json or use in screens.c
   JSON_ENUM_ITEM(GetNextOutputOutcome, 1) // Do not use in json or use in screens.c
   JSON_ENUM_ITEM(QuitGameOutcome,      2)
+  // Do not give to frontend
   JSON_ENUM_ITEM(GotoScreenOutcome,    3) // -> GetNextOutput, Needs newScreen field in the same screen's json entry
   JSON_ENUM_ITEM(GameGoNorthOutcome,   4) // -> GetNextOutput, Needs north in current room's json entry
   JSON_ENUM_ITEM(GameGoEastOutcome,    5) // -> GetNextOutput, Needs east in current room's json entry
@@ -57,12 +59,15 @@ JSON_ENUM_START(RoomType)
   JSON_ENUM_ITEM(InvalidRoomType, 255)
 JSON_ENUM_END
 
-// RoomType is a uint16_t, [0, 65535]
-// Must match indices in rooms array in GameData.in.json
-// Screen 0 is the default room and is shown when GameScreen becomes the current screen
-EMIT(#define PRIRoomID PRIuFAST16)
-C_EMIT(typedef uint_fast16_t RoomID;)
-EMIT(#define InvalidRoomID 65535)
+// RoomCoord is a uint8_t but with [0, FloorSize) <= [0, 255)
+// Need to be able to add 1 safely for both printing on screen and for safely
+// finding the next room. Same for subtracting 1 from 0, both give 255 which
+// is defined to be invalid
+EMIT(#define PRIRoomCoord PRIuFAST8)
+EMIT(#define DefaultRoomCoordX 0)
+EMIT(#define DefaultRoomCoordY 0)
+EMIT(#define InvalidRoomCoord 255)
+C_EMIT(typedef uint_fast8_t RoomCoord;)
 
 // TODO: Add enum for state vars
 
