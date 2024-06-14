@@ -11,7 +11,7 @@
         {
           "title": "Start Game",
           "outcome": GotoScreenOutcome,
-          "newScreen": GameScreen
+          "newScreenID": GameScreen
         },
         {
           "title": "Quit Game",
@@ -44,7 +44,7 @@
         {
           "title": "Return to Main Menu",
           "outcome": GotoScreenOutcome,
-          "newScreen": MainMenuScreen
+          "newScreenID": MainMenuScreen
         }
       ]
     }
@@ -61,7 +61,7 @@
   ],
   "rooms": {
     "floorSize": 5,
-    "rooms": [
+    "roomsArray": [
       {
         "type": EmptyRoomType,
         "position": [0, 0]

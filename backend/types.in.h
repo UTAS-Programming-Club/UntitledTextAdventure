@@ -22,7 +22,7 @@ EMIT(#define PCGAME_TYPES_H)
 C_EMIT(#include <inttypes.h>)
 C_EMIT(#include <stdint.h>)
 
-// ScreenID is a uint16_t, [0, 65535]
+// ScreenID is a uint16_t with [0, 65535)
 // Must match indices in screen array in GameData.in.json
 // Screen 0 is the default screen and is shown on startup
 JSON_ENUM_START(Screen)
@@ -31,7 +31,7 @@ JSON_ENUM_START(Screen)
   JSON_ENUM_ITEM(InvalidScreen, 65535)
 JSON_ENUM_END
 
-// InputOutcome is a uint16_t, [0, 65535]
+// InputOutcome is a uint16_t with (0, 65535]
 JSON_ENUM_START(InputOutcome)
   // Can be given to frontend
   JSON_ENUM_ITEM(InvalidInputOutcome,  0) // Do not use in json or use in screens.c
@@ -45,7 +45,7 @@ JSON_ENUM_START(InputOutcome)
   JSON_ENUM_ITEM(GameGoWestOutcome,    7) // -> GetNextOutput, Needs west in current room's json entry
 JSON_ENUM_END
 
-// CustomScreenCode is a uint16_t, [0, 65535]
+// CustomScreenCode is a uint16_t with [0, 65535)
 // Must match indices in CustomScreenCode array in specialscreens.c
 JSON_ENUM_START(CustomScreenCode)
   JSON_ENUM_ITEM(MainMenuCustomScreenCode,    0)
@@ -53,20 +53,20 @@ JSON_ENUM_START(CustomScreenCode)
   JSON_ENUM_ITEM(InvalidCustomScreenCode, 65535)
 JSON_ENUM_END
 
-// RoomType is a uint8_t, [0, 255]
+// RoomType is a uint8_t with [0, 255)
 JSON_ENUM_START(RoomType)
   JSON_ENUM_ITEM(EmptyRoomType,     0)
   JSON_ENUM_ITEM(InvalidRoomType, 255)
 JSON_ENUM_END
 
-// RoomCoord is a uint8_t but with [0, FloorSize) <= [0, 255)
+// RoomCoord is a uint8_t with [0, FloorSize) <= [0, 255)
 // Need to be able to add 1 safely for both printing on screen and for safely
 // finding the next room. Same for subtracting 1 from 0, both give 255 which
 // is defined to be invalid
 EMIT(#define PRIRoomCoord PRIuFAST8)
-EMIT(#define DefaultRoomCoordX 0)
-EMIT(#define DefaultRoomCoordY 0)
-EMIT(#define InvalidRoomCoord 255)
+EMIT(#define DefaultRoomCoordX (RoomCoord)0)
+EMIT(#define DefaultRoomCoordY (RoomCoord)0)
+EMIT(#define InvalidRoomCoord (RoomCoord)255)
 C_EMIT(typedef uint_fast8_t RoomCoord;)
 
 // TODO: Add enum for state vars

@@ -127,22 +127,22 @@ bool LoadGameRooms(uint_fast8_t *floorSize, struct RoomInfo **rooms) {
     return false;
   }
 
-  cJSON *jsonRooms1;
-  JSON_GETJSONOBJECTERROR(jsonRooms1, GameData, "rooms", false);
+  cJSON *jsonRooms;
+  JSON_GETJSONOBJECTERROR(jsonRooms, GameData, "rooms", false);
 
-  JSON_GETNUMBERVALUEERROR(*floorSize, jsonRooms1, "floorSize", false);
+  JSON_GETNUMBERVALUEERROR(*floorSize, jsonRooms, "floorSize", false);
 
   *rooms = calloc(*floorSize * *floorSize, sizeof **rooms);
   if (!*rooms) {
     return false;
   }
 
-  cJSON *jsonRooms2;
-  JSON_GETJSONARRAYERROR(jsonRooms2, jsonRooms1, "rooms", false);
+  cJSON *jsonRoomsArray;
+  JSON_GETJSONARRAYERROR(jsonRoomsArray, jsonRooms, "roomsArray", false);
 
   // cJSON_ArrayForEach uses int for idx, likely fine as INT_MAX >= 2^15 - 1
   cJSON *jsonRoom;
-  cJSON_ArrayForEach(jsonRoom, jsonRooms2) {
+  cJSON_ArrayForEach(jsonRoom, jsonRoomsArray) {
     cJSON *jsonPosition;
     JSON_GETJSONARRAYERROR(jsonPosition, jsonRoom, "position", false);
 
@@ -369,7 +369,7 @@ bool GetGameScreenButton(enum Screen screenID, uint8_t buttonID, struct GameScre
 
   button->outcome = cJSON_GetOptNumberValue(jsonButton, "outcome", InvalidInputOutcome, invalidOptNumberVal);
 
-  button->newScreenID = cJSON_GetOptNumberValue(jsonButton, "newScreen", InvalidScreen, invalidOptNumberVal);
+  button->newScreenID = cJSON_GetOptNumberValue(jsonButton, "newScreenID", InvalidScreen, invalidOptNumberVal);
   if (invalidOptNumberVal == button->newScreenID) {
     return false;
   }
