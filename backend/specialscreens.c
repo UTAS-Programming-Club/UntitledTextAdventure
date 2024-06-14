@@ -39,11 +39,11 @@
 static void WriteRoomRow(FILE *fp, uint_fast8_t roomRow,
                          uint_fast8_t roomColumn, uint_fast8_t outputRow) {
   // Top Grid Row
-  if (0 == roomRow && 0 == roomColumn && 0 == outputRow) {
+  if (FloorSize - 1 == roomRow && 0 == roomColumn && 0 == outputRow) {
     fputs(TopLeftLine HorLine HorLine, fp);
-  } else if (0 == roomRow && FloorSize - 1 > roomColumn && 0 == outputRow) {
+  } else if (FloorSize - 1 == roomRow && FloorSize - 1 > roomColumn && 0 == outputRow) {
     fputs(TopMiddleLine HorLine HorLine, fp);
-  } else if (0 == roomRow && FloorSize - 1 == roomColumn && 0 == outputRow) {
+  } else if (FloorSize - 1 == roomRow && FloorSize - 1 == roomColumn && 0 == outputRow) {
     fputs(TopMiddleLine HorLine HorLine TopRightLine "\n", fp);
   }
 
@@ -63,20 +63,20 @@ static void WriteRoomRow(FILE *fp, uint_fast8_t roomRow,
   }
 
   // Middle Grid Rows
-  else if (FloorSize - 1 > roomRow && 0 == roomColumn && RoomGridSize - 1 == outputRow) {
+  else if (0 < roomRow && 0 == roomColumn && RoomGridSize - 1 == outputRow) {
     fputs(SideLeftLine HorLine HorLine, fp);
-  } else if (FloorSize - 1 > roomRow && FloorSize - 1 > roomColumn && RoomGridSize - 1 == outputRow) {
+  } else if (0 < roomRow && FloorSize - 1 > roomColumn && RoomGridSize - 1 == outputRow) {
     fputs(MiddleLine HorLine HorLine, fp);
-  } else if (FloorSize - 1 > roomRow && FloorSize - 1 == roomColumn && RoomGridSize - 1 == outputRow) {
+  } else if (0 < roomRow && FloorSize - 1 == roomColumn && RoomGridSize - 1 == outputRow) {
     fputs(MiddleLine HorLine HorLine SideRightLine "\n", fp);
   }
 
   // Bottom Grid Row
-  else if (FloorSize - 1 == roomRow && 0 == roomColumn && RoomGridSize - 1 == outputRow) {
+  else if (0 == roomRow && 0 == roomColumn && RoomGridSize - 1 == outputRow) {
     fputs(BottomLeftLine HorLine HorLine, fp);
-  } else if (FloorSize - 1 == roomRow && FloorSize - 1 > roomColumn && RoomGridSize - 1 == outputRow) {
+  } else if (0 == roomRow && FloorSize - 1 > roomColumn && RoomGridSize - 1 == outputRow) {
     fputs(BottomMiddleLine HorLine HorLine, fp);
-  } else if (FloorSize - 1 == roomRow && FloorSize - 1 == roomColumn && RoomGridSize - 1 == outputRow) {
+  } else if (0 == roomRow && FloorSize - 1 == roomColumn && RoomGridSize - 1 == outputRow) {
     fputs(BottomMiddleLine HorLine HorLine BottomRightLine "\n", fp);
   }
 }
@@ -87,7 +87,7 @@ static void WriteMap(void) {
     return;
   }
 
-  for (uint_fast8_t roomRow = 0; roomRow < FloorSize; ++roomRow) {
+  for (uint_fast8_t roomRow = FloorSize - 1; roomRow != UINT_FAST8_MAX; --roomRow) {
     for (uint_fast8_t outputRow = 0; outputRow < RoomGridSize; ++outputRow) {
       for (uint_fast8_t roomColumn = 0; roomColumn < FloorSize; ++roomColumn) {
         WriteRoomRow(fp, roomRow, roomColumn, outputRow);
