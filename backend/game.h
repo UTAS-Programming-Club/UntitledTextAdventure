@@ -35,7 +35,7 @@ struct GameOutput {
   char *body; // utf-8
   uint8_t inputCount;
   struct GameInput *inputs;
-  struct RoomInfo *roomInfo;
+  const struct RoomInfo *roomInfo;
   bool startedGame;
 // implementation, do not use outside of backend
   Arena arena;
@@ -47,7 +47,7 @@ struct GameOutput {
 bool SetupBackend(void);
 bool GetCurrentGameOutput(struct GameOutput *);
 enum InputOutcome HandleGameInput(struct GameOutput *, uint8_t);
-struct RoomInfo *GetGameRoom(RoomCoord, RoomCoord);
+const struct RoomInfo *GetGameRoom(RoomCoord, RoomCoord);
 void CleanupGame(struct GameOutput *);
 void CleanupBackend(void);
 

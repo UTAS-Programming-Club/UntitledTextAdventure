@@ -67,7 +67,7 @@ static void WriteRoomRow(FILE *fp, RoomCoord roomRow, RoomCoord roomColumn,
   // Middle Room Rows
   else {
     // Player in room
-    if (currentRoom->x == roomRow && currentRoom->y == roomColumn && 1 == outputRow) {
+    if (currentRoom->x == roomColumn && currentRoom->y == roomRow && 1 == outputRow) {
       fprintf(fp, VerLine "P%*s", RoomGridSize - 3, "");
     // Room exists
     } else if (GetGameRoom(roomRow, roomColumn)->exists) {
@@ -185,24 +185,20 @@ static bool CreateGameScreen(struct GameOutput *output) {
   for (uint8_t i = 0; i < output->inputCount; ++i) {
     switch (output->inputs[i].outcome) {
       case GameGoNorthOutcome:
-        // output->inputs[i].visible =
-        //   GetGameRoom(output->roomInfo->x, output->roomInfo->y + 1)->exists;
-        output->inputs[i].visible = false;
+        output->inputs[i].visible =
+          GetGameRoom(output->roomInfo->x, output->roomInfo->y + 1)->exists;
         break;
       case GameGoEastOutcome:
-        // output->inputs[i].visible =
-        //   GetGameRoom(output->roomInfo->x + 1, output->roomInfo->y)->exists;
-        output->inputs[i].visible = false;
+        output->inputs[i].visible =
+          GetGameRoom(output->roomInfo->x + 1, output->roomInfo->y)->exists;
         break;
       case GameGoSouthOutcome:
-        // output->inputs[i].visible =
-        //   GetGameRoom(output->roomInfo->x, output->roomInfo->y - 1)->exists;
-        output->inputs[i].visible = false;
+        output->inputs[i].visible =
+          GetGameRoom(output->roomInfo->x, output->roomInfo->y - 1)->exists;
         break;
       case GameGoWestOutcome:
-        // output->inputs[i].visible =
-        //   GetGameRoom(output->roomInfo->x - 1, output->roomInfo->y)->exists;
-        output->inputs[i].visible = false;
+        output->inputs[i].visible =
+          GetGameRoom(output->roomInfo->x - 1, output->roomInfo->y)->exists;
         break;
       default:
         break;

@@ -151,7 +151,10 @@ bool LoadGameRooms(uint_fast8_t *floorSize, struct RoomInfo **rooms) {
     JSON_GETJSONARRAYITEMNUMBERERROR(y, jsonPosition, 1, false);
 
     uint_fast16_t idx = *floorSize * y + x;
-    GetGameRoomData(jsonRoom, &(*rooms)[idx]);
+    struct RoomInfo *room = &(*rooms)[idx];
+    room->x = x;
+    room->y = y;
+    GetGameRoomData(jsonRoom, room);
   }
 
   return true;
