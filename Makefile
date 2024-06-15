@@ -75,39 +75,42 @@ $(INCDIR)/jsoncons_ext: third_party/jsoncons/include/jsoncons_ext | $(INCDIR)
 	cp -r $< $@
 
 
-backend/game.h: $(INCDIR)/arena.h backend/types.h
+backend/game.h: $(INCDIR)/arena.h $(INCDIR)/types.h
+backend/screens.h: backend/game.h
+backend/specialscreens.h: backend/game.h
+shared/parser.h: backend/game.h
 
-backend/types.h: backend/types.in.h
+$(INCDIR)/types.h: backend/types.in.h
 	$(CPP) -P -C -nostdinc -o $@ $<
 
-backend/types.json.h: backend/types.in.h
+$(INCDIR)/types.json.h: backend/types.in.h
 	$(CPP) -P -o $@ $< -D JSON
 
-GameData.json: GameData.in.json backend/types.json.h
-	$(CPP) -P -o $@ -xc $<
+GameData.json: GameData.in.json $(INCDIR)/types.json.h
+	$(CPP) -P -o $@ -xc $< -I $(INCDIR)
 
 
 # Objects
-$(LIBDIR)/game.o: backend/game.c backend/game.h | $(LIBDIR)
+$(LIBDIR)/game.o: backend/game.c backend/game.h backend/screens.h backend/specialscreens.h frontends/frontend.h shared/parser.h $(INCDIR)/types.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
-$(LIBDIR)/screens.o: backend/screens.c backend/screens.h | $(LIBDIR)
+$(LIBDIR)/screens.o: backend/screens.c backend/game.h backend/screens.h shared/parser.h $(INCDIR)/arena.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
-$(LIBDIR)/specialscreens.o: backend/specialscreens.c backend/specialscreens.h | $(LIBDIR)
+$(LIBDIR)/specialscreens.o: backend/specialscreens.c backend/game.h backend/specialscreens.h shared/parser.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 
 $(LIBDIR)/crossprint.o: shared/crossprint.c shared/crossprint.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
-$(LIBDIR)/fileloading_frontend.o: shared/fileloading.c shared/fileloading.h | $(LIBDIR)
+$(LIBDIR)/fileloading_frontend.o: shared/fileloading.c frontends/frontend.h shared/fileloading.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS) -D FRONTEND
 
-$(LIBDIR)/fileloading_printgamedata.o: shared/fileloading.c shared/fileloading.h | $(LIBDIR)
+$(LIBDIR)/fileloading_printgamedata.o: shared/fileloading.c frontends/frontend.h shared/fileloading.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
-$(LIBDIR)/parser.o: shared/parser.c backend/game.h shared/parser.h $(INCDIR)/cJSON.h | $(LIBDIR)
+$(LIBDIR)/parser.o: shared/parser.c backend/game.h frontends/frontend.h shared/fileloading.h  shared/winresources.h shared/parser.h $(INCDIR)/cJSON.h $(INCDIR)/types.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS) -D BACKEND
 
 
@@ -122,10 +125,10 @@ $(LIBDIR)/jsonvalidator.o: tools/jsonvalidator.cpp $(INCDIR)/jsoncons $(INCDIR)/
 	$(CXX) $(CXXSTD) $(CXXWARNINGS) -c -o $@ $< $(CXXFLAGS)
 
 
-$(LIBDIR)/cmdfrontend.o: frontends/cmdfrontend.c frontends/frontend.h backend/game.h | $(LIBDIR)
+$(LIBDIR)/cmdfrontend.o: frontends/cmdfrontend.c backend/game.h frontends/frontend.h shared/crossprint.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
-$(LIBDIR)/gdifrontend.o: frontends/gdifrontend.c frontends/frontend.h | $(LIBDIR)
+$(LIBDIR)/gdifrontend.o: frontends/gdifrontend.c backend/game.h frontends/frontend.h shared/crossprint.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS) $(GDICFLAGS)
 
 $(LIBDIR)/winresources.o: frontends/winresources.rc shared/winresources.h GameData.json | $(LIBDIR)

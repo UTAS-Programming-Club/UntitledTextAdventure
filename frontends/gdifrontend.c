@@ -1,8 +1,7 @@
-#include <memory.h>
-#include <stdlib.h>
+#include <stdbool.h>
+#include <stdint.h>
 
 #include "../backend/game.h"
-#include "../backend/screens.h"
 #include "../shared/crossprint.h"
 #include "frontend.h"
 

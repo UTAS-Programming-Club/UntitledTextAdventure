@@ -1,13 +1,14 @@
+#include <arena.h>
 #include <stdbool.h>
-#include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
+#include <types.h>
 
-#include "types.h"
+#include "../frontends/frontend.h"
+#include "../shared/parser.h"
 #include "game.h"
 #include "screens.h"
 #include "specialscreens.h"
-#include "../frontends/frontend.h"
-#include "../shared/parser.h"
 
 uint_fast8_t FloorSize = 0;
 static const struct RoomInfo *Rooms = NULL;

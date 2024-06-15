@@ -2,7 +2,6 @@
 #define PCGAME_FILELOADING_H
 
 #include <stdbool.h>
-#include <stddef.h>
 #include <stdint.h>
 
 bool LoadFile(char *, size_t *, void **, uint16_t, void *);

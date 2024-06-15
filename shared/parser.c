@@ -5,15 +5,13 @@
 #include <limits.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/stat.h>
+#include <types.h>
 #ifdef _WIN32
 #include <windows.h>
 #endif
 
+#include "../backend/game.h"
 #include "../frontends/frontend.h"
 #include "fileloading.h"
 #include "winresources.h"

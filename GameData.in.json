@@ -1,4 +1,4 @@
-#include "backend/types.json.h"
+#include <types.json.h>
 
 {
   "screens": [

@@ -1,9 +1,8 @@
 #include <inttypes.h>
 #include <stdarg.h>
 #include <stdbool.h>
-#include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
 #include <wchar.h>
 #ifdef _WIN32
@@ -13,7 +12,6 @@
 #endif
 
 #include "../backend/game.h"
-#include "../backend/screens.h"
 #include "../shared/crossprint.h"
 #include "frontend.h"
 

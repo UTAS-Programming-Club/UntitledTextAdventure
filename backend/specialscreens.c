@@ -1,15 +1,10 @@
 #include <inttypes.h>
-#include <math.h>
-#include <stdarg.h>
 #include <stdbool.h>
-#include <stdlib.h>
+#include <stdint.h>
 #include <stdio.h>
-#include <string.h>
 
-#include "game.h"
-#include "screens.h"
-#include "specialscreens.h"
 #include "../shared/parser.h"
+#include "game.h"
 
 // Each room take 4x4 but the 4 required calls to WriteRoomRow per room only
 // handle the top left most 3x3 unless it is the right and/or bottom most room
@@ -18,6 +13,7 @@
 #define HorLine "─"
 #define VerLine "│"
 
+#ifdef _DEBUG
 static const char *TopGridRowChars[] =    {"┌", "┬", "┐"};
 static const char *MiddleGridRowChars[] = {"├", "┼", "┤"};
 static const char *BottomGridRowChars[] = {"└", "┴", "┘"};
@@ -32,7 +28,6 @@ static void FPrintRep(char *sym, uint_fast8_t count, FILE *fp) {
 // TODO: Find a better way to mark rooms that don't exist
 // TODO: Add openings between rooms that exist
 // TODO: Indicate room type
-#ifdef _DEBUG
 static void WriteRoomRow(FILE *fp, RoomCoord roomRow, RoomCoord roomColumn,
                          uint_fast8_t outputRow, const struct RoomInfo *currentRoom) {
   if (RoomGridSize - 1 == outputRow && 0 != roomRow) {

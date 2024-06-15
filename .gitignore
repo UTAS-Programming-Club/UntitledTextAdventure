@@ -2,8 +2,6 @@
 nppBackup/
 
 # Output files
-backend/types.h
-backend/types.json.h
 out/
 third_party/cosmos/
 GameData.json

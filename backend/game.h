@@ -7,8 +7,9 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <types.h>
 
-#include "types.h"
+extern uint_fast8_t FloorSize;
 
 struct GameInput {
 // public, safe to use outside of backend
@@ -27,7 +28,6 @@ struct RoomInfo {
   RoomCoord x;
   RoomCoord y;
 };
-extern uint_fast8_t FloorSize;
 
 struct GameOutput {
 // public, safe to use outside of backend

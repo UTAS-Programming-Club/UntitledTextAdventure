@@ -5,10 +5,11 @@
 
 #define ARENA_IMPLEMENTATION
 #include <arena.h>
+#include <stdbool.h>
 
+#include "../shared/parser.h"
 #include "game.h"
 #include "screens.h"
-#include "../shared/parser.h"
 
 bool CreateScreen(struct GameOutput *output) {
   if (!output) {
