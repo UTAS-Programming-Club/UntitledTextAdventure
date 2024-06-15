@@ -14,12 +14,19 @@
 #include <windows.h>
 #endif
 
+#include "../frontends/frontend.h"
 #include "fileloading.h"
 #include "winresources.h"
 #include "parser.h"
 
 #define CAT_(a, b) a ## b
 #define CAT(a, b) CAT_(a, b)
+
+#define JSON_GETJSONOBJECTERROR(var, obj, name, err) \
+  var = cJSON_GetObjectItemCaseSensitive(obj, name); \
+  if (!cJSON_IsObject(var)) { \
+    return err; \
+  }
 
 #define JSON_GETJSONARRAYERROR(var, obj, name, err) \
   var = cJSON_GetObjectItemCaseSensitive(obj, name); \
@@ -32,6 +39,13 @@
   if (!cJSON_IsObject(var)) { \
     return false; \
   }
+
+#define JSON_GETJSONARRAYITEMNUMBERERROR(var, arr, idx, err) \
+  cJSON *CAT(json, __LINE__) = cJSON_GetArrayItem(arr, idx); \
+  if (!cJSON_IsNumber(CAT(json, __LINE__))) { \
+    return err; \
+  } \
+  var = cJSON_GetNumberValue(CAT(json, __LINE__));
 
 #define JSON_GETSTRINGVALUEERROR(var, obj, name, err) \
   cJSON *CAT(json, __LINE__) = cJSON_GetObjectItemCaseSensitive(obj, name); \
@@ -66,7 +80,14 @@ static inline double cJSON_GetOptNumberValue(const cJSON *const object, const ch
 }
 
 
+static bool GetGameRoomData(cJSON *jsonRoom, struct RoomInfo *room);
+
+
 bool LoadGameData(char *path) {
+  if (GameData) {
+    return true;
+  }
+
   if (!path) {
     return false;
   }
@@ -81,10 +102,10 @@ bool LoadGameData(char *path) {
     UnloadFile(Data, GAMEDATA, GAMEDATA_RESTYPE);
     // TODO: Report erroring line and column numbers
     // TODO: Show erroring line
-    printf("ERROR: Unable to load %s, error in parsing at position %td.\n", path, cJSON_GetErrorPtr() - (char *)Data);
+    PrintError("Unable to load %s, error in parsing at position %td", path, cJSON_GetErrorPtr() - (char *)Data);
     return false;
   }
-  
+
   return true;
 }
 
@@ -101,11 +122,54 @@ void UnloadGameData(void) {
 }
 
 
+bool LoadGameRooms(uint_fast8_t *floorSize, struct RoomInfo **rooms) {
+  if (!GameData || !floorSize || !rooms) {
+    return false;
+  }
+
+  cJSON *jsonRooms;
+  JSON_GETJSONOBJECTERROR(jsonRooms, GameData, "rooms", false);
+
+  JSON_GETNUMBERVALUEERROR(*floorSize, jsonRooms, "floorSize", false);
+
+  *rooms = calloc(*floorSize * *floorSize, sizeof **rooms);
+  if (!*rooms) {
+    return false;
+  }
+
+  cJSON *jsonRoomsArray;
+  JSON_GETJSONARRAYERROR(jsonRoomsArray, jsonRooms, "roomsArray", false);
+
+  // cJSON_ArrayForEach uses int for idx, likely fine as INT_MAX >= 2^15 - 1
+  cJSON *jsonRoom;
+  cJSON_ArrayForEach(jsonRoom, jsonRoomsArray) {
+    cJSON *jsonPosition;
+    JSON_GETJSONARRAYERROR(jsonPosition, jsonRoom, "position", false);
+
+    RoomCoord x, y;
+    JSON_GETJSONARRAYITEMNUMBERERROR(x, jsonPosition, 0, false);
+    JSON_GETJSONARRAYITEMNUMBERERROR(y, jsonPosition, 1, false);
+
+    uint_fast16_t idx = *floorSize * y + x;
+    struct RoomInfo *room = &(*rooms)[idx];
+    room->x = x;
+    room->y = y;
+    GetGameRoomData(jsonRoom, room);
+  }
+
+  return true;
+}
+
+
 // Currently only integers are supported
 // TODO: Support floating point
 // TODO: Support loading data from "save", the plan is to use a password system so no actual saves per se
 // Must be freed at the end of the program
 unsigned char *InitGameState(void) {
+  if (!GameData) {
+    return NULL;
+  }
+
   cJSON *jsonStateVars;
   JSON_GETJSONARRAYERROR(jsonStateVars, GameData, "state", NULL);
 
@@ -177,7 +241,12 @@ unsigned char *InitGameState(void) {
   return gameState;
 }
 
+// TODO: Change error value to -1(would need nonstandard ssize_t)?
 size_t GetGameStateOffset(enum Screen screenID, uint8_t stateID) {
+  if (!GameData) {
+    return SIZE_MAX;
+  }
+
   cJSON *jsonStateVars;
   JSON_GETJSONARRAYERROR(jsonStateVars, GameData, "state", SIZE_MAX);
 
@@ -303,7 +372,7 @@ bool GetGameScreenButton(enum Screen screenID, uint8_t buttonID, struct GameScre
 
   button->outcome = cJSON_GetOptNumberValue(jsonButton, "outcome", InvalidInputOutcome, invalidOptNumberVal);
 
-  button->newScreenID = cJSON_GetOptNumberValue(jsonButton, "newScreen", InvalidScreen, invalidOptNumberVal);
+  button->newScreenID = cJSON_GetOptNumberValue(jsonButton, "newScreenID", InvalidScreen, invalidOptNumberVal);
   if (invalidOptNumberVal == button->newScreenID) {
     return false;
   }
@@ -312,37 +381,22 @@ bool GetGameScreenButton(enum Screen screenID, uint8_t buttonID, struct GameScre
 }
 
 
-bool GetGameRoom(struct RoomInfo *room) {
-  if (!GameData) {
+static bool GetGameRoomData(cJSON *jsonRoom, struct RoomInfo *room) {
+  if (!room) {
     return false;
   }
-
-  // cJSON_GetArrayItem uses int, likely fine as INT_MAX >= 2^15 - 1
-  // Need pragra to avoid warning about size check being redundant,
-  // it's not as 2^16 - 1 > 2^15 - 1
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wtype-limits"
-  if (!room || InvalidRoomID == room->roomID || room->roomID > INT_MAX) {
-#pragma GCC diagnostic pop
-    return false;
-  }
-
-  cJSON *jsonRooms;
-  JSON_GETJSONARRAYERROR(jsonRooms, GameData, "rooms", false);
-
-  cJSON *jsonRoom;
-  JSON_GETJSONARRAYITEMOBJERROR(jsonRoom, jsonRooms, room->roomID, false);
 
   JSON_GETNUMBERVALUEERROR(room->type, jsonRoom, "type", false);
 
-  room->northRoomID = cJSON_GetOptNumberValue(jsonRoom, "north", InvalidRoomID, invalidOptNumberVal);
-  room->eastRoomID = cJSON_GetOptNumberValue(jsonRoom, "east", InvalidRoomID, invalidOptNumberVal);
-  room->southRoomID = cJSON_GetOptNumberValue(jsonRoom, "south", InvalidRoomID, invalidOptNumberVal);
-  room->westRoomID = cJSON_GetOptNumberValue(jsonRoom, "west", InvalidRoomID, invalidOptNumberVal);
-  if (invalidOptNumberVal == room->northRoomID || invalidOptNumberVal == room->eastRoomID
-  || invalidOptNumberVal == room->southRoomID || invalidOptNumberVal == room->westRoomID) {
-    return false;
-  }
+  // room->northRoomID = cJSON_GetOptNumberValue(jsonRoom, "north", InvalidRoomID, invalidOptNumberVal);
+  // room->eastRoomID = cJSON_GetOptNumberValue(jsonRoom, "east", InvalidRoomID, invalidOptNumberVal);
+  // room->southRoomID = cJSON_GetOptNumberValue(jsonRoom, "south", InvalidRoomID, invalidOptNumberVal);
+  // room->westRoomID = cJSON_GetOptNumberValue(jsonRoom, "west", InvalidRoomID, invalidOptNumberVal);
+  // if (invalidOptNumberVal == room->northRoomID || invalidOptNumberVal == room->eastRoomID
+  // || invalidOptNumberVal == room->southRoomID || invalidOptNumberVal == room->westRoomID) {
+  //   return false;
+  // }
 
+  room->exists = true;
   return true;
 }

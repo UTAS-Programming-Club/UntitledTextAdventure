@@ -1,6 +1,6 @@
 #ifndef PCGAME_FRONTEND_H
 #define PCGAME_FRONTEND_H
 
-// TODO: Remove?
+void PrintError(const char *, ...);
 
 #endif // PCGAME_FRONTEND_H

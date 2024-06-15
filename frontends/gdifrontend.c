@@ -417,6 +417,29 @@ cleanup_paint:
   return DefWindowProcW(hWnd, msg, wParam, lParam);
 }
 
+// TODO: Empty file on first write?
+void PrintError(const char *error, ...) {
+  FILE *fp = fopen("stderr.txt", "a");
+  bool usingStderr = false;
+  if (!fp) {
+    fp = stderr;
+    usingStderr = true;
+  }
+
+  fputs("ERROR: ", fp);
+
+  va_list args;
+  va_start(args, error);
+  vfprintf(fp, error, args);
+  va_end(args);
+
+  fputs(".\n", fp);
+
+  if (!usingStderr) {
+    fclose(fp);
+  }
+}
+
 #if defined(_WIN32)
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLine, int nCmdShow) {
   UNREFERENCED_PARAMETER(hPrevInstance); // Always NULL on win32
@@ -430,7 +453,7 @@ int main(void) {
   int nCmdShow = info.dwFlags & STARTF_USESHOWWINDOW ? info.wShowWindow : kNtSwNormal;
 #endif
 
-  if (!SetupGame()) {
+  if (!SetupBackend()) {
     return 1;
   }
   if (!GetCurrentGameOutput(&Output)) {
@@ -487,5 +510,6 @@ int main(void) {
   UnregisterClassW(rClass, hInstance);
 #endif
   CleanupGame(&Output);
+  CleanupBackend();
   return msg.wParam;
 }

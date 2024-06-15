@@ -1,10 +1,12 @@
 #include <inttypes.h>
+#include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <wchar.h>
 
+#include "../frontends/frontend.h"
 #include "../shared/crossprint.h"
 #include "../shared/parser.h"
 
@@ -21,6 +23,17 @@ static void PrintString(const char *str) {
   printf("%ls", wcStr);
   free(wcStr);
 #endif
+}
+
+void PrintError(const char *error, ...) {
+  fputs("ERROR: ", stderr);
+
+  va_list args;
+  va_start(args, error);
+  vfprintf(stderr, error, args);
+  va_end(args);
+
+  fputs(".\n", stderr);
 }
 
 int main(int argc, char *argv[]) {

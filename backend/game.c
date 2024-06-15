@@ -1,14 +1,32 @@
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "types.h"
 #include "game.h"
 #include "screens.h"
 #include "specialscreens.h"
+#include "../frontends/frontend.h"
 #include "../shared/parser.h"
 
-bool SetupGame(void) {
-  return LoadGameData("GameData.json");
+uint_fast8_t FloorSize = 0;
+static const struct RoomInfo *Rooms = NULL;
+static const struct RoomInfo DefaultRoom = {0};
+
+bool SetupBackend(void) {
+  if (!LoadGameData("GameData.json")) {
+    PrintError("Failed to load GameData.json");
+    return false;
+  }
+
+  struct RoomInfo *newRooms = NULL;
+  if (!Rooms && !LoadGameRooms(&FloorSize, &newRooms)) {
+    PrintError("Failed to load rooms from GameData.json");
+    return false;
+  }
+  Rooms = (const struct RoomInfo *)newRooms;
+
+  return true;
 }
 
 bool GetCurrentGameOutput(struct GameOutput *output) {
@@ -66,19 +84,19 @@ enum InputOutcome HandleGameInput(struct GameOutput *output, uint8_t inputIndex)
       outcome = GetNextOutputOutcome;
       break;
     case GameGoNorthOutcome:
-      output->roomInfo.roomID = output->roomInfo.northRoomID;
+      output->roomInfo = GetGameRoom(output->roomInfo->x, output->roomInfo->y + 1);
       outcome = GetNextOutputOutcome;
       break;
     case GameGoEastOutcome:
-      output->roomInfo.roomID = output->roomInfo.eastRoomID;
+      output->roomInfo = GetGameRoom(output->roomInfo->x + 1, output->roomInfo->y);
       outcome = GetNextOutputOutcome;
       break;
     case GameGoSouthOutcome:
-      output->roomInfo.roomID = output->roomInfo.southRoomID;
+      output->roomInfo = GetGameRoom(output->roomInfo->x, output->roomInfo->y - 1);
       outcome = GetNextOutputOutcome;
       break;
     case GameGoWestOutcome:
-      output->roomInfo.roomID = output->roomInfo.westRoomID;
+      output->roomInfo = GetGameRoom(output->roomInfo->x - 1, output->roomInfo->y);
       outcome = GetNextOutputOutcome;
       break;
     default:
@@ -88,9 +106,25 @@ enum InputOutcome HandleGameInput(struct GameOutput *output, uint8_t inputIndex)
   return outcome;
 }
 
+// Room may not exist, always check result->exists
+const struct RoomInfo *GetGameRoom(RoomCoord x, RoomCoord y) {
+  if (x >= FloorSize || y >= FloorSize
+    || x == InvalidRoomCoord || y == InvalidRoomCoord) {
+    return &DefaultRoom;
+  }
+
+  return &(Rooms[y * FloorSize + x]);
+}
+
 void CleanupGame(struct GameOutput *output) {
   arena_free(&output->arena);
-  UnloadGameData();
   free(output->stateData);
   output->stateData = NULL;
+}
+
+void CleanupBackend(void) {
+  UnloadGameData();
+  FloorSize = 0;
+  free((void *)Rooms);
+  Rooms = NULL;
 }
