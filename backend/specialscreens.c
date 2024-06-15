@@ -11,77 +11,76 @@
 #include "specialscreens.h"
 #include "../shared/parser.h"
 
-// Each room take 4x4 but the 3 required calls to WriteRoomRow per room only
-// handles the top left most 3x3 unless it is the right and/or bottom most room
+// Each room take 4x4 but the 4 required calls to WriteRoomRow per room only
+// handle the top left most 3x3 unless it is the right and/or bottom most room
 #define RoomGridSize 4
-
-#define TopLeftLine "┌"
-#define TopRightLine "┐"
-#define BottomLeftLine "└"
-#define BottomRightLine "┘"
-
-#define TopMiddleLine "┬"
-#define SideLeftLine "├"
-#define SideRightLine "┤"
-#define BottomMiddleLine "┴"
-
-#define MiddleLine "┼"
 
 #define HorLine "─"
 #define VerLine "│"
+
+static const char *TopGridRowChars[] =    {"┌", "┬", "┐"};
+static const char *MiddleGridRowChars[] = {"├", "┼", "┤"};
+static const char *BottomGridRowChars[] = {"└", "┴", "┘"};
+
+static void FPrintRep(char *sym, uint_fast8_t count, FILE *fp) {
+  for (uint_fast8_t i = 0; i < count; ++i) {
+    fputs(sym, fp);
+  }
+}
 
 // TODO: Only show inner walls on rooms that exists
 // TODO: Find a better way to mark rooms that don't exist
 // TODO: Add openings between rooms that exist
 // TODO: Indicate room type
-// TODO: Indicate player position
 #ifdef _DEBUG
 static void WriteRoomRow(FILE *fp, RoomCoord roomRow, RoomCoord roomColumn,
-                         uint_fast8_t outputRow) {
-  // Top Grid Row
-  if (FloorSize - 1 == roomRow && 0 == roomColumn && 0 == outputRow) {
-    fputs(TopLeftLine HorLine HorLine, fp);
-  } else if (FloorSize - 1 == roomRow && FloorSize - 1 > roomColumn && 0 == outputRow) {
-    fputs(TopMiddleLine HorLine HorLine, fp);
-  } else if (FloorSize - 1 == roomRow && FloorSize - 1 == roomColumn && 0 == outputRow) {
-    fputs(TopMiddleLine HorLine HorLine TopRightLine "\n", fp);
+                         uint_fast8_t outputRow, const struct RoomInfo *currentRoom) {
+  if (RoomGridSize - 1 == outputRow && 0 != roomRow) {
+    return;
+  }
+
+  // Top, middle and bottom grid rows
+  if (0 == outputRow || RoomGridSize - 1 == outputRow) {
+    const char **rowChars = NULL;
+    if (FloorSize - 1 == roomRow) {
+      rowChars = TopGridRowChars;
+    } else if (0 < roomRow) {
+      rowChars = MiddleGridRowChars;
+    } else {
+      rowChars = BottomGridRowChars;
+    }
+
+    if (0 == roomColumn) {
+      fputs(rowChars[0], fp);
+    } else {
+      fputs(rowChars[1], fp);
+    }
+
+    FPrintRep(HorLine, RoomGridSize - 2, fp);
+
+    if (FloorSize - 1 == roomColumn) {
+      fputs(rowChars[2], fp);
+      fputc('\n', fp);
+    }
   }
 
   // Middle Room Rows
-  else if (FloorSize - 1 > roomColumn && 0 < outputRow && RoomGridSize - 1 > outputRow) {
-    if (GetGameRoom(roomRow, roomColumn)->exists) {
-      fputs(VerLine "  ", fp);
+  else {
+    if (currentRoom->x == roomRow && currentRoom->y == roomColumn && 1 == outputRow) {
+      fprintf(fp, VerLine "P%*s", RoomGridSize - 3, "");
+    } else if (GetGameRoom(roomRow, roomColumn)->exists) {
+      fprintf(fp, VerLine "%*s", RoomGridSize - 2, "");
     } else {
-      fputs(VerLine "NO", fp);
+      fprintf(fp, VerLine "NO%*s", RoomGridSize - 4, "");
     }
-  } else if (FloorSize - 1 == roomColumn && 0 < outputRow && RoomGridSize - 1 > outputRow) {
-    if (GetGameRoom(roomRow, roomColumn)->exists) {
-      fputs(VerLine "  " VerLine "\n", fp);
-    } else {
-      fputs(VerLine "NO" VerLine "\n", fp);
+
+    if (FloorSize - 1 == roomColumn) {
+      fputs(VerLine "\n", fp);
     }
-  }
-
-  // Middle Grid Rows
-  else if (0 < roomRow && 0 == roomColumn && RoomGridSize - 1 == outputRow) {
-    fputs(SideLeftLine HorLine HorLine, fp);
-  } else if (0 < roomRow && FloorSize - 1 > roomColumn && RoomGridSize - 1 == outputRow) {
-    fputs(MiddleLine HorLine HorLine, fp);
-  } else if (0 < roomRow && FloorSize - 1 == roomColumn && RoomGridSize - 1 == outputRow) {
-    fputs(MiddleLine HorLine HorLine SideRightLine "\n", fp);
-  }
-
-  // Bottom Grid Row
-  else if (0 == roomRow && 0 == roomColumn && RoomGridSize - 1 == outputRow) {
-    fputs(BottomLeftLine HorLine HorLine, fp);
-  } else if (0 == roomRow && FloorSize - 1 > roomColumn && RoomGridSize - 1 == outputRow) {
-    fputs(BottomMiddleLine HorLine HorLine, fp);
-  } else if (0 == roomRow && FloorSize - 1 == roomColumn && RoomGridSize - 1 == outputRow) {
-    fputs(BottomMiddleLine HorLine HorLine BottomRightLine "\n", fp);
   }
 }
 
-static void WriteMap(void) {
+static void WriteMap(const struct RoomInfo *currentRoom) {
   FILE *fp = fopen("Map.txt", "w");
   if (!fp) {
     return;
@@ -90,7 +89,7 @@ static void WriteMap(void) {
   for (RoomCoord roomRow = FloorSize - 1; roomRow != InvalidRoomCoord; --roomRow) {
     for (uint_fast8_t outputRow = 0; outputRow < RoomGridSize; ++outputRow) {
       for (RoomCoord roomColumn = 0; roomColumn < FloorSize; ++roomColumn) {
-        WriteRoomRow(fp, roomRow, roomColumn, outputRow);
+        WriteRoomRow(fp, roomRow, roomColumn, outputRow, currentRoom);
       }
     }
   }
@@ -155,7 +154,7 @@ static bool CreateGameScreen(struct GameOutput *output) {
   }
 
 #ifdef _DEBUG
-  WriteMap();
+  WriteMap(output->roomInfo);
 #endif
 
   int allocatedCharCount = snprintf(NULL, 0, "%s%" PRIRoomCoord "%s%" PRIRoomCoord "%s",
