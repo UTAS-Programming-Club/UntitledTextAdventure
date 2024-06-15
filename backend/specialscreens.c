@@ -44,7 +44,7 @@ static void WriteRoomRow(FILE *fp, RoomCoord roomRow, RoomCoord roomColumn,
     const char **rowChars = NULL;
     if (FloorSize - 1 == roomRow) {
       rowChars = TopGridRowChars;
-    } else if (0 < roomRow) {
+    } else if (0 < roomRow || 0 == outputRow) {
       rowChars = MiddleGridRowChars;
     } else {
       rowChars = BottomGridRowChars;
@@ -66,10 +66,13 @@ static void WriteRoomRow(FILE *fp, RoomCoord roomRow, RoomCoord roomColumn,
 
   // Middle Room Rows
   else {
+    // Player in room
     if (currentRoom->x == roomRow && currentRoom->y == roomColumn && 1 == outputRow) {
       fprintf(fp, VerLine "P%*s", RoomGridSize - 3, "");
+    // Room exists
     } else if (GetGameRoom(roomRow, roomColumn)->exists) {
       fprintf(fp, VerLine "%*s", RoomGridSize - 2, "");
+    // Room does not exist
     } else {
       fprintf(fp, VerLine "NO%*s", RoomGridSize - 4, "");
     }
