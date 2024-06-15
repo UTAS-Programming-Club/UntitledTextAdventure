@@ -264,8 +264,8 @@ static void HandleOutput(HWND hWnd, HDC hdc, PAINTSTRUCT ps) {
     }
   }
 
-  uint8_t inputCount = 0;
-  for (uint8_t i = 0; i < Output.inputCount; ++i) {
+  uint_fast8_t inputCount = 0;
+  for (uint_fast8_t i = 0; i < Output.inputCount; ++i) {
     if (!Output.inputs[i].visible) {
       continue;
     }
@@ -304,7 +304,7 @@ static void HandleOutput(HWND hWnd, HDC hdc, PAINTSTRUCT ps) {
 
   HINSTANCE wndInst = (HINSTANCE)GetWindowLongPtrW(hWnd, GWLP_HINSTANCE);
 
-  for (uint8_t i = 0, visibleInputCount = 0; i < Output.inputCount; ++i) {
+  for (uint_fast8_t i = 0, visibleInputCount = 0; i < Output.inputCount; ++i) {
     if (!Output.inputs[i].visible) {
       continue;
     }

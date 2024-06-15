@@ -33,7 +33,7 @@ struct GameOutput {
 // public, safe to use outside of backend
   enum Screen screenID;
   char *body; // utf-8
-  uint8_t inputCount;
+  uint_fast8_t inputCount;
   struct GameInput *inputs;
   const struct RoomInfo *roomInfo;
   bool startedGame;
@@ -46,7 +46,7 @@ struct GameOutput {
 
 bool SetupBackend(void);
 bool GetCurrentGameOutput(struct GameOutput *);
-enum InputOutcome HandleGameInput(struct GameOutput *, uint8_t);
+enum InputOutcome HandleGameInput(struct GameOutput *, uint_fast8_t);
 const struct RoomInfo *GetGameRoom(RoomCoord, RoomCoord);
 void CleanupGame(struct GameOutput *);
 void CleanupBackend(void);

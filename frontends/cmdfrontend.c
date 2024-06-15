@@ -143,7 +143,7 @@ static void PrintOutputBody(const char *body) {
 }
 
 // Returns 0 to 8 for inputs 1 to 9
-static uint8_t GetInput(void) {
+static uint_fast8_t GetInput(void) {
   while(true) {
     // getchar fails with cosmo on windows where it only returns after 2 keys have been pressed with ~ICANON if VMIN==1 so switched to read
     char buf[1] = {0};
@@ -155,14 +155,14 @@ static uint8_t GetInput(void) {
   }
 }
 
-static void PrintInputs(uint8_t inputCount, const struct GameInput *inputs) {
+static void PrintInputs(uint_fast8_t inputCount, const struct GameInput *inputs) {
   puts("\nUse the numbers below to make a selection.");
   // TODO: Find a better way to do this. Perhaps actually remove unused buttons from inputs in game.c?
-  for (uint8_t i = 0, visibleInputCount = 0; i < inputCount; ++i) {
+  for (uint_fast8_t i = 0, visibleInputCount = 0; i < inputCount; ++i) {
     if (!inputs[i].visible) {
       continue;
     }
-    printf("%" PRIu8 ". ", visibleInputCount + 1);
+    printf("%" PRIuFAST8 ". ", visibleInputCount + 1);
     PrintString(inputs[i].title);
     putchar('\n');
     ++visibleInputCount;
@@ -179,10 +179,7 @@ static bool HandleOutput(struct GameOutput *output) {
 }
 
 static bool HandleInput(struct GameOutput *output) {
-  uint8_t input = GetInput();
-  if (input == UINT8_MAX) {
-    return HandleInput(output);
-  }
+  uint_fast8_t input = GetInput();
 
   enum InputOutcome outcome = HandleGameInput(output, input);
   switch(outcome) {

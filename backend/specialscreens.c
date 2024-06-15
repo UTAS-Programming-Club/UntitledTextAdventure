@@ -182,7 +182,7 @@ static bool CreateGameScreen(struct GameOutput *output) {
 
   output->body = str;
 
-  for (uint8_t i = 0; i < output->inputCount; ++i) {
+  for (uint_fast8_t i = 0; i < output->inputCount; ++i) {
     switch (output->inputs[i].outcome) {
       case GameGoNorthOutcome:
         output->inputs[i].visible =

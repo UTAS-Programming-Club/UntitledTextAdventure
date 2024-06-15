@@ -22,8 +22,8 @@ bool CreateScreen(struct GameOutput *output) {
   output->body = screen.body;
   output->customScreenCodeID = screen.customScreenCodeID;
 
-  uint8_t buttonCount = GetGameScreenButtonCount(output->screenID);
-  if (buttonCount == UINT8_MAX) {
+  uint_fast8_t buttonCount = GetGameScreenButtonCount(output->screenID);
+  if (buttonCount == UINT_FAST8_MAX) {
     return false;
   }
   output->inputCount = buttonCount;
@@ -33,7 +33,7 @@ bool CreateScreen(struct GameOutput *output) {
     return false;
   }
 
-  for (uint8_t i = 0; i < buttonCount; ++i) {
+  for (uint_fast8_t i = 0; i < buttonCount; ++i) {
     struct GameScreenButton button;
     if (!GetGameScreenButton(output->screenID, i, &button)) {
       return false;

@@ -54,8 +54,8 @@ bool GetCurrentGameOutput(struct GameOutput *output) {
   }
 }
 
-static uint8_t MapInputIndex(struct GameOutput *output, uint8_t inputIndex) {
-  for (uint8_t i = 0, visibleInputCount = 0; i < output->inputCount; ++i) {
+static uint_fast8_t MapInputIndex(struct GameOutput *output, uint_fast8_t inputIndex) {
+  for (uint_fast8_t i = 0, visibleInputCount = 0; i < output->inputCount; ++i) {
     if (!output->inputs[i].visible) {
       continue;
     }
@@ -66,11 +66,14 @@ static uint8_t MapInputIndex(struct GameOutput *output, uint8_t inputIndex) {
 
     ++visibleInputCount;
   }
-  return UINT8_MAX;
+  return UINT_FAST8_MAX;
 }
 
-enum InputOutcome HandleGameInput(struct GameOutput *output, uint8_t inputIndex) {
-  uint8_t inputID = MapInputIndex(output, inputIndex);
+enum InputOutcome HandleGameInput(struct GameOutput *output, uint_fast8_t inputIndex) {
+  uint_fast8_t inputID = MapInputIndex(output, inputIndex);
+  if (UINT_FAST8_MAX == inputID) {
+    return InvalidInputOutcome;
+  }
 
   struct GameScreenButton button = {0};
   if (!GetGameScreenButton(output->screenID, inputID, &button)) {
@@ -109,7 +112,7 @@ enum InputOutcome HandleGameInput(struct GameOutput *output, uint8_t inputIndex)
 // Room may not exist, always check result->exists
 const struct RoomInfo *GetGameRoom(RoomCoord x, RoomCoord y) {
   if (x >= FloorSize || y >= FloorSize
-    || x == InvalidRoomCoord || y == InvalidRoomCoord) {
+      || x == InvalidRoomCoord || y == InvalidRoomCoord) {
     return &DefaultRoom;
   }
 

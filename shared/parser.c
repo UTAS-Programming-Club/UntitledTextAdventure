@@ -242,7 +242,7 @@ unsigned char *InitGameState(void) {
 }
 
 // TODO: Change error value to -1(would need nonstandard ssize_t)?
-size_t GetGameStateOffset(enum Screen screenID, uint8_t stateID) {
+size_t GetGameStateOffset(enum Screen screenID, uint_fast8_t stateID) {
   if (!GameData) {
     return SIZE_MAX;
   }
@@ -274,8 +274,8 @@ size_t GetGameStateOffset(enum Screen screenID, uint8_t stateID) {
       goto loop;
     }
 
-    uint8_t curStateID = cJSON_GetNumberValue(jsonCurStateID);
-    if (stateID != curStateID){
+    uint_fast8_t curStateID = cJSON_GetNumberValue(jsonCurStateID);
+    if (stateID != curStateID) {
       goto loop;
     }
 
@@ -340,19 +340,19 @@ bool GetGameScreen(enum Screen screenID, struct GameScreen *screen) {
 
 
 // TODO: Change error value to 0? Would require making 0 buttons not allowed which is reasonable
-uint8_t GetGameScreenButtonCount(enum Screen screenID) {
+uint_fast8_t GetGameScreenButtonCount(enum Screen screenID) {
   cJSON *jsonScreen = GetGameScreenJson(screenID);
   if (!jsonScreen) {
-    return UINT8_MAX;
+    return UINT_FAST8_MAX;
   }
 
   cJSON *jsonButtons;
-  JSON_GETJSONARRAYERROR(jsonButtons, jsonScreen, "buttons", UINT8_MAX);
+  JSON_GETJSONARRAYERROR(jsonButtons, jsonScreen, "buttons", UINT_FAST8_MAX);
 
   return cJSON_GetArraySize(jsonButtons);
 }
 
-bool GetGameScreenButton(enum Screen screenID, uint8_t buttonID, struct GameScreenButton *button) {
+bool GetGameScreenButton(enum Screen screenID, uint_fast8_t buttonID, struct GameScreenButton *button) {
   if (!button) {
     return false;
   }

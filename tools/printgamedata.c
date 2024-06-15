@@ -61,19 +61,19 @@ int main(int argc, char *argv[]) {
     PrintString(screen.extraText);
     puts("\"");
 
-    uint8_t screenButtonCount = GetGameScreenButtonCount(i);
-    if (screenButtonCount == UINT8_MAX) {
+    uint_fast8_t screenButtonCount = GetGameScreenButtonCount(i);
+    if (screenButtonCount == UINT_FAST8_MAX) {
       continue;
     }
 
-    printf(INDENT "Button count: %" PRIu8 "\n", screenButtonCount);
-    for (uint8_t j = 0; j < screenButtonCount; ++j) {
+    printf(INDENT "Button count: %" PRIuFAST8 "\n", screenButtonCount);
+    for (uint_fast8_t j = 0; j < screenButtonCount; ++j) {
       struct GameScreenButton button;
       if (!GetGameScreenButton(i, j, &button)) {
         continue;
       }
 
-      printf(INDENT "Button %d\n", j);
+      printf(INDENT "Button %" PRIuFAST8 "\n", j);
       printf(INDENT INDENT "Title: \"");
       PrintString(button.title);
       puts("\"");
