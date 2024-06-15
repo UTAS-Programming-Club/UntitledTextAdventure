@@ -290,13 +290,13 @@ loop:
 
 
 // TODO: Change error value to 0? Would require making 0 screens not allowed which is reasonable
-uint16_t GetGameScreenCount(void) {
+uint_fast16_t GetGameScreenCount(void) {
   if (!GameData) {
-    return UINT16_MAX;
+    return UINT_FAST16_MAX;
   }
 
   cJSON *jsonScreens;
-  JSON_GETJSONARRAYERROR(jsonScreens, GameData, "screens", UINT16_MAX);
+  JSON_GETJSONARRAYERROR(jsonScreens, GameData, "screens", UINT_FAST16_MAX);
 
   return cJSON_GetArraySize(jsonScreens);
 }

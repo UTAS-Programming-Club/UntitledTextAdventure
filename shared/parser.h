@@ -26,8 +26,8 @@ bool LoadGameRooms(uint_fast8_t *floorSize, struct RoomInfo **);
 unsigned char *InitGameState(void);
 size_t GetGameStateOffset(enum Screen, uint_fast8_t);
 
-// Returns UINT16_MAX on error
-uint16_t GetGameScreenCount(void);
+// Returns UINT_FAST16_MAX on error
+uint_fast16_t GetGameScreenCount(void);
 bool GetGameScreen(enum Screen, struct GameScreen *);
 
 bool GetGameScreenButton(enum Screen, uint_fast8_t, struct GameScreenButton *);

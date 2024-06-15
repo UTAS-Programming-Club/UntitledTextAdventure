@@ -42,12 +42,12 @@ int main(int argc, char *argv[]) {
   }
 
   LoadGameData(argv[1]);
-  uint16_t screenCount = GetGameScreenCount();
-  if (screenCount == UINT16_MAX) {
+  uint_fast16_t screenCount = GetGameScreenCount();
+  if (screenCount == UINT_FAST16_MAX) {
     goto cleanup;
   }
 
-  printf("Screen count: %" PRIu32 "\n\n", screenCount);
+  printf("Screen count: %" PRIuFAST16 "\n\n", screenCount);
   for (enum Screen i = 0; i < screenCount; ++i) {
     struct GameScreen screen = {0};
     if (!GetGameScreen(i, &screen)) {
