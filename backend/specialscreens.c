@@ -6,12 +6,15 @@
 #include "../shared/parser.h"
 #include "game.h"
 
-// Each room take 4x4 but the 4 required calls to WriteRoomRow per room only
-// handle the top left most 3x3 unless it is the right and/or bottom most room
-#define RoomGridSize 4
+// Each room take 6x4 but the 6 required calls to WriteRoomRow per room only
+// handle the top left most 5x3 unless it is the right and/or bottom most room
+#define RoomGridSizeHor 6
+#define RoomGridSizeVer 4
 
 #define HorLine "─"
 #define VerLine "│"
+#define UpperHalfVerLine "╵"
+#define LowerHalfVerLine "╷"
 
 #ifdef _DEBUG
 static const char *TopGridRowChars[] =    {"┌", "┬", "┐"};
@@ -30,12 +33,12 @@ static void FPrintRep(char *sym, uint_fast8_t count, FILE *fp) {
 // TODO: Indicate room type
 static void WriteRoomRow(FILE *fp, RoomCoord roomRow, RoomCoord roomColumn,
                          uint_fast8_t outputRow, const struct RoomInfo *currentRoom) {
-  if (RoomGridSize - 1 == outputRow && 0 != roomRow) {
+  if (RoomGridSizeVer - 1 == outputRow && 0 != roomRow) {
     return;
   }
 
   // Top, middle and bottom grid rows
-  if (0 == outputRow || RoomGridSize - 1 == outputRow) {
+  if (0 == outputRow || RoomGridSizeVer - 1 == outputRow) {
     const char **rowChars = NULL;
     if (FloorSize - 1 == roomRow) {
       rowChars = TopGridRowChars;
@@ -51,7 +54,11 @@ static void WriteRoomRow(FILE *fp, RoomCoord roomRow, RoomCoord roomColumn,
       fputs(rowChars[1], fp);
     }
 
-    FPrintRep(HorLine, RoomGridSize - 2, fp);
+    if (0 == outputRow && GetGameRoom(roomRow + 1, roomColumn)->exists) {
+      fprintf(fp, HorLine "%*s" HorLine, RoomGridSizeHor - 4, "");
+    } else {
+      FPrintRep(HorLine, RoomGridSizeHor - 2, fp);
+    }
 
     if (FloorSize - 1 == roomColumn) {
       fputs(rowChars[2], fp);
@@ -61,15 +68,27 @@ static void WriteRoomRow(FILE *fp, RoomCoord roomRow, RoomCoord roomColumn,
 
   // Middle Room Rows
   else {
+    char *wallChar;
+    if (!GetGameRoom(roomRow, roomColumn)->exists
+        || !GetGameRoom(roomRow, roomColumn - 1)->exists) {
+      wallChar = VerLine;
+    } else if (1 == outputRow) {
+      wallChar = UpperHalfVerLine;
+    } else if (RoomGridSizeVer - 2 == outputRow) {
+      wallChar = LowerHalfVerLine;
+    } else {
+      wallChar = " ";
+    }
+
     // Player in room
     if (currentRoom->x == roomColumn && currentRoom->y == roomRow && 1 == outputRow) {
-      fprintf(fp, VerLine "P%*s", RoomGridSize - 3, "");
+      fprintf(fp, "%sP%*s", wallChar, RoomGridSizeHor - 3, "");
     // Room exists
     } else if (GetGameRoom(roomRow, roomColumn)->exists) {
-      fprintf(fp, VerLine "%*s", RoomGridSize - 2, "");
+      fprintf(fp, "%s%*s", wallChar, RoomGridSizeHor - 2, "");
     // Room does not exist
     } else {
-      fprintf(fp, VerLine "NO%*s", RoomGridSize - 4, "");
+      fprintf(fp, "%sNO%*s", wallChar, RoomGridSizeHor - 4, "");
     }
 
     if (FloorSize - 1 == roomColumn) {
@@ -85,7 +104,7 @@ static void WriteMap(const struct RoomInfo *currentRoom) {
   }
 
   for (RoomCoord roomRow = FloorSize - 1; roomRow != InvalidRoomCoord; --roomRow) {
-    for (uint_fast8_t outputRow = 0; outputRow < RoomGridSize; ++outputRow) {
+    for (uint_fast8_t outputRow = 0; outputRow < RoomGridSizeVer; ++outputRow) {
       for (RoomCoord roomColumn = 0; roomColumn < FloorSize; ++roomColumn) {
         WriteRoomRow(fp, roomRow, roomColumn, outputRow, currentRoom);
       }
