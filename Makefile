@@ -1,4 +1,4 @@
-.PHONY: build clean
+.PHONY: clean debug discord release tools
 
 ifneq (,$(findstring tools,$(MAKECMDGOALS)))
 NEEDCXX := TRUE
