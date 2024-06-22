@@ -15,6 +15,23 @@
 
 #define UNUSED(x) (void)(x)
 
+// Based on https://github.com/Marco-DG/static_assert.h/blob/bd2d1eb/assert.h
+#if defined __STDC_VERSION__ && __STDC_VERSION__ >= 201112L
+#define STATIC_ASSERT(expr, message) static_assert(expr, message)
+#elif defined __GNUC__ && ( __GNUC__ > 4 || __GNUC__ == 4 && defined __GNUC_MINOR__ && __GNUC_MINOR >= 6)
+#define STATIC_ASSERT(expr, message) _Static_assert(expr, message)
+#else
+// Using two macros somehow gets Ubuntu 22.04's copy of mingw-64 gcc to mention the calling line
+#define FAILED_ASSERT c89_static_assert
+#define STATIC_ASSERT(expr, msg) {   \
+      char                           \
+      FAILED_ASSERT  \
+      [2*(expr)-1];                  \
+      (void)FAILED_ASSERT; \
+  }
+#endif
+
+
 bool LoadFile(char *path, size_t *size, void **data, uint16_t resourceID, void *resourceType) {
 #if defined(_WIN32) && defined(FRONTEND) && !defined(_DEBUG)
   void *resource = MAKEINTRESOURCEW(resourceID);
@@ -50,7 +67,7 @@ bool LoadFile(char *path, size_t *size, void **data, uint16_t resourceID, void *
     goto cleanup;
   }
 
-  static_assert(sizeof(off_t) <= sizeof(size_t));
+  STATIC_ASSERT(sizeof(off_t) <= sizeof(size_t), "Unable to store off_t in size_t without possible overflow");
   *size = st.st_size;
   *data = malloc(*size);
 

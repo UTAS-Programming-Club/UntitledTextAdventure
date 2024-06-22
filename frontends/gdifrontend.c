@@ -1,6 +1,7 @@
 #include <stdbool.h>
-#include <stddef.h>
+#include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #include "../backend/crossprint.h"
 #include "../backend/game.h"
@@ -50,6 +51,8 @@ extern HANDLE LoadImage(HINSTANCE, LPCWSTR, UINT, int, int, UINT);
 #define memcpy_s(d, ds, s, ss) (memcpy(d, s, ss), 0)
 #define RegisterClassW   RegisterClass
 extern BOOL UpdateWindow(HWND);
+
+#define TEXT(str) u##str
 
 // From mingw-w64's ntdef.h
 #define UNREFERENCED_PARAMETER(P) {(P) = (P);}
@@ -144,6 +147,7 @@ typedef int (CALLBACK *FONTENUMPROCW)(CONST LOGFONTW *, CONST TEXTMETRICW *, DWO
 #define GWLP_HINSTANCE (-6)
 #define MAKEINTRESOURCEW(i) ((LPWSTR)((ULONG_PTR)((WORD)(i))))
 #define IDI_APPLICATION MAKEINTRESOURCEW(32512)
+#define DT_WORDBREAK 0x00000010
 
 // Cosmo doesn't have these functions so need to fetch manually
 typedef HFONT (WINAPI *fCreateFontIndirectW)(CONST LOGFONTW *);
@@ -321,7 +325,7 @@ static void HandleOutput(HWND hWnd, HDC hdc, PAINTSTRUCT ps) {
     int buttonTopLeftY = firstButtonCornerTopRowY + buttonVerticalSeperation * (visibleInputCount / buttonsPerRow);
 
     // TODO: Fix tabbing not working despite WS_TABSTOP
-    HWND hBtn = CreateWindowExW(0,  u"BUTTON", wcText,
+    HWND hBtn = CreateWindowExW(0,  TEXT("BUTTON"), wcText,
                                 WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
                                 buttonTopLeftX, buttonTopLeftY, buttonWidth, buttonHeight, hWnd,
                                 (HMENU)(intptr_t)visibleInputCount, wndInst, NULL);
@@ -343,7 +347,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         return 0;
       }
 
-      WCHAR *faceName = u"SYMBOLA";
+      WCHAR *faceName = TEXT("SYMBOLA");
       LOGFONTW fontInfo = {0};
       fontInfo.lfCharSet = ANSI_CHARSET;
       if (FAILED(StringCchCopyW(fontInfo.lfFaceName, LF_FACESIZE, faceName))) {
@@ -476,7 +480,7 @@ int main(void) {
                                  LR_DEFAULTSIZE | LR_SHARED);
 #endif
   wnd.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-  wnd.lpszClassName = u"Untitled Text Adventure";
+  wnd.lpszClassName = TEXT("Untitled Text Adventure");
   if (!wnd.hIcon || !wnd.hCursor) {
     return FALSE;
   }
@@ -487,7 +491,7 @@ int main(void) {
   }
   void *rClass = MAKEINTRESOURCEW(class);
 
-  HWND hWnd = CreateWindowExW(0, rClass, u"Test window",
+  HWND hWnd = CreateWindowExW(0, rClass, TEXT("Test window"),
                               WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
                               CW_USEDEFAULT, CW_USEDEFAULT, 500, 500, NULL, NULL, hInstance, NULL);
   if(!hWnd) {

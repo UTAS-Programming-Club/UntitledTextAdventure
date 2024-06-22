@@ -10,7 +10,7 @@ endif
 # TODO: download config.sub instead of hardcoding it in the repo
 TARGET := $(shell sh ./config.sub $(GCCTARGET))
 
-CSTD := -std=c17
+CSTD := -std=c99
 CWARNINGS := -Wall -Wextra -pedantic -Wmissing-prototypes -Wstrict-prototypes -Wold-style-definition
 endif
 
@@ -18,7 +18,7 @@ ifneq (,$(findstring clang,$(CCVERSIONINFO)))
 CLANGTARGET := $(shell $(CC) -dumpmachine)
 TARGET := $(shell ./config.sub $(CLANGTARGET))
 
-CSTD := -std=c17
+CSTD := -std=c99
 CWARNINGS := -Wall -Wextra -pedantic -Wmissing-prototypes -Wstrict-prototypes -Wold-style-definition
 endif
 
