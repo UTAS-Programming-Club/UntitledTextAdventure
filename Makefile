@@ -55,7 +55,7 @@ discord: $(LIBDIR)/game.so GameData.json
 tools: $(BINDIR)/printgamedata$(EXECSUFFIX) $(BINDIR)/jsonvalidator$(EXECSUFFIX) GameData.json
 
 clean:
-	rm -r $(OUTPUT) GameData.json backend/types.h backend/types.json.h 2> /dev/null || true
+	rm -r $(OUTPUT) GameData.json 2> /dev/null || true
 
 %/:
 	mkdir -p $@

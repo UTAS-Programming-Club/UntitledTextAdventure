@@ -249,7 +249,7 @@ static void HandleOutput(HWND hWnd, HDC hdc, PAINTSTRUCT ps) {
   textPosition.top = 10;
   textPosition.right = ps.rcPaint.right - 10;
   textPosition.bottom = ps.rcPaint.bottom - 10;
-  DrawTextW(hdc, wcText, -1, &textPosition, 0);
+  DrawTextW(hdc, wcText, -1, &textPosition, DT_WORDBREAK);
   free(wcText);
 
   if (!NeedRedrawButtons) {
