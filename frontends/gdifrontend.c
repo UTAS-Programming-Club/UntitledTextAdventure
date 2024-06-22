@@ -1,8 +1,9 @@
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
+#include "../backend/crossprint.h"
 #include "../backend/game.h"
-#include "../shared/crossprint.h"
 #include "frontend.h"
 
 #if defined(_WIN32)

@@ -3,8 +3,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "../shared/parser.h"
 #include "game.h"
+#include "parser.h"
 
 // Each room take 6x4 but the 6 required calls to WriteRoomRow per room only
 // handle the top left most 5x3 unless it is the right and/or bottom most room

@@ -11,8 +11,8 @@
 #include <termios.h>
 #endif
 
+#include "../backend/crossprint.h"
 #include "../backend/game.h"
-#include "../shared/crossprint.h"
 #include "frontend.h"
 
 #define ESC "\x1B"

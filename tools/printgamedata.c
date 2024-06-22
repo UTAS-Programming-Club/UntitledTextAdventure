@@ -6,9 +6,9 @@
 #include <stdlib.h>
 #include <wchar.h>
 
+#include "../backend/crossprint.h"
+#include "../backend/parser.h"
 #include "../frontends/frontend.h"
-#include "../shared/crossprint.h"
-#include "../shared/parser.h"
 
 #define INDENT "  "
 

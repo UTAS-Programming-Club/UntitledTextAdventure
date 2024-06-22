@@ -11,11 +11,11 @@
 #include <windows.h>
 #endif
 
-#include "../backend/game.h"
 #include "../frontends/frontend.h"
 #include "fileloading.h"
-#include "winresources.h"
+#include "game.h"
 #include "parser.h"
+#include "winresources.h"
 
 #define CAT_(a, b) a ## b
 #define CAT(a, b) CAT_(a, b)

@@ -2,9 +2,10 @@
 #define PCGAME_PARSER_H
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
-#include "../backend/game.h"
+#include "game.h"
 
 struct GameScreen {
   char *body;      // utf-8

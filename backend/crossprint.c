@@ -1,3 +1,5 @@
+#include <stddef.h>
+
 #if defined(_WIN32)
 #include <windows.h>
 // TODO: Does cosmo need this now that utf-8 can be used?

@@ -78,7 +78,7 @@ $(INCDIR)/jsoncons_ext: third_party/jsoncons/include/jsoncons_ext | $(INCDIR)
 backend/game.h: $(INCDIR)/arena.h $(INCDIR)/types.h
 backend/screens.h: backend/game.h
 backend/specialscreens.h: backend/game.h
-shared/parser.h: backend/game.h
+backend/parser.h: backend/game.h
 
 $(INCDIR)/types.h: backend/types.in.h
 	$(CPP) -P -C -nostdinc -o $@ $<
@@ -91,47 +91,46 @@ GameData.json: GameData.in.json $(INCDIR)/types.json.h
 
 
 # Objects
-$(LIBDIR)/game.o: backend/game.c backend/game.h backend/screens.h backend/specialscreens.h frontends/frontend.h shared/parser.h $(INCDIR)/types.h | $(LIBDIR)
+$(LIBDIR)/crossprint.o: backend/crossprint.c backend/crossprint.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
-$(LIBDIR)/screens.o: backend/screens.c backend/game.h backend/screens.h shared/parser.h $(INCDIR)/arena.h | $(LIBDIR)
-	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
-
-$(LIBDIR)/specialscreens.o: backend/specialscreens.c backend/game.h backend/specialscreens.h shared/parser.h | $(LIBDIR)
-	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
-
-
-$(LIBDIR)/crossprint.o: shared/crossprint.c shared/crossprint.h | $(LIBDIR)
-	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
-
-$(LIBDIR)/fileloading_frontend.o: shared/fileloading.c frontends/frontend.h shared/fileloading.h | $(LIBDIR)
+$(LIBDIR)/fileloading_frontend.o: backend/fileloading.c backend/fileloading.h frontends/frontend.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS) -D FRONTEND
 
-$(LIBDIR)/fileloading_printgamedata.o: shared/fileloading.c frontends/frontend.h shared/fileloading.h | $(LIBDIR)
+$(LIBDIR)/fileloading_printgamedata.o: backend/fileloading.c backend/fileloading.h frontends/frontend.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
-$(LIBDIR)/parser.o: shared/parser.c backend/game.h frontends/frontend.h shared/fileloading.h  shared/winresources.h shared/parser.h $(INCDIR)/cJSON.h $(INCDIR)/types.h | $(LIBDIR)
+$(LIBDIR)/game.o: backend/game.c backend/game.h backend/parser.h backend/screens.h backend/specialscreens.h frontends/frontend.h $(INCDIR)/types.h | $(LIBDIR)
+	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
+
+$(LIBDIR)/parser.o: backend/parser.c backend/fileloading.h backend/game.h backend/parser.h backend/winresources.h frontends/frontend.h $(INCDIR)/cJSON.h $(INCDIR)/types.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS) -D BACKEND
+
+$(LIBDIR)/screens.o: backend/screens.c backend/game.h backend/parser.h backend/screens.h $(INCDIR)/arena.h | $(LIBDIR)
+	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
+
+$(LIBDIR)/specialscreens.o: backend/specialscreens.c backend/game.h backend/parser.h backend/specialscreens.h | $(LIBDIR)
+	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 
 $(LIBDIR)/cJSON.o: third_party/cJSON/cJSON.c third_party/cJSON/cJSON.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 
-$(LIBDIR)/printgamedata.o: tools/printgamedata.c | $(LIBDIR)
+$(LIBDIR)/printgamedata.o: tools/printgamedata.c backend/crossprint.h backend/parser.h frontends/frontend.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 $(LIBDIR)/jsonvalidator.o: tools/jsonvalidator.cpp $(INCDIR)/jsoncons $(INCDIR)/jsoncons_ext | $(LIBDIR)
 	$(CXX) $(CXXSTD) $(CXXWARNINGS) -c -o $@ $< $(CXXFLAGS)
 
 
-$(LIBDIR)/cmdfrontend.o: frontends/cmdfrontend.c backend/game.h frontends/frontend.h shared/crossprint.h | $(LIBDIR)
+$(LIBDIR)/cmdfrontend.o: frontends/cmdfrontend.c backend/crossprint.h backend/game.h frontends/frontend.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
-$(LIBDIR)/gdifrontend.o: frontends/gdifrontend.c backend/game.h frontends/frontend.h shared/crossprint.h | $(LIBDIR)
+$(LIBDIR)/gdifrontend.o: frontends/gdifrontend.c backend/crossprint.h backend/game.h frontends/frontend.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS) $(GDICFLAGS)
 
-$(LIBDIR)/winresources.o: frontends/winresources.rc shared/winresources.h GameData.json | $(LIBDIR)
+$(LIBDIR)/winresources.o: frontends/winresources.rc backend/winresources.h GameData.json | $(LIBDIR)
 	$(WINDRES) $< -o $@
 
 $(LIBDIR)/game.so: $(COMMONOBJS) | $(LIBDIR)

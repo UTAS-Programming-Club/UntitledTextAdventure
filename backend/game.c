@@ -5,8 +5,8 @@
 #include <types.h>
 
 #include "../frontends/frontend.h"
-#include "../shared/parser.h"
 #include "game.h"
+#include "parser.h"
 #include "screens.h"
 #include "specialscreens.h"
 

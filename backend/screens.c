@@ -7,8 +7,8 @@
 #include <arena.h>
 #include <stdbool.h>
 
-#include "../shared/parser.h"
 #include "game.h"
+#include "parser.h"
 #include "screens.h"
 
 bool CreateScreen(struct GameOutput *output) {
