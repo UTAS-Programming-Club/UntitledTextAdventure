@@ -1,6 +1,7 @@
 #include <stdbool.h>
-#include <stddef.h>
+#include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #include "../backend/crossprint.h"
 #include "../backend/game.h"
@@ -144,6 +145,7 @@ typedef int (CALLBACK *FONTENUMPROCW)(CONST LOGFONTW *, CONST TEXTMETRICW *, DWO
 #define GWLP_HINSTANCE (-6)
 #define MAKEINTRESOURCEW(i) ((LPWSTR)((ULONG_PTR)((WORD)(i))))
 #define IDI_APPLICATION MAKEINTRESOURCEW(32512)
+#define DT_WORDBREAK 0x00000010
 
 // Cosmo doesn't have these functions so need to fetch manually
 typedef HFONT (WINAPI *fCreateFontIndirectW)(CONST LOGFONTW *);

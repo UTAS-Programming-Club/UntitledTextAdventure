@@ -104,7 +104,7 @@ $(LIBDIR)/game.o: backend/game.c backend/game.h backend/parser.h backend/screens
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 $(LIBDIR)/parser.o: backend/parser.c backend/fileloading.h backend/game.h backend/parser.h backend/winresources.h frontends/frontend.h $(INCDIR)/cJSON.h $(INCDIR)/types.h | $(LIBDIR)
-	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS) -D BACKEND
+	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 $(LIBDIR)/screens.o: backend/screens.c backend/game.h backend/parser.h backend/screens.h $(INCDIR)/arena.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)

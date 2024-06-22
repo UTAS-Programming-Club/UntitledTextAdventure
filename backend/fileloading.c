@@ -50,7 +50,7 @@ bool LoadFile(char *path, size_t *size, void **data, uint16_t resourceID, void *
     goto cleanup;
   }
 
-  static_assert(sizeof(off_t) <= sizeof(size_t));
+  static_assert(sizeof(off_t) <= sizeof(size_t), "Unable to store off_t in size_t without possible overflow");
   *size = st.st_size;
   *data = malloc(*size);
 
