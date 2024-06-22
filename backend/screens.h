@@ -3,6 +3,6 @@
 
 #include "game.h"
 
-bool CreateScreen(struct GameOutput *);
+bool CreateScreen(struct GameState *);
 
 #endif // PCGAME_SCREENS_H

@@ -30,34 +30,34 @@ bool SetupBackend(void) {
   return true;
 }
 
-bool GetCurrentGameOutput(struct GameOutput *output) {
-  if (!output || output->screenID == InvalidScreen) {
+bool UpdateGameState(struct GameState *state) {
+  if (!state || state->screenID == InvalidScreen) {
     return false;
   }
 
-  if (!output->stateData) {
-    output->stateData = InitGameState();
+  if (!state->stateData) {
+    state->stateData = InitGameState();
   }
-  if (!output->stateData) {
+  if (!state->stateData) {
     return false;
   }
 
-  arena_reset(&output->arena);
+  arena_reset(&state->arena);
 
-  if (!CreateScreen(output)) {
+  if (!CreateScreen(state)) {
     return false;
   }
 
-  if (InvalidCustomScreenCode != output->customScreenCodeID) {
-    return CustomScreenCode[output->customScreenCodeID](output);
+  if (InvalidCustomScreenCode != state->customScreenCodeID) {
+    return CustomScreenCode[state->customScreenCodeID](state);
   } else {
     return true;
   }
 }
 
-static uint_fast8_t MapInputIndex(struct GameOutput *output, uint_fast8_t inputIndex) {
-  for (uint_fast8_t i = 0, visibleInputCount = 0; i < output->inputCount; ++i) {
-    if (!output->inputs[i].visible) {
+static uint_fast8_t MapInputIndex(struct GameState *state, uint_fast8_t inputIndex) {
+  for (uint_fast8_t i = 0, visibleInputCount = 0; i < state->inputCount; ++i) {
+    if (!state->inputs[i].visible) {
       continue;
     }
 
@@ -70,37 +70,37 @@ static uint_fast8_t MapInputIndex(struct GameOutput *output, uint_fast8_t inputI
   return UINT_FAST8_MAX;
 }
 
-enum InputOutcome HandleGameInput(struct GameOutput *output, uint_fast8_t inputIndex) {
-  uint_fast8_t inputID = MapInputIndex(output, inputIndex);
+enum InputOutcome HandleGameInput(struct GameState *state, uint_fast8_t inputIndex) {
+  uint_fast8_t inputID = MapInputIndex(state, inputIndex);
   if (UINT_FAST8_MAX == inputID) {
     return InvalidInputOutcome;
   }
 
   struct GameScreenButton button = {0};
-  if (!GetGameScreenButton(output->screenID, inputID, &button)) {
+  if (!GetGameScreenButton(state->screenID, inputID, &button)) {
     return InvalidInputOutcome;
   }
 
   enum InputOutcome outcome = button.outcome;
   switch (outcome) {
     case GotoScreenOutcome:
-      output->screenID = button.newScreenID;
+      state->screenID = button.newScreenID;
       outcome = GetNextOutputOutcome;
       break;
     case GameGoNorthOutcome:
-      output->roomInfo = GetGameRoom(output->roomInfo->x, output->roomInfo->y + 1);
+      state->roomInfo = GetGameRoom(state->roomInfo->x, state->roomInfo->y + 1);
       outcome = GetNextOutputOutcome;
       break;
     case GameGoEastOutcome:
-      output->roomInfo = GetGameRoom(output->roomInfo->x + 1, output->roomInfo->y);
+      state->roomInfo = GetGameRoom(state->roomInfo->x + 1, state->roomInfo->y);
       outcome = GetNextOutputOutcome;
       break;
     case GameGoSouthOutcome:
-      output->roomInfo = GetGameRoom(output->roomInfo->x, output->roomInfo->y - 1);
+      state->roomInfo = GetGameRoom(state->roomInfo->x, state->roomInfo->y - 1);
       outcome = GetNextOutputOutcome;
       break;
     case GameGoWestOutcome:
-      output->roomInfo = GetGameRoom(output->roomInfo->x - 1, output->roomInfo->y);
+      state->roomInfo = GetGameRoom(state->roomInfo->x - 1, state->roomInfo->y);
       outcome = GetNextOutputOutcome;
       break;
     default:
@@ -120,10 +120,10 @@ const struct RoomInfo *GetGameRoom(RoomCoord x, RoomCoord y) {
   return &(Rooms[y * FloorSize + x]);
 }
 
-void CleanupGame(struct GameOutput *output) {
-  arena_free(&output->arena);
-  free(output->stateData);
-  output->stateData = NULL;
+void CleanupGame(struct GameState *state) {
+  arena_free(&state->arena);
+  free(state->stateData);
+  state->stateData = NULL;
 }
 
 void CleanupBackend(void) {

@@ -29,7 +29,7 @@ struct RoomInfo {
   RoomCoord y;
 };
 
-struct GameOutput {
+struct GameState {
 // public, safe to use outside of backend
   enum Screen screenID;
   char *body; // utf-8
@@ -45,10 +45,10 @@ struct GameOutput {
 };
 
 bool SetupBackend(void);
-bool GetCurrentGameOutput(struct GameOutput *);
-enum InputOutcome HandleGameInput(struct GameOutput *, uint_fast8_t);
+bool UpdateGameState(struct GameState *);
+enum InputOutcome HandleGameInput(struct GameState *, uint_fast8_t);
 const struct RoomInfo *GetGameRoom(RoomCoord, RoomCoord);
-void CleanupGame(struct GameOutput *);
+void CleanupGame(struct GameState *);
 void CleanupBackend(void);
 
 #endif // PCGAME_GAME_H

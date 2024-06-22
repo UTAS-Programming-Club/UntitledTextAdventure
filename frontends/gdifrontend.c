@@ -1,6 +1,6 @@
 #include <stdbool.h>
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "../backend/crossprint.h"
@@ -214,7 +214,7 @@ static LONG_PTR GetWindowLongPtrW(HWND hWnd, int nIndex) {
 #error Building the gdi frontend requires windows support
 #endif
 
-static struct GameOutput Output = {0};
+static struct GameState State = {0};
 static BOOL NeedRedrawButtons = FALSE;
 static HWND *buttonHandles = NULL;
 
@@ -242,7 +242,7 @@ static void HandleOutput(HWND hWnd, HDC hdc, PAINTSTRUCT ps) {
   static size_t buttonHandleCount = 0;
 
   // TODO: Free previous string
-  WCHAR *wcText = s8tows(Output.body);
+  WCHAR *wcText = s8tows(State.body);
   if (!wcText) {
     return;
   }
@@ -267,8 +267,8 @@ static void HandleOutput(HWND hWnd, HDC hdc, PAINTSTRUCT ps) {
   }
 
   uint_fast8_t inputCount = 0;
-  for (uint_fast8_t i = 0; i < Output.inputCount; ++i) {
-    if (!Output.inputs[i].visible) {
+  for (uint_fast8_t i = 0; i < State.inputCount; ++i) {
+    if (!State.inputs[i].visible) {
       continue;
     }
     ++inputCount;
@@ -306,13 +306,13 @@ static void HandleOutput(HWND hWnd, HDC hdc, PAINTSTRUCT ps) {
 
   HINSTANCE wndInst = (HINSTANCE)GetWindowLongPtrW(hWnd, GWLP_HINSTANCE);
 
-  for (uint_fast8_t i = 0, visibleInputCount = 0; i < Output.inputCount; ++i) {
-    if (!Output.inputs[i].visible) {
+  for (uint_fast8_t i = 0, visibleInputCount = 0; i < State.inputCount; ++i) {
+    if (!State.inputs[i].visible) {
       continue;
     }
 
   // TODO: Free previous strings
-    wcText = s8tows(Output.inputs[i].title);
+    wcText = s8tows(State.inputs[i].title);
     if (!wcText) {
       return;
     }
@@ -393,10 +393,10 @@ cleanup_paint:
         return 0;
       }
 
-      enum InputOutcome outcome = HandleGameInput(&Output, LOWORD(wParam));
+      enum InputOutcome outcome = HandleGameInput(&State, LOWORD(wParam));
       switch(outcome) {
         case GetNextOutputOutcome:
-          if (GetCurrentGameOutput(&Output)) {
+          if (UpdateGameState(&State)) {
             NeedRedrawButtons = TRUE;
             InvalidateRect(hWnd, NULL, TRUE);
             break;
@@ -458,8 +458,8 @@ int main(void) {
   if (!SetupBackend()) {
     return 1;
   }
-  if (!GetCurrentGameOutput(&Output)) {
-    CleanupGame(&Output);
+  if (!UpdateGameState(&State)) {
+    CleanupGame(&State);
     return 1;
   }
   NeedRedrawButtons = TRUE;
@@ -511,7 +511,7 @@ int main(void) {
 #ifndef _COSMO_SOURCE
   UnregisterClassW(rClass, hInstance);
 #endif
-  CleanupGame(&Output);
+  CleanupGame(&State);
   CleanupBackend();
   return msg.wParam;
 }

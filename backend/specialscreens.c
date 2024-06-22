@@ -116,25 +116,25 @@ static void WriteMap(const struct RoomInfo *currentRoom) {
 #endif
 
 
-static void StartGame(struct GameOutput *output) {
-  output->roomInfo = GetGameRoom(DefaultRoomCoordX, DefaultRoomCoordY);
-  output->startedGame = true;
+static void StartGame(struct GameState *state) {
+  state->roomInfo = GetGameRoom(DefaultRoomCoordX, DefaultRoomCoordY);
+  state->startedGame = true;
 }
 
 
-static bool CreateMainMenuScreen(struct GameOutput *output) {
-  size_t reloadCountVarOffset = GetGameStateOffset(output->screenID, 0);
+static bool CreateMainMenuScreen(struct GameState *state) {
+  size_t reloadCountVarOffset = GetGameStateOffset(state->screenID, 0);
   if (reloadCountVarOffset == SIZE_MAX) {
     return false;
   }
 
-  output->startedGame = false;
+  state->startedGame = false;
 
-  uint32_t *pReloadCount = (uint32_t *)(output->stateData + reloadCountVarOffset);
+  uint32_t *pReloadCount = (uint32_t *)(state->stateData + reloadCountVarOffset);
 
   if (*pReloadCount) {
     struct GameScreen screen = {0};
-    if (!GetGameScreen(output->screenID, &screen)) {
+    if (!GetGameScreen(state->screenID, &screen)) {
       return false;
     }
 
@@ -144,7 +144,7 @@ static bool CreateMainMenuScreen(struct GameOutput *output) {
     }
     ++allocatedCharCount;
 
-    char *str = arena_alloc(&output->arena, allocatedCharCount * sizeof *str);
+    char *str = arena_alloc(&state->arena, allocatedCharCount * sizeof *str);
     if (!str) {
       return false;
     }
@@ -153,66 +153,66 @@ static bool CreateMainMenuScreen(struct GameOutput *output) {
       return false;
     }
 
-    output->body = str;
+    state->body = str;
   }
 
   ++(*pReloadCount);
   return true;
 }
 
-static bool CreateGameScreen(struct GameOutput *output) {
+static bool CreateGameScreen(struct GameState *state) {
   // TODO: Remove
   static char bodyBeginning[] = "This is the game, you are in room [";
   static char bodyMiddle[] = ", ";
   static char bodyEnding[] = "].";
 
-  if (!output->startedGame) {
-    StartGame(output);
+  if (!state->startedGame) {
+    StartGame(state);
   }
 
 #ifdef _DEBUG
-  WriteMap(output->roomInfo);
+  WriteMap(state->roomInfo);
 #endif
 
   int allocatedCharCount = snprintf(NULL, 0, "%s%" PRIRoomCoord "%s%" PRIRoomCoord "%s",
-                                    bodyBeginning, output->roomInfo->x + 1, bodyMiddle,
-                                    output->roomInfo->y + 1, bodyEnding);
+                                    bodyBeginning, state->roomInfo->x + 1, bodyMiddle,
+                                    state->roomInfo->y + 1, bodyEnding);
   if (allocatedCharCount <= 0) {
     return false;
   }
   ++allocatedCharCount;
 
-  char *str = arena_alloc(&output->arena, allocatedCharCount * sizeof *str);
+  char *str = arena_alloc(&state->arena, allocatedCharCount * sizeof *str);
   if (!str) {
     return false;
   }
 
   if (snprintf(str, allocatedCharCount, "%s%" PRIRoomCoord "%s%" PRIRoomCoord "%s",
-               bodyBeginning, output->roomInfo->x + 1, bodyMiddle,
-               output->roomInfo->y + 1, bodyEnding)
+               bodyBeginning, state->roomInfo->x + 1, bodyMiddle,
+               state->roomInfo->y + 1, bodyEnding)
       <= 0) {
     return false;
   }
 
-  output->body = str;
+  state->body = str;
 
-  for (uint_fast8_t i = 0; i < output->inputCount; ++i) {
-    switch (output->inputs[i].outcome) {
+  for (uint_fast8_t i = 0; i < state->inputCount; ++i) {
+    switch (state->inputs[i].outcome) {
       case GameGoNorthOutcome:
-        output->inputs[i].visible =
-          GetGameRoom(output->roomInfo->x, output->roomInfo->y + 1)->exists;
+        state->inputs[i].visible =
+          GetGameRoom(state->roomInfo->x, state->roomInfo->y + 1)->exists;
         break;
       case GameGoEastOutcome:
-        output->inputs[i].visible =
-          GetGameRoom(output->roomInfo->x + 1, output->roomInfo->y)->exists;
+        state->inputs[i].visible =
+          GetGameRoom(state->roomInfo->x + 1, state->roomInfo->y)->exists;
         break;
       case GameGoSouthOutcome:
-        output->inputs[i].visible =
-          GetGameRoom(output->roomInfo->x, output->roomInfo->y - 1)->exists;
+        state->inputs[i].visible =
+          GetGameRoom(state->roomInfo->x, state->roomInfo->y - 1)->exists;
         break;
       case GameGoWestOutcome:
-        output->inputs[i].visible =
-          GetGameRoom(output->roomInfo->x - 1, output->roomInfo->y)->exists;
+        state->inputs[i].visible =
+          GetGameRoom(state->roomInfo->x - 1, state->roomInfo->y)->exists;
         break;
       default:
         break;
@@ -224,7 +224,7 @@ static bool CreateGameScreen(struct GameOutput *output) {
 
 
 // Must match the order of the CustomScreenCode enum in types.h
-bool (*CustomScreenCode[])(struct GameOutput *) = {
+bool (*CustomScreenCode[])(struct GameState *) = {
   CreateMainMenuScreen,
   CreateGameScreen,
 };

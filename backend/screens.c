@@ -11,37 +11,37 @@
 #include "parser.h"
 #include "screens.h"
 
-bool CreateScreen(struct GameOutput *output) {
-  if (!output) {
+bool CreateScreen(struct GameState *state) {
+  if (!state) {
     return false;
   }
 
   struct GameScreen screen = {0};
-  if (!GetGameScreen(output->screenID, &screen)) {
+  if (!GetGameScreen(state->screenID, &screen)) {
     return false;
   }
-  output->body = screen.body;
-  output->customScreenCodeID = screen.customScreenCodeID;
+  state->body = screen.body;
+  state->customScreenCodeID = screen.customScreenCodeID;
 
-  uint_fast8_t buttonCount = GetGameScreenButtonCount(output->screenID);
+  uint_fast8_t buttonCount = GetGameScreenButtonCount(state->screenID);
   if (buttonCount == UINT_FAST8_MAX) {
     return false;
   }
-  output->inputCount = buttonCount;
+  state->inputCount = buttonCount;
 
-  output->inputs = arena_alloc(&output->arena, output->inputCount * sizeof *output->inputs);
-  if (!output->inputs) {
+  state->inputs = arena_alloc(&state->arena, state->inputCount * sizeof *state->inputs);
+  if (!state->inputs) {
     return false;
   }
 
   for (uint_fast8_t i = 0; i < buttonCount; ++i) {
     struct GameScreenButton button;
-    if (!GetGameScreenButton(output->screenID, i, &button)) {
+    if (!GetGameScreenButton(state->screenID, i, &button)) {
       return false;
     }
-    output->inputs[i].title = button.title;
-    output->inputs[i].visible = true;
-    output->inputs[i].outcome = button.outcome;
+    state->inputs[i].title = button.title;
+    state->inputs[i].visible = true;
+    state->inputs[i].outcome = button.outcome;
   }
 
   return true;
