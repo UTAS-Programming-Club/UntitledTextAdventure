@@ -11,6 +11,8 @@
 #include <windows.h>
 #elif defined(_POSIX_VERSION)
 #include <time.h>
+#else // Hope for c threads
+#include <threads.h>
 #endif
 
 #define ESC "\x1B"

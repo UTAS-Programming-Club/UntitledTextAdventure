@@ -18,7 +18,8 @@
 #define ESC "\x1B"
 #define CSI ESC "["
 
-static bool BackupsMade;
+static bool BackupsMade = false;
+static bool ConsoleRestored = false;
 #ifdef _WIN32
 static DWORD BackupMode;
 #else
@@ -88,6 +89,10 @@ static bool SetupConsole(void) {
 }
 
 static void ResetConsole(void) {
+  if (ConsoleRestored) {
+    return;
+  }
+
   if (!BackupsMade) {
     goto end;
   }
@@ -115,6 +120,8 @@ static void ResetConsole(void) {
 
 end:
   printf(CSI "?1049l"); // Restore original buffer
+  fflush(stdout);
+  ConsoleRestored = true;
 }
 
 static void PrintString(const char *str) {
@@ -192,6 +199,9 @@ static bool HandleInput(const struct GameInfo *info, struct GameState *state) {
 }
 
 void PrintError(const char *error, ...) {
+  // Need to switch back to make stderr persist after the programs exists
+  ResetConsole();
+
   fputs("ERROR: ", stderr);
 
   va_list args;

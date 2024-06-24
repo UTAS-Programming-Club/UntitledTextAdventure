@@ -15,6 +15,7 @@
 #include "fileloading.h"
 #include "game.h"
 #include "parser.h"
+#include "specialscreens.h"
 #include "winresources.h"
 
 #define CAT_(a, b) a ## b
@@ -80,6 +81,7 @@ static inline double cJSON_GetOptNumberValue(const cJSON *const object, const ch
 
 static bool GetGameRoomData(cJSON *jsonRoom, struct RoomInfo *room);
 
+// TODO: Use PrintError for each failure
 
 bool LoadGameData(char *path) {
   if (GameData) {
@@ -340,7 +342,9 @@ bool GetGameScreen(enum Screen screenID, struct GameScreen *screen) {
   JSON_GETSTRINGVALUEERROR(screen->extraText, jsonScreen, "extraText", false);
 
   screen->customScreenCodeID = cJSON_GetOptNumberValue(jsonScreen, "customScreenCode", InvalidCustomScreenCode, invalidOptNumberVal);
-  if (invalidOptNumberVal == screen->customScreenCodeID) {
+  if (invalidOptNumberVal == screen->customScreenCodeID
+      || (InvalidCustomScreenCode != screen->customScreenCodeID && CustomScreenCodeCount <= screen->customScreenCodeID)) {
+    PrintError("Invalid custom screen code ID %i for screen %i", screen->customScreenCodeID, screenID);
     return false;
   }
 

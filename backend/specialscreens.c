@@ -232,3 +232,4 @@ bool (*CustomScreenCode[])(const struct GameInfo *, struct GameState *) = {
   CreateMainMenuScreen,
   CreateGameScreen,
 };
+size_t CustomScreenCodeCount = sizeof CustomScreenCode / sizeof *CustomScreenCode;

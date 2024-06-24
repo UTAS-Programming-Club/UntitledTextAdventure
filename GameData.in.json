@@ -15,6 +15,11 @@
           "newScreenID": GameScreen
         },
         {
+          "title": "Load Game",
+          "outcome": GotoScreenOutcome,
+          "newScreenID": LoadScreen
+        },
+        {
           "title": "Quit Game",
           "outcome": 2
         }
@@ -43,7 +48,37 @@
           "outcome": GameGoWestOutcome
         },
         {
-          "title": "Return to Main Menu",
+          "title": "Save and Quit",
+          "outcome": GotoScreenOutcome,
+          "newScreenID": SaveScreen
+        },
+        {
+          "title": "Quit",
+          "outcome": GotoScreenOutcome,
+          "newScreenID": MainMenuScreen
+        }
+      ]
+    },
+    {
+      // ID: 2
+      "body": "Enter your password: \n",
+      "extraText": "",
+      "buttons": [
+        {
+          "title": "Return To Main Menu",
+          "outcome": GotoScreenOutcome,
+          "newScreenID": MainMenuScreen
+        }
+      ]
+    },
+    {
+      // ID: 3
+      "body": "Here is your password: \n",
+      "extraText": "",
+      // "customScreenCode": SaveCustomScreenCode,
+      "buttons": [
+        {
+          "title": "Return To Main Menu",
           "outcome": GotoScreenOutcome,
           "newScreenID": MainMenuScreen
         }
