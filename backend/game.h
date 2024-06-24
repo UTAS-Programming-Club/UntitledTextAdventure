@@ -9,7 +9,14 @@
 #include <stdint.h>
 #include <types.h>
 
-extern uint_fast8_t FloorSize;
+struct GameInfo {
+// public, safe to use outside of backend
+  const char *name; // utf-8
+// implementation, do not use outside of backend
+  bool initialised;
+  const uint_fast8_t floorSize;
+  const struct RoomInfo *rooms;
+};
 
 struct GameInput {
 // public, safe to use outside of backend
@@ -44,11 +51,13 @@ struct GameState {
 // Currently body and inputs[i].title MUST be allocated, this must be fixed if the encoding changes to utf-8 because then most button titles will also be direct copies of cJSON returned data
 };
 
-bool SetupBackend(void);
-bool UpdateGameState(struct GameState *);
-enum InputOutcome HandleGameInput(struct GameState *, uint_fast8_t);
-const struct RoomInfo *GetGameRoom(RoomCoord, RoomCoord);
+// GameInfo should be zero initialised before first call
+bool SetupBackend(struct GameInfo *);
+// GameState should be zero initialised before first call
+bool UpdateGameState(const struct GameInfo *, struct GameState *);
+enum InputOutcome HandleGameInput(const struct GameInfo *, struct GameState *, uint_fast8_t);
+const struct RoomInfo *GetGameRoom(const struct GameInfo *, RoomCoord, RoomCoord);
 void CleanupGame(struct GameState *);
-void CleanupBackend(void);
+void CleanupBackend(struct GameInfo *);
 
 #endif // PCGAME_GAME_H

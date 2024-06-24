@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-bool LoadFile(char *, size_t *, void **, uint16_t, void *);
-void UnloadFile(void *, uint16_t, void *);
+bool LoadFile(const char *, size_t *, void **, uint16_t, const void *);
+void UnloadFile(void *, uint16_t, const void *);
 
 #endif // PCGAME_FILELOADING_H

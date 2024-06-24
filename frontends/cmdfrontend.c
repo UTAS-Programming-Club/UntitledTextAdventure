@@ -167,8 +167,8 @@ static void PrintInputs(uint_fast8_t inputCount, const struct GameInput *inputs)
   }
 }
 
-static bool HandleOutput(struct GameState *state) {
-  if (!UpdateGameState(state)) {
+static bool HandleOutput(const struct GameInfo *info, struct GameState *state) {
+  if (!UpdateGameState(info, state)) {
     return false;
   }
   PrintOutputBody(state->body);
@@ -176,13 +176,13 @@ static bool HandleOutput(struct GameState *state) {
   return true;
 }
 
-static bool HandleInput(struct GameState *state) {
+static bool HandleInput(const struct GameInfo *info, struct GameState *state) {
   uint_fast8_t input = GetInput();
 
-  enum InputOutcome outcome = HandleGameInput(state, input);
+  enum InputOutcome outcome = HandleGameInput(info, state, input);
   switch(outcome) {
     case InvalidInputOutcome:
-      return HandleInput(state);
+      return HandleInput(info, state);
     case GetNextOutputOutcome:
       return true;
     case QuitGameOutcome:
@@ -205,22 +205,23 @@ void PrintError(const char *error, ...) {
 int main(void) {
   int res = 1;
 
-  if (!SetupConsole() || !SetupBackend()) {
+  struct GameInfo info = {0};
+  if (!SetupConsole() || !SetupBackend(&info)) {
     goto reset_console;
   }
 
   struct GameState state = {0};
   do {
-    if (!HandleOutput(&state)) {
+    if (!HandleOutput(&info, &state)) {
       break;
     }
-  } while(HandleInput(&state));
+  } while(HandleInput(&info, &state));
 
   res = 0;
 
   // TODO: Make sure this happens, even on crash. atexit + signal handler?
   CleanupGame(&state);
-  CleanupBackend();
+  CleanupBackend(&info);
 reset_console:
   ResetConsole();
   return res;

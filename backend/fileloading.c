@@ -15,7 +15,7 @@
 
 #define UNUSED(x) (void)(x)
 
-bool LoadFile(char *path, size_t *size, void **data, uint16_t resourceID, void *resourceType) {
+bool LoadFile(const char *path, size_t *size, void **data, uint16_t resourceID, const void *resourceType) {
 #if defined(_WIN32) && defined(FRONTEND) && !defined(_DEBUG)
   void *resource = MAKEINTRESOURCEW(resourceID);
   HRSRC hResource = FindResourceW(NULL, resource, resourceType);
@@ -66,7 +66,7 @@ cleanup:
   return success;
 }
 
-void UnloadFile(void *data, uint16_t resourceID, void *resourceType) {
+void UnloadFile(void *data, uint16_t resourceID, const void *resourceType) {
 #if defined(_WIN32) && defined(FRONTEND) && !defined(_DEBUG)
   void *resource = MAKEINTRESOURCEW(resourceID);
   HRSRC hResource = FindResourceW(NULL, resource, resourceType);

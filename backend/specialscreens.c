@@ -27,12 +27,14 @@ static void FPrintRep(char *sym, uint_fast8_t count, FILE *fp) {
   }
 }
 
-// TODO: Only show inner walls on rooms that exists
 // TODO: Find a better way to mark rooms that don't exist
-// TODO: Add openings between rooms that exist
 // TODO: Indicate room type
+// TODO: Fix room openings for other sizes or remove resizing support
+// TODO: Merge repeated GetGameRoom calls
 static void WriteRoomRow(FILE *fp, RoomCoord roomRow, RoomCoord roomColumn,
-                         uint_fast8_t outputRow, const struct RoomInfo *currentRoom) {
+                         uint_fast8_t outputRow, const struct GameInfo *info,
+                         const struct RoomInfo *currentRoom
+                         ) {
   if (RoomGridSizeVer - 1 == outputRow && 0 != roomRow) {
     return;
   }
@@ -40,7 +42,7 @@ static void WriteRoomRow(FILE *fp, RoomCoord roomRow, RoomCoord roomColumn,
   // Top, middle and bottom grid rows
   if (0 == outputRow || RoomGridSizeVer - 1 == outputRow) {
     const char **rowChars = NULL;
-    if (FloorSize - 1 == roomRow) {
+    if (info->floorSize - 1 == roomRow) {
       rowChars = TopGridRowChars;
     } else if (0 < roomRow || 0 == outputRow) {
       rowChars = MiddleGridRowChars;
@@ -54,13 +56,13 @@ static void WriteRoomRow(FILE *fp, RoomCoord roomRow, RoomCoord roomColumn,
       fputs(rowChars[1], fp);
     }
 
-    if (0 == outputRow && GetGameRoom(roomRow + 1, roomColumn)->exists) {
+    if (0 == outputRow && GetGameRoom(info, roomRow + 1, roomColumn)->exists) {
       fprintf(fp, HorLine "%*s" HorLine, RoomGridSizeHor - 4, "");
     } else {
       FPrintRep(HorLine, RoomGridSizeHor - 2, fp);
     }
 
-    if (FloorSize - 1 == roomColumn) {
+    if (info->floorSize - 1 == roomColumn) {
       fputs(rowChars[2], fp);
       fputc('\n', fp);
     }
@@ -69,8 +71,8 @@ static void WriteRoomRow(FILE *fp, RoomCoord roomRow, RoomCoord roomColumn,
   // Middle Room Rows
   else {
     char *wallChar;
-    if (!GetGameRoom(roomRow, roomColumn)->exists
-        || !GetGameRoom(roomRow, roomColumn - 1)->exists) {
+    if (!GetGameRoom(info, roomRow, roomColumn)->exists
+        || !GetGameRoom(info, roomRow, roomColumn - 1)->exists) {
       wallChar = VerLine;
     } else if (1 == outputRow) {
       wallChar = UpperHalfVerLine;
@@ -84,29 +86,29 @@ static void WriteRoomRow(FILE *fp, RoomCoord roomRow, RoomCoord roomColumn,
     if (currentRoom->x == roomColumn && currentRoom->y == roomRow && 1 == outputRow) {
       fprintf(fp, "%sP%*s", wallChar, RoomGridSizeHor - 3, "");
     // Room exists
-    } else if (GetGameRoom(roomRow, roomColumn)->exists) {
+    } else if (GetGameRoom(info, roomRow, roomColumn)->exists) {
       fprintf(fp, "%s%*s", wallChar, RoomGridSizeHor - 2, "");
     // Room does not exist
     } else {
       fprintf(fp, "%sNO%*s", wallChar, RoomGridSizeHor - 4, "");
     }
 
-    if (FloorSize - 1 == roomColumn) {
+    if (info->floorSize - 1 == roomColumn) {
       fputs(VerLine "\n", fp);
     }
   }
 }
 
-static void WriteMap(const struct RoomInfo *currentRoom) {
+static void WriteMap(const struct GameInfo *info, const struct RoomInfo *currentRoom) {
   FILE *fp = fopen("Map.txt", "w");
   if (!fp) {
     return;
   }
 
-  for (RoomCoord roomRow = FloorSize - 1; roomRow != InvalidRoomCoord; --roomRow) {
+  for (RoomCoord roomRow = info->floorSize - 1; roomRow != InvalidRoomCoord; --roomRow) {
     for (uint_fast8_t outputRow = 0; outputRow < RoomGridSizeVer; ++outputRow) {
-      for (RoomCoord roomColumn = 0; roomColumn < FloorSize; ++roomColumn) {
-        WriteRoomRow(fp, roomRow, roomColumn, outputRow, currentRoom);
+      for (RoomCoord roomColumn = 0; roomColumn < info->floorSize; ++roomColumn) {
+        WriteRoomRow(fp, roomRow, roomColumn, outputRow, info, currentRoom);
       }
     }
   }
@@ -116,13 +118,15 @@ static void WriteMap(const struct RoomInfo *currentRoom) {
 #endif
 
 
-static void StartGame(struct GameState *state) {
-  state->roomInfo = GetGameRoom(DefaultRoomCoordX, DefaultRoomCoordY);
+static void StartGame(const struct GameInfo *info, struct GameState *state) {
+  state->roomInfo = GetGameRoom(info, DefaultRoomCoordX, DefaultRoomCoordY);
   state->startedGame = true;
 }
 
 
-static bool CreateMainMenuScreen(struct GameState *state) {
+static bool CreateMainMenuScreen(const struct GameInfo *info, struct GameState *state) {
+  (void)info;
+
   size_t reloadCountVarOffset = GetGameStateOffset(state->screenID, 0);
   if (reloadCountVarOffset == SIZE_MAX) {
     return false;
@@ -160,18 +164,18 @@ static bool CreateMainMenuScreen(struct GameState *state) {
   return true;
 }
 
-static bool CreateGameScreen(struct GameState *state) {
+static bool CreateGameScreen(const struct GameInfo *info, struct GameState *state) {
   // TODO: Remove
   static char bodyBeginning[] = "This is the game, you are in room [";
   static char bodyMiddle[] = ", ";
   static char bodyEnding[] = "].";
 
   if (!state->startedGame) {
-    StartGame(state);
+    StartGame(info, state);
   }
 
 #ifdef _DEBUG
-  WriteMap(state->roomInfo);
+  WriteMap(info, state->roomInfo);
 #endif
 
   int allocatedCharCount = snprintf(NULL, 0, "%s%" PRIRoomCoord "%s%" PRIRoomCoord "%s",
@@ -200,19 +204,19 @@ static bool CreateGameScreen(struct GameState *state) {
     switch (state->inputs[i].outcome) {
       case GameGoNorthOutcome:
         state->inputs[i].visible =
-          GetGameRoom(state->roomInfo->x, state->roomInfo->y + 1)->exists;
+          GetGameRoom(info, state->roomInfo->x, state->roomInfo->y + 1)->exists;
         break;
       case GameGoEastOutcome:
         state->inputs[i].visible =
-          GetGameRoom(state->roomInfo->x + 1, state->roomInfo->y)->exists;
+          GetGameRoom(info, state->roomInfo->x + 1, state->roomInfo->y)->exists;
         break;
       case GameGoSouthOutcome:
         state->inputs[i].visible =
-          GetGameRoom(state->roomInfo->x, state->roomInfo->y - 1)->exists;
+          GetGameRoom(info, state->roomInfo->x, state->roomInfo->y - 1)->exists;
         break;
       case GameGoWestOutcome:
         state->inputs[i].visible =
-          GetGameRoom(state->roomInfo->x - 1, state->roomInfo->y)->exists;
+          GetGameRoom(info, state->roomInfo->x - 1, state->roomInfo->y)->exists;
         break;
       default:
         break;
@@ -224,7 +228,7 @@ static bool CreateGameScreen(struct GameState *state) {
 
 
 // Must match the order of the CustomScreenCode enum in types.h
-bool (*CustomScreenCode[])(struct GameState *) = {
+bool (*CustomScreenCode[])(const struct GameInfo *, struct GameState *) = {
   CreateMainMenuScreen,
   CreateGameScreen,
 };

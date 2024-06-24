@@ -214,6 +214,7 @@ static LONG_PTR GetWindowLongPtrW(HWND hWnd, int nIndex) {
 #error Building the gdi frontend requires windows support
 #endif
 
+static struct GameInfo Info = {0};
 static struct GameState State = {0};
 static BOOL NeedRedrawButtons = FALSE;
 static HWND *buttonHandles = NULL;
@@ -393,10 +394,10 @@ cleanup_paint:
         return 0;
       }
 
-      enum InputOutcome outcome = HandleGameInput(&State, LOWORD(wParam));
+      enum InputOutcome outcome = HandleGameInput(&Info, &State, LOWORD(wParam));
       switch(outcome) {
         case GetNextOutputOutcome:
-          if (UpdateGameState(&State)) {
+          if (UpdateGameState(&Info, &State)) {
             NeedRedrawButtons = TRUE;
             InvalidateRect(hWnd, NULL, TRUE);
             break;
@@ -455,12 +456,13 @@ int main(void) {
   int nCmdShow = info.dwFlags & STARTF_USESHOWWINDOW ? info.wShowWindow : kNtSwNormal;
 #endif
 
-  if (!SetupBackend()) {
-    return 1;
+  int result = 1;
+
+  if (!SetupBackend(&Info)) {
+    goto end;
   }
-  if (!UpdateGameState(&State)) {
-    CleanupGame(&State);
-    return 1;
+  if (!UpdateGameState(&Info, &State)) {
+    goto cleanup_game;
   }
   NeedRedrawButtons = TRUE;
 
@@ -480,12 +482,12 @@ int main(void) {
   wnd.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
   wnd.lpszClassName = u"Untitled Text Adventure";
   if (!wnd.hIcon || !wnd.hCursor) {
-    return FALSE;
+    goto cleanup_game;
   }
 
   ATOM class = RegisterClassW(&wnd);
   if (!class) {
-    return FALSE;
+    goto cleanup_game;
   }
   void *rClass = MAKEINTRESOURCEW(class);
 
@@ -493,12 +495,12 @@ int main(void) {
                               WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
                               CW_USEDEFAULT, CW_USEDEFAULT, 500, 500, NULL, NULL, hInstance, NULL);
   if(!hWnd) {
-    return FALSE;
+    goto cleanup_class;
   }
 
   ShowWindow(hWnd, nCmdShow);
   if (!UpdateWindow(hWnd)) {
-    return FALSE;
+    goto cleanup_class;
   }
 
   MSG msg;
@@ -506,12 +508,16 @@ int main(void) {
       TranslateMessage(&msg);
       DispatchMessageW(&msg);
   }
+  result = msg.wParam;
 
   // TODO: Add UnregisterClassW support to cosmo
+cleanup_class:
 #ifndef _COSMO_SOURCE
   UnregisterClassW(rClass, hInstance);
 #endif
+cleanup_game:
   CleanupGame(&State);
-  CleanupBackend();
-  return msg.wParam;
+  CleanupBackend(&Info);
+end:
+  return result;
 }
