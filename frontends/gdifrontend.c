@@ -480,8 +480,8 @@ int main(void) {
                                  LR_DEFAULTSIZE | LR_SHARED);
 #endif
   wnd.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-  wnd.lpszClassName = u"Untitled Text Adventure";
-  if (!wnd.hIcon || !wnd.hCursor) {
+  wnd.lpszClassName = s8tows(Info.name);
+  if (!wnd.hIcon || !wnd.hCursor || !wnd.lpszClassName) {
     goto cleanup_game;
   }
 
@@ -491,7 +491,7 @@ int main(void) {
   }
   void *rClass = MAKEINTRESOURCEW(class);
 
-  HWND hWnd = CreateWindowExW(0, rClass, u"Test window",
+  HWND hWnd = CreateWindowExW(0, rClass, wnd.lpszClassName,
                               WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
                               CW_USEDEFAULT, CW_USEDEFAULT, 500, 500, NULL, NULL, hInstance, NULL);
   if(!hWnd) {
@@ -515,6 +515,7 @@ cleanup_class:
 #ifndef _COSMO_SOURCE
   UnregisterClassW(rClass, hInstance);
 #endif
+  free((void *)wnd.lpszClassName);
 cleanup_game:
   CleanupGame(&State);
   CleanupBackend(&Info);

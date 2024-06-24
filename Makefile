@@ -33,7 +33,7 @@ endef
 
 ifdef ISWINDOWS
 CXXFLAGS += -Wa,-mbig-obj
-GDICFLAGS := -municode -l gdi32
+GDICFLAGS := -municode -lgdi32
 COMMONOBJS += $(LIBDIR)/crossprint.o
 EXECSUFFIX := .exe
 

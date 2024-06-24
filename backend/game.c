@@ -23,11 +23,13 @@ bool SetupBackend(struct GameInfo *info) {
     return true;
   }
 
-  // TODO: Get name from json
-  char *name = NULL;
+  char *name = LoadGameName();
+  if (!name) {
+    return false;
+  }
+
   uint_fast8_t floorSize = 0;
   struct RoomInfo *rooms = NULL;
-
   if (!LoadGameRooms(&floorSize, &rooms)) {
     PrintError("Failed to load rooms from GameData.json");
     return false;

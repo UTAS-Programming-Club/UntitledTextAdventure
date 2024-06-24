@@ -120,6 +120,17 @@ void UnloadGameData(void) {
 }
 
 
+char *LoadGameName(void) {
+  if (!GameData) {
+    return NULL;
+  }
+
+  char *name = NULL;
+  JSON_GETSTRINGVALUEERROR(name, GameData, "name", NULL);
+
+  return name;
+}
+
 bool LoadGameRooms(uint_fast8_t *floorSize, struct RoomInfo **rooms) {
   if (!GameData || !floorSize || !rooms) {
     return false;

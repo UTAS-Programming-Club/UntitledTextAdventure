@@ -11,8 +11,6 @@
 #include <windows.h>
 #elif defined(_POSIX_VERSION)
 #include <time.h>
-#elif defined(_COSMO_SOURCE)
-#include <threads.h>
 #endif
 
 #define ESC "\x1B"

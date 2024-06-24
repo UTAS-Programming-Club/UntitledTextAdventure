@@ -1,6 +1,7 @@
 #include <types.json.h>
 
 {
+  "name": "Untitled Text Adventure",
   "screens": [
     {
       // ID: 0

@@ -3,11 +3,15 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "name",
     "screens",
     "state",
     "rooms"
   ],
   "properties": {
+    "name": {
+      "type": "string"
+    },
     "screens": {
       "type": "array",
       "items": {
