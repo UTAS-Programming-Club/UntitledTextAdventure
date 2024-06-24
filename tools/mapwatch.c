@@ -1,10 +1,18 @@
+#define _POSIX_C_SOURCE 199309L
 #include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <threads.h>
 #ifndef _WIN32
 #include <termios.h>
 #include <unistd.h>
+#endif
+#ifdef _WIN32
+#include <fcntl.h>
+#include <windows.h>
+#elif defined(_POSIX_VERSION)
+#include <time.h>
+#elif defined(_COSMO_SOURCE)
+#include <threads.h>
 #endif
 
 #define ESC "\x1B"
@@ -18,8 +26,37 @@ static void HandleIntSig(int unused) {
   keepLooping = false;
 }
 
+static void SleepMS(long msec) {
+  if (msec > 999999999) {
+    return;
+  }
+
+#if defined(_WIN32)
+  // From https://stackoverflow.com/a/17283549
+  HANDLE timer;
+  LARGE_INTEGER ft;
+
+  ft.QuadPart = -10000 * msec;
+
+  timer = CreateWaitableTimer(NULL, TRUE, NULL);
+  SetWaitableTimer(timer, &ft, 0, NULL, NULL, 0);
+  WaitForSingleObject(timer, INFINITE);
+  CloseHandle(timer);
+#elif defined(_POSIX_VERSION)
+    struct timespec sleepTime = {0, 1000000 * msec};
+    nanosleep(&sleepTime, NULL);
+#else // Hope for c threads
+    struct timespec sleepTime = {0, 1000000 * msec};
+    thrd_sleep(&sleepTime, NULL);
+#endif
+}
+
 int main(void) {
   signal(SIGINT, HandleIntSig);
+
+#ifdef _WIN32
+   SetConsoleOutputCP(CP_UTF8);
+#endif
 
   int result = 1;
 
@@ -45,8 +82,7 @@ int main(void) {
 
     fclose(fp);
 
-    struct timespec sleepTime = {0, 500000000}; // 0.5 seconds
-    thrd_sleep(&sleepTime, NULL);
+    SleepMS(500);
   }
   result = 0;
 
