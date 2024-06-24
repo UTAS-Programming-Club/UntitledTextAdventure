@@ -52,7 +52,7 @@ debug: CFLAGS += -D _DEBUG -g
 debug: CXXFLAGS += -D _DEBUG -g
 debug release: $(BINDIR)/cmdgame$(EXECSUFFIX) $(BINDIR)/gdigame$(EXECSUFFIX) GameData.json
 discord: $(LIBDIR)/game.so GameData.json
-tools: $(BINDIR)/printgamedata$(EXECSUFFIX) $(BINDIR)/jsonvalidator$(EXECSUFFIX) GameData.json
+tools: $(BINDIR)/jsonvalidator$(EXECSUFFIX) $(BINDIR)/mapwatch$(EXECSUFFIX) $(BINDIR)/printgamedata$(EXECSUFFIX) GameData.json
 
 clean:
 	rm -r $(OUTPUT) GameData.json 2> /dev/null || true
@@ -117,11 +117,14 @@ $(LIBDIR)/cJSON.o: third_party/cJSON/cJSON.c third_party/cJSON/cJSON.h | $(LIBDI
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 
-$(LIBDIR)/printgamedata.o: tools/printgamedata.c backend/crossprint.h backend/parser.h frontends/frontend.h | $(LIBDIR)
-	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
-
 $(LIBDIR)/jsonvalidator.o: tools/jsonvalidator.cpp $(INCDIR)/jsoncons $(INCDIR)/jsoncons_ext | $(LIBDIR)
 	$(CXX) $(CXXSTD) $(CXXWARNINGS) -c -o $@ $< $(CXXFLAGS)
+
+$(LIBDIR)/mapwatch.o: tools/mapwatch.c | $(LIBDIR)
+	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
+
+$(LIBDIR)/printgamedata.o: tools/printgamedata.c backend/crossprint.h backend/parser.h frontends/frontend.h | $(LIBDIR)
+	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 
 $(LIBDIR)/cmdfrontend.o: frontends/cmdfrontend.c backend/crossprint.h backend/game.h frontends/frontend.h | $(LIBDIR)
@@ -138,6 +141,14 @@ $(LIBDIR)/game.so: $(COMMONOBJS) | $(LIBDIR)
 
 
 # Executables
+$(BINDIR)/jsonvalidator$(EXECSUFFIX): $(LIBDIR)/jsonvalidator.o | $(BINDIR)
+	$(CXX) -o $(basename $@) $^ $(CXXFLAGS)
+	$(call MAKEEXEC,$@,$(basename $@))
+
+$(BINDIR)/mapwatch$(EXECSUFFIX): $(LIBDIR)/mapwatch.o
+	$(CC) -o $(basename $@) $^ $(CFLAGS)
+	$(call MAKEEXEC,$@,$(basename $@))
+
 ifdef ISWINDOWS
 $(BINDIR)/printgamedata$(EXECSUFFIX): $(LIBDIR)/cJSON.o $(LIBDIR)/crossprint.o $(LIBDIR)/fileloading_printgamedata.o $(LIBDIR)/parser.o $(LIBDIR)/printgamedata.o | $(BINDIR)
 else # !ISWINDOWS
@@ -146,9 +157,6 @@ endif # ISWINDOWS/!ISWINDOWS
 	$(CC) -o $(basename $@) $^ $(CFLAGS)
 	$(call MAKEEXEC,$@,$(basename $@))
 
-$(BINDIR)/jsonvalidator$(EXECSUFFIX): $(LIBDIR)/jsonvalidator.o | $(BINDIR)
-	$(CXX) -o $(basename $@) $^ $(CXXFLAGS)
-	$(call MAKEEXEC,$@,$(basename $@))
 
 $(BINDIR)/cmdgame$(EXECSUFFIX): $(LIBDIR)/cmdfrontend.o $(COMMONOBJS) $(WINRESOURCES) | $(BINDIR)
 	$(CC) -o $(basename $@) $^ $(CFLAGS) -lm
