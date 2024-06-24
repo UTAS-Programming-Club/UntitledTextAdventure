@@ -52,7 +52,8 @@ JSON_ENUM_END
 JSON_ENUM_START(CustomScreenCode)
   JSON_ENUM_ITEM(MainMenuCustomScreenCode,    0)
   JSON_ENUM_ITEM(GameCustomScreenCode,        1)
-  JSON_ENUM_ITEM(SaveCustomScreenCode,        2)
+  JSON_ENUM_ITEM(LoadCustomScreenCode,        2)
+  JSON_ENUM_ITEM(SaveCustomScreenCode,        3)
   JSON_ENUM_ITEM(InvalidCustomScreenCode, 65535)
 JSON_ENUM_END
 

@@ -60,7 +60,11 @@ bool UpdateGameState(const struct GameInfo *info, struct GameState *state) {
   }
 
   if (InvalidCustomScreenCode != state->customScreenCodeID) {
-    return CustomScreenCode[state->customScreenCodeID](info, state);
+    bool result = CustomScreenCode[state->customScreenCodeID](info, state);
+    if (!result) {
+      PrintError("Custom screen code for screen %i failed", state->screenID);
+    }
+    return result;
   } else {
     return true;
   }

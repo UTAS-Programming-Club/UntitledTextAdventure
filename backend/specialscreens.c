@@ -148,16 +148,14 @@ static bool CreateMainMenuScreen(const struct GameInfo *info, struct GameState *
     }
     ++allocatedCharCount;
 
-    char *str = arena_alloc(&state->arena, allocatedCharCount * sizeof *str);
-    if (!str) {
+    state->body = arena_alloc(&state->arena, allocatedCharCount * sizeof *state->body);
+    if (!state->body) {
       return false;
     }
 
-    if (snprintf(str, allocatedCharCount, "%s%s%" PRIu32, screen.body, screen.extraText, *pReloadCount) <= 0) {
+    if (snprintf(state->body, allocatedCharCount, "%s%s%" PRIu32, screen.body, screen.extraText, *pReloadCount) <= 0) {
       return false;
     }
-
-    state->body = str;
   }
 
   ++(*pReloadCount);
@@ -226,10 +224,44 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
   return true;
 }
 
+static bool CreateLoadScreen(const struct GameInfo *info, struct GameState *state) {
+  (void)info;
+  (void)state;
+  return false;
+}
+
+static bool CreateSaveScreen(const struct GameInfo *info, struct GameState *state) {
+  (void)info;
+
+  struct GameScreen screen = {0};
+  if (!GetGameScreen(state->screenID, &screen)) {
+    return false;
+  }
+
+  int allocatedCharCount = snprintf(NULL, 0, "%s%s", screen.body, "NO-PASSWORD");
+  if (allocatedCharCount <= 0) {
+    return false;
+  }
+  ++allocatedCharCount;
+
+  state->body = arena_alloc(&state->arena, allocatedCharCount * sizeof *state->body);
+  if (!state->body) {
+    return false;
+  }
+
+  if (snprintf(state->body, allocatedCharCount, "%s%s", screen.body, "NO-PASSWORD") <= 0) {
+    return false;
+  }
+
+  return true;
+}
+
 
 // Must match the order of the CustomScreenCode enum in types.h
 bool (*CustomScreenCode[])(const struct GameInfo *, struct GameState *) = {
   CreateMainMenuScreen,
   CreateGameScreen,
+  CreateLoadScreen,
+  CreateSaveScreen
 };
 size_t CustomScreenCodeCount = sizeof CustomScreenCode / sizeof *CustomScreenCode;

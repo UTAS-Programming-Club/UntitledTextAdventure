@@ -63,6 +63,7 @@
       // ID: 2
       "body": "Enter your password: \n",
       "extraText": "",
+      "customScreenCode": LoadCustomScreenCode,
       "buttons": [
         {
           "title": "Return To Main Menu",
@@ -75,7 +76,7 @@
       // ID: 3
       "body": "Here is your password: \n",
       "extraText": "",
-      // "customScreenCode": SaveCustomScreenCode,
+      "customScreenCode": SaveCustomScreenCode,
       "buttons": [
         {
           "title": "Return To Main Menu",
