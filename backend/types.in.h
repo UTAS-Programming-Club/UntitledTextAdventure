@@ -72,6 +72,7 @@ EMIT(#define DefaultRoomCoordX (RoomCoord)0)
 EMIT(#define DefaultRoomCoordY (RoomCoord)0)
 EMIT(#define InvalidRoomCoord (RoomCoord)255)
 C_EMIT(typedef uint_fast8_t RoomCoord;)
+C_EMIT(typedef uint8_t RoomCoordSave;)
 
 // TODO: Add enum for state vars
 

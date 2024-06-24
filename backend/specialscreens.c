@@ -5,6 +5,7 @@
 
 #include "game.h"
 #include "parser.h"
+#include "save.h"
 
 // Each room take 6x4 but the 6 required calls to WriteRoomRow per room only
 // handle the top left most 5x3 unless it is the right and/or bottom most room
@@ -238,7 +239,12 @@ static bool CreateSaveScreen(const struct GameInfo *info, struct GameState *stat
     return false;
   }
 
-  int allocatedCharCount = snprintf(NULL, 0, "%s%s", screen.body, "NO-PASSWORD");
+  char *save = GetSavePassword(state);
+  if (!save) {
+    return false;
+  }
+
+  int allocatedCharCount = snprintf(NULL, 0, "%s%s", screen.body, save);
   if (allocatedCharCount <= 0) {
     return false;
   }
@@ -249,7 +255,7 @@ static bool CreateSaveScreen(const struct GameInfo *info, struct GameState *stat
     return false;
   }
 
-  if (snprintf(state->body, allocatedCharCount, "%s%s", screen.body, "NO-PASSWORD") <= 0) {
+  if (snprintf(state->body, allocatedCharCount, "%s%s", screen.body, save) <= 0) {
     return false;
   }
 

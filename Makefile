@@ -12,7 +12,7 @@ BINDIR := $(OUTDIR)/bin/
 LIBDIR := $(OUTDIR)/lib/
 INCDIR := $(OUTDIR)/include/
 
-COMMONOBJS := $(LIBDIR)/cJSON.o $(LIBDIR)/fileloading_frontend.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/screens.o $(LIBDIR)/specialscreens.o
+COMMONOBJS := $(LIBDIR)/cJSON.o $(LIBDIR)/fileloading_frontend.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/save.o $(LIBDIR)/screens.o $(LIBDIR)/specialscreens.o
 
 CFLAGS += -I $(INCDIR)
 CXXFLAGS += -I $(INCDIR)
@@ -76,9 +76,10 @@ $(INCDIR)/jsoncons_ext: third_party/jsoncons/include/jsoncons_ext | $(INCDIR)
 
 
 backend/game.h: $(INCDIR)/arena.h $(INCDIR)/types.h
+backend/parser.h: backend/game.h
+backend/save.h: backend/game.h
 backend/screens.h: backend/game.h
 backend/specialscreens.h: backend/game.h
-backend/parser.h: backend/game.h
 
 $(INCDIR)/types.h: backend/types.in.h
 	$(CPP) -P -C -nostdinc -o $@ $<
@@ -104,6 +105,9 @@ $(LIBDIR)/game.o: backend/game.c backend/game.h backend/parser.h backend/screens
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 $(LIBDIR)/parser.o: backend/parser.c backend/fileloading.h backend/game.h backend/parser.h backend/specialscreens.h backend/winresources.h frontends/frontend.h $(INCDIR)/cJSON.h $(INCDIR)/types.h | $(LIBDIR)
+	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
+
+$(LIBDIR)/save.o: backend/save.c backend/game.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 $(LIBDIR)/screens.o: backend/screens.c backend/game.h backend/parser.h backend/screens.h $(INCDIR)/arena.h | $(LIBDIR)
@@ -150,9 +154,9 @@ $(BINDIR)/mapwatch$(EXECSUFFIX): $(LIBDIR)/mapwatch.o
 	$(call MAKEEXEC,$@,$(basename $@))
 
 ifdef ISWINDOWS
-$(BINDIR)/printgamedata$(EXECSUFFIX): $(LIBDIR)/cJSON.o $(LIBDIR)/crossprint.o $(LIBDIR)/fileloading_printgamedata.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/printgamedata.o $(LIBDIR)/screens.o $(LIBDIR)/specialscreens.o | $(BINDIR)
+$(BINDIR)/printgamedata$(EXECSUFFIX): $(LIBDIR)/cJSON.o $(LIBDIR)/crossprint.o $(LIBDIR)/fileloading_printgamedata.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/printgamedata.o $(LIBDIR)/save.o $(LIBDIR)/screens.o $(LIBDIR)/specialscreens.o | $(BINDIR)
 else # !ISWINDOWS
-$(BINDIR)/printgamedata$(EXECSUFFIX): $(LIBDIR)/cJSON.o $(LIBDIR)/fileloading_printgamedata.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/printgamedata.o $(LIBDIR)/screens.o $(LIBDIR)/specialscreens.o | $(BINDIR)
+$(BINDIR)/printgamedata$(EXECSUFFIX): $(LIBDIR)/cJSON.o $(LIBDIR)/fileloading_printgamedata.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/printgamedata.o $(LIBDIR)/save.o $(LIBDIR)/screens.o $(LIBDIR)/specialscreens.o | $(BINDIR)
 endif # ISWINDOWS/!ISWINDOWS
 	$(CC) -o $(basename $@) $^ $(CFLAGS)
 	$(call MAKEEXEC,$@,$(basename $@))
