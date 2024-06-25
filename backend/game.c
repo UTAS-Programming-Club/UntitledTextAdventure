@@ -8,6 +8,7 @@
 #include "../frontends/frontend.h"
 #include "game.h"
 #include "parser.h"
+#include "save.h"
 #include "screens.h"
 #include "specialscreens.h"
 
@@ -98,6 +99,13 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
 
   enum InputOutcome outcome = button.outcome;
   switch (outcome) {
+    case SubmitPasswordOutcome: ;
+      // TODO: Get password from frontend
+      char password[] = "AAQABA";
+      if (!LoadState(info, state, password)) {
+        return InvalidInputOutcome;
+      }
+    /* fallthrough */
     case GotoScreenOutcome:
       state->screenID = button.newScreenID;
       outcome = GetNextOutputOutcome;

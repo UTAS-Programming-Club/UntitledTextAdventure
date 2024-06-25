@@ -61,10 +61,15 @@
     },
     {
       // ID: 2
-      "body": "Enter your password: \n",
+      "body": "Enter your password: \nPassword is currently hardcoded :(",
       "extraText": "",
       "customScreenCode": LoadCustomScreenCode,
       "buttons": [
+        {
+          "title": "Submit password",
+          "outcome": SubmitPasswordOutcome,
+          "newScreenID": GameScreen
+        },
         {
           "title": "Return To Main Menu",
           "outcome": GotoScreenOutcome,

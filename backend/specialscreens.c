@@ -228,7 +228,10 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
 static bool CreateLoadScreen(const struct GameInfo *info, struct GameState *state) {
   (void)info;
   (void)state;
-  return false;
+
+  // TODO: Request frontend to enable inline editing
+
+  return true;
 }
 
 static bool CreateSaveScreen(const struct GameInfo *info, struct GameState *state) {
@@ -239,12 +242,12 @@ static bool CreateSaveScreen(const struct GameInfo *info, struct GameState *stat
     return false;
   }
 
-  char *save = GetSavePassword(state);
-  if (!save) {
+  char *password = SaveState(state);
+  if (!password) {
     return false;
   }
 
-  int allocatedCharCount = snprintf(NULL, 0, "%s%s", screen.body, save);
+  int allocatedCharCount = snprintf(NULL, 0, "%s%s", screen.body, password);
   if (allocatedCharCount <= 0) {
     return false;
   }
@@ -255,7 +258,7 @@ static bool CreateSaveScreen(const struct GameInfo *info, struct GameState *stat
     return false;
   }
 
-  if (snprintf(state->body, allocatedCharCount, "%s%s", screen.body, save) <= 0) {
+  if (snprintf(state->body, allocatedCharCount, "%s%s", screen.body, password) <= 0) {
     return false;
   }
 
@@ -263,6 +266,8 @@ static bool CreateSaveScreen(const struct GameInfo *info, struct GameState *stat
 }
 
 
+// TODO: Add GameScreen parameter
+// TODO: Allow loading these dynamically to support adding new custom rooms? If so the api needs to be versioned
 // Must match the order of the CustomScreenCode enum in types.h
 bool (*CustomScreenCode[])(const struct GameInfo *, struct GameState *) = {
   CreateMainMenuScreen,

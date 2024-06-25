@@ -16,7 +16,7 @@ struct GameScreen {
 struct GameScreenButton {
   char *title; // utf-8
   enum InputOutcome outcome;
-  enum Screen newScreenID; // Only set if outcome == GotoScreenOutcome
+  enum Screen newScreenID; // Only set if outcome == GotoScreenOutcome or SubmitPasswordOutcome
 };
 
 bool LoadGameData(char *);
