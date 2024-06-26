@@ -40,8 +40,11 @@ struct GameState {
 // public, safe to use outside of backend
   enum Screen screenID;
   char *body; // utf-8
-  uint_fast8_t inputCount;
-  struct GameInput *inputs;
+  enum ScreenInputType inputType;
+  uint_fast8_t inputCount;      // Only set if inputType == ButtonScreenInputType
+  struct GameInput *inputs;     // Only set if inputType == ButtonScreenInputType
+  enum Screen previousScreenID; // Only set if inputType == TextScreenInputType
+  enum Screen nextScreenID;     // Only set if inputType == TextScreenInputType
   const struct RoomInfo *roomInfo;
   bool startedGame;
 // implementation, do not use outside of backend
@@ -55,7 +58,7 @@ struct GameState {
 bool SetupBackend(struct GameInfo *);
 // GameState should be zero initialised before first call
 bool UpdateGameState(const struct GameInfo *, struct GameState *);
-enum InputOutcome HandleGameInput(const struct GameInfo *, struct GameState *, uint_fast8_t);
+enum InputOutcome HandleGameInput(const struct GameInfo *, struct GameState *, uint_fast8_t, const char *);
 const struct RoomInfo *GetGameRoom(const struct GameInfo *, RoomCoord, RoomCoord);
 void CleanupGame(struct GameState *);
 void CleanupBackend(struct GameInfo *);

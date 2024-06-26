@@ -8,6 +8,7 @@
       "body": "Untitled text adventure game\n----------------------------\nBy the UTAS Programming Club\n\nCurrently unimplemented :(",
       "extraText": "\nReload Count: ",
       "customScreenCode": MainMenuCustomScreenCode,
+      "inputType": ButtonScreenInputType,
       "buttons": [
         {
           "title": "Start Game",
@@ -30,6 +31,7 @@
       "body": "",
       "extraText": "",
       "customScreenCode": GameCustomScreenCode,
+      "inputType": ButtonScreenInputType,
       "buttons": [
         {
           "title": "Go North",
@@ -61,27 +63,22 @@
     },
     {
       // ID: 2
-      "body": "Enter your password: \nPassword is currently hardcoded :(",
+      "body": "Enter your password: ",
       "extraText": "",
       "customScreenCode": LoadCustomScreenCode,
-      "buttons": [
-        {
-          "title": "Submit password",
-          "outcome": SubmitPasswordOutcome,
-          "newScreenID": GameScreen
-        },
-        {
-          "title": "Return To Main Menu",
-          "outcome": GotoScreenOutcome,
-          "newScreenID": MainMenuScreen
-        }
-      ]
+      "inputType": TextScreenInputType,
+      // TODO: Make dependent on type == ButtonScreenType
+      "buttons": [],
+      // TODO: Make dependent on type == TextScreenType
+      "previousScreenID": MainMenuScreen,
+      "nextScreenID": GameScreen
     },
     {
       // ID: 3
       "body": "Here is your password: \n",
       "extraText": "",
       "customScreenCode": SaveCustomScreenCode,
+      "inputType": ButtonScreenInputType,
       "buttons": [
         {
           "title": "Return To Main Menu",

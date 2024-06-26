@@ -86,51 +86,54 @@ static uint_fast8_t MapInputIndex(const struct GameState *state, uint_fast8_t in
   return UINT_FAST8_MAX;
 }
 
-enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState *state, uint_fast8_t inputIndex) {
-  uint_fast8_t inputID = MapInputIndex(state, inputIndex);
-  if (!info || !info->initialised || !state || UINT_FAST8_MAX == inputID) {
+enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState *state, uint_fast8_t buttonInputIndex, const char *textInput) {
+  if (!info || !info->initialised || !state) {
     return InvalidInputOutcome;
   }
 
-  struct GameScreenButton button = {0};
-  if (!GetGameScreenButton(state->screenID, inputID, &button)) {
-    return InvalidInputOutcome;
-  }
+  if (ButtonScreenInputType == state->inputType && UINT_FAST8_MAX != buttonInputIndex) {
+    uint_fast8_t inputID = MapInputIndex(state, buttonInputIndex);
+    if (UINT_FAST8_MAX == inputID) {
+      return InvalidInputOutcome;
+    }
 
-  enum InputOutcome outcome = button.outcome;
-  switch (outcome) {
-    case SubmitPasswordOutcome: ;
-      // TODO: Get password from frontend
-      char password[] = "AAQABA";
-      if (!LoadState(info, state, password)) {
+    struct GameScreenButton button = {0};
+    if (!GetGameScreenButton(state->screenID, inputID, &button)) {
+      return InvalidInputOutcome;
+    }
+
+    switch (button.outcome) {
+      case GotoScreenOutcome:
+        state->screenID = button.newScreenID;
+        return GetNextOutputOutcome;
+      case GameGoNorthOutcome:
+        state->roomInfo = GetGameRoom(info, state->roomInfo->x, state->roomInfo->y + 1);
+        return GetNextOutputOutcome;
+      case GameGoEastOutcome:
+        state->roomInfo = GetGameRoom(info, state->roomInfo->x + 1, state->roomInfo->y);
+        return GetNextOutputOutcome;
+      case GameGoSouthOutcome:
+        state->roomInfo = GetGameRoom(info, state->roomInfo->x, state->roomInfo->y - 1);
+        return GetNextOutputOutcome;
+      case GameGoWestOutcome:
+        state->roomInfo = GetGameRoom(info, state->roomInfo->x - 1, state->roomInfo->y);
+        return GetNextOutputOutcome;
+      case QuitGameOutcome:
+        return button.outcome;
+      default:
         return InvalidInputOutcome;
+    }
+  } else if (TextScreenInputType == state->inputType && textInput) {
+      if ('\x1B' /* ESC */ == textInput[0] && '\0' == textInput[1]) {
+        state->screenID = state->previousScreenID;
+        return GetNextOutputOutcome;
+      } else if (LoadState(info, state, textInput)) {
+        state->screenID = state->nextScreenID;
+        return GetNextOutputOutcome;
       }
-    /* fallthrough */
-    case GotoScreenOutcome:
-      state->screenID = button.newScreenID;
-      outcome = GetNextOutputOutcome;
-      break;
-    case GameGoNorthOutcome:
-      state->roomInfo = GetGameRoom(info, state->roomInfo->x, state->roomInfo->y + 1);
-      outcome = GetNextOutputOutcome;
-      break;
-    case GameGoEastOutcome:
-      state->roomInfo = GetGameRoom(info, state->roomInfo->x + 1, state->roomInfo->y);
-      outcome = GetNextOutputOutcome;
-      break;
-    case GameGoSouthOutcome:
-      state->roomInfo = GetGameRoom(info, state->roomInfo->x, state->roomInfo->y - 1);
-      outcome = GetNextOutputOutcome;
-      break;
-    case GameGoWestOutcome:
-      state->roomInfo = GetGameRoom(info, state->roomInfo->x - 1, state->roomInfo->y);
-      outcome = GetNextOutputOutcome;
-      break;
-    default:
-      break;
   }
 
-  return outcome;
+  return InvalidInputOutcome;
 }
 
 // Room may not exist, always check result->exists

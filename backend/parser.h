@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <types.h>
 
 #include "game.h"
 
@@ -11,12 +12,15 @@ struct GameScreen {
   char *body;      // utf-8
   char *extraText; // utf-8
   enum CustomScreenCode customScreenCodeID;
+  enum ScreenInputType inputType;
+  enum Screen previousScreenID; // Only set if inputType == TextScreenInputType
+  enum Screen nextScreenID;     // Only set if inputType == TextScreenInputType
 };
 
 struct GameScreenButton {
   char *title; // utf-8
   enum InputOutcome outcome;
-  enum Screen newScreenID; // Only set if outcome == GotoScreenOutcome or SubmitPasswordOutcome
+  enum Screen newScreenID; // Only set if outcome == GotoScreenOutcome
 };
 
 bool LoadGameData(char *);

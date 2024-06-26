@@ -348,6 +348,15 @@ bool GetGameScreen(enum Screen screenID, struct GameScreen *screen) {
     return false;
   }
 
+  JSON_GETNUMBERVALUEERROR(screen->inputType, jsonScreen, "inputType", false);
+  if (TextScreenInputType == screen->inputType) {
+    JSON_GETNUMBERVALUEERROR(screen->previousScreenID, jsonScreen, "previousScreenID", false);
+    JSON_GETNUMBERVALUEERROR(screen->nextScreenID, jsonScreen, "nextScreenID", false);
+    if (InvalidScreen == screen->previousScreenID || InvalidScreen == screen->previousScreenID) {
+      return false;
+    }
+  }
+
   return true;
 }
 

@@ -1,8 +1,10 @@
+#include <ctype.h>
 #include <inttypes.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <wchar.h>
 #ifdef _WIN32
@@ -124,6 +126,7 @@ end:
   ConsoleRestored = true;
 }
 
+
 static void PrintString(const char *str) {
 #ifndef _WIN32
   printf("%s", str);
@@ -144,24 +147,24 @@ static void PrintOutputBody(const char *body) {
   printf(CSI "0J");   // Erase entire screen
   PrintString(body);
   printf(CSI "?25h"); // Show cursor
-  putchar('\n');
 }
 
+
 // Returns 0 to 8 for inputs 1 to 9
-static uint_fast8_t GetInput(void) {
+static uint_fast8_t GetButtonInput(void) {
   while(true) {
     // getchar fails with cosmo on windows where it only returns after 2 keys have been pressed with ~ICANON if VMIN==1 so switched to read
     char buf[1] = {0};
-    read(STDIN_FILENO, buf, sizeof(buf));
-    int input = buf[0];
-    if ('1' <= input && input <= '9') {
+    int ret = read(STDIN_FILENO, buf, sizeof buf);
+    char input = buf[0];
+    if (ret && '1' <= input && input <= '9') {
       return input - '1';
     }
   }
 }
 
-static void PrintInputs(uint_fast8_t inputCount, const struct GameInput *inputs) {
-  puts("\nUse the numbers below to make a selection.");
+static void PrintButtonInputs(uint_fast8_t inputCount, const struct GameInput *inputs) {
+  puts("\n\nUse the numbers below to make a selection.");
   // TODO: Find a better way to do this. Perhaps actually remove unused buttons from inputs in game.c?
   for (uint_fast8_t i = 0, visibleInputCount = 0; i < inputCount; ++i) {
     if (!inputs[i].visible) {
@@ -174,32 +177,128 @@ static void PrintInputs(uint_fast8_t inputCount, const struct GameInput *inputs)
   }
 }
 
+
+// Returns input text as a utf-8 string if enter is pressed, "\x1B" on esc
+// being pressed or NULL if buffer allocation failed
+// Resulting pointer must be freed if not "\x1B" or NULL
+static char *GetTextInput(void) {
+  // Starting at 16 chars and will go to the next power of two when full
+  // Do not need to allocate room for '\0' as it replaces the final char
+  size_t bufSize = 16;
+  size_t bufOffset = 0;
+  char *buf = malloc(bufSize);
+  if (!buf) {
+    return NULL;
+  }
+
+  while(true) {
+    if (bufOffset == bufSize) {
+      size_t newBufSize = bufSize * bufSize;
+      char *newBuf = realloc(buf, newBufSize);
+      if (!newBuf) {
+        free(buf);
+        return NULL;
+      }
+      bufSize = newBufSize + 1;
+      buf = newBuf;
+    }
+
+    int ret = read(STDIN_FILENO, buf + bufOffset, 1);
+    if (!ret) {
+      continue;
+    }
+
+    char input = buf[bufOffset];
+    // This also detects any key that sends an escape sequence e.g. arrow keys
+    if (ESC[0] == input) {
+      free(buf);
+      return ESC;
+    }
+
+    // delete, stand-in for backspace
+    if (0x7f == input && 1 <= bufOffset) {
+      printf("\b \b");
+      --bufOffset;
+    } else if (isblank(input) || isgraph(input)) {
+      putchar(buf[bufOffset]);
+      ++bufOffset;
+    } else if ('\n' == input) {
+      buf[bufOffset] = '\0';
+      return buf;
+    }
+
+    fflush(stdout);
+  }
+}
+
+static void PrintTextInput(void) {
+  puts(ESC "7"); // Backup cursor position
+  puts("\nPress Enter to confirm password entry.\nPress Esc to return to the previous screen.");
+  printf(ESC "8"); // Restore cursor position
+  fflush(stdout);
+}
+
+
 static bool HandleOutput(const struct GameInfo *info, struct GameState *state) {
   if (!UpdateGameState(info, state)) {
     return false;
   }
   PrintOutputBody(state->body);
-  PrintInputs(state->inputCount, state->inputs);
+
+  if (ButtonScreenInputType == state->inputType) {
+    PrintButtonInputs(state->inputCount, state->inputs);
+  } else if (TextScreenInputType == state->inputType) {
+    PrintTextInput();
+  }
   return true;
 }
 
-static bool HandleInput(const struct GameInfo *info, struct GameState *state) {
-  uint_fast8_t input = GetInput();
+// Returned bool indicates whether or not to continue, true meaning continue
+// res indicates whether or not there was a failure, 1 meaning failure
+static bool HandleInput(const struct GameInfo *info, struct GameState *state, int *res) {
+  uint_fast8_t buttonInput = UINT_FAST8_MAX;
+  char *textInput = NULL;
 
-  enum InputOutcome outcome = HandleGameInput(info, state, input);
+  *res = 1;
+
+  if (ButtonScreenInputType == state->inputType) {
+    buttonInput = GetButtonInput();
+  } else if (TextScreenInputType == state->inputType) {
+    textInput = GetTextInput();
+    if (!textInput) {
+      return false;
+    }
+  }
+
+  enum InputOutcome outcome = HandleGameInput(info, state, buttonInput, textInput);
+  if (textInput && ESC[0] != textInput[0]) {
+    free(textInput);
+  }
+
   switch(outcome) {
     case InvalidInputOutcome:
-      return HandleInput(info, state);
+      if (ButtonScreenInputType == state->inputType) {
+        return HandleInput(info, state, res);
+      // Force a redraw if the password was invalid
+      } else if (TextScreenInputType == state->inputType) {
+        return true;
+      } else {
+        return false;
+      }
     case GetNextOutputOutcome:
+      *res = 0;
       return true;
     case QuitGameOutcome:
+      *res = 0;
+      // fallthrough
     default:
       return false;
   }
 }
 
+
 void PrintError(const char *error, ...) {
-  // Need to switch back to make stderr persist after the programs exists
+  // Required in order to make stderr persist after the programs exists
   ResetConsole();
 
   fputs("ERROR: ", stderr);
@@ -225,9 +324,7 @@ int main(void) {
     if (!HandleOutput(&info, &state)) {
       break;
     }
-  } while(HandleInput(&info, &state));
-
-  res = 0;
+  } while(HandleInput(&info, &state, &res));
 
   // TODO: Make sure this happens, even on crash. atexit + signal handler?
   CleanupGame(&state);

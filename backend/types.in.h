@@ -35,19 +35,25 @@ JSON_ENUM_START(Screen)
   JSON_ENUM_ITEM(InvalidScreen, 65535)
 JSON_ENUM_END
 
+// ScreenType is a uint16_t with (0, 255]
+JSON_ENUM_START(ScreenInputType)
+  JSON_ENUM_ITEM(InvalidScreenInputType, 0)
+  JSON_ENUM_ITEM(ButtonScreenInputType,  1)
+  JSON_ENUM_ITEM(TextScreenInputType,    2)
+JSON_ENUM_END
+
 // InputOutcome is a uint16_t with (0, 65535]
 JSON_ENUM_START(InputOutcome)
   // Can be given to frontend
-  JSON_ENUM_ITEM(InvalidInputOutcome,   0) // Do not use in json or use in screens.c
-  JSON_ENUM_ITEM(GetNextOutputOutcome,  1) // Do not use in json or use in screens.c
-  JSON_ENUM_ITEM(QuitGameOutcome,       2)
+  JSON_ENUM_ITEM(InvalidInputOutcome,  0) // Do not use in json or use in screens.c
+  JSON_ENUM_ITEM(GetNextOutputOutcome, 1) // Do not use in json or use in screens.c
+  JSON_ENUM_ITEM(QuitGameOutcome,      2)
   // Do not give to frontend
-  JSON_ENUM_ITEM(GotoScreenOutcome,     3) // -> GetNextOutput, Needs newScreenID field in the same screen's json entry
-  JSON_ENUM_ITEM(GameGoNorthOutcome,    4) // -> GetNextOutput, Needs north in current room's json entry
-  JSON_ENUM_ITEM(GameGoEastOutcome,     5) // -> GetNextOutput, Needs east in current room's json entry
-  JSON_ENUM_ITEM(GameGoSouthOutcome,    6) // -> GetNextOutput, Needs south in current room's json entry
-  JSON_ENUM_ITEM(GameGoWestOutcome,     7) // -> GetNextOutput, Needs west in current room's json entry
-  JSON_ENUM_ITEM(SubmitPasswordOutcome, 8) // -> GetNextOutput, Needs newScreenID field in the same screen's json entry
+  JSON_ENUM_ITEM(GotoScreenOutcome,    3) // -> GetNextOutput, Needs newScreenID field in the same screen's json entry
+  JSON_ENUM_ITEM(GameGoNorthOutcome,   4) // -> GetNextOutput, Needs north in current room's json entry
+  JSON_ENUM_ITEM(GameGoEastOutcome,    5) // -> GetNextOutput, Needs east in current room's json entry
+  JSON_ENUM_ITEM(GameGoSouthOutcome,   6) // -> GetNextOutput, Needs south in current room's json entry
+  JSON_ENUM_ITEM(GameGoWestOutcome,    7) // -> GetNextOutput, Needs west in current room's json entry
 JSON_ENUM_END
 
 // CustomScreenCode is a uint16_t with [0, 65535)

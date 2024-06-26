@@ -1,3 +1,4 @@
+#include <arena.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -75,8 +76,8 @@ char *SaveState(struct GameState *state) {
   } else {
     return NULL;
   }
-
   password[j] = '\0';
+
   return password;
 }
 
@@ -120,7 +121,6 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
     pData[j] = hex1 | (hex2 & 0x3 /* 0b000011 */) << 6;
     pData[j + 1] = (hex2 & 0x3C /* 0b111100 */) >> 2 | hex3 << 4;
 
-    i += 3;
     j += 2;
   } else if (actualPasswordSize - i == 2) {
     uint8_t hex1 = strchr(AllowedPasswordChars, password[i]) - AllowedPasswordChars;
@@ -128,14 +128,11 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
 
     pData[j] = hex1 | hex2 << 6;
 
-    i += 2;
     ++j;
   } else {
     return false;
   }
-
   pData[j] = '\0';
-  ++j;
 
   if (PasswordVersion != data.version) {
     return false;
