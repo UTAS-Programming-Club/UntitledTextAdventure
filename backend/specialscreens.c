@@ -226,15 +226,6 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
   return true;
 }
 
-static bool CreateLoadScreen(const struct GameInfo *info, struct GameState *state) {
-  (void)info;
-  (void)state;
-
-  // TODO: Request frontend to enable inline editing
-
-  return true;
-}
-
 static bool CreateSaveScreen(const struct GameInfo *info, struct GameState *state) {
   (void)info;
 
@@ -273,7 +264,6 @@ static bool CreateSaveScreen(const struct GameInfo *info, struct GameState *stat
 bool (*CustomScreenCode[])(const struct GameInfo *, struct GameState *) = {
   CreateMainMenuScreen,
   CreateGameScreen,
-  CreateLoadScreen,
   CreateSaveScreen
 };
 size_t CustomScreenCodeCount = sizeof CustomScreenCode / sizeof *CustomScreenCode;

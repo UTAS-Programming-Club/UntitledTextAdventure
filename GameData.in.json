@@ -65,7 +65,6 @@
       // ID: 2
       "body": "Enter your password: ",
       "extraText": "",
-      "customScreenCode": LoadCustomScreenCode,
       "inputType": TextScreenInputType,
       // TODO: Make dependent on type == ButtonScreenType
       "buttons": [],
