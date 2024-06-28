@@ -42,6 +42,10 @@ bool SetupBackend(struct GameInfo *info) {
 }
 
 bool UpdateGameState(const struct GameInfo *info, struct GameState *state) {
+  if(!state->playerInfo.init){
+	state->playerInfo.health = 100;
+	state->playerInfo.stamina = 100;
+  }
   if (!info || !info->initialised || !state || state->screenID == InvalidScreen) {
     return false;
   }

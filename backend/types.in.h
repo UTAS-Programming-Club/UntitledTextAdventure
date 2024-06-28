@@ -28,6 +28,7 @@ C_EMIT(#include <stdint.h>)
 JSON_ENUM_START(Screen)
   JSON_ENUM_ITEM(MainMenuScreen,    0)
   JSON_ENUM_ITEM(GameScreen,        1)
+  JSON_ENUM_ITEM(PlayerStatsScreen,	2)
   JSON_ENUM_ITEM(InvalidScreen, 65535)
 JSON_ENUM_END
 
@@ -43,6 +44,7 @@ JSON_ENUM_START(InputOutcome)
   JSON_ENUM_ITEM(GameGoEastOutcome,    5) // -> GetNextOutput, Needs east in current room's json entry
   JSON_ENUM_ITEM(GameGoSouthOutcome,   6) // -> GetNextOutput, Needs south in current room's json entry
   JSON_ENUM_ITEM(GameGoWestOutcome,    7) // -> GetNextOutput, Needs west in current room's json entry
+  JSON_ENUM_ITEM(PlayerDartTrapOutcome,8) // -> GetNextOutput, Needs player stat info
 JSON_ENUM_END
 
 // CustomScreenCode is a uint16_t with [0, 65535)
@@ -50,12 +52,14 @@ JSON_ENUM_END
 JSON_ENUM_START(CustomScreenCode)
   JSON_ENUM_ITEM(MainMenuCustomScreenCode,    0)
   JSON_ENUM_ITEM(GameCustomScreenCode,        1)
+  JSON_ENUM_ITEM(PlayerStatsCustomScreenCode, 2)
   JSON_ENUM_ITEM(InvalidCustomScreenCode, 65535)
 JSON_ENUM_END
 
 // RoomType is a uint8_t with [0, 255)
 JSON_ENUM_START(RoomType)
   JSON_ENUM_ITEM(EmptyRoomType,     0)
+  JSON_ENUM_ITEM(DartTrapRoomType, 	1)
   JSON_ENUM_ITEM(InvalidRoomType, 255)
 JSON_ENUM_END
 

@@ -9,6 +9,20 @@
 #include <stdint.h>
 #include <types.h>
 
+// player stat struct
+struct PlayerInfo{
+	bool init;
+	uint_fast8_t equippedIDs[7]; // helmet -> weapons
+	uint_fast8_t health;
+	uint_fast8_t stamina;
+	uint_fast8_t physAtk;
+	uint_fast8_t magAtk;
+	uint_fast8_t physDef;
+	uint_fast8_t magDef;
+	
+	// add other stats such as agility that can be impacted by equipment
+};
+
 struct GameInfo {
 // public, safe to use outside of backend
   const char *name; // utf-8
@@ -42,6 +56,7 @@ struct GameState {
   char *body; // utf-8
   uint_fast8_t inputCount;
   struct GameInput *inputs;
+  struct PlayerInfo playerInfo;
   const struct RoomInfo *roomInfo;
   bool startedGame;
 // implementation, do not use outside of backend

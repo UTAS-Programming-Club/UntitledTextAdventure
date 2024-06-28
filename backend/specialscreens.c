@@ -218,6 +218,9 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
         state->inputs[i].visible =
           GetGameRoom(info, state->roomInfo->x - 1, state->roomInfo->y)->exists;
         break;
+	  case PlayerDartTrapOutcome:
+	    state->inputs[i].visible =
+		  state->roomInfo->type == DartTrapRoomType;
       default:
         break;
     }
@@ -226,9 +229,32 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
   return true;
 }
 
+static bool CreatePlayerStatsScreen(const struct GameInfo *info, struct GameState *state) {
+	
+  int allocatedCharCount = snprintf(NULL, 0, "%s\n\nHealth: %" PRIuFAST8 "\nStamina: %" PRIuFAST8,
+                                    state->body, state->playerInfo.health, state->playerInfo.stamina);
+  if (allocatedCharCount <= 0) {
+    return false;
+  }
+  ++allocatedCharCount;
+
+  char *str = arena_alloc(&state->arena, allocatedCharCount * sizeof *str);
+  if (!str) {
+    return false;
+  }
+
+  if (snprintf(str, allocatedCharCount, "%s\n\nHealth: %" PRIuFAST8 "\nStamina: %" PRIuFAST8,
+               state->body, state->playerInfo.health, state->playerInfo.stamina)
+      <= 0) {
+    return false;
+  }
+  state->body = str;
+  return true;
+}
 
 // Must match the order of the CustomScreenCode enum in types.h
 bool (*CustomScreenCode[])(const struct GameInfo *, struct GameState *) = {
   CreateMainMenuScreen,
   CreateGameScreen,
+  CreatePlayerStatsScreen,
 };
