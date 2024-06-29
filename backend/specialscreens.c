@@ -1,7 +1,9 @@
 #include <inttypes.h>
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "game.h"
 #include "parser.h"
@@ -118,6 +120,36 @@ static void WriteMap(const struct GameInfo *info, const struct RoomInfo *current
 #endif
 
 
+static char *CreateString(struct GameState *state, const char *restrict format, ...) {
+  va_list args1, args2;
+  va_start(args1, format);
+  va_copy(args2, args1);
+
+  char *res = NULL;
+
+  int allocatedCharCount = vsnprintf(NULL, 0, format, args1);
+  va_end(args1);
+  if (allocatedCharCount <= 0) {
+    goto cleanup;
+  }
+  ++allocatedCharCount;
+
+  res = arena_alloc(&state->arena, allocatedCharCount);
+  if (!res) {
+    goto cleanup;
+  }
+
+  if (vsnprintf(res, allocatedCharCount, format, args2) <= 0) {
+    free(res);
+    res = NULL;
+  }
+
+cleanup:
+  va_end(args2);
+  return res;
+}
+
+
 static void StartGame(const struct GameInfo *info, struct GameState *state) {
   state->roomInfo = GetGameRoom(info, DefaultRoomCoordX, DefaultRoomCoordY);
   // TODO: Add default values in types.in.h
@@ -145,22 +177,10 @@ static bool CreateMainMenuScreen(const struct GameInfo *info, struct GameState *
       return false;
     }
 
-    int allocatedCharCount = snprintf(NULL, 0, "%s%s%" PRIu32, screen.body, screen.extraText, *pReloadCount);
-    if (allocatedCharCount <= 0) {
+    state->body = CreateString(state, "%s%s%" PRIu32, screen.body, screen.extraText, *pReloadCount);
+    if (!state->body) {
       return false;
     }
-    ++allocatedCharCount;
-
-    char *str = arena_alloc(&state->arena, allocatedCharCount * sizeof *str);
-    if (!str) {
-      return false;
-    }
-
-    if (snprintf(str, allocatedCharCount, "%s%s%" PRIu32, screen.body, screen.extraText, *pReloadCount) <= 0) {
-      return false;
-    }
-
-    state->body = str;
   }
 
   ++(*pReloadCount);
@@ -192,27 +212,13 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
       break;
   }
 
-  int allocatedCharCount = snprintf(NULL, 0, "%s%" PRIRoomCoord "%s%" PRIRoomCoord "%s%s",
-                                    bodyBeginning, state->roomInfo->x + 1, bodyMiddle,
-                                    state->roomInfo->y + 1, bodyEnding, roomInfoStr);
-  if (allocatedCharCount <= 0) {
+
+  state->body = CreateString(state, "%s%" PRIRoomCoord "%s%" PRIRoomCoord "%s%s",
+                             bodyBeginning, state->roomInfo->x + 1, bodyMiddle,
+                             state->roomInfo->y + 1, bodyEnding, roomInfoStr);
+  if (!state->body) {
     return false;
   }
-  ++allocatedCharCount;
-
-  char *str = arena_alloc(&state->arena, allocatedCharCount * sizeof *str);
-  if (!str) {
-    return false;
-  }
-
-  if (snprintf(str, allocatedCharCount, "%s%" PRIRoomCoord "%s%" PRIRoomCoord "%s%s",
-               bodyBeginning, state->roomInfo->x + 1, bodyMiddle,
-               state->roomInfo->y + 1, bodyEnding, roomInfoStr)
-      <= 0) {
-    return false;
-  }
-
-  state->body = str;
 
   for (uint_fast8_t i = 0; i < state->inputCount; ++i) {
     switch (state->inputs[i].outcome) {
