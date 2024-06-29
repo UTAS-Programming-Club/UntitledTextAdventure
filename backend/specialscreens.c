@@ -178,9 +178,20 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
   WriteMap(info, state->roomInfo);
 #endif
 
-  int allocatedCharCount = snprintf(NULL, 0, "%s%" PRIRoomCoord "%s%" PRIRoomCoord "%s",
+  char *roomInfoStr = "";
+
+  switch (state->roomInfo->type) {
+  	case DartTrapRoomType:
+  	  roomInfoStr = "You come across a trap";
+	  // other options w/ extra info such as failing etc
+  	  break;
+  	default:
+  	  break;
+  }
+
+  int allocatedCharCount = snprintf(NULL, 0, "%s%" PRIRoomCoord "%s%" PRIRoomCoord "%s\n\n%s",
                                     bodyBeginning, state->roomInfo->x + 1, bodyMiddle,
-                                    state->roomInfo->y + 1, bodyEnding);
+                                    state->roomInfo->y + 1, bodyEnding, roomInfoStr);
   if (allocatedCharCount <= 0) {
     return false;
   }
@@ -191,9 +202,9 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
     return false;
   }
 
-  if (snprintf(str, allocatedCharCount, "%s%" PRIRoomCoord "%s%" PRIRoomCoord "%s",
+  if (snprintf(str, allocatedCharCount, "%s%" PRIRoomCoord "%s%" PRIRoomCoord "%s\n\n%s",
                bodyBeginning, state->roomInfo->x + 1, bodyMiddle,
-               state->roomInfo->y + 1, bodyEnding)
+               state->roomInfo->y + 1, bodyEnding, roomInfoStr)
       <= 0) {
     return false;
   }

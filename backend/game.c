@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <types.h>
+#include <time.h>
 
 #include "../frontends/frontend.h"
 #include "game.h"
@@ -118,6 +119,16 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
       state->roomInfo = GetGameRoom(info, state->roomInfo->x - 1, state->roomInfo->y);
       outcome = GetNextOutputOutcome;
       break;
+	case PlayerDartTrapOutcome:
+	  // chance to dodge the trap else take damage
+	  // will only trigger once, once room completion added
+	  srand((unsigned) time(NULL));
+	  if((rand() % 100) < 50)
+	  {
+		  state->playerInfo.health -= 10;
+	  }
+	  outcome = GetNextOutputOutcome;
+	  break;
     default:
       break;
   }
