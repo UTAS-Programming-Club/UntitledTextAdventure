@@ -120,6 +120,9 @@ static void WriteMap(const struct GameInfo *info, const struct RoomInfo *current
 
 static void StartGame(const struct GameInfo *info, struct GameState *state) {
   state->roomInfo = GetGameRoom(info, DefaultRoomCoordX, DefaultRoomCoordY);
+  // TODO: Add default values in types.in.h
+  state->playerInfo.health = 100;
+  state->playerInfo.stamina = 100;
   state->startedGame = true;
 }
 
@@ -179,17 +182,17 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
 #endif
 
   char *roomInfoStr = "";
-
   switch (state->roomInfo->type) {
-  	case DartTrapRoomType:
-  	  roomInfoStr = "You come across a trap";
-	  // other options w/ extra info such as failing etc
-  	  break;
-  	default:
-  	  break;
+    // TODO: Add other options w/ extra info such as failing etc
+    case DartTrapRoomType:
+      // TODO: Move to GameData.in.json
+      roomInfoStr = "\n\nYou come across a trap.";
+      break;
+    default:
+      break;
   }
 
-  int allocatedCharCount = snprintf(NULL, 0, "%s%" PRIRoomCoord "%s%" PRIRoomCoord "%s\n\n%s",
+  int allocatedCharCount = snprintf(NULL, 0, "%s%" PRIRoomCoord "%s%" PRIRoomCoord "%s%s",
                                     bodyBeginning, state->roomInfo->x + 1, bodyMiddle,
                                     state->roomInfo->y + 1, bodyEnding, roomInfoStr);
   if (allocatedCharCount <= 0) {
@@ -202,7 +205,7 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
     return false;
   }
 
-  if (snprintf(str, allocatedCharCount, "%s%" PRIRoomCoord "%s%" PRIRoomCoord "%s\n\n%s",
+  if (snprintf(str, allocatedCharCount, "%s%" PRIRoomCoord "%s%" PRIRoomCoord "%s%s",
                bodyBeginning, state->roomInfo->x + 1, bodyMiddle,
                state->roomInfo->y + 1, bodyEnding, roomInfoStr)
       <= 0) {
@@ -229,9 +232,8 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
         state->inputs[i].visible =
           GetGameRoom(info, state->roomInfo->x - 1, state->roomInfo->y)->exists;
         break;
-	  case PlayerDartTrapOutcome:
-	    state->inputs[i].visible =
-		  state->roomInfo->type == DartTrapRoomType;
+      case PlayerDartTrapOutcome:
+        state->inputs[i].visible = state->roomInfo->type == DartTrapRoomType;
       default:
         break;
     }
@@ -241,7 +243,8 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
 }
 
 static bool CreatePlayerStatsScreen(const struct GameInfo *info, struct GameState *state) {
-	
+  (void)info;
+
   int allocatedCharCount = snprintf(NULL, 0, "%s\n\nHealth: %" PRIuFAST8 "\nStamina: %" PRIuFAST8,
                                     state->body, state->playerInfo.health, state->playerInfo.stamina);
   if (allocatedCharCount <= 0) {

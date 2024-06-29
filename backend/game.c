@@ -3,8 +3,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <types.h>
 #include <time.h>
+#include <types.h>
 
 #include "../frontends/frontend.h"
 #include "game.h"
@@ -43,10 +43,6 @@ bool SetupBackend(struct GameInfo *info) {
 }
 
 bool UpdateGameState(const struct GameInfo *info, struct GameState *state) {
-  if(!state->playerInfo.init){
-	state->playerInfo.health = 100;
-	state->playerInfo.stamina = 100;
-  }
   if (!info || !info->initialised || !state || state->screenID == InvalidScreen) {
     return false;
   }
@@ -119,16 +115,18 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
       state->roomInfo = GetGameRoom(info, state->roomInfo->x - 1, state->roomInfo->y);
       outcome = GetNextOutputOutcome;
       break;
-	case PlayerDartTrapOutcome:
-	  // chance to dodge the trap else take damage
-	  // will only trigger once, once room completion added
-	  srand((unsigned) time(NULL));
-	  if((rand() % 100) < 50)
-	  {
-		  state->playerInfo.health -= 10;
-	  }
-	  outcome = GetNextOutputOutcome;
-	  break;
+    case PlayerDartTrapOutcome:
+      // chance to dodge the trap else take damage
+      // TODO: Ensure this only trigger once, track room completion?
+      // TODO: End game when health is 0
+      // TODO: Prevent health from wrapping around
+      // TODO: Move constants to types.in.h and GameData.in.json
+      srand((unsigned int)time(NULL));
+      if((rand() % 100) < 50) {
+        state->playerInfo.health -= 10;
+      }
+      outcome = GetNextOutputOutcome;
+      break;
     default:
       break;
   }
