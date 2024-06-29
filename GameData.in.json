@@ -43,12 +43,34 @@
           "outcome": GameGoWestOutcome
         },
         {
+          "title": "Dodge Trap",
+          "outcome": PlayerDartTrapOutcome
+        },
+        {
+          "title": "Check Player Stats",
+          "outcome": GotoScreenOutcome,
+          "newScreenID": PlayerStatsScreen
+        },
+        {
           "title": "Return to Main Menu",
           "outcome": GotoScreenOutcome,
           "newScreenID": MainMenuScreen
         }
       ]
-    }
+    },
+    // ID: 2
+    {
+      "body": "Player Stats",
+      "extraText": "",
+      "customScreenCode": PlayerStatsCustomScreenCode,
+      "buttons": [
+        {
+          "title": "Return to Game",
+          "outcome": GotoScreenOutcome,
+          "newScreenID": GameScreen
+        }
+      ]
+	}
   ],
   "state": [
     {
@@ -78,6 +100,10 @@
       {
         "type": EmptyRoomType,
         "position": [1, 1]
+      },
+      {
+        "type": DartTrapRoomType,
+        "position": [1, 2]
       }
     ]
   }

@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <types.h>
 
 #include "../frontends/frontend.h"
@@ -112,6 +113,18 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
       break;
     case GameGoWestOutcome:
       state->roomInfo = GetGameRoom(info, state->roomInfo->x - 1, state->roomInfo->y);
+      outcome = GetNextOutputOutcome;
+      break;
+    case PlayerDartTrapOutcome:
+      // chance to dodge the trap else take damage
+      // TODO: Ensure this only trigger once, track room completion?
+      // TODO: End game when health is 0
+      // TODO: Prevent health from wrapping around
+      // TODO: Move constants to types.in.h and GameData.in.json
+      srand((unsigned int)time(NULL));
+      if((rand() % 100) < 50) {
+        state->playerInfo.health -= 10;
+      }
       outcome = GetNextOutputOutcome;
       break;
     default:
