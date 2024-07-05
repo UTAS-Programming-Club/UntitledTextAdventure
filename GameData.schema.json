@@ -4,6 +4,7 @@
   "additionalProperties": false,
   "required": [
     "name",
+    "defaultStats",
     "screens",
     "state",
     "rooms"
@@ -11,6 +12,50 @@
   "properties": {
     "name": {
       "type": "string"
+    },
+    "defaultStats": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "health",
+        "stamina",
+        "physAtk",
+        "magAtk",
+        "physDef",
+        "magDef"
+      ],
+      "properties": {
+        "health": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "stamina": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "physAtk": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "magAtk": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "physDef": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "magDef": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        }
+      }
     },
     "screens": {
       "type": "array",

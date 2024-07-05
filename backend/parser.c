@@ -131,6 +131,24 @@ char *LoadGameName(void) {
   return name;
 }
 
+bool LoadDefaultPlayerStats(struct PlayerInfo *playerStats) {
+  if (!GameData || !playerStats) {
+    return false;
+  }
+
+  cJSON *jsonDefaultStats;
+  JSON_GETJSONOBJECTERROR(jsonDefaultStats, GameData, "defaultStats", false);
+
+  JSON_GETNUMBERVALUEERROR(playerStats->health, jsonDefaultStats, "health", false);
+  JSON_GETNUMBERVALUEERROR(playerStats->stamina, jsonDefaultStats, "stamina", false);
+  JSON_GETNUMBERVALUEERROR(playerStats->physAtk, jsonDefaultStats, "physAtk", false);
+  JSON_GETNUMBERVALUEERROR(playerStats->magAtk, jsonDefaultStats, "magAtk", false);
+  JSON_GETNUMBERVALUEERROR(playerStats->physDef, jsonDefaultStats, "physDef", false);
+  JSON_GETNUMBERVALUEERROR(playerStats->magDef, jsonDefaultStats, "magDef", false);
+
+  return true;
+}
+
 bool LoadGameRooms(uint_fast8_t *floorSize, struct RoomInfo **rooms) {
   if (!GameData || !floorSize || !rooms) {
     return false;

@@ -24,42 +24,46 @@ bool SetupBackend(struct GameInfo *info) {
     return true;
   }
 
-  char *name = LoadGameName();
-  if (!name) {
+  info->name = LoadGameName();
+  if (!info->name) {
     return false;
   }
 
-  uint_fast8_t floorSize = 0;
-  struct RoomInfo *rooms = NULL;
-  if (!LoadGameRooms(&floorSize, &rooms)) {
+  if (!LoadDefaultPlayerStats(&info->defaultPlayerStats)) {
+    PrintError("Failed to load default player stats from GameData.json");
+    return false;
+  }
+
+  if (!LoadGameRooms(&info->floorSize, &info->rooms)) {
     PrintError("Failed to load rooms from GameData.json");
     return false;
   }
 
-  uint_fast8_t equipmentDBLength = 1;
+  // TODO: Move equipment stuff to json
+  info->equipmentDBLength = 1;
 
   char *equipmentName = "Leather";
   size_t equipmentNameLen = strlen(equipmentName) + 1;
 
-  // TODO: Move to json
-  struct EquipmentInfo *equipmentDB = malloc(equipmentDBLength * sizeof *equipmentDB + equipmentNameLen);
-  equipmentDB[0].id = 0;
-  equipmentDB[0].physAtkMod = 5;
-  equipmentDB[0].physDefMod = 4;
-  equipmentDB[0].magAtkMod = 90;
-  equipmentDB[0].magDefMod = 10;
+  info->equipmentDB = malloc(info->equipmentDBLength * sizeof *info->equipmentDB + equipmentNameLen);
+  if (!info->equipmentDB) {
+    PrintError("Failed to allocate room for equipment array.");
+    return false;
+  }
+  info->equipmentDB[0].id = 0;
+  info->equipmentDB[0].physAtkMod = 5;
+  info->equipmentDB[0].physDefMod = 4;
+  info->equipmentDB[0].magAtkMod = 90;
+  info->equipmentDB[0].magDefMod = 10;
 
-  memcpy(equipmentDB + equipmentDBLength, equipmentName, equipmentNameLen);
-  equipmentDB[0].name = (char *)(equipmentDB + equipmentDBLength);
+  info->equipmentDB[0].name = (char *)(info->equipmentDB + info->equipmentDBLength);
+  memcpy(info->equipmentDB[0].name, equipmentName, equipmentNameLen);
 
-  struct GameInfo tempInfo = {name, true, floorSize, rooms, equipmentDBLength, equipmentDB};
-  memcpy(info, &tempInfo, sizeof tempInfo);
-
+  info->initialised = true;
   return true;
 }
 
-void EquipItem(const struct GameInfo *info, struct GameState *state)
-{
+void EquipItem(const struct GameInfo *info, struct GameState *state) {
   // equipped ID index differs by item type
   state->playerInfo.equippedIDs[0] = info->equipmentDB->id;
   state->playerInfo.magDef = info->equipmentDB[0].magDefMod;
@@ -182,7 +186,9 @@ void CleanupBackend(struct GameInfo *info) {
   UnloadGameData();
   if (info && info->initialised) {
     info->initialised = false;
-    free((void *)info->rooms);
+    free(info->rooms);
+    info->rooms = NULL;
     free(info->equipmentDB);
+    info->equipmentDB = NULL;
   }
 }

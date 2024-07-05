@@ -9,27 +9,29 @@
 #include <stdint.h>
 #include <types.h>
 
+// Do not use outside of backend
 // items equipable by player
 struct EquipmentInfo {
-// implementation, do not use outside of backend
   uint_fast8_t id;
   char *name;
   // TODO: Add enum for type (helmet, boots, etc)
-  
+
   // stats
   uint_fast8_t physAtkMod;
   uint_fast8_t physDefMod;
   uint_fast8_t magAtkMod;
   uint_fast8_t magDefMod;
-  
+
   // TODO: Add other stats such as dex, int, etc
 };
 
+#define EquippedIDLen 7
+
+// Do not use outside of backend
 struct PlayerInfo {
-// implementation, do not use outside of backend
   // TODO: Add custom types in types.in.h
   // helmet, shirts, gloves, pants, boots, 2x weapons
-  uint_fast8_t equippedIDs[7];
+  uint_fast8_t equippedIDs[EquippedIDLen];
   uint_fast8_t health;
   uint_fast8_t stamina;
   uint_fast8_t physAtk;
@@ -40,15 +42,19 @@ struct PlayerInfo {
   // TODO: Add other stats such as agility that can be impacted by equipment
 };
 
+// Always make this const when possible to avoid accidental modification
 struct GameInfo {
 // public, safe to use outside of backend
-  const char *name; // utf-8
+  char *name; // utf-8
 // implementation, do not use outside of backend
   bool initialised;
-  const uint_fast8_t floorSize;
-  const struct RoomInfo *rooms;
 
-  // TODO: Make const
+  // Only health, stamina, physAtk, magAtk, physDef, and magDef as available
+  struct PlayerInfo defaultPlayerStats;
+
+  uint_fast8_t floorSize;
+  struct RoomInfo *rooms;
+
   uint_fast8_t equipmentDBLength;
   struct EquipmentInfo *equipmentDB;
 };
@@ -69,9 +75,9 @@ struct RoomInfo {
   enum RoomType type;
   RoomCoord x;
   RoomCoord y;
-  
 };
 
+// Always make this const when possible to avoid accidental modification
 struct GameState {
 // public, safe to use outside of backend
   enum Screen screenID;
@@ -88,6 +94,7 @@ struct GameState {
 // Currently body and inputs[i].title MUST be allocated, this must be fixed if the encoding changes to utf-8 because then most button titles will also be direct copies of cJSON returned data
 };
 
+// TODO: Move to another file that just handles equipment
 // find item matching ID and equip it to the player slot swapping out existing equipment
 void EquipItem(const struct GameInfo *, struct GameState *);
 

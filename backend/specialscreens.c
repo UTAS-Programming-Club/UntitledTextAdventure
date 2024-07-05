@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "game.h"
 #include "parser.h"
@@ -151,14 +152,13 @@ cleanup:
 
 
 static void StartGame(const struct GameInfo *info, struct GameState *state) {
-  state->roomInfo = GetGameRoom(info, DefaultRoomCoordX, DefaultRoomCoordY);
-  // TODO: Add default values in types.in.h
-  state->playerInfo.health = 100;
-  state->playerInfo.stamina = 100;
-  state->playerInfo.physDef = 0;
-  state->playerInfo.magDef = 0;
-  state->playerInfo.equippedIDs[0] = 0;
+  memcpy(&state->playerInfo, &info->defaultPlayerStats, sizeof info->defaultPlayerStats);
+
+  // TODO: Add equippedIDs to types.in.h
+  memset(state->playerInfo.equippedIDs, 0, EquippedIDLen);
   EquipItem(info, state);
+
+  state->roomInfo = GetGameRoom(info, DefaultRoomCoordX, DefaultRoomCoordY);
   state->startedGame = true;
 }
 
