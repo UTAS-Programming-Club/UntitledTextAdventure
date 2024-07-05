@@ -36,13 +36,34 @@ bool SetupBackend(struct GameInfo *info) {
     return false;
   }
 
+  uint_fast8_t equipmentDBLength = 2;
+  struct EquipmentInfo equipmentDB[] = {{0, "Leather", 5, 4, 90, 10}};
+
   struct GameInfo tempInfo = {name, true, floorSize, rooms};
   memcpy(info, &tempInfo, sizeof tempInfo);
 
   return true;
 }
 
+void EquipItem(const struct GameInfo *info, struct GameState *state)
+{
+  // equipped ID index differs by item type
+  state->playerInfo.equippedIDs[0] = info->equipmentDB->id;
+  state->playerInfo.magDef = info->equipmentDB->magDefMod;
+}
+
 bool UpdateGameState(const struct GameInfo *info, struct GameState *state) {
+  if(!state->playerInfo.init){
+	state->playerInfo.health = 100;
+	state->playerInfo.stamina = 100;
+	state->playerInfo.physDef = 0;
+	state->playerInfo.magDef = 0;
+	state->playerInfo.equippedIDs[0] = 0;
+	
+	EquipItem(info, state);
+	state->playerInfo.init = true;
+  }
+  
   if (!info || !info->initialised || !state || state->screenID == InvalidScreen) {
     return false;
   }

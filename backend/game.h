@@ -9,10 +9,26 @@
 #include <stdint.h>
 #include <types.h>
 
+// items equipable by player
+struct EquipmentInfo{
+  uint_fast8_t id;
+  char *name;
+  // enum for type (helmet boots etc)
+  
+  // stats
+  uint_fast8_t physAtkMod;
+  uint_fast8_t physDefMod;
+  uint_fast8_t magAtkMod;
+  uint_fast8_t magDefMod;
+  
+  // other stats such as dex and int etc
+};
+
 struct PlayerInfo {
 // implementation, do not use outside of backend
   // TODO: Add custom types in types.in.h
   // helmet, shirts, gloves, pants, boots, 2x weapons
+  bool init;
   uint_fast8_t equippedIDs[7];
   uint_fast8_t health;
   uint_fast8_t stamina;
@@ -31,6 +47,9 @@ struct GameInfo {
   bool initialised;
   const uint_fast8_t floorSize;
   const struct RoomInfo *rooms;
+  
+  const uint_fast8_t equipmentDBLength;
+  const struct EquipmentInfo equipmentDB[];
 };
 
 struct GameInput {
@@ -49,6 +68,7 @@ struct RoomInfo {
   enum RoomType type;
   RoomCoord x;
   RoomCoord y;
+  
 };
 
 struct GameState {
@@ -66,6 +86,9 @@ struct GameState {
   enum CustomScreenCode customScreenCodeID;
 // Currently body and inputs[i].title MUST be allocated, this must be fixed if the encoding changes to utf-8 because then most button titles will also be direct copies of cJSON returned data
 };
+
+// find item matching ID and equip it to the player slot swapping out existing equipment
+void EquipItem(const struct GameInfo *, struct GameState *);
 
 // GameInfo should be zero initialised before first call
 bool SetupBackend(struct GameInfo *);
