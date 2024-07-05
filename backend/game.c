@@ -36,10 +36,23 @@ bool SetupBackend(struct GameInfo *info) {
     return false;
   }
 
-  uint_fast8_t equipmentDBLength = 2;
-  struct EquipmentInfo equipmentDB[] = {{0, "Leather", 5, 4, 90, 10}};
+  uint_fast8_t equipmentDBLength = 1;
 
-  struct GameInfo tempInfo = {name, true, floorSize, rooms};
+  char *equipmentName = "Leather";
+  size_t equipmentNameLen = strlen(equipmentName) + 1;
+
+  // TODO: Move to json
+  struct EquipmentInfo *equipmentDB = malloc(equipmentDBLength * sizeof *equipmentDB + equipmentNameLen);
+  equipmentDB[0].id = 0;
+  equipmentDB[0].physAtkMod = 5;
+  equipmentDB[0].physDefMod = 4;
+  equipmentDB[0].magAtkMod = 90;
+  equipmentDB[0].magDefMod = 10;
+
+  memcpy(equipmentDB + equipmentDBLength, equipmentName, equipmentNameLen);
+  equipmentDB[0].name = (char *)(equipmentDB + equipmentDBLength);
+
+  struct GameInfo tempInfo = {name, true, floorSize, rooms, equipmentDBLength, equipmentDB};
   memcpy(info, &tempInfo, sizeof tempInfo);
 
   return true;
@@ -53,17 +66,6 @@ void EquipItem(const struct GameInfo *info, struct GameState *state)
 }
 
 bool UpdateGameState(const struct GameInfo *info, struct GameState *state) {
-  if(!state->playerInfo.init){
-	state->playerInfo.health = 100;
-	state->playerInfo.stamina = 100;
-	state->playerInfo.physDef = 0;
-	state->playerInfo.magDef = 0;
-	state->playerInfo.equippedIDs[0] = 0;
-	
-	EquipItem(info, state);
-	state->playerInfo.init = true;
-  }
-  
   if (!info || !info->initialised || !state || state->screenID == InvalidScreen) {
     return false;
   }
@@ -181,5 +183,6 @@ void CleanupBackend(struct GameInfo *info) {
   if (info && info->initialised) {
     info->initialised = false;
     free((void *)info->rooms);
+    free(info->equipmentDB);
   }
 }

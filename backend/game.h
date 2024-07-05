@@ -10,10 +10,11 @@
 #include <types.h>
 
 // items equipable by player
-struct EquipmentInfo{
+struct EquipmentInfo {
+// implementation, do not use outside of backend
   uint_fast8_t id;
   char *name;
-  // enum for type (helmet boots etc)
+  // TODO: Add enum for type (helmet, boots, etc)
   
   // stats
   uint_fast8_t physAtkMod;
@@ -21,14 +22,13 @@ struct EquipmentInfo{
   uint_fast8_t magAtkMod;
   uint_fast8_t magDefMod;
   
-  // other stats such as dex and int etc
+  // TODO: Add other stats such as dex, int, etc
 };
 
 struct PlayerInfo {
 // implementation, do not use outside of backend
   // TODO: Add custom types in types.in.h
   // helmet, shirts, gloves, pants, boots, 2x weapons
-  bool init;
   uint_fast8_t equippedIDs[7];
   uint_fast8_t health;
   uint_fast8_t stamina;
@@ -47,9 +47,10 @@ struct GameInfo {
   bool initialised;
   const uint_fast8_t floorSize;
   const struct RoomInfo *rooms;
-  
+
+  // TODO: Make const
   uint_fast8_t equipmentDBLength;
-  struct EquipmentInfo equipmentDB[];
+  struct EquipmentInfo *equipmentDB;
 };
 
 struct GameInput {

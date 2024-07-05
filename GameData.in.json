@@ -58,8 +58,8 @@
         }
       ]
     },
-    // ID: 2
     {
+      // ID: 2
       "body": "Player Stats",
       "extraText": "",
       "customScreenCode": PlayerStatsCustomScreenCode,

@@ -155,6 +155,10 @@ static void StartGame(const struct GameInfo *info, struct GameState *state) {
   // TODO: Add default values in types.in.h
   state->playerInfo.health = 100;
   state->playerInfo.stamina = 100;
+  state->playerInfo.physDef = 0;
+  state->playerInfo.magDef = 0;
+  state->playerInfo.equippedIDs[0] = 0;
+  EquipItem(info, state);
   state->startedGame = true;
 }
 
