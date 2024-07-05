@@ -15,8 +15,8 @@
 static const struct RoomInfo DefaultRoom = {0};
 
 bool SetupBackend(struct GameInfo *info) {
-  if (!LoadGameData("GameData.json")) {
-    PrintError("Failed to load GameData.json");
+  if (!info) {
+    PrintError("Required game info struct is inaccessable");
     return false;
   }
 
@@ -24,49 +24,81 @@ bool SetupBackend(struct GameInfo *info) {
     return true;
   }
 
+  if (info->rooms || info->equipment) {
+    PrintError("Parts of the game info struct are already initialised");
+    return false;
+  }
+
+  char dataFile[] = "GameData.json";
+
+  if (!LoadGameData(dataFile)) {
+    PrintError("Failed to load %s", dataFile);
+    return false;
+  }
+
   info->name = LoadGameName();
   if (!info->name) {
+    PrintError("Failed to load game name from %s", dataFile);
     return false;
   }
 
   if (!LoadDefaultPlayerStats(&info->defaultPlayerStats)) {
-    PrintError("Failed to load default player stats from GameData.json");
+    PrintError("Failed to load default player stats from %s", dataFile);
     return false;
   }
 
   if (!LoadGameRooms(&info->floorSize, &info->rooms)) {
-    PrintError("Failed to load rooms from GameData.json");
+    free(info->rooms);
+    info->rooms = NULL;
+    PrintError("Failed to load rooms from %s", dataFile);
     return false;
   }
 
-  // TODO: Move equipment stuff to json
-  info->equipmentDBLength = 1;
-
-  char *equipmentName = "Leather";
-  size_t equipmentNameLen = strlen(equipmentName) + 1;
-
-  info->equipmentDB = malloc(info->equipmentDBLength * sizeof *info->equipmentDB + equipmentNameLen);
-  if (!info->equipmentDB) {
-    PrintError("Failed to allocate room for equipment array.");
+  if (!LoadGameEquipment(&info->equipmentCount, &info->equipment)) {
+    free(info->rooms);
+    info->rooms = NULL;
+    free(info->equipment);
+    info->equipment = NULL;
+    PrintError("Failed to load equipment from %s", dataFile);
     return false;
   }
-  info->equipmentDB[0].id = 0;
-  info->equipmentDB[0].physAtkMod = 5;
-  info->equipmentDB[0].physDefMod = 4;
-  info->equipmentDB[0].magAtkMod = 90;
-  info->equipmentDB[0].magDefMod = 10;
-
-  info->equipmentDB[0].name = (char *)(info->equipmentDB + info->equipmentDBLength);
-  memcpy(info->equipmentDB[0].name, equipmentName, equipmentNameLen);
 
   info->initialised = true;
   return true;
 }
 
+static bool UpdatePlayerStat(PlayerStat *base, PlayerStatDiff diff) {
+  if (!base || MaximumPlayerStat < *base
+      || MinimumPlayerStatDiff > diff || MaximumPlayerStatDiff < diff) {
+    return false;
+  }
+
+  if (0 > diff && MinimumPlayerStat > *base + diff) {
+    *base = MinimumPlayerStat;
+  } else if (0 < diff && MaximumPlayerStat < *base + diff) {
+    *base = MaximumPlayerStat;
+  } else {
+    *base += diff;
+  }
+  return true;
+}
+
+// TODO: Replace test with real impl with pickups
 void EquipItem(const struct GameInfo *info, struct GameState *state) {
   // equipped ID index differs by item type
-  state->playerInfo.equippedIDs[0] = info->equipmentDB->id;
-  state->playerInfo.magDef = info->equipmentDB[0].magDefMod;
+  state->playerInfo.equippedItems[0] = info->equipment + 0;
+
+  for (uint_fast8_t i = 0; i < EquippedItemsSlots; ++i) {
+    const struct EquipmentInfo *item = state->playerInfo.equippedItems[i];
+    if (!item) {
+      continue;
+    }
+
+    UpdatePlayerStat(&state->playerInfo.physAtk, item->physAtkMod);
+    UpdatePlayerStat(&state->playerInfo.magAtk,  item->magAtkMod);
+    UpdatePlayerStat(&state->playerInfo.physDef, item->physDefMod);
+    UpdatePlayerStat(&state->playerInfo.magDef,  item->magDefMod);
+  }
 }
 
 bool UpdateGameState(const struct GameInfo *info, struct GameState *state) {
@@ -188,7 +220,7 @@ void CleanupBackend(struct GameInfo *info) {
     info->initialised = false;
     free(info->rooms);
     info->rooms = NULL;
-    free(info->equipmentDB);
-    info->equipmentDB = NULL;
+    free(info->equipment);
+    info->equipment = NULL;
   }
 }

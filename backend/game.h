@@ -18,21 +18,21 @@ struct EquipmentInfo {
   // TODO: Add enum for type (helmet, boots, etc)
 
   // stats
-  PlayerStat physAtkMod;
-  PlayerStat physDefMod;
-  PlayerStat magAtkMod;
-  PlayerStat magDefMod;
+  PlayerStatDiff physAtkMod;
+  PlayerStatDiff physDefMod;
+  PlayerStatDiff magAtkMod;
+  PlayerStatDiff magDefMod;
 
   // TODO: Add other stats such as dex, int, etc
 };
 
-#define EquippedIDLen 7
+#define EquippedItemsSlots 7
 
 // Do not use outside of backend
 struct PlayerInfo {
   // TODO: Add custom types in types.in.h
   // helmet, shirts, gloves, pants, boots, 2x weapons
-  uint_fast8_t equippedIDs[EquippedIDLen];
+  const struct EquipmentInfo *equippedItems[EquippedItemsSlots];
   PlayerStat health;
   PlayerStat stamina;
   PlayerStat physAtk;
@@ -56,8 +56,8 @@ struct GameInfo {
   uint_fast8_t floorSize;
   struct RoomInfo *rooms;
 
-  uint_fast8_t equipmentDBLength;
-  struct EquipmentInfo *equipmentDB;
+  uint_fast8_t equipmentCount;
+  struct EquipmentInfo *equipment;
 };
 
 // Never modify after creation

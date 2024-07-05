@@ -78,7 +78,8 @@ static inline double cJSON_GetOptNumberValue(const cJSON *const object, const ch
 }
 
 
-static bool GetGameRoomData(cJSON *jsonRoom, struct RoomInfo *room);
+static bool GetGameRoomData(cJSON *, struct RoomInfo *);
+static bool GetGameEquipmentItemData(cJSON *, struct EquipmentInfo *);
 
 
 bool LoadGameData(char *path) {
@@ -181,7 +182,42 @@ bool LoadGameRooms(uint_fast8_t *floorSize, struct RoomInfo **rooms) {
     struct RoomInfo *room = &(*rooms)[idx];
     room->x = x;
     room->y = y;
-    GetGameRoomData(jsonRoom, room);
+    if (!GetGameRoomData(jsonRoom, room)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool LoadGameEquipment(uint_fast8_t *equipmentCount, struct EquipmentInfo **equipment) {
+  if (!GameData || !equipmentCount || !equipment) {
+    return false;
+  }
+
+  cJSON *jsonEquipment;
+  JSON_GETJSONARRAYERROR(jsonEquipment, GameData, "equipment", false);
+
+  *equipmentCount = cJSON_GetArraySize(jsonEquipment);
+
+  *equipment = calloc(*equipmentCount, sizeof **equipment);
+  if (!*equipment) {
+    return false;
+  }
+
+  struct EquipmentInfo *currentItem = *equipment;
+  uint_fast8_t i = 0;
+
+  // cJSON_ArrayForEach uses int for idx, likely fine as INT_MAX >= 2^15 - 1
+  cJSON *jsonItem;
+  cJSON_ArrayForEach(jsonItem, jsonEquipment) {
+    currentItem->id = i;
+    if (!GetGameEquipmentItemData(jsonItem, currentItem)) {
+      return false;
+    }
+
+    ++i;
+    ++currentItem;
   }
 
   return true;
@@ -409,7 +445,7 @@ bool GetGameScreenButton(enum Screen screenID, uint_fast8_t buttonID, struct Gam
 
 
 static bool GetGameRoomData(cJSON *jsonRoom, struct RoomInfo *room) {
-  if (!room) {
+  if (!jsonRoom || !room) {
     return false;
   }
 
@@ -425,5 +461,20 @@ static bool GetGameRoomData(cJSON *jsonRoom, struct RoomInfo *room) {
   // }
 
   room->exists = true;
+  return true;
+}
+
+static bool GetGameEquipmentItemData(cJSON *jsonItem, struct EquipmentInfo *item) {
+  if (!jsonItem || !item) {
+    return false;
+  }
+
+  JSON_GETSTRINGVALUEERROR(item->name, jsonItem, "name", false);
+
+  JSON_GETNUMBERVALUEERROR(item->physAtkMod, jsonItem, "physAtkMod", false);
+  JSON_GETNUMBERVALUEERROR(item->physDefMod, jsonItem, "physDefMod", false);
+  JSON_GETNUMBERVALUEERROR(item->magAtkMod, jsonItem, "magAtkMod", false);
+  JSON_GETNUMBERVALUEERROR(item->magDefMod, jsonItem, "magDefMod", false);
+
   return true;
 }

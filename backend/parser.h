@@ -24,7 +24,9 @@ void UnloadGameData(void);
 
 char *LoadGameName(void);
 bool LoadDefaultPlayerStats(struct PlayerInfo *);
-bool LoadGameRooms(uint_fast8_t *floorSize, struct RoomInfo **);
+// loaded struct pointers must be freed, even if these functions returns false
+bool LoadGameRooms(uint_fast8_t *, struct RoomInfo **);
+bool LoadGameEquipment(uint_fast8_t *, struct EquipmentInfo **);
 
 unsigned char *InitGameState(void);
 size_t GetGameStateOffset(enum Screen, uint_fast8_t);

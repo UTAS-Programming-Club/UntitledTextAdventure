@@ -154,8 +154,9 @@ cleanup:
 static void StartGame(const struct GameInfo *info, struct GameState *state) {
   memcpy(&state->playerInfo, &info->defaultPlayerStats, sizeof info->defaultPlayerStats);
 
-  // TODO: Add equippedIDs to types.in.h
-  memset(state->playerInfo.equippedIDs, 0, EquippedIDLen);
+  for (uint_fast8_t i = 0; i < EquippedItemsSlots; ++i) {
+    state->playerInfo.equippedItems[i] = NULL;
+  }
   EquipItem(info, state);
 
   state->roomInfo = GetGameRoom(info, DefaultRoomCoordX, DefaultRoomCoordY);

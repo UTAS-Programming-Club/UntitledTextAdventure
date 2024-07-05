@@ -90,6 +90,8 @@
       "default": 0
     }
   ],
+  // TODO: Support multiple floors
+  // TODO: Support removing doors between adjacent rooms
   "rooms": {
     "floorSize": 5,
     "roomsArray": [
@@ -114,5 +116,15 @@
         "position": [1, 2]
       }
     ]
-  }
+  },
+  // TODO: Make stats optional
+  "equipment": [
+    {
+      "name": "Leather",
+      "physAtkMod": 5,
+      "magAtkMod": 4,
+      "physDefMod": 90,
+      "magDefMod": 10
+    }
+  ]
 }

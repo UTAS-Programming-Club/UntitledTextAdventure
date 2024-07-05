@@ -23,6 +23,9 @@ EMIT(#define PCGAME_TYPES_H)
 C_EMIT(#include <inttypes.h>)
 C_EMIT(#include <stdint.h>)
 
+// TODO: Restrict operators on IDs to prevent modifying them via anything other than assignment
+// TODO: Restrict operators on stats to enforce min and max
+
 // ScreenID is a uint16_t with [0, 65535)
 // Must match indices in screen array in GameData.in.json
 // Screen 0 is the default screen and is shown on startup
@@ -75,12 +78,16 @@ VALUE_EMIT(RoomCoord, DefaultRoomCoordY,  0)
 VALUE_EMIT(RoomCoord, InvalidRoomCoord, 255)
 C_EMIT(typedef uint_fast8_t RoomCoord;)
 
-// TODO: Add enum with invalid value?
-// PlayerStat is a uint8_t with [0, 100)
+// PlayerStat is a uint8_t with [0, 100]
 C_EMIT(#define PRIPlayerStat PRIuFAST8)
 VALUE_EMIT(PlayerStat, MinimumPlayerStat,   0)
 VALUE_EMIT(PlayerStat, MaximumPlayerStat, 100)
 C_EMIT(typedef uint_fast8_t PlayerStat;)
+
+// PlayerStatDiff is a int8_t with [-100, 100]
+VALUE_EMIT(PlayerStatDiff, MinimumPlayerStatDiff, -100)
+VALUE_EMIT(PlayerStatDiff, MaximumPlayerStatDiff,  100)
+C_EMIT(typedef int_fast8_t PlayerStatDiff;)
 
 // TODO: Add enum for state vars
 
