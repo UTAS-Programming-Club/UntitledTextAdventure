@@ -48,8 +48,8 @@ struct GameInfo {
   const uint_fast8_t floorSize;
   const struct RoomInfo *rooms;
   
-  const uint_fast8_t equipmentDBLength;
-  const struct EquipmentInfo equipmentDB[];
+  uint_fast8_t equipmentDBLength;
+  struct EquipmentInfo equipmentDB[];
 };
 
 struct GameInput {

@@ -49,7 +49,7 @@ void EquipItem(const struct GameInfo *info, struct GameState *state)
 {
   // equipped ID index differs by item type
   state->playerInfo.equippedIDs[0] = info->equipmentDB->id;
-  state->playerInfo.magDef = info->equipmentDB->magDefMod;
+  state->playerInfo.magDef = info->equipmentDB[0].magDefMod;
 }
 
 bool UpdateGameState(const struct GameInfo *info, struct GameState *state) {

@@ -251,8 +251,8 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
 static bool CreatePlayerStatsScreen(const struct GameInfo *info, struct GameState *state) {
   (void)info;
 
-  int allocatedCharCount = snprintf(NULL, 0, "%s\n\nHealth: %" PRIuFAST8 "\nStamina: %" PRIuFAST8,
-                                    state->body, state->playerInfo.health, state->playerInfo.stamina);
+  int allocatedCharCount = snprintf(NULL, 0, "%s\n\nHealth: %" PRIuFAST8 "\nStamina: %" PRIuFAST8 "\nMagDef: %" PRIuFAST8,
+                                    state->body, state->playerInfo.health, state->playerInfo.stamina, state->playerInfo.magDef);
   if (allocatedCharCount <= 0) {
     return false;
   }
@@ -263,8 +263,8 @@ static bool CreatePlayerStatsScreen(const struct GameInfo *info, struct GameStat
     return false;
   }
 
-  if (snprintf(str, allocatedCharCount, "%s\n\nHealth: %" PRIuFAST8 "\nStamina: %" PRIuFAST8,
-               state->body, state->playerInfo.health, state->playerInfo.stamina)
+  if (snprintf(str, allocatedCharCount, "%s\n\nHealth: %" PRIuFAST8 "\nStamina: %" PRIuFAST8 "\nMagDef: %" PRIuFAST8,
+               state->body, state->playerInfo.health, state->playerInfo.stamina, state->playerInfo.magDef)
       <= 0) {
     return false;
   }
