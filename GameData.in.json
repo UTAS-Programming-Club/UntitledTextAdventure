@@ -3,12 +3,12 @@
 {
   "name": "Untitled Text Adventure",
   "defaultStats": {
-    "health": 100,
-    "stamina": 100,
-    "physAtk": 0,
-    "magAtk": 0,
-    "physDef": 0,
-    "magDef": 0
+    "health": MaximumPlayerStat,
+    "stamina": MaximumPlayerStat,
+    "physAtk": MinimumPlayerStat,
+    "magAtk": MinimumPlayerStat,
+    "physDef": MinimumPlayerStat,
+    "magDef": MinimumPlayerStat
   },
   "screens": [
     {

@@ -11,16 +11,17 @@
 
 // Do not use outside of backend
 // items equipable by player
+// Never modify after creation
 struct EquipmentInfo {
   uint_fast8_t id;
   char *name;
   // TODO: Add enum for type (helmet, boots, etc)
 
   // stats
-  uint_fast8_t physAtkMod;
-  uint_fast8_t physDefMod;
-  uint_fast8_t magAtkMod;
-  uint_fast8_t magDefMod;
+  PlayerStat physAtkMod;
+  PlayerStat physDefMod;
+  PlayerStat magAtkMod;
+  PlayerStat magDefMod;
 
   // TODO: Add other stats such as dex, int, etc
 };
@@ -32,12 +33,12 @@ struct PlayerInfo {
   // TODO: Add custom types in types.in.h
   // helmet, shirts, gloves, pants, boots, 2x weapons
   uint_fast8_t equippedIDs[EquippedIDLen];
-  uint_fast8_t health;
-  uint_fast8_t stamina;
-  uint_fast8_t physAtk;
-  uint_fast8_t magAtk;
-  uint_fast8_t physDef;
-  uint_fast8_t magDef;
+  PlayerStat health;
+  PlayerStat stamina;
+  PlayerStat physAtk;
+  PlayerStat magAtk;
+  PlayerStat physDef;
+  PlayerStat magDef;
 
   // TODO: Add other stats such as agility that can be impacted by equipment
 };
@@ -59,6 +60,7 @@ struct GameInfo {
   struct EquipmentInfo *equipmentDB;
 };
 
+// Never modify after creation
 struct GameInput {
 // public, safe to use outside of backend
   char *title; // utf-8
@@ -68,6 +70,7 @@ struct GameInput {
 };
 
 // Do not use outside of backend
+// Never modify after creation
 struct RoomInfo {
   // Always set
   bool exists;
@@ -83,6 +86,7 @@ struct GameState {
   enum Screen screenID;
   char *body; // utf-8
   uint_fast8_t inputCount;
+  // TODO: Make const
   struct GameInput *inputs;
   struct PlayerInfo playerInfo;
   const struct RoomInfo *roomInfo;

@@ -1,18 +1,19 @@
+#define hash #
 #define EMIT(text) text
 
 #ifdef JSON
-#define hash #
-
 #define JSON_ENUM_START(name)
 #define JSON_ENUM_ITEM(name, value) hash define name value
 #define JSON_ENUM_END
 
+#define VALUE_EMIT(type, name, value) hash define name value
 #define C_EMIT(text)
 #else
 #define JSON_ENUM_START(name) enum name {
 #define JSON_ENUM_ITEM(name, value) name = value,
 #define JSON_ENUM_END };
 
+#define VALUE_EMIT(type, name, value) hash define name (type)value
 #define C_EMIT(text) text
 #endif
 
@@ -59,7 +60,7 @@ JSON_ENUM_END
 // RoomType is a uint8_t with [0, 255)
 JSON_ENUM_START(RoomType)
   JSON_ENUM_ITEM(EmptyRoomType,     0)
-  JSON_ENUM_ITEM(DartTrapRoomType, 	1)
+  JSON_ENUM_ITEM(DartTrapRoomType,  1)
   JSON_ENUM_ITEM(InvalidRoomType, 255)
 JSON_ENUM_END
 
@@ -67,11 +68,19 @@ JSON_ENUM_END
 // Need to be able to add 1 safely for both printing on screen and for safely
 // finding the next room. Same for subtracting 1 from 0, both give 255 which
 // is defined to be invalid
-EMIT(#define PRIRoomCoord PRIuFAST8)
-EMIT(#define DefaultRoomCoordX (RoomCoord)0)
-EMIT(#define DefaultRoomCoordY (RoomCoord)0)
-EMIT(#define InvalidRoomCoord (RoomCoord)255)
+C_EMIT(#define PRIRoomCoord PRIuFAST8)
+// TODO: Make these c only?
+VALUE_EMIT(RoomCoord, DefaultRoomCoordX,  0)
+VALUE_EMIT(RoomCoord, DefaultRoomCoordY,  0)
+VALUE_EMIT(RoomCoord, InvalidRoomCoord, 255)
 C_EMIT(typedef uint_fast8_t RoomCoord;)
+
+// TODO: Add enum with invalid value?
+// PlayerStat is a uint8_t with [0, 100)
+C_EMIT(#define PRIPlayerStat PRIuFAST8)
+VALUE_EMIT(PlayerStat, MinimumPlayerStat,   0)
+VALUE_EMIT(PlayerStat, MaximumPlayerStat, 100)
+C_EMIT(typedef uint_fast8_t PlayerStat;)
 
 // TODO: Add enum for state vars
 

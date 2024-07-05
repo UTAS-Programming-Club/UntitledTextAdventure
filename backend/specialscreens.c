@@ -255,24 +255,27 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
 static bool CreatePlayerStatsScreen(const struct GameInfo *info, struct GameState *state) {
   (void)info;
 
-  int allocatedCharCount = snprintf(NULL, 0, "%s\n\nHealth: %" PRIuFAST8 "\nStamina: %" PRIuFAST8 "\nMagDef: %" PRIuFAST8,
-                                    state->body, state->playerInfo.health, state->playerInfo.stamina, state->playerInfo.magDef);
-  if (allocatedCharCount <= 0) {
-    return false;
-  }
-  ++allocatedCharCount;
-
-  char *str = arena_alloc(&state->arena, allocatedCharCount * sizeof *str);
-  if (!str) {
+  struct GameScreen screen = {0};
+  if (!GetGameScreen(state->screenID, &screen)) {
     return false;
   }
 
-  if (snprintf(str, allocatedCharCount, "%s\n\nHealth: %" PRIuFAST8 "\nStamina: %" PRIuFAST8 "\nMagDef: %" PRIuFAST8,
-               state->body, state->playerInfo.health, state->playerInfo.stamina, state->playerInfo.magDef)
-      <= 0) {
+  state->body = CreateString(state, "%s\n\n"
+                                    "Health: %" PRIPlayerStat "\n"
+                                    "Stamina: %" PRIPlayerStat "\n"
+                                    "Physical Attack: %" PRIPlayerStat "\n"
+                                    "Magic Attack: %" PRIPlayerStat "\n"
+                                    "Physical Defence: %" PRIPlayerStat "\n"
+                                    "Magic Defence: %" PRIPlayerStat,
+                             screen.body,
+                             state->playerInfo.health, state->playerInfo.stamina,
+                             state->playerInfo.physAtk, state->playerInfo.magAtk,
+                             state->playerInfo.physDef, state->playerInfo.magDef
+  );
+  if (!state->body) {
     return false;
   }
-  state->body = str;
+
   return true;
 }
 
