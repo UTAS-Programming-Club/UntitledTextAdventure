@@ -109,7 +109,7 @@ $(LIBDIR)/parser.o: backend/parser.c backend/fileloading.h backend/game.h backen
 $(LIBDIR)/screens.o: backend/screens.c backend/game.h backend/parser.h backend/screens.h $(INCDIR)/arena.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
-$(LIBDIR)/specialscreens.o: backend/specialscreens.c backend/game.h backend/parser.h backend/specialscreens.h | $(LIBDIR)
+$(LIBDIR)/specialscreens.o: backend/specialscreens.c backend/game.h backend/parser.h backend/specialscreens.h $(INCDIR)/arena.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 

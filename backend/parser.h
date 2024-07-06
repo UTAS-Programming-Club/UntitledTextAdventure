@@ -7,12 +7,14 @@
 
 #include "game.h"
 
+// TODO: Remove?
 struct GameScreen {
   char *body;      // utf-8
   char *extraText; // utf-8
   enum CustomScreenCode customScreenCodeID;
 };
 
+// TODO: Remove?
 struct GameScreenButton {
   char *title; // utf-8
   enum InputOutcome outcome;
@@ -23,7 +25,10 @@ bool LoadGameData(char *);
 void UnloadGameData(void);
 
 char *LoadGameName(void);
-bool LoadGameRooms(uint_fast8_t *floorSize, struct RoomInfo **);
+bool LoadDefaultPlayerStats(struct PlayerInfo *);
+// loaded struct pointers must be freed, even if these functions returns false
+bool LoadGameRooms(uint_fast8_t *, struct RoomInfo **);
+bool LoadGameEquipment(uint_fast8_t *, struct EquipmentInfo **);
 
 unsigned char *InitGameState(void);
 size_t GetGameStateOffset(enum Screen, uint_fast8_t);

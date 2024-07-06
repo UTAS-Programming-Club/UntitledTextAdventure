@@ -63,6 +63,20 @@ static void *Data = NULL;
 static cJSON *GameData = NULL;
 static const double invalidOptNumberVal = -1.0;
 
+static inline const char *cJSON_GetOptStringValue(const cJSON *const object, const char *const string,
+                                                  const char *missingVal, const char *invalidVal) {
+  cJSON *jsonVar = cJSON_GetObjectItemCaseSensitive(object, string);
+  if (!jsonVar) {
+    return missingVal;
+  }
+
+  if (!cJSON_IsString(jsonVar)) {
+    return invalidVal;
+  }
+
+  return cJSON_GetStringValue(jsonVar);
+}
+
 static inline double cJSON_GetOptNumberValue(const cJSON *const object, const char *const string,
                                              double missingVal, double invalidVal) {
   cJSON *jsonVar = cJSON_GetObjectItemCaseSensitive(object, string);
@@ -78,7 +92,8 @@ static inline double cJSON_GetOptNumberValue(const cJSON *const object, const ch
 }
 
 
-static bool GetGameRoomData(cJSON *jsonRoom, struct RoomInfo *room);
+static bool GetGameRoomData(cJSON *, struct RoomInfo *);
+static bool GetGameEquipmentItemData(cJSON *, struct EquipmentInfo *);
 
 
 bool LoadGameData(char *path) {
@@ -131,6 +146,24 @@ char *LoadGameName(void) {
   return name;
 }
 
+bool LoadDefaultPlayerStats(struct PlayerInfo *playerStats) {
+  if (!GameData || !playerStats) {
+    return false;
+  }
+
+  cJSON *jsonDefaultStats;
+  JSON_GETJSONOBJECTERROR(jsonDefaultStats, GameData, "defaultStats", false);
+
+  JSON_GETNUMBERVALUEERROR(playerStats->health, jsonDefaultStats, "health", false);
+  JSON_GETNUMBERVALUEERROR(playerStats->stamina, jsonDefaultStats, "stamina", false);
+  JSON_GETNUMBERVALUEERROR(playerStats->physAtk, jsonDefaultStats, "physAtk", false);
+  JSON_GETNUMBERVALUEERROR(playerStats->magAtk, jsonDefaultStats, "magAtk", false);
+  JSON_GETNUMBERVALUEERROR(playerStats->physDef, jsonDefaultStats, "physDef", false);
+  JSON_GETNUMBERVALUEERROR(playerStats->magDef, jsonDefaultStats, "magDef", false);
+
+  return true;
+}
+
 bool LoadGameRooms(uint_fast8_t *floorSize, struct RoomInfo **rooms) {
   if (!GameData || !floorSize || !rooms) {
     return false;
@@ -141,9 +174,14 @@ bool LoadGameRooms(uint_fast8_t *floorSize, struct RoomInfo **rooms) {
 
   JSON_GETNUMBERVALUEERROR(*floorSize, jsonRooms, "floorSize", false);
 
-  *rooms = calloc(*floorSize * *floorSize, sizeof **rooms);
+  size_t floorRoomCount = *floorSize * *floorSize;
+  *rooms = calloc(floorRoomCount, sizeof **rooms);
   if (!*rooms) {
     return false;
+  }
+
+  for (size_t i = 0; i < floorRoomCount; ++i) {
+    (*rooms)[i].type = InvalidRoomType;
   }
 
   cJSON *jsonRoomsArray;
@@ -163,7 +201,42 @@ bool LoadGameRooms(uint_fast8_t *floorSize, struct RoomInfo **rooms) {
     struct RoomInfo *room = &(*rooms)[idx];
     room->x = x;
     room->y = y;
-    GetGameRoomData(jsonRoom, room);
+    if (!GetGameRoomData(jsonRoom, room)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool LoadGameEquipment(uint_fast8_t *equipmentCount, struct EquipmentInfo **equipment) {
+  if (!GameData || !equipmentCount || !equipment) {
+    return false;
+  }
+
+  cJSON *jsonEquipment;
+  JSON_GETJSONARRAYERROR(jsonEquipment, GameData, "equipment", false);
+
+  *equipmentCount = cJSON_GetArraySize(jsonEquipment);
+
+  *equipment = calloc(*equipmentCount, sizeof **equipment);
+  if (!*equipment) {
+    return false;
+  }
+
+  struct EquipmentInfo *currentItem = *equipment;
+  uint_fast8_t i = 0;
+
+  // cJSON_ArrayForEach uses int for idx, likely fine as INT_MAX >= 2^15 - 1
+  cJSON *jsonItem;
+  cJSON_ArrayForEach(jsonItem, jsonEquipment) {
+    currentItem->id = i;
+    if (!GetGameEquipmentItemData(jsonItem, currentItem)) {
+      return false;
+    }
+
+    ++i;
+    ++currentItem;
   }
 
   return true;
@@ -391,7 +464,7 @@ bool GetGameScreenButton(enum Screen screenID, uint_fast8_t buttonID, struct Gam
 
 
 static bool GetGameRoomData(cJSON *jsonRoom, struct RoomInfo *room) {
-  if (!room) {
+  if (!jsonRoom || !room) {
     return false;
   }
 
@@ -406,6 +479,29 @@ static bool GetGameRoomData(cJSON *jsonRoom, struct RoomInfo *room) {
   //   return false;
   // }
 
-  room->exists = true;
+  room->eventDescription = cJSON_GetOptStringValue(jsonRoom, "description", "", NULL);
+  room->eventPercentageChance = cJSON_GetOptNumberValue(jsonRoom, "percentageChance", UINT_FAST8_MAX, invalidOptNumberVal);
+  room->eventStatChange = cJSON_GetOptNumberValue(jsonRoom, "healthChange", InvalidPlayerStatDiff, invalidOptNumberVal);
+  if (!room->eventDescription
+      || invalidOptNumberVal == room->eventPercentageChance
+      || invalidOptNumberVal == room->eventStatChange) {
+    return false;
+  }
+
+  return true;
+}
+
+static bool GetGameEquipmentItemData(cJSON *jsonItem, struct EquipmentInfo *item) {
+  if (!jsonItem || !item) {
+    return false;
+  }
+
+  JSON_GETSTRINGVALUEERROR(item->name, jsonItem, "name", false);
+
+  JSON_GETNUMBERVALUEERROR(item->physAtkMod, jsonItem, "physAtkMod", false);
+  JSON_GETNUMBERVALUEERROR(item->physDefMod, jsonItem, "physDefMod", false);
+  JSON_GETNUMBERVALUEERROR(item->magAtkMod, jsonItem, "magAtkMod", false);
+  JSON_GETNUMBERVALUEERROR(item->magDefMod, jsonItem, "magDefMod", false);
+
   return true;
 }
