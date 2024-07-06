@@ -72,10 +72,9 @@ struct GameInput {
 // Do not use outside of backend
 // Never modify after creation
 struct RoomInfo {
-  // Always set
-  bool exists;
-  // Set only if the room exists
   enum RoomType type;
+
+  // Onlt set if type != InvalidRoomType
   RoomCoord x;
   RoomCoord y;
 };

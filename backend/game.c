@@ -12,7 +12,7 @@
 #include "screens.h"
 #include "specialscreens.h"
 
-static const struct RoomInfo DefaultRoom = {0};
+static const struct RoomInfo DefaultRoom = {.type = InvalidRoomType};
 
 bool SetupBackend(struct GameInfo *info) {
   if (!info) {
@@ -185,7 +185,7 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
       // chance to dodge the trap else take damage
       // TODO: Ensure this only trigger once, track room completion?
       // TODO: End game when health is 0
-      // TODO: Move constants to types.in.h and GameData.in.json
+      // TODO: Move constants to GameData.in.json
       if((rand() % MaximumPlayerStat) < 50) {
         UpdatePlayerStat(&state->playerInfo.health, -10);
       }

@@ -59,7 +59,7 @@ static void WriteRoomRow(FILE *fp, RoomCoord roomRow, RoomCoord roomColumn,
       fputs(rowChars[1], fp);
     }
 
-    if (0 == outputRow && GetGameRoom(info, roomRow + 1, roomColumn)->exists) {
+    if (0 == outputRow && GetGameRoom(info, roomRow + 1, roomColumn)->type != InvalidRoomType) {
       fprintf(fp, HorLine "%*s" HorLine, RoomGridSizeHor - 4, "");
     } else {
       FPrintRep(HorLine, RoomGridSizeHor - 2, fp);
@@ -74,8 +74,8 @@ static void WriteRoomRow(FILE *fp, RoomCoord roomRow, RoomCoord roomColumn,
   // Middle Room Rows
   else {
     char *wallChar;
-    if (!GetGameRoom(info, roomRow, roomColumn)->exists
-        || !GetGameRoom(info, roomRow, roomColumn - 1)->exists) {
+    if (GetGameRoom(info, roomRow, roomColumn)->type == InvalidRoomType
+        || GetGameRoom(info, roomRow, roomColumn - 1)->type == InvalidRoomType) {
       wallChar = VerLine;
     } else if (1 == outputRow) {
       wallChar = UpperHalfVerLine;
@@ -89,7 +89,7 @@ static void WriteRoomRow(FILE *fp, RoomCoord roomRow, RoomCoord roomColumn,
     if (currentRoom->x == roomColumn && currentRoom->y == roomRow && 1 == outputRow) {
       fprintf(fp, "%sP%*s", wallChar, RoomGridSizeHor - 3, "");
     // Room exists
-    } else if (GetGameRoom(info, roomRow, roomColumn)->exists) {
+    } else if (GetGameRoom(info, roomRow, roomColumn)->type != InvalidRoomType) {
       fprintf(fp, "%s%*s", wallChar, RoomGridSizeHor - 2, "");
     // Room does not exist
     } else {
@@ -229,19 +229,19 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
     switch (state->inputs[i].outcome) {
       case GameGoNorthOutcome:
         state->inputs[i].visible =
-          GetGameRoom(info, state->roomInfo->x, state->roomInfo->y + 1)->exists;
+          GetGameRoom(info, state->roomInfo->x, state->roomInfo->y + 1)->type != InvalidRoomType;
         break;
       case GameGoEastOutcome:
         state->inputs[i].visible =
-          GetGameRoom(info, state->roomInfo->x + 1, state->roomInfo->y)->exists;
+          GetGameRoom(info, state->roomInfo->x + 1, state->roomInfo->y)->type != InvalidRoomType;
         break;
       case GameGoSouthOutcome:
         state->inputs[i].visible =
-          GetGameRoom(info, state->roomInfo->x, state->roomInfo->y - 1)->exists;
+          GetGameRoom(info, state->roomInfo->x, state->roomInfo->y - 1)->type != InvalidRoomType;
         break;
       case GameGoWestOutcome:
         state->inputs[i].visible =
-          GetGameRoom(info, state->roomInfo->x - 1, state->roomInfo->y)->exists;
+          GetGameRoom(info, state->roomInfo->x - 1, state->roomInfo->y)->type != InvalidRoomType;
         break;
       case PlayerDartTrapOutcome:
         state->inputs[i].visible = state->roomInfo->type == DartTrapRoomType;

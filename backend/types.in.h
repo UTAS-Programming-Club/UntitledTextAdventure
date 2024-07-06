@@ -67,6 +67,7 @@ JSON_ENUM_START(RoomType)
   JSON_ENUM_ITEM(InvalidRoomType, 255)
 JSON_ENUM_END
 
+
 // RoomCoord is a uint8_t with [0, FloorSize) <= [0, 255)
 // Need to be able to add 1 safely for both printing on screen and for safely
 // finding the next room. Same for subtracting 1 from 0, both give 255 which
@@ -77,6 +78,7 @@ VALUE_EMIT(RoomCoord, DefaultRoomCoordX,  0)
 VALUE_EMIT(RoomCoord, DefaultRoomCoordY,  0)
 VALUE_EMIT(RoomCoord, InvalidRoomCoord, 255)
 C_EMIT(typedef uint_fast8_t RoomCoord;)
+
 
 // PlayerStat is a uint8_t with [0, 100]
 C_EMIT(#define PRIPlayerStat PRIuFAST8)

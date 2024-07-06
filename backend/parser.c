@@ -160,9 +160,14 @@ bool LoadGameRooms(uint_fast8_t *floorSize, struct RoomInfo **rooms) {
 
   JSON_GETNUMBERVALUEERROR(*floorSize, jsonRooms, "floorSize", false);
 
-  *rooms = calloc(*floorSize * *floorSize, sizeof **rooms);
+  size_t floorRoomCount = *floorSize * *floorSize;
+  *rooms = calloc(floorRoomCount, sizeof **rooms);
   if (!*rooms) {
     return false;
+  }
+
+  for (size_t i = 0; i < floorRoomCount; ++i) {
+    (*rooms)[i].type = InvalidRoomType;
   }
 
   cJSON *jsonRoomsArray;
@@ -460,7 +465,6 @@ static bool GetGameRoomData(cJSON *jsonRoom, struct RoomInfo *room) {
   //   return false;
   // }
 
-  room->exists = true;
   return true;
 }
 
