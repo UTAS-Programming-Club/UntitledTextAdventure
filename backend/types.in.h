@@ -63,7 +63,7 @@ JSON_ENUM_END
 // RoomType is a uint8_t with [0, 255)
 JSON_ENUM_START(RoomType)
   JSON_ENUM_ITEM(EmptyRoomType,          0)
-  // TODO: Change to general stat check room type, support more than one stat?
+  // TODO: Change to general stat change room type, support more than one stat?
   JSON_ENUM_ITEM(HealthChangeRoomType,   1)
   // TODO: Readd stat check room type
   JSON_ENUM_ITEM(InvalidRoomType,      255)
