@@ -112,9 +112,11 @@
         "position": [1, 1]
       },
       // TODO: Make these values required for this room type
+      // TODO: Add other factors like agility that impact outcome
       {
         "type": HealthChangeRoomType,
         "position": [1, 2],
+        "description": "You have come across a trap",
         "percentageChance": 50,
         "healthChange": -10
       }

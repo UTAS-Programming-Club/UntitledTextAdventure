@@ -178,6 +178,9 @@
                 "minItems": 2,
                 "maxItems": 2
               },
+              "description": {
+                "type": "string"
+              },
               "percentageChance": {
                 "type": "integer",
                 "exclusiveMinimum": 0,

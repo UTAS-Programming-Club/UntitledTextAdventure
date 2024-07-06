@@ -46,7 +46,7 @@ struct PlayerInfo {
 // Always make this const when possible to avoid accidental modification
 struct GameInfo {
 // public, safe to use outside of backend
-  char *name; // utf-8
+  const char *name; // utf-8
 // implementation, do not use outside of backend
   bool initialised;
 
@@ -63,7 +63,7 @@ struct GameInfo {
 // Never modify after creation
 struct GameInput {
 // public, safe to use outside of backend
-  char *title; // utf-8
+  const char *title; // utf-8
   bool visible;
 // implementation, do not use outside of backend
   enum InputOutcome outcome;
@@ -79,6 +79,7 @@ struct RoomInfo {
   RoomCoord y;
 
   // Only set if type == HealthChangeRoomType
+  const char *eventDescription; // utf-8
   uint_fast8_t eventPercentageChance;
   PlayerStatDiff eventStatChange;
 };
@@ -87,7 +88,7 @@ struct RoomInfo {
 struct GameState {
 // public, safe to use outside of backend
   enum Screen screenID;
-  char *body; // utf-8
+  const char *body; // utf-8
   uint_fast8_t inputCount;
   // TODO: Make const
   struct GameInput *inputs;
@@ -98,7 +99,6 @@ struct GameState {
   Arena arena;
   unsigned char *stateData;
   enum CustomScreenCode customScreenCodeID;
-// Currently body and inputs[i].title MUST be allocated, this must be fixed if the encoding changes to utf-8 because then most button titles will also be direct copies of cJSON returned data
 };
 
 // TODO: Move to another file that just handles equipment

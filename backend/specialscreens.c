@@ -1,3 +1,4 @@
+#include <arena.h>
 #include <inttypes.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -121,7 +122,7 @@ static void WriteMap(const struct GameInfo *info, const struct RoomInfo *current
 #endif
 
 
-static char *CreateString(struct GameState *state, const char *restrict format, ...) {
+static char *CreateString(Arena *arena, const char *restrict format, ...) {
   va_list args1, args2;
   va_start(args1, format);
   va_copy(args2, args1);
@@ -135,7 +136,7 @@ static char *CreateString(struct GameState *state, const char *restrict format, 
   }
   ++allocatedCharCount;
 
-  res = arena_alloc(&state->arena, allocatedCharCount);
+  res = arena_alloc(arena, allocatedCharCount);
   if (!res) {
     goto cleanup;
   }
@@ -182,7 +183,7 @@ static bool CreateMainMenuScreen(const struct GameInfo *info, struct GameState *
       return false;
     }
 
-    state->body = CreateString(state, "%s%s%" PRIu32, screen.body, screen.extraText, *pReloadCount);
+    state->body = CreateString(&state->arena, "%s%s%" PRIu32, screen.body, screen.extraText, *pReloadCount);
     if (!state->body) {
       return false;
     }
@@ -210,15 +211,17 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
   switch (state->roomInfo->type) {
     // TODO: Add other options w/ extra info such as failing etc
     case HealthChangeRoomType:
-      // TODO: Move to GameData.in.json
-      roomInfoStr = "\n\nYou come across a trap.";
+      roomInfoStr = CreateString(&state->arena, "\n\n%s.", state->roomInfo->eventDescription);
+      if (!roomInfoStr) {
+        return false;
+      }
       break;
     default:
       break;
   }
 
 
-  state->body = CreateString(state, "%s%" PRIRoomCoord "%s%" PRIRoomCoord "%s%s",
+  state->body = CreateString(&state->arena, "%s%" PRIRoomCoord "%s%" PRIRoomCoord "%s%s",
                              bodyBeginning, state->roomInfo->x + 1, bodyMiddle,
                              state->roomInfo->y + 1, bodyEnding, roomInfoStr);
   if (!state->body) {
@@ -261,7 +264,7 @@ static bool CreatePlayerStatsScreen(const struct GameInfo *info, struct GameStat
     return false;
   }
 
-  state->body = CreateString(state, "%s\n\n"
+  state->body = CreateString(&state->arena, "%s\n\n"
                                     "Health: %" PRIPlayerStat "\n"
                                     "Stamina: %" PRIPlayerStat "\n"
                                     "Physical Attack: %" PRIPlayerStat "\n"

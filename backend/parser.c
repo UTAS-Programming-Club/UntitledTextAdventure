@@ -63,6 +63,20 @@ static void *Data = NULL;
 static cJSON *GameData = NULL;
 static const double invalidOptNumberVal = -1.0;
 
+static inline const char *cJSON_GetOptStringValue(const cJSON *const object, const char *const string,
+                                                  const char *missingVal, const char *invalidVal) {
+  cJSON *jsonVar = cJSON_GetObjectItemCaseSensitive(object, string);
+  if (!jsonVar) {
+    return missingVal;
+  }
+
+  if (!cJSON_IsString(jsonVar)) {
+    return invalidVal;
+  }
+
+  return cJSON_GetStringValue(jsonVar);
+}
+
 static inline double cJSON_GetOptNumberValue(const cJSON *const object, const char *const string,
                                              double missingVal, double invalidVal) {
   cJSON *jsonVar = cJSON_GetObjectItemCaseSensitive(object, string);
@@ -465,9 +479,11 @@ static bool GetGameRoomData(cJSON *jsonRoom, struct RoomInfo *room) {
   //   return false;
   // }
 
+  room->eventDescription = cJSON_GetOptStringValue(jsonRoom, "description", "", NULL);
   room->eventPercentageChance = cJSON_GetOptNumberValue(jsonRoom, "percentageChance", UINT_FAST8_MAX, invalidOptNumberVal);
   room->eventStatChange = cJSON_GetOptNumberValue(jsonRoom, "healthChange", InvalidPlayerStatDiff, invalidOptNumberVal);
-  if (invalidOptNumberVal == room->eventPercentageChance
+  if (!room->eventDescription
+      || invalidOptNumberVal == room->eventPercentageChance
       || invalidOptNumberVal == room->eventStatChange) {
     return false;
   }
