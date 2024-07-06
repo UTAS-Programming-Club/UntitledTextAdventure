@@ -181,13 +181,14 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
       state->roomInfo = GetGameRoom(info, state->roomInfo->x - 1, state->roomInfo->y);
       outcome = GetNextOutputOutcome;
       break;
-    case PlayerDartTrapOutcome:
+    case GameHealthChangeOutcome: ;
       // chance to dodge the trap else take damage
       // TODO: Ensure this only trigger once, track room completion?
       // TODO: End game when health is 0
-      // TODO: Move constants to GameData.in.json
-      if((rand() % MaximumPlayerStat) < 50) {
-        UpdatePlayerStat(&state->playerInfo.health, -10);
+      // eventPercentageChance is (0, 100] so chance must be as well
+      uint_fast8_t chance = rand() % MaximumPlayerStat + 1;
+      if(state->roomInfo->eventPercentageChance > chance) {
+        UpdatePlayerStat(&state->playerInfo.health, state->roomInfo->eventStatChange);
       }
       outcome = GetNextOutputOutcome;
       break;

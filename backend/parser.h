@@ -7,12 +7,14 @@
 
 #include "game.h"
 
+// TODO: Remove?
 struct GameScreen {
   char *body;      // utf-8
   char *extraText; // utf-8
   enum CustomScreenCode customScreenCodeID;
 };
 
+// TODO: Remove?
 struct GameScreenButton {
   char *title; // utf-8
   enum InputOutcome outcome;

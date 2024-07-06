@@ -177,6 +177,16 @@
                 },
                 "minItems": 2,
                 "maxItems": 2
+              },
+              "percentageChance": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 100
+              },
+              "healthChange": {
+                "type": "integer",
+                "minimum": -100,
+                "maximum": 100
               }
             }
           }

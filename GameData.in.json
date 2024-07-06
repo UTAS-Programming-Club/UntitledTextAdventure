@@ -52,7 +52,7 @@
         },
         {
           "title": "Dodge Trap",
-          "outcome": PlayerDartTrapOutcome
+          "outcome": GameHealthChangeOutcome
         },
         {
           "title": "Check Player Stats",
@@ -111,9 +111,12 @@
         "type": EmptyRoomType,
         "position": [1, 1]
       },
+      // TODO: Make these values required for this room type
       {
-        "type": DartTrapRoomType,
-        "position": [1, 2]
+        "type": HealthChangeRoomType,
+        "position": [1, 2],
+        "percentageChance": 50,
+        "healthChange": -10
       }
     ]
   },

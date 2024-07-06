@@ -74,9 +74,13 @@ struct GameInput {
 struct RoomInfo {
   enum RoomType type;
 
-  // Onlt set if type != InvalidRoomType
+  // Only set if type != InvalidRoomType
   RoomCoord x;
   RoomCoord y;
+
+  // Only set if type == HealthChangeRoomType
+  uint_fast8_t eventPercentageChance;
+  PlayerStatDiff eventStatChange;
 };
 
 // Always make this const when possible to avoid accidental modification

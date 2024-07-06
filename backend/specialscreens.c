@@ -209,7 +209,7 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
   char *roomInfoStr = "";
   switch (state->roomInfo->type) {
     // TODO: Add other options w/ extra info such as failing etc
-    case DartTrapRoomType:
+    case HealthChangeRoomType:
       // TODO: Move to GameData.in.json
       roomInfoStr = "\n\nYou come across a trap.";
       break;
@@ -243,8 +243,8 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
         state->inputs[i].visible =
           GetGameRoom(info, state->roomInfo->x - 1, state->roomInfo->y)->type != InvalidRoomType;
         break;
-      case PlayerDartTrapOutcome:
-        state->inputs[i].visible = state->roomInfo->type == DartTrapRoomType;
+      case GameHealthChangeOutcome:
+        state->inputs[i].visible = state->roomInfo->type == HealthChangeRoomType;
       default:
         break;
     }
