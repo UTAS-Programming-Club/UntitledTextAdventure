@@ -63,6 +63,9 @@ bool SetupBackend(struct GameInfo *info) {
     return false;
   }
 
+  unsigned int currentTimestamp = time(NULL);
+  srand(currentTimestamp);
+
   info->initialised = true;
   return true;
 }
@@ -142,8 +145,12 @@ static uint_fast8_t MapInputIndex(const struct GameState *state, uint_fast8_t in
 }
 
 enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState *state, uint_fast8_t inputIndex) {
+  if (!info || !info->initialised || !state) {
+    return InvalidInputOutcome;
+  }
+
   uint_fast8_t inputID = MapInputIndex(state, inputIndex);
-  if (!info || !info->initialised || !state || UINT_FAST8_MAX == inputID) {
+  if (UINT_FAST8_MAX == inputID) {
     return InvalidInputOutcome;
   }
 
@@ -178,11 +185,9 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
       // chance to dodge the trap else take damage
       // TODO: Ensure this only trigger once, track room completion?
       // TODO: End game when health is 0
-      // TODO: Prevent health from wrapping around
       // TODO: Move constants to types.in.h and GameData.in.json
-      srand((unsigned int)time(NULL));
-      if((rand() % 100) < 50) {
-        state->playerInfo.health -= 10;
+      if((rand() % MaximumPlayerStat) < 50) {
+        UpdatePlayerStat(&state->playerInfo.health, -10);
       }
       outcome = GetNextOutputOutcome;
       break;
