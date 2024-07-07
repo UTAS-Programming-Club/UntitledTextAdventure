@@ -8,17 +8,35 @@
 #include "game.h"
 #include "save.h"
 
-static const char AllowedPasswordChars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+#define base 85
 
 // 65535 is reserved
 static const uint16_t PasswordVersion = 0;
 
 // TODO: Store screen variable data
-__attribute__((__packed__)) struct SaveData {
+struct __attribute__((packed, scalar_storage_order("little-endian"))) SaveData {
   uint16_t version;
   RoomCoordSave x;
   RoomCoordSave y;
 };
+
+
+static inline char GetChar(uint_fast8_t val) {
+  if (val > base) {
+    return ' ';
+  }
+
+  return '!' + val;
+}
+
+static inline uint_fast8_t GetVal(char c) {
+  if ('!' > c || base + '!' <= c) {
+    return UINT_FAST8_MAX;
+  }
+
+  return c - '!';
+}
+
 
 char *SaveState(struct GameState *state) {
   if (!state || !state->startedGame || !state->roomInfo) {
@@ -31,52 +49,67 @@ char *SaveState(struct GameState *state) {
     .y = state->roomInfo->y
   };
 
-  uint8_t *pData = (uint8_t *)&data;
   size_t dataSize = sizeof data;
-  size_t passwordSize = ceil(8. / 6 * dataSize) + 1;
+  // TODO: This overestimates if dataSize is not a multiple of 4
+  size_t passwordSize = 5 * ceil(dataSize / 4.) + 1;
   char *password = arena_alloc(&state->arena, passwordSize);
-
-  // log_2(64) = 6 =/= 8 so using 6 * 4 = 8 * 3 = 24
-  size_t i = 0;
-  size_t j = 0;
-  if (dataSize - i >= 3) {
-    for (; dataSize - i >= 3; i += 3, j += 4) {
-      // aaaaaaaa bbbbbbbb cccccccc -> aaaaaa aabbbb bbbbcc cccccc
-      uint8_t hex1 = pData[i] & 0x3F /* 0b00111111 */;
-      uint8_t hex2 = (pData[i + 1] & 0xF /* 0b00001111 */) << 2 | pData[i] >> 6;
-      uint8_t hex3 = (pData[i + 2] & 0x3 /* 0b00000011 */) << 4 | pData[i + 1] >> 4;
-      uint8_t hex4 = pData[i + 2] >> 2;
-
-      password[j] = AllowedPasswordChars[hex1];
-      password[j + 1] = AllowedPasswordChars[hex2];
-      password[j + 2] = AllowedPasswordChars[hex3];
-      password[j + 3] = AllowedPasswordChars[hex4];
-    }
-  }
-  if (dataSize - i == 2) {
-    // aaaaaaaa bbbbbbbb -> aaaaaa aabbbb bbbb00
-    uint8_t hex1 = pData[i] & 0x3F /* 0b00111111 */;
-    uint8_t hex2 = (pData[i + 1] & 0xF /* 0b00001111 */) << 2 | pData[i] >> 6;
-    uint8_t hex3 = pData[i + 1] >> 4;
-
-    password[j] = AllowedPasswordChars[hex1];
-    password[j + 1] = AllowedPasswordChars[hex2];
-    password[j + 2] = AllowedPasswordChars[hex3];
-
-    j += 3;
-  } else if (dataSize - i == 1) {
-    // aaaaaaaa -> aaaaaa aa0000
-    uint8_t hex1 = pData[i] & 0x3F /* 0b00111111 */;
-    uint8_t hex2 = pData[i] >> 6;
-
-    password[j] = AllowedPasswordChars[hex1];
-    password[j + 1] = AllowedPasswordChars[hex2];
-
-    j += 2;
-  } else {
+  if (!password) {
     return NULL;
   }
-  password[j] = '\0';
+
+  char *passwordPos = password;
+
+  uint_fast32_t powers[] = {
+    pow(base, 0),
+    pow(base, 1),
+    pow(base, 2),
+    pow(base, 3),
+    pow(base, 4)
+  };
+
+  for (size_t i = 0; i < dataSize; i += 4) {
+    uint_fast32_t value = 0;
+    size_t rem = dataSize - i % dataSize;
+    size_t quot = rem < 4 ? rem : 4;
+    memcpy(&value, &data + i, quot);
+
+    uint_fast8_t digit4 = value / powers[4];
+    uint_fast32_t value4 = value - digit4 * powers[4];
+    if (digit4 >= base) {
+      return NULL;
+    }
+
+    uint_fast8_t digit3 = value4 / powers[3];
+    uint_fast32_t value3 = value4 - digit3 * powers[3];
+    if (digit3 >= base) {
+      return NULL;
+    }
+
+    uint_fast8_t digit2 = value3 / powers[2];
+    uint_fast32_t value2 = value3 - digit2 * powers[2];
+    if (digit2 >= base) {
+      return NULL;
+    }
+
+    uint_fast8_t digit1 = value2 / powers[1];
+    uint_fast32_t value1 = value2 - digit1 * powers[1];
+    if (digit1 >= base) {
+      return NULL;
+    }
+
+    uint_fast8_t digit0 = value1 / powers[0];
+    uint_fast32_t value0 = value1 - digit0 * powers[0];
+    if (0 != value0) {
+      return NULL;
+    }
+
+    *(passwordPos++) = GetChar(digit0);
+    *(passwordPos++) = GetChar(digit1);
+    *(passwordPos++) = GetChar(digit2);
+    *(passwordPos++) = GetChar(digit3);
+    *(passwordPos++) = GetChar(digit4);
+  }
+  *passwordPos = '\0';
 
   return password;
 }
@@ -86,59 +119,54 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
     return false;
   }
 
-  struct SaveData data;
-  uint8_t *pData = (uint8_t *)&data;
-  size_t dataSize = sizeof data;
-
-  size_t requiredPasswordSize = ceil(8. / 6 * dataSize);
-  size_t actualPasswordSize = strlen(password);
-  if (requiredPasswordSize != actualPasswordSize) {
+  struct SaveData *data;
+  size_t passwordSize = strlen(password);
+  if (passwordSize % 5 != 0) {
     return false;
   }
 
-  // log_2(64) = 6 =/= 8 so using 6 * 4 = 8 * 3 = 24
-  size_t i = 0;
-  size_t j = 0;
-  if (actualPasswordSize - i >= 4) {
-    for (; actualPasswordSize - i >= 4; i += 4, j += 3) {
-      // aaaaaa aabbbb bbbbcc cccccc -> aaaaaaaa bbbbbbbb cccccccc
-      uint8_t hex1 = strchr(AllowedPasswordChars, password[i]) - AllowedPasswordChars;
-      uint8_t hex2 = strchr(AllowedPasswordChars, password[i + 1]) - AllowedPasswordChars;
-      uint8_t hex3 = strchr(AllowedPasswordChars, password[i + 2]) - AllowedPasswordChars;
-      uint8_t hex4 = strchr(AllowedPasswordChars, password[i + 3]) - AllowedPasswordChars;
+  uint_fast32_t powers[] = {
+    pow(base, 0),
+    pow(base, 1),
+    pow(base, 2),
+    pow(base, 3),
+    pow(base, 4)
+  };
 
-      pData[j] = hex1 | (hex2 & 0x3 /* 0b000011 */) << 6;
-      pData[j + 1] = (hex2 & 0x3C /* 0b111100 */) >> 2 | (hex3 & 0xF /* 0b001111 */) << 4;
-      pData[j + 2] = (hex3 & 0x30 /* 0b110000 */) >> 4 | hex4 << 2;
+  size_t dataSize = 4 * passwordSize / 5;
+  uint32_t *decodedData = arena_alloc(&state->arena, dataSize);
+  if (!decodedData) {
+    return false;
+  }
+
+  for (size_t i = 0; i < passwordSize; i += 5) {
+    uint_fast8_t digit0 = GetVal(password[i]);
+    uint_fast8_t digit1 = GetVal(password[i + 1]);
+    uint_fast8_t digit2 = GetVal(password[i + 2]);
+    uint_fast8_t digit3 = GetVal(password[i + 3]);
+    uint_fast8_t digit4 = GetVal(password[i + 4]);
+    if (UINT_FAST8_MAX == digit0 || UINT_FAST8_MAX == digit1 || UINT_FAST8_MAX == digit2
+        || UINT_FAST8_MAX == digit3 || UINT_FAST8_MAX == digit4) {
+      return false;
     }
+
+    decodedData[i / 5] = digit4 * powers[4] + digit3 * powers[3] + digit2 * powers[2] + digit1 * powers[1] + digit0 * powers[0];
   }
-  if (actualPasswordSize - i == 3) {
-    // aaaaaa aabbbb bbbb00 -> aaaaaaaa bbbbbbbb
-    uint8_t hex1 = strchr(AllowedPasswordChars, password[i]) - AllowedPasswordChars;
-    uint8_t hex2 = strchr(AllowedPasswordChars, password[i + 1]) - AllowedPasswordChars;
-    uint8_t hex3 = strchr(AllowedPasswordChars, password[i + 2]) - AllowedPasswordChars;
 
-    pData[j] = hex1 | (hex2 & 0x3 /* 0b000011 */) << 6;
-    pData[j + 1] = (hex2 & 0x3C /* 0b111100 */) >> 2 | hex3 << 4;
-
-    j += 2;
-  } else if (actualPasswordSize - i == 2) {
-    uint8_t hex1 = strchr(AllowedPasswordChars, password[i]) - AllowedPasswordChars;
-    uint8_t hex2 = strchr(AllowedPasswordChars, password[i + 1]) - AllowedPasswordChars;
-
-    pData[j] = hex1 | hex2 << 6;
-
-    ++j;
-  } else {
+  // These should be the same but the current system can overestimate the number of bytes required
+  if (sizeof data < dataSize) {
     return false;
   }
-  pData[j] = '\0';
+  data = (struct SaveData *)decodedData;
 
-  if (PasswordVersion != data.version) {
+  if (PasswordVersion != data->version) {
     return false;
   }
 
-  state->roomInfo = GetGameRoom(info, data.x, data.y);
+  // TODO: Setup stats
+  // TODO: Setup equipment
+
+  state->roomInfo = GetGameRoom(info, data->x, data->y);
   state->startedGame = true;
 
   return true;
