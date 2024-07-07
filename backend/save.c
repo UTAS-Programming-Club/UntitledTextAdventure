@@ -22,7 +22,7 @@ struct __attribute__((packed, scalar_storage_order("little-endian"))) SaveData {
 
 
 static inline char GetChar(uint_fast8_t val) {
-  if (val > base) {
+  if (base < val) {
     return ' ';
   }
 
@@ -49,6 +49,7 @@ char *SaveState(struct GameState *state) {
     .y = state->roomInfo->y
   };
 
+  unsigned char *pData = (unsigned char *)&data;
   size_t dataSize = sizeof data;
   // TODO: This overestimates if dataSize is not a multiple of 4
   size_t passwordSize = 5 * ceil(dataSize / 4.) + 1;
@@ -71,7 +72,7 @@ char *SaveState(struct GameState *state) {
     uint_fast32_t value = 0;
     size_t rem = dataSize - i % dataSize;
     size_t quot = rem < 4 ? rem : 4;
-    memcpy(&value, &data + i, quot);
+    memcpy(&value, pData + i, quot);
 
     uint_fast8_t digit4 = value / powers[4];
     uint_fast32_t value4 = value - digit4 * powers[4];
