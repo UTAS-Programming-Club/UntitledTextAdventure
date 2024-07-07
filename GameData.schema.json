@@ -4,13 +4,59 @@
   "additionalProperties": false,
   "required": [
     "name",
+    "defaultStats",
     "screens",
     "state",
-    "rooms"
+    "rooms",
+    "equipment"
   ],
   "properties": {
     "name": {
       "type": "string"
+    },
+    "defaultStats": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "health",
+        "stamina",
+        "physAtk",
+        "magAtk",
+        "physDef",
+        "magDef"
+      ],
+      "properties": {
+        "health": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "stamina": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "physAtk": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "magAtk": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "physDef": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "magDef": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        }
+      }
     },
     "screens": {
       "type": "array",
@@ -147,8 +193,60 @@
                 },
                 "minItems": 2,
                 "maxItems": 2
+              },
+              "description": {
+                "type": "string"
+              },
+              "percentageChance": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 100
+              },
+              "healthChange": {
+                "type": "integer",
+                "minimum": -100,
+                "maximum": 100
               }
             }
+          }
+        }
+      }
+    },
+    "equipment": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "physAtkMod",
+          "physDefMod",
+          "magAtkMod",
+          "magDefMod"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "physAtkMod": {
+            "type": "integer",
+            "minimum": -100,
+            "maximum": 100
+          },
+          "magAtkMod": {
+            "type": "integer",
+            "minimum": -100,
+            "maximum": 100
+          },
+          "physDefMod": {
+            "type": "integer",
+            "minimum": -100,
+            "maximum": 100
+          },
+          "magDefMod": {
+            "type": "integer",
+            "minimum": -100,
+            "maximum": 100
           }
         }
       }

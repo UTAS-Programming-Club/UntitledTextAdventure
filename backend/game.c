@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <types.h>
 
 #include "../frontends/frontend.h"
@@ -12,11 +13,11 @@
 #include "screens.h"
 #include "specialscreens.h"
 
-static const struct RoomInfo DefaultRoom = {0};
+static const struct RoomInfo DefaultRoom = {.type = InvalidRoomType};
 
 bool SetupBackend(struct GameInfo *info) {
-  if (!LoadGameData("GameData.json")) {
-    PrintError("Failed to load GameData.json");
+  if (!info) {
+    PrintError("Required game info struct is inaccessable");
     return false;
   }
 
@@ -24,22 +25,84 @@ bool SetupBackend(struct GameInfo *info) {
     return true;
   }
 
-  char *name = LoadGameName();
-  if (!name) {
+  if (info->rooms || info->equipment) {
+    PrintError("Parts of the game info struct are already initialised");
     return false;
   }
 
-  uint_fast8_t floorSize = 0;
-  struct RoomInfo *rooms = NULL;
-  if (!LoadGameRooms(&floorSize, &rooms)) {
-    PrintError("Failed to load rooms from GameData.json");
+  char dataFile[] = "GameData.json";
+
+  if (!LoadGameData(dataFile)) {
+    PrintError("Failed to load %s", dataFile);
     return false;
   }
 
-  struct GameInfo tempInfo = {name, true, floorSize, rooms};
-  memcpy(info, &tempInfo, sizeof tempInfo);
+  info->name = LoadGameName();
+  if (!info->name) {
+    PrintError("Failed to load game name from %s", dataFile);
+    return false;
+  }
 
+  if (!LoadDefaultPlayerStats(&info->defaultPlayerStats)) {
+    PrintError("Failed to load default player stats from %s", dataFile);
+    return false;
+  }
+
+  if (!LoadGameRooms(&info->floorSize, &info->rooms)) {
+    free(info->rooms);
+    info->rooms = NULL;
+    PrintError("Failed to load rooms from %s", dataFile);
+    return false;
+  }
+
+  if (!LoadGameEquipment(&info->equipmentCount, &info->equipment)) {
+    free(info->rooms);
+    info->rooms = NULL;
+    free(info->equipment);
+    info->equipment = NULL;
+    PrintError("Failed to load equipment from %s", dataFile);
+    return false;
+  }
+
+  unsigned int currentTimestamp = time(NULL);
+  srand(currentTimestamp);
+
+  info->initialised = true;
   return true;
+}
+
+static bool UpdatePlayerStat(PlayerStat *base, PlayerStatDiff diff) {
+  if (!base || MaximumPlayerStat < *base
+      || MinimumPlayerStatDiff > diff || MaximumPlayerStatDiff < diff) {
+    return false;
+  }
+
+  if (0 > diff && MinimumPlayerStat > *base + diff) {
+    *base = MinimumPlayerStat;
+  } else if (0 < diff && MaximumPlayerStat < *base + diff) {
+    *base = MaximumPlayerStat;
+  } else {
+    *base += diff;
+  }
+  return true;
+}
+
+// TODO: Replace test with real impl with pickups
+void EquipItem(const struct GameInfo *info, struct GameState *state) {
+  // equipped ID index differs by item type
+  state->playerInfo.equippedItems[0] = info->equipment + 0;
+
+  for (uint_fast8_t i = 0; i < EquippedItemsSlots; ++i) {
+    const struct EquipmentInfo *item = state->playerInfo.equippedItems[i];
+    if (!item) {
+      continue;
+    }
+
+    UpdatePlayerStat(&state->playerInfo.physAtk, item->physAtkMod);
+    UpdatePlayerStat(&state->playerInfo.magAtk,  item->magAtkMod);
+    UpdatePlayerStat(&state->playerInfo.physDef, item->physDefMod);
+    UpdatePlayerStat(&state->playerInfo.magDef,  item->magDefMod);
+  }
 }
 
 bool UpdateGameState(const struct GameInfo *info, struct GameState *state) {
@@ -86,7 +149,8 @@ static uint_fast8_t MapInputIndex(const struct GameState *state, uint_fast8_t in
   return UINT_FAST8_MAX;
 }
 
-enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState *state, uint_fast8_t buttonInputIndex, const char *textInput) {
+enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState *state,
+                                  uint_fast8_t buttonInputIndex, const char *textInput) {
   if (!info || !info->initialised || !state) {
     return InvalidInputOutcome;
   }
@@ -117,6 +181,16 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
         return GetNextOutputOutcome;
       case GameGoWestOutcome:
         state->roomInfo = GetGameRoom(info, state->roomInfo->x - 1, state->roomInfo->y);
+        return GetNextOutputOutcome;
+      case GameHealthChangeOutcome: ;
+        // chance to dodge the trap else take damage
+        // TODO: Ensure this only trigger once, track room completion?
+        // TODO: End game when health is 0
+        // eventPercentageChance is (0, 100] so chance must be as well
+        uint_fast8_t chance = rand() % MaximumPlayerStat + 1;
+        if(state->roomInfo->eventPercentageChance > chance) {
+          UpdatePlayerStat(&state->playerInfo.health, state->roomInfo->eventStatChange);
+        }
         return GetNextOutputOutcome;
       case QuitGameOutcome:
         return button.outcome;
@@ -161,6 +235,9 @@ void CleanupBackend(struct GameInfo *info) {
   UnloadGameData();
   if (info && info->initialised) {
     info->initialised = false;
-    free((void *)info->rooms);
+    free(info->rooms);
+    info->rooms = NULL;
+    free(info->equipment);
+    info->equipment = NULL;
   }
 }

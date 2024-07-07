@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "game.h"
 #include "parser.h"
@@ -60,7 +61,7 @@ static void WriteRoomRow(FILE *fp, RoomCoord roomRow, RoomCoord roomColumn,
       fputs(rowChars[1], fp);
     }
 
-    if (0 == outputRow && GetGameRoom(info, roomRow + 1, roomColumn)->exists) {
+    if (0 == outputRow && GetGameRoom(info, roomRow + 1, roomColumn)->type != InvalidRoomType) {
       fprintf(fp, HorLine "%*s" HorLine, RoomGridSizeHor - 4, "");
     } else {
       FPrintRep(HorLine, RoomGridSizeHor - 2, fp);
@@ -75,8 +76,8 @@ static void WriteRoomRow(FILE *fp, RoomCoord roomRow, RoomCoord roomColumn,
   // Middle Room Rows
   else {
     char *wallChar;
-    if (!GetGameRoom(info, roomRow, roomColumn)->exists
-        || !GetGameRoom(info, roomRow, roomColumn - 1)->exists) {
+    if (GetGameRoom(info, roomRow, roomColumn)->type == InvalidRoomType
+        || GetGameRoom(info, roomRow, roomColumn - 1)->type == InvalidRoomType) {
       wallChar = VerLine;
     } else if (1 == outputRow) {
       wallChar = UpperHalfVerLine;
@@ -90,7 +91,7 @@ static void WriteRoomRow(FILE *fp, RoomCoord roomRow, RoomCoord roomColumn,
     if (currentRoom->x == roomColumn && currentRoom->y == roomRow && 1 == outputRow) {
       fprintf(fp, "%sP%*s", wallChar, RoomGridSizeHor - 3, "");
     // Room exists
-    } else if (GetGameRoom(info, roomRow, roomColumn)->exists) {
+    } else if (GetGameRoom(info, roomRow, roomColumn)->type != InvalidRoomType) {
       fprintf(fp, "%s%*s", wallChar, RoomGridSizeHor - 2, "");
     // Room does not exist
     } else {
@@ -122,7 +123,7 @@ static void WriteMap(const struct GameInfo *info, const struct RoomInfo *current
 #endif
 
 
-static char *CreateString(struct GameState *state, const char *restrict format, ...) {
+static char *CreateString(Arena *arena, const char *restrict format, ...) {
   va_list args1, args2;
   va_start(args1, format);
   va_copy(args2, args1);
@@ -136,7 +137,7 @@ static char *CreateString(struct GameState *state, const char *restrict format, 
   }
   ++allocatedCharCount;
 
-  res = arena_alloc(&state->arena, allocatedCharCount);
+  res = arena_alloc(arena, allocatedCharCount);
   if (!res) {
     goto cleanup;
   }
@@ -152,7 +153,15 @@ cleanup:
 }
 
 
+// TODO: Move to save.c
 static void StartGame(const struct GameInfo *info, struct GameState *state) {
+  memcpy(&state->playerInfo, &info->defaultPlayerStats, sizeof info->defaultPlayerStats);
+
+  for (uint_fast8_t i = 0; i < EquippedItemsSlots; ++i) {
+    state->playerInfo.equippedItems[i] = NULL;
+  }
+  EquipItem(info, state);
+
   state->roomInfo = GetGameRoom(info, DefaultRoomCoordX, DefaultRoomCoordY);
   state->startedGame = true;
 }
@@ -176,7 +185,7 @@ static bool CreateMainMenuScreen(const struct GameInfo *info, struct GameState *
       return false;
     }
 
-    state->body = CreateString(state, "%s%s%" PRIu32, screen.body, screen.extraText, *pReloadCount);
+    state->body = CreateString(&state->arena, "%s%s%" PRIu32, screen.body, screen.extraText, *pReloadCount);
     if (!state->body) {
       return false;
     }
@@ -200,9 +209,23 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
   WriteMap(info, state->roomInfo);
 #endif
 
-  state->body = CreateString(state, "%s%" PRIRoomCoord "%s%" PRIRoomCoord "%s",
+  char *roomInfoStr = "";
+  switch (state->roomInfo->type) {
+    // TODO: Add other options w/ extra info such as failing etc
+    case HealthChangeRoomType:
+      roomInfoStr = CreateString(&state->arena, "\n\n%s.", state->roomInfo->eventDescription);
+      if (!roomInfoStr) {
+        return false;
+      }
+      break;
+    default:
+      break;
+  }
+
+
+  state->body = CreateString(&state->arena, "%s%" PRIRoomCoord "%s%" PRIRoomCoord "%s%s",
                              bodyBeginning, state->roomInfo->x + 1, bodyMiddle,
-                             state->roomInfo->y + 1, bodyEnding);
+                             state->roomInfo->y + 1, bodyEnding, roomInfoStr);
   if (!state->body) {
     return false;
   }
@@ -211,23 +234,52 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
     switch (state->inputs[i].outcome) {
       case GameGoNorthOutcome:
         state->inputs[i].visible =
-          GetGameRoom(info, state->roomInfo->x, state->roomInfo->y + 1)->exists;
+          GetGameRoom(info, state->roomInfo->x, state->roomInfo->y + 1)->type != InvalidRoomType;
         break;
       case GameGoEastOutcome:
         state->inputs[i].visible =
-          GetGameRoom(info, state->roomInfo->x + 1, state->roomInfo->y)->exists;
+          GetGameRoom(info, state->roomInfo->x + 1, state->roomInfo->y)->type != InvalidRoomType;
         break;
       case GameGoSouthOutcome:
         state->inputs[i].visible =
-          GetGameRoom(info, state->roomInfo->x, state->roomInfo->y - 1)->exists;
+          GetGameRoom(info, state->roomInfo->x, state->roomInfo->y - 1)->type != InvalidRoomType;
         break;
       case GameGoWestOutcome:
         state->inputs[i].visible =
-          GetGameRoom(info, state->roomInfo->x - 1, state->roomInfo->y)->exists;
+          GetGameRoom(info, state->roomInfo->x - 1, state->roomInfo->y)->type != InvalidRoomType;
         break;
+      case GameHealthChangeOutcome:
+        state->inputs[i].visible = state->roomInfo->type == HealthChangeRoomType;
       default:
         break;
     }
+  }
+
+  return true;
+}
+
+static bool CreatePlayerStatsScreen(const struct GameInfo *info, struct GameState *state) {
+  (void)info;
+
+  struct GameScreen screen = {0};
+  if (!GetGameScreen(state->screenID, &screen)) {
+    return false;
+  }
+
+  state->body = CreateString(&state->arena, "%s\n\n"
+                                    "Health: %" PRIPlayerStat "\n"
+                                    "Stamina: %" PRIPlayerStat "\n"
+                                    "Physical Attack: %" PRIPlayerStat "\n"
+                                    "Magic Attack: %" PRIPlayerStat "\n"
+                                    "Physical Defence: %" PRIPlayerStat "\n"
+                                    "Magic Defence: %" PRIPlayerStat,
+                             screen.body,
+                             state->playerInfo.health, state->playerInfo.stamina,
+                             state->playerInfo.physAtk, state->playerInfo.magAtk,
+                             state->playerInfo.physDef, state->playerInfo.magDef
+  );
+  if (!state->body) {
+    return false;
   }
 
   return true;
@@ -241,23 +293,14 @@ static bool CreateSaveScreen(const struct GameInfo *info, struct GameState *stat
     return false;
   }
 
-  char *password = SaveState(state);
+  // TODO: Make SaveState return const char *
+  const char *password = SaveState(state);
   if (!password) {
     return false;
   }
 
-  int allocatedCharCount = snprintf(NULL, 0, "%s%s", screen.body, password);
-  if (allocatedCharCount <= 0) {
-    return false;
-  }
-  ++allocatedCharCount;
-
-  state->body = arena_alloc(&state->arena, allocatedCharCount * sizeof *state->body);
+  state->body = CreateString(&state->arena, "%s%s", screen.body, password);
   if (!state->body) {
-    return false;
-  }
-
-  if (snprintf(state->body, allocatedCharCount, "%s%s", screen.body, password) <= 0) {
     return false;
   }
 
@@ -271,6 +314,7 @@ static bool CreateSaveScreen(const struct GameInfo *info, struct GameState *stat
 bool (*CustomScreenCode[])(const struct GameInfo *, struct GameState *) = {
   CreateMainMenuScreen,
   CreateGameScreen,
+  CreatePlayerStatsScreen,
   CreateSaveScreen
 };
 size_t CustomScreenCodeCount = sizeof CustomScreenCode / sizeof *CustomScreenCode;

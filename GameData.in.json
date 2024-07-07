@@ -2,6 +2,14 @@
 
 {
   "name": "Untitled Text Adventure",
+  "defaultStats": {
+    "health": MaximumPlayerStat,
+    "stamina": MaximumPlayerStat,
+    "physAtk": MinimumPlayerStat,
+    "magAtk": MinimumPlayerStat,
+    "physDef": MinimumPlayerStat,
+    "magDef": MinimumPlayerStat
+  },
   "screens": [
     {
       // ID: 0
@@ -50,6 +58,15 @@
           "outcome": GameGoWestOutcome
         },
         {
+          "title": "Dodge Trap",
+          "outcome": GameHealthChangeOutcome
+        },
+        {
+          "title": "Check Player Stats",
+          "outcome": GotoScreenOutcome,
+          "newScreenID": PlayerStatsScreen
+        },
+        {
           "title": "Save and Quit",
           "outcome": GotoScreenOutcome,
           "newScreenID": SaveScreen
@@ -63,6 +80,19 @@
     },
     {
       // ID: 2
+      "body": "Player Stats",
+      "extraText": "",
+      "customScreenCode": PlayerStatsCustomScreenCode,
+      "buttons": [
+        {
+          "title": "Return to Game",
+          "outcome": GotoScreenOutcome,
+          "newScreenID": GameScreen
+        }
+      ]
+    },
+    {
+      // ID: 3
       "body": "Enter your password: ",
       "extraText": "",
       "inputType": TextScreenInputType,
@@ -73,14 +103,14 @@
       "nextScreenID": GameScreen
     },
     {
-      // ID: 3
+      // ID: 4
       "body": "Here is your password: \n",
       "extraText": "",
       "customScreenCode": SaveCustomScreenCode,
       "inputType": ButtonScreenInputType,
       "buttons": [
         {
-          "title": "Return To Main Menu",
+          "title": "Return to Main Menu",
           "outcome": GotoScreenOutcome,
           "newScreenID": MainMenuScreen
         }
@@ -97,6 +127,8 @@
       "default": 0
     }
   ],
+  // TODO: Support multiple floors
+  // TODO: Support removing doors between adjacent rooms
   "rooms": {
     "floorSize": 5,
     "roomsArray": [
@@ -115,7 +147,26 @@
       {
         "type": EmptyRoomType,
         "position": [1, 1]
+      },
+      // TODO: Make these values required for this room type
+      // TODO: Add other factors like agility that impact outcome
+      {
+        "type": HealthChangeRoomType,
+        "position": [1, 2],
+        "description": "You have come across a trap",
+        "percentageChance": 50,
+        "healthChange": -10
       }
     ]
-  }
+  },
+  // TODO: Make stats optional
+  "equipment": [
+    {
+      "name": "Leather",
+      "physAtkMod": 5,
+      "magAtkMod": 4,
+      "physDefMod": 90,
+      "magDefMod": 10
+    }
+  ]
 }
