@@ -110,6 +110,11 @@ VALUE_EMIT(PlayerStatDiff, MaximumPlayerStatDiff,  100)
 VALUE_EMIT(PlayerStatDiff, InvalidPlayerStatDiff, INT_FAST8_MAX)
 C_EMIT(typedef int_fast8_t PlayerStatDiff;)
 
+// EquipmentID is a uint8_t with [0, 62]
+// With 7 category of items, this gives 9 items per type
+VALUE_EMIT(EquipmentIDSave, InvalidEquipmentIDSave, 0)
+SAVED_INTEGRAL_TYPE_EMIT(uint, 8, EquipmentID)
+
 // TODO: Add enum for state vars
 
 EMIT(#endif /* PCGAME_TYPES_H */)

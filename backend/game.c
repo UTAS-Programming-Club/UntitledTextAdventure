@@ -88,11 +88,13 @@ static bool UpdatePlayerStat(PlayerStat *base, PlayerStatDiff diff) {
 }
 
 // TODO: Replace test with real impl with pickups
-void EquipItem(const struct GameInfo *info, struct GameState *state) {
-  // equipped ID index differs by item type
-  state->playerInfo.equippedItems[0] = info->equipment + 0;
+void UpdateStats(struct GameState *state) {
+  state->playerInfo.physAtk = MinimumPlayerStat;
+  state->playerInfo.magAtk = MinimumPlayerStat;
+  state->playerInfo.physDef = MinimumPlayerStat;
+  state->playerInfo.magDef = MinimumPlayerStat;
 
-  for (uint_fast8_t i = 0; i < EquippedItemsSlots; ++i) {
+  for (EquipmentID i = 0; i < EquippedItemsSlots; ++i) {
     const struct EquipmentInfo *item = state->playerInfo.equippedItems[i];
     if (!item) {
       continue;

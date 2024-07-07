@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+#include <types.h>
 
 #include "game.h"
 #include "save.h"
@@ -22,6 +23,7 @@ struct __attribute__((packed, scalar_storage_order("little-endian"))) SaveData {
   RoomCoordSave y;
   PlayerStatSave health;
   PlayerStatSave stamina;
+  EquipmentIDSave equippedItems[EquippedItemsSlots];
 };
 
 
@@ -44,6 +46,7 @@ static inline uint_fast8_t GetVal(char c) {
 }
 
 
+// TODO: Add zstd compression
 // Encode state to ascii string using base 85 with 4 bytes to 5 chars
 char *SaveState(struct GameState *state) {
   if (!state || !state->startedGame || !state->roomInfo) {
@@ -58,12 +61,18 @@ char *SaveState(struct GameState *state) {
     .stamina = state->playerInfo.stamina
   };
 
+  for (EquipmentID i = 0; i < EquippedItemsSlots; ++i) {
+  const struct EquipmentInfo *item = state->playerInfo.equippedItems[i];
+    data.equippedItems[i] = item ? item->id + 1 : InvalidEquipmentIDSave;
+  }
+
   uint8_t *pData = (uint8_t *)&data;
   size_t dataSize = sizeof data;
   // Note that this overestimates if dataSize is not a multiple of 4
   // This is corrected by reversing the order of each group of chars
   // so that the password ends with ! which can then be stripped out
   // to get a password that is shorter by 0 to 4 chars.
+  // TODO: Replace with integer math
   size_t passwordSize = 5 * ceil(dataSize / 4.) + 1;
   char *password = arena_alloc(&state->arena, passwordSize);
   if (!password) {
@@ -123,7 +132,7 @@ char *SaveState(struct GameState *state) {
     *(passwordPos++) = GetChar(digit4);
   }
 
-  while(passwordPos[-1] == STARTING_CHAR) {
+  for (int i = 0; i < 4 && passwordPos[-1] == STARTING_CHAR; ++i) {
     --passwordPos;
   }
   *passwordPos = '\0';
@@ -139,6 +148,8 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
   struct SaveData *data;
   size_t passwordSize = strlen(password);
   size_t dataSize = 4 * passwordSize / 5;
+  // Integer formula that gives the same result as 5*ceil(floor(4*size/5.)/4)+1 for integer sizes
+  size_t requiredProccessedBytes = 5 * ((sizeof *data - 2) / 5) + 6;
   uint32_t *decodedData = arena_alloc(&state->arena, dataSize);
   if (!decodedData) {
     return false;
@@ -152,7 +163,8 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
     pow(BASE, 4)
   };
 
-  for (size_t i = 0; i < passwordSize; i += 5) {
+  size_t processedBytes = 0;
+  for (size_t i = 0; i < passwordSize; i += 5, processedBytes += 4) {
     char data[5] = STARTING_CHAR_STR STARTING_CHAR_STR STARTING_CHAR_STR STARTING_CHAR_STR STARTING_CHAR_STR;
     uint8_t *pData = (uint8_t *)&data;
     size_t rem = passwordSize - i % passwordSize;
@@ -172,8 +184,7 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
     decodedData[i / 5] = digit4 * powers[4] + digit3 * powers[3] + digit2 * powers[2] + digit1 * powers[1] + digit0 * powers[0];
   }
 
-  // These should be the same but the current system can overestimate the number of bytes required
-  if (sizeof data < dataSize) {
+  if (requiredProccessedBytes != processedBytes) {
     return false;
   }
   data = (struct SaveData *)decodedData;
@@ -182,11 +193,15 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
     return false;
   }
 
-  // TODO: Setup equipment
-
   memcpy(&state->playerInfo, &info->defaultPlayerStats, sizeof info->defaultPlayerStats);
   state->playerInfo.health = data->health;
   state->playerInfo.stamina = data->stamina;
+
+  for (EquipmentID i = 0; i < EquippedItemsSlots; ++i) {
+    EquipmentID id = data->equippedItems[i];
+    state->playerInfo.equippedItems[i] = id != InvalidEquipmentIDSave ? info->equipment + id - 1 : NULL;
+  }
+  UpdateStats(state);
 
   state->roomInfo = GetGameRoom(info, data->x, data->y);
   state->startedGame = true;
@@ -200,6 +215,13 @@ bool CreateNewState(const struct GameInfo *info, struct GameState *state) {
   }
 
   memcpy(&state->playerInfo, &info->defaultPlayerStats, sizeof info->defaultPlayerStats);
+
+  // TODO: Remove hardcoded item once inventory works, perhaps have starting items?
+  state->playerInfo.equippedItems[0] = &info->equipment[0];
+  for (EquipmentID i = 1; i < EquippedItemsSlots; ++i) {
+    state->playerInfo.equippedItems[i] = NULL;
+  }
+  UpdateStats(state);
 
   state->roomInfo = GetGameRoom(info, DefaultRoomCoordX, DefaultRoomCoordY);
   state->startedGame = true;

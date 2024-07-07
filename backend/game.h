@@ -13,7 +13,7 @@
 // items equipable by player
 // Never modify after creation
 struct EquipmentInfo {
-  uint_fast8_t id;
+  EquipmentID id;
   char *name;
   // TODO: Add enum for type (helmet, boots, etc)
 
@@ -105,8 +105,7 @@ struct GameState {
 };
 
 // TODO: Move to another file that just handles equipment
-// find item matching ID and equip it to the player slot swapping out existing equipment
-void EquipItem(const struct GameInfo *, struct GameState *);
+void UpdateStats(struct GameState *);
 
 // GameInfo should be zero initialised before first call
 bool SetupBackend(struct GameInfo *);

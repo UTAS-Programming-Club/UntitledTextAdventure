@@ -220,14 +220,13 @@ bool LoadGameEquipment(uint_fast8_t *equipmentCount, struct EquipmentInfo **equi
   JSON_GETJSONARRAYERROR(jsonEquipment, GameData, "equipment", false);
 
   *equipmentCount = cJSON_GetArraySize(jsonEquipment);
-
   *equipment = calloc(*equipmentCount, sizeof **equipment);
   if (!*equipment) {
     return false;
   }
 
   struct EquipmentInfo *currentItem = *equipment;
-  uint_fast8_t i = 0;
+  EquipmentID i = 0;
 
   // cJSON_ArrayForEach uses int for idx, likely fine as INT_MAX >= 2^15 - 1
   cJSON *jsonItem;

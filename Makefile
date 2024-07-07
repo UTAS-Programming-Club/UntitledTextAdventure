@@ -75,6 +75,10 @@ $(INCDIR)/jsoncons_ext: third_party/jsoncons/include/jsoncons_ext | $(INCDIR)
 	cp -r $< $@
 
 
+# TODO: Fix these being ignored on rebuild
+# I had an issue with save.c not being rebuilt if types.in.h
+# changed because it did not depend on types.h directly,
+# despite depending on game.h which does depend on types.h.
 backend/game.h: $(INCDIR)/arena.h $(INCDIR)/types.h
 backend/parser.h: backend/game.h $(INCDIR)/types.h
 backend/save.h: backend/game.h
@@ -107,7 +111,7 @@ $(LIBDIR)/game.o: backend/game.c backend/game.h backend/parser.h backend/screens
 $(LIBDIR)/parser.o: backend/parser.c backend/fileloading.h backend/game.h backend/parser.h backend/specialscreens.h backend/winresources.h frontends/frontend.h $(INCDIR)/cJSON.h $(INCDIR)/types.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
-$(LIBDIR)/save.o: backend/save.c backend/game.h backend/save.h $(INCDIR)/arena.h | $(LIBDIR)
+$(LIBDIR)/save.o: backend/save.c backend/game.h backend/save.h $(INCDIR)/types.h $(INCDIR)/arena.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 $(LIBDIR)/screens.o: backend/screens.c backend/game.h backend/parser.h backend/screens.h $(INCDIR)/arena.h | $(LIBDIR)
@@ -117,7 +121,7 @@ $(LIBDIR)/specialscreens.o: backend/specialscreens.c backend/game.h backend/pars
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 
-$(LIBDIR)/cJSON.o: third_party/cJSON/cJSON.c third_party/cJSON/cJSON.h | $(LIBDIR)
+$(LIBDIR)/cJSON.o: third_party/cJSON/cJSON.c | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 

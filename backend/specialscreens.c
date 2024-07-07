@@ -153,17 +153,6 @@ cleanup:
 }
 
 
-// TODO: Move to save.c
-static void StartGame(const struct GameInfo *info, struct GameState *state) {
-  for (uint_fast8_t i = 0; i < EquippedItemsSlots; ++i) {
-    state->playerInfo.equippedItems[i] = NULL;
-  }
-  EquipItem(info, state);
-
-  CreateNewState(info, state);
-}
-
-
 static bool CreateMainMenuScreen(const struct GameInfo *info, struct GameState *state) {
   (void)info;
 
@@ -199,7 +188,7 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
   static char bodyEnding[] = "].";
 
   if (!state->startedGame) {
-    StartGame(info, state);
+    CreateNewState(info, state);
   }
 
 #ifdef _DEBUG
