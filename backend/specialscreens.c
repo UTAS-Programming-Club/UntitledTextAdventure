@@ -155,15 +155,12 @@ cleanup:
 
 // TODO: Move to save.c
 static void StartGame(const struct GameInfo *info, struct GameState *state) {
-  memcpy(&state->playerInfo, &info->defaultPlayerStats, sizeof info->defaultPlayerStats);
-
   for (uint_fast8_t i = 0; i < EquippedItemsSlots; ++i) {
     state->playerInfo.equippedItems[i] = NULL;
   }
   EquipItem(info, state);
 
-  state->roomInfo = GetGameRoom(info, DefaultRoomCoordX, DefaultRoomCoordY);
-  state->startedGame = true;
+  CreateNewState(info, state);
 }
 
 

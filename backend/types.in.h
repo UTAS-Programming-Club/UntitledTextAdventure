@@ -9,6 +9,7 @@
 #define JSON_ENUM_END
 
 #define VALUE_EMIT(type, name, value) hash define name value
+#define SAVED_INTEGRAL_TYPE_EMIT(type, size, name)
 #define C_EMIT(text)
 #else
 #define JSON_ENUM_START(name) enum name {
@@ -16,6 +17,9 @@
 #define JSON_ENUM_END };
 
 #define VALUE_EMIT(type, name, value) hash define name (type)value
+#define SAVED_INTEGRAL_TYPE_EMIT(type, size, name) \
+typedef type##_fast##size##_t name; \
+typedef type##size##_t name##Save;
 #define C_EMIT(text) text
 #endif
 
@@ -91,15 +95,14 @@ C_EMIT(#define PRIRoomCoord PRIuFAST8)
 VALUE_EMIT(RoomCoord, DefaultRoomCoordX,  0)
 VALUE_EMIT(RoomCoord, DefaultRoomCoordY,  0)
 VALUE_EMIT(RoomCoord, InvalidRoomCoord, 255)
-C_EMIT(typedef uint_fast8_t RoomCoord;)
-C_EMIT(typedef uint8_t RoomCoordSave;)
+SAVED_INTEGRAL_TYPE_EMIT(uint, 8, RoomCoord)
 
 
 // PlayerStat is a uint8_t with [0, 100]
 C_EMIT(#define PRIPlayerStat PRIuFAST8)
 VALUE_EMIT(PlayerStat, MinimumPlayerStat,   0)
 VALUE_EMIT(PlayerStat, MaximumPlayerStat, 100)
-C_EMIT(typedef uint_fast8_t PlayerStat;)
+SAVED_INTEGRAL_TYPE_EMIT(uint, 8, PlayerStat)
 
 // PlayerStatDiff is a int8_t with [-100, 100]
 VALUE_EMIT(PlayerStatDiff, MinimumPlayerStatDiff, -100)

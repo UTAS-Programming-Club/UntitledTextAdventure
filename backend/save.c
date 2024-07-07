@@ -20,6 +20,8 @@ struct __attribute__((packed, scalar_storage_order("little-endian"))) SaveData {
   uint16_t version;
   RoomCoordSave x;
   RoomCoordSave y;
+  PlayerStatSave health;
+  PlayerStatSave stamina;
 };
 
 
@@ -51,7 +53,9 @@ char *SaveState(struct GameState *state) {
   struct SaveData data = {
     .version = PasswordVersion,
     .x = state->roomInfo->x,
-    .y = state->roomInfo->y
+    .y = state->roomInfo->y,
+    .health = state->playerInfo.health,
+    .stamina = state->playerInfo.stamina
   };
 
   uint8_t *pData = (uint8_t *)&data;
@@ -178,10 +182,26 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
     return false;
   }
 
-  // TODO: Setup stats
   // TODO: Setup equipment
 
+  memcpy(&state->playerInfo, &info->defaultPlayerStats, sizeof info->defaultPlayerStats);
+  state->playerInfo.health = data->health;
+  state->playerInfo.stamina = data->stamina;
+
   state->roomInfo = GetGameRoom(info, data->x, data->y);
+  state->startedGame = true;
+
+  return true;
+}
+
+bool CreateNewState(const struct GameInfo *info, struct GameState *state) {
+  if (!info || !state) {
+    return false;
+  }
+
+  memcpy(&state->playerInfo, &info->defaultPlayerStats, sizeof info->defaultPlayerStats);
+
+  state->roomInfo = GetGameRoom(info, DefaultRoomCoordX, DefaultRoomCoordY);
   state->startedGame = true;
 
   return true;
