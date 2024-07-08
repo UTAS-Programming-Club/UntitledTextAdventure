@@ -46,6 +46,13 @@
   } \
   var = cJSON_GetNumberValue(CAT(json, __LINE__));
 
+#define JSON_GETBOOLEANVALUEERROR(var, obj, name, err) \
+  cJSON *CAT(json, __LINE__) = cJSON_GetObjectItemCaseSensitive(obj, name); \
+  if (!cJSON_IsBool(CAT(json, __LINE__))) { \
+    return err; \
+  } \
+  var = cJSON_IsTrue(CAT(json, __LINE__));
+
 #define JSON_GETSTRINGVALUEERROR(var, obj, name, err) \
   cJSON *CAT(json, __LINE__) = cJSON_GetObjectItemCaseSensitive(obj, name); \
   var = cJSON_GetStringValue(CAT(json, __LINE__)); \
@@ -233,6 +240,7 @@ bool LoadGameEquipment(uint_fast8_t *equipmentCount, struct EquipmentInfo **equi
   cJSON_ArrayForEach(jsonItem, jsonEquipment) {
     currentItem->id = i;
     if (!GetGameEquipmentItemData(jsonItem, currentItem)) {
+      free(equipment);
       return false;
     }
 
@@ -244,10 +252,38 @@ bool LoadGameEquipment(uint_fast8_t *equipmentCount, struct EquipmentInfo **equi
 }
 
 
+bool LoadGameStateSaveStatus(bool **stateSaveStatus) {
+  if (!GameData) {
+    return false;
+  }
+
+  cJSON *jsonStateVars;
+  JSON_GETJSONARRAYERROR(jsonStateVars, GameData, "state", false);
+
+  size_t stateSaveStatusCount = cJSON_GetArraySize(jsonStateVars);
+  *stateSaveStatus = calloc(stateSaveStatusCount, sizeof *stateSaveStatus);
+  if (!*stateSaveStatus) {
+    return false;
+  }
+
+  size_t i = 0;
+  cJSON *jsonStateVar;
+  cJSON_ArrayForEach(jsonStateVar, jsonStateVars) {
+    cJSON *jsonStateSize = cJSON_GetObjectItemCaseSensitive(jsonStateVar, "size");
+    if (!cJSON_IsNumber(jsonStateSize)) {
+      continue;
+    }
+
+    JSON_GETBOOLEANVALUEERROR((*stateSaveStatus)[i], jsonStateVar, "save", false);
+    ++i;
+  }
+
+  return true;
+}
+
 // Currently only integers are supported
 // TODO: Support floating point
 // TODO: Support loading data from "save", the plan is to use a password system so no actual saves per se
-// Must be freed at the end of the program
 unsigned char *InitGameState(void) {
   if (!GameData) {
     return NULL;

@@ -134,7 +134,8 @@
           "screenID",
           "stateID",
           "size",
-          "default"
+          "default",
+          "save"
         ],
         "properties": {
           "screenID": {
@@ -152,6 +153,9 @@
           },
           "default": {
             "type": "integer"
+          },
+          "save": {
+            "type": "boolean"
           }
         }
       }

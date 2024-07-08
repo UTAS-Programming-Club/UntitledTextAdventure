@@ -58,6 +58,8 @@ struct GameInfo {
 
   uint_fast8_t equipmentCount;
   struct EquipmentInfo *equipment;
+
+  bool *stateSaveStatus;
 };
 
 // Never modify after creation

@@ -22,53 +22,62 @@ bool SetupBackend(struct GameInfo *info) {
   }
 
   if (info->initialised) {
-    return true;
+    goto end;
   }
 
   if (info->rooms || info->equipment) {
     PrintError("Parts of the game info struct are already initialised");
-    return false;
+    goto end;
   }
 
   char dataFile[] = "GameData.json";
 
   if (!LoadGameData(dataFile)) {
     PrintError("Failed to load %s", dataFile);
-    return false;
+    goto end;
   }
 
   info->name = LoadGameName();
   if (!info->name) {
     PrintError("Failed to load game name from %s", dataFile);
-    return false;
+    goto end;
   }
 
   if (!LoadDefaultPlayerStats(&info->defaultPlayerStats)) {
     PrintError("Failed to load default player stats from %s", dataFile);
-    return false;
+    goto end;
   }
 
   if (!LoadGameRooms(&info->floorSize, &info->rooms)) {
-    free(info->rooms);
-    info->rooms = NULL;
     PrintError("Failed to load rooms from %s", dataFile);
-    return false;
+    goto free_rooms;
   }
 
   if (!LoadGameEquipment(&info->equipmentCount, &info->equipment)) {
-    free(info->rooms);
-    info->rooms = NULL;
-    free(info->equipment);
-    info->equipment = NULL;
     PrintError("Failed to load equipment from %s", dataFile);
-    return false;
+    goto free_rooms;
+  }
+
+  if (!LoadGameStateSaveStatus(&info->stateSaveStatus)) {
+    PrintError("Failed to load state info from %s", dataFile);
+    goto free_stateSaveStatus;
   }
 
   unsigned int currentTimestamp = time(NULL);
   srand(currentTimestamp);
 
   info->initialised = true;
-  return true;
+  goto end;
+
+free_stateSaveStatus:
+  free(info->stateSaveStatus);
+  info->stateSaveStatus = NULL;
+free_rooms:
+  free(info->rooms);
+  info->rooms = NULL;
+
+end:
+  return info->initialised;
 }
 
 static bool UpdatePlayerStat(PlayerStat *base, PlayerStatDiff diff) {
@@ -241,5 +250,7 @@ void CleanupBackend(struct GameInfo *info) {
     info->rooms = NULL;
     free(info->equipment);
     info->equipment = NULL;
+    free(info->stateSaveStatus);
+    info->stateSaveStatus = NULL;
   }
 }

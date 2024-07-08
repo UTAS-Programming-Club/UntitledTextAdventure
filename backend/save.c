@@ -53,21 +53,26 @@ char *SaveState(struct GameState *state) {
     return NULL;
   }
 
-  struct SaveData data = {
-    .version = PasswordVersion,
-    .x = state->roomInfo->x,
-    .y = state->roomInfo->y,
-    .health = state->playerInfo.health,
-    .stamina = state->playerInfo.stamina
-  };
-
-  for (EquipmentID i = 0; i < EquippedItemsSlots; ++i) {
-  const struct EquipmentInfo *item = state->playerInfo.equippedItems[i];
-    data.equippedItems[i] = item ? item->id + 1 : InvalidEquipmentIDSave;
+  struct SaveData *data = arena_alloc(&state->arena, sizeof *data);
+  if (!data) {
+    return NULL;
   }
 
-  uint8_t *pData = (uint8_t *)&data;
-  size_t dataSize = sizeof data;
+  // TODO: Add state data
+  // New list of bools is not enough, also need the size and number of items
+
+  data->version = PasswordVersion;
+  data->x = state->roomInfo->x;
+  data->y = state->roomInfo->y;
+  data->health = state->playerInfo.health;
+  data->stamina = state->playerInfo.stamina;
+
+  for (EquipmentID i = 0; i < EquippedItemsSlots; ++i) {
+    const struct EquipmentInfo *item = state->playerInfo.equippedItems[i];
+    data->equippedItems[i] = item ? item->id + 1 : InvalidEquipmentIDSave;
+  }
+
+  size_t dataSize = sizeof *data;
   // Note that this overestimates if dataSize is not a multiple of 4
   // This is corrected by reversing the order of each group of chars
   // so that the password ends with ! which can then be stripped out
@@ -93,7 +98,7 @@ char *SaveState(struct GameState *state) {
     uint_fast32_t value = 0;
     size_t rem = dataSize - i % dataSize;
     size_t quot = rem < 4 ? rem : 4;
-    memcpy(&value, pData + i, quot);
+    memcpy(&value, (uint8_t *)data + i, quot);
 
     uint_fast8_t digit4 = value / powers[4];
     uint_fast32_t value4 = value - digit4 * powers[4];

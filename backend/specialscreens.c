@@ -123,6 +123,7 @@ static void WriteMap(const struct GameInfo *info, const struct RoomInfo *current
 #endif
 
 
+// TODO: Use arena's arena_sprintf?
 static char *CreateString(Arena *arena, const char *restrict format, ...) {
   va_list args1, args2;
   va_start(args1, format);

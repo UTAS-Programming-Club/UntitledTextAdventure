@@ -30,10 +30,13 @@ void UnloadGameData(void);
 
 char *LoadGameName(void);
 bool LoadDefaultPlayerStats(struct PlayerInfo *);
-// loaded struct pointers must be freed, even if these functions returns false
+// The RoomInfo array must be freed, even if this function returns false
 bool LoadGameRooms(uint_fast8_t *, struct RoomInfo **);
 bool LoadGameEquipment(uint_fast8_t *, struct EquipmentInfo **);
 
+// The bool array must be freed by the end of the program, even if this functions returns false
+bool LoadGameStateSaveStatus(bool **);
+// This array must be freed by the end of the game
 unsigned char *InitGameState(void);
 size_t GetGameStateOffset(enum Screen, uint_fast8_t);
 

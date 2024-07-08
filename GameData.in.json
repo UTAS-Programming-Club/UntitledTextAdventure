@@ -125,7 +125,8 @@
       "stateID": 0,
       // type: uint32_t
       "size": 4,
-      "default": 0
+      "default": 0,
+      "save": true
     }
   ],
   // TODO: Support multiple floors
