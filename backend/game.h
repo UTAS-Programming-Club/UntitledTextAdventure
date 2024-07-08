@@ -100,6 +100,8 @@ struct GameState {
   bool startedGame;
 // implementation, do not use outside of backend
   Arena arena;
+  size_t stateDataSize;
+  // TODO: Should this be uint8_t to ensure correct size?
   unsigned char *stateData;
   enum CustomScreenCode customScreenCodeID;
 };

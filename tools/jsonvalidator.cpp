@@ -20,9 +20,9 @@ static bool CheckJson(istream &schemaFile, istream &jsonFile, std::string_view j
   ojson json;
   uint_fast32_t errorCount = 0;
   auto reporter = [&errorCount](const jsonschema::validation_message& message) -> jsonschema::walk_result {
-          ++errorCount;
-          std::cout << message.instance_location().string() << ": " << message.message() << std::endl;
-          return jsonschema::walk_result::advance;
+    ++errorCount;
+    std::cout << message.instance_location().string() << ": " << message.message() << std::endl;
+    return jsonschema::walk_result::advance;
   };
 
   std::cout << "Parsing " << jsonFileName << std::endl;

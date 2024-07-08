@@ -53,27 +53,33 @@ char *SaveState(struct GameState *state) {
     return NULL;
   }
 
-  struct SaveData data = {
-    .version = PasswordVersion,
-    .x = state->roomInfo->x,
-    .y = state->roomInfo->y,
-    .health = state->playerInfo.health,
-    .stamina = state->playerInfo.stamina
-  };
+  struct SaveData *data;
+  size_t dataSize = sizeof *data + state->stateDataSize;
+  data = arena_alloc(&state->arena, dataSize);
+  if (!data) {
+    return NULL;
+  }
+  uint8_t *pData = (uint8_t *)data;
+
+  data->version = PasswordVersion;
+  data->x       = state->roomInfo->x;
+  data->y       = state->roomInfo->y;
+  data->health  = state->playerInfo.health;
+  data->stamina = state->playerInfo.stamina;
 
   for (EquipmentID i = 0; i < EquippedItemsSlots; ++i) {
-  const struct EquipmentInfo *item = state->playerInfo.equippedItems[i];
-    data.equippedItems[i] = item ? item->id + 1 : InvalidEquipmentIDSave;
+    const struct EquipmentInfo *item = state->playerInfo.equippedItems[i];
+    data->equippedItems[i] = item ? item->id + 1 : InvalidEquipmentIDSave;
   }
 
-  uint8_t *pData = (uint8_t *)&data;
-  size_t dataSize = sizeof data;
+  memcpy(pData + sizeof *data, state->stateData, state->stateDataSize);
+
   // Note that this overestimates if dataSize is not a multiple of 4
   // This is corrected by reversing the order of each group of chars
   // so that the password ends with ! which can then be stripped out
   // to get a password that is shorter by 0 to 4 chars.
-  // TODO: Replace with integer math
-  size_t passwordSize = 5 * ceil(dataSize / 4.) + 1;
+  // Integer formula that gives the same result as 5*ceil(size/4.)+1 for integer sizes
+  size_t passwordSize = 5 * ((dataSize + 3) / 4) + 1;
   char *password = arena_alloc(&state->arena, passwordSize);
   if (!password) {
     return NULL;
@@ -148,8 +154,7 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
   struct SaveData *data;
   size_t passwordSize = strlen(password);
   size_t dataSize = 4 * passwordSize / 5;
-  // Integer formula that gives the same result as 5*ceil(floor(4*size/5.)/4)+1 for integer sizes
-  size_t requiredProccessedBytes = 5 * ((sizeof *data - 2) / 5) + 6;
+  size_t requiredProccessedBytes = 4 * ((sizeof *data + state->stateDataSize + 3) / 4);
   uint32_t *decodedData = arena_alloc(&state->arena, dataSize);
   if (!decodedData) {
     return false;
@@ -203,6 +208,8 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
   }
   UpdateStats(state);
 
+  memcpy(state->stateData, (uint8_t *)data + sizeof *data, state->stateDataSize);
+
   state->roomInfo = GetGameRoom(info, data->x, data->y);
   state->startedGame = true;
 
@@ -222,6 +229,8 @@ bool CreateNewState(const struct GameInfo *info, struct GameState *state) {
     state->playerInfo.equippedItems[i] = NULL;
   }
   UpdateStats(state);
+
+  // TODO: Reset state, requires removing main menu state
 
   state->roomInfo = GetGameRoom(info, DefaultRoomCoordX, DefaultRoomCoordY);
   state->startedGame = true;

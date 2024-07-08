@@ -5,6 +5,7 @@
 #include <limits.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <types.h>
 #ifdef _WIN32
@@ -233,6 +234,7 @@ bool LoadGameEquipment(uint_fast8_t *equipmentCount, struct EquipmentInfo **equi
   cJSON_ArrayForEach(jsonItem, jsonEquipment) {
     currentItem->id = i;
     if (!GetGameEquipmentItemData(jsonItem, currentItem)) {
+      free(equipment);
       return false;
     }
 
@@ -246,16 +248,15 @@ bool LoadGameEquipment(uint_fast8_t *equipmentCount, struct EquipmentInfo **equi
 
 // Currently only integers are supported
 // TODO: Support floating point
-// TODO: Support loading data from "save", the plan is to use a password system so no actual saves per se
-// Must be freed at the end of the program
-unsigned char *InitGameState(void) {
-  if (!GameData) {
-    return NULL;
+bool InitGameState(size_t *gameStateSize, unsigned char **gameState) {
+  if (!gameStateSize || !gameState) {
+    return false;
   }
 
   cJSON *jsonStateVars;
-  JSON_GETJSONARRAYERROR(jsonStateVars, GameData, "state", NULL);
+  JSON_GETJSONARRAYERROR(jsonStateVars, GameData, "state", false);
 
+  // totalSize is allocated size, gameStateSize is the subset used for data
   size_t totalSize = 0;
   size_t stateSize;
 
@@ -279,6 +280,7 @@ unsigned char *InitGameState(void) {
 #ifdef DEBUG_STATE
   printf("Total size is %zu, ", totalSize);
 #endif
+  *gameStateSize = totalSize;
   if (stateSize != sizeof(uint64_t)) {
     totalSize += sizeof(uint64_t) - stateSize;
   }
@@ -286,9 +288,9 @@ unsigned char *InitGameState(void) {
   printf("Rounded size is %zu\n", totalSize);
 #endif
 
-  unsigned char *gameState = malloc(totalSize);
-  if (!gameState) {
-    return NULL;
+  *gameState = malloc(totalSize);
+  if (!*gameState) {
+    return false;
   }
 
   size_t currentOffset = 0;
@@ -308,11 +310,11 @@ unsigned char *InitGameState(void) {
     // and so any excess writing is irrelevant. Doing it this way avoids branching to check the var
     // size. The buffer is large enough so that even overestimating the size of the final variable
     // is safe.
-    *((uint64_t *)gameState + currentOffset) = cJSON_GetNumberValue(jsonDefaultValue);
+    *((uint64_t *)*gameState + currentOffset) = cJSON_GetNumberValue(jsonDefaultValue);
 #ifdef DEBUG_STATE
     printf("Set state variable at offset %zu, remainder %zu of size %zu(8) to %" PRIx64 "\n",
            currentOffset, totalSize - currentOffset, stateSize,
-           *((uint64_t *)gameState + currentOffset));
+           *((uint64_t *)*gameStatea + currentOffset));
 #endif
     currentOffset += stateSize;
   }
@@ -321,9 +323,10 @@ unsigned char *InitGameState(void) {
   getchar();
 #endif
 
-  return gameState;
+  return true;
 }
 
+// TODO: Ensure support for systems without poor support for unaligned access
 // TODO: Change error value to -1(would need nonstandard ssize_t)?
 size_t GetGameStateOffset(enum Screen screenID, uint_fast8_t stateID) {
   if (!GameData) {
