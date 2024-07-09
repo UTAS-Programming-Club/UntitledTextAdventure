@@ -326,7 +326,7 @@ bool InitGameState(size_t *gameStateSize, unsigned char **gameState) {
   return true;
 }
 
-// TODO: Ensure support for systems without poor support for unaligned access
+// TODO: Ensure support for systems with poor support for unaligned access
 // TODO: Change error value to -1(would need nonstandard ssize_t)?
 size_t GetGameStateOffset(enum Screen screenID, uint_fast8_t stateID) {
   if (!GameData) {

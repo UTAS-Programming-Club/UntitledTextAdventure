@@ -35,39 +35,38 @@ static void FPrintRep(char *sym, uint_fast8_t count, FILE *fp) {
 // TODO: Find a better way to mark rooms that don't exist
 // TODO: Indicate room type
 // TODO: Fix room openings for other sizes or remove resizing support
-// TODO: Merge repeated GetGameRoom calls
-static void WriteRoomRow(FILE *fp, RoomCoord roomRow, RoomCoord roomColumn,
+static void WriteRoomRow(FILE *fp, RoomCoord roomX, RoomCoord roomY,
                          uint_fast8_t outputRow, const struct GameInfo *info,
-                         const struct RoomInfo *currentRoom
+                         const struct RoomInfo *playerRoom
                          ) {
-  if (RoomGridSizeVer - 1 == outputRow && 0 != roomRow) {
+  if (RoomGridSizeVer - 1 == outputRow && 0 != roomY) {
     return;
   }
 
   // Top, middle and bottom grid rows
   if (0 == outputRow || RoomGridSizeVer - 1 == outputRow) {
     const char **rowChars = NULL;
-    if (info->floorSize - 1 == roomRow) {
+    if (info->floorSize - 1 == roomY) {
       rowChars = TopGridRowChars;
-    } else if (0 < roomRow || 0 == outputRow) {
+    } else if (0 < roomY || 0 == outputRow) {
       rowChars = MiddleGridRowChars;
     } else {
       rowChars = BottomGridRowChars;
     }
 
-    if (0 == roomColumn) {
+    if (0 == roomX) {
       fputs(rowChars[0], fp);
     } else {
       fputs(rowChars[1], fp);
     }
 
-    if (0 == outputRow && GetGameRoom(info, roomRow + 1, roomColumn)->type != InvalidRoomType) {
+    if (0 == outputRow && GetGameRoom(info, roomX, roomY + 1)->type != InvalidRoomType) {
       fprintf(fp, HorLine "%*s" HorLine, RoomGridSizeHor - 4, "");
     } else {
       FPrintRep(HorLine, RoomGridSizeHor - 2, fp);
     }
 
-    if (info->floorSize - 1 == roomColumn) {
+    if (info->floorSize - 1 == roomX) {
       fputs(rowChars[2], fp);
       fputc('\n', fp);
     }
@@ -75,9 +74,10 @@ static void WriteRoomRow(FILE *fp, RoomCoord roomRow, RoomCoord roomColumn,
 
   // Middle Room Rows
   else {
+    enum RoomType roomExists = GetGameRoom(info, roomX, roomY)->type != InvalidRoomType;
+
     char *wallChar;
-    if (GetGameRoom(info, roomRow, roomColumn)->type == InvalidRoomType
-        || GetGameRoom(info, roomRow, roomColumn - 1)->type == InvalidRoomType) {
+    if (!roomExists || GetGameRoom(info, roomX - 1, roomY)->type == InvalidRoomType) {
       wallChar = VerLine;
     } else if (1 == outputRow) {
       wallChar = UpperHalfVerLine;
@@ -88,17 +88,17 @@ static void WriteRoomRow(FILE *fp, RoomCoord roomRow, RoomCoord roomColumn,
     }
 
     // Player in room
-    if (currentRoom->x == roomColumn && currentRoom->y == roomRow && 1 == outputRow) {
+    if (playerRoom->x == roomX && playerRoom->y == roomY && 1 == outputRow) {
       fprintf(fp, "%sP%*s", wallChar, RoomGridSizeHor - 3, "");
     // Room exists
-    } else if (GetGameRoom(info, roomRow, roomColumn)->type != InvalidRoomType) {
+    } else if (roomExists) {
       fprintf(fp, "%s%*s", wallChar, RoomGridSizeHor - 2, "");
     // Room does not exist
     } else {
       fprintf(fp, "%sNO%*s", wallChar, RoomGridSizeHor - 4, "");
     }
 
-    if (info->floorSize - 1 == roomColumn) {
+    if (info->floorSize - 1 == roomX) {
       fputs(VerLine "\n", fp);
     }
   }
@@ -110,10 +110,10 @@ static void WriteMap(const struct GameInfo *info, const struct RoomInfo *current
     return;
   }
 
-  for (RoomCoord roomRow = info->floorSize - 1; roomRow != InvalidRoomCoord; --roomRow) {
+  for (RoomCoord roomY = info->floorSize - 1; roomY != InvalidRoomCoord; --roomY) {
     for (uint_fast8_t outputRow = 0; outputRow < RoomGridSizeVer; ++outputRow) {
-      for (RoomCoord roomColumn = 0; roomColumn < info->floorSize; ++roomColumn) {
-        WriteRoomRow(fp, roomRow, roomColumn, outputRow, info, currentRoom);
+      for (RoomCoord roomX = 0; roomX < info->floorSize; ++roomX) {
+        WriteRoomRow(fp, roomX, roomY, outputRow, info, currentRoom);
       }
     }
   }
@@ -280,7 +280,6 @@ static bool CreateSaveScreen(const struct GameInfo *info, struct GameState *stat
     return false;
   }
 
-  // TODO: Make SaveState return const char *
   const char *password = SaveState(state);
   if (!password) {
     return false;
