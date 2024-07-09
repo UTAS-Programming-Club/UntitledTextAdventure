@@ -89,20 +89,24 @@ struct GameState {
 // public, safe to use outside of backend
   enum Screen screenID;
   const char *body; // utf-8
+
   enum ScreenInputType inputType;
   uint_fast8_t inputCount;      // Only set if inputType == ButtonScreenInputType
   // TODO: Make const
   struct GameInput *inputs;     // Only set if inputType == ButtonScreenInputType
   enum Screen previousScreenID; // Only set if inputType == TextScreenInputType
   enum Screen nextScreenID;     // Only set if inputType == TextScreenInputType
+
   struct PlayerInfo playerInfo;
   const struct RoomInfo *roomInfo;
   bool startedGame;
 // implementation, do not use outside of backend
   Arena arena;
+
+  static_assert(sizeof(unsigned char) == sizeof(uint8_t), "Need 8 bit bytes.");
   size_t stateDataSize;
-  // TODO: Should this be uint8_t to ensure correct size?
   unsigned char *stateData;
+
   enum CustomScreenCode customScreenCodeID;
 };
 
