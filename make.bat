@@ -1,18 +1,14 @@
 @echo off
 
-set COSMOS=third_party\cosmos\bin
-set MAKECOSMOS=third_party/cosmos/bin
-set SUBMAKECOSMOS=../cosmos/bin
+set COSMOSBIN=%cd:\=/%/third_party/cosmos/bin
 set SHELL=sh
-set CC=x86_64-unknown-cosmo-cc
-set CXX=x86_64-unknown-cosmo-c++
-set APELINK=apelink.exe
-set x86_64APEELF=ape-x86_64.elf
 
-%COSMOS%\make.exe %* ^
-SHELL=%MAKECOSMOS%/%SHELL% SUBMAKESHELL=SHELL=%SUBMAKECOSMOS%/%SHELL% ^
-PATH=%MAKECOSMOS%  SUBMAKEPATH=PATH=%SUBMAKECOSMOS% ^
-CC="%MAKECOSMOS%/%SHELL% %MAKECOSMOS%/%CC%" SUBMAKECC=CC="\"%SUBMAKECOSMOS%/%SHELL% %SUBMAKECOSMOS%/%CC%\"" ^
-CXX="%MAKECOSMOS%/%SHELL% %MAKECOSMOS%/%CXX%" ^
-APELINK="%MAKECOSMOS%/%APELINK%" x86_64APEELF="%MAKECOSMOS%/%x86_64APEELF%"
-
+%COSMOSBIN%/make.exe %* ^
+PATH=%COSMOSBIN% ^
+APELINK="apelink.exe" x86_64APEELF="%COSMOSBIN%/ape-x86_64.elf" ^
+AR="x86_64-unknown-cosmo-ar" ^
+AS="x86_64-unknown-cosmo-as" ^
+CC="%SHELL% %COSMOSBIN%/x86_64-unknown-cosmo-cc" ^
+CXX="%SHELL% %COSMOSBIN%/x86_64-unknown-cosmo-c++" ^
+MAKE=make ^
+SHELL=%SHELL%

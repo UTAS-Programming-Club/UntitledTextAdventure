@@ -35,10 +35,8 @@ static void FPrintRep(char *sym, uint_fast8_t count, FILE *fp) {
 // TODO: Find a better way to mark rooms that don't exist
 // TODO: Indicate room type
 // TODO: Fix room openings for other sizes or remove resizing support
-static void WriteRoomRow(FILE *fp, RoomCoord roomX, RoomCoord roomY,
-                         uint_fast8_t outputRow, const struct GameInfo *info,
-                         const struct RoomInfo *playerRoom
-                         ) {
+static void WriteRoomRow(FILE *fp, RoomCoord roomX, RoomCoord roomY, uint_fast8_t outputRow,
+                         const struct GameInfo *info, const struct RoomInfo *playerRoom) {
   if (RoomGridSizeVer - 1 == outputRow && 0 != roomY) {
     return;
   }

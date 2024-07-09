@@ -129,7 +129,7 @@ $(LIBDIR)/cJSON.o: third_party/cJSON/cJSON.c | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 $(LIBDIR)/libzstd.a: third_party/zstd/lib | $(LIBDIR)
-	$(MAKE) -C $< libzstd.a
+	$(MAKE) -C $< libzstd.a ZSTD_NO_ASM=1
 	cp $</libzstd.a $@
 
 
@@ -178,7 +178,7 @@ $(BINDIR)/cmdgame$(EXECSUFFIX): $(LIBDIR)/cmdfrontend.o $(COMMONOBJS) $(WINRESOU
 	$(CC) -o $(basename $@) $^ $(CFLAGS) -lm
 	$(call MAKEEXEC,$@,$(basename $@))
 
-ifdef ISWINDOWS
+ifdef 0 # ISWINDOWS
 $(BINDIR)/gdigame$(EXECSUFFIX): $(LIBDIR)/gdifrontend.o $(COMMONOBJS) $(WINRESOURCES) | $(BINDIR)
 	$(CC) -o $(basename $@) $^ $(CFLAGS) $(GDICFLAGS)
 	$(call MAKEEXEC,$@,$(basename $@))
