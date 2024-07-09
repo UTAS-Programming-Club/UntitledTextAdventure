@@ -20,7 +20,6 @@ static_assert(sizeof(size_t) <= sizeof(unsigned long long), "Need to store size_
 // 65535 is reserved
 static const uint16_t PasswordVersion = 0;
 
-// TODO: Store screen variable data
 struct __attribute__((packed, scalar_storage_order("little-endian"))) SaveData {
   uint16_t version;
   RoomCoordSave x;
