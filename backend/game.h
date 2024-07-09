@@ -5,6 +5,7 @@
 #include <arena.h>
 #endif
 
+#include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <types.h>

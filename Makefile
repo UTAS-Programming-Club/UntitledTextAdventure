@@ -12,7 +12,7 @@ BINDIR := $(OUTDIR)/bin/
 LIBDIR := $(OUTDIR)/lib/
 INCDIR := $(OUTDIR)/include/
 
-COMMONOBJS := $(LIBDIR)/cJSON.o $(LIBDIR)/fileloading_frontend.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/save.o $(LIBDIR)/screens.o $(LIBDIR)/specialscreens.o
+COMMONOBJS := $(LIBDIR)/cJSON.o $(LIBDIR)/fileloading_frontend.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/save.o $(LIBDIR)/screens.o $(LIBDIR)/specialscreens.o $(LIBDIR)/libzstd.a
 
 CFLAGS += -I $(INCDIR)
 CXXFLAGS += -I $(INCDIR)
@@ -56,6 +56,7 @@ tools: $(BINDIR)/jsonvalidator$(EXECSUFFIX) $(BINDIR)/mapwatch$(EXECSUFFIX) $(BI
 
 clean:
 	rm -r $(OUTPUT) GameData.json 2> /dev/null || true
+	$(MAKE) -C third_party/zstd/lib clean
 
 %/:
 	mkdir -p $@
@@ -72,6 +73,9 @@ $(INCDIR)/jsoncons: third_party/jsoncons/include/jsoncons | $(INCDIR)
 	cp -r $< $@
 
 $(INCDIR)/jsoncons_ext: third_party/jsoncons/include/jsoncons_ext | $(INCDIR)
+	cp -r $< $@
+
+$(INCDIR)/zstd.h: third_party/zstd/lib/zstd.h | $(INCDIR)
 	cp -r $< $@
 
 
@@ -111,7 +115,7 @@ $(LIBDIR)/game.o: backend/game.c backend/game.h backend/parser.h backend/screens
 $(LIBDIR)/parser.o: backend/parser.c backend/fileloading.h backend/game.h backend/parser.h backend/specialscreens.h backend/winresources.h frontends/frontend.h $(INCDIR)/cJSON.h $(INCDIR)/types.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
-$(LIBDIR)/save.o: backend/save.c backend/game.h backend/save.h $(INCDIR)/types.h $(INCDIR)/arena.h | $(LIBDIR)
+$(LIBDIR)/save.o: backend/save.c backend/game.h backend/save.h $(INCDIR)/arena.h $(INCDIR)/types.h $(INCDIR)/zstd.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 $(LIBDIR)/screens.o: backend/screens.c backend/game.h backend/parser.h backend/screens.h $(INCDIR)/arena.h | $(LIBDIR)
@@ -123,6 +127,10 @@ $(LIBDIR)/specialscreens.o: backend/specialscreens.c backend/game.h backend/pars
 
 $(LIBDIR)/cJSON.o: third_party/cJSON/cJSON.c | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
+
+$(LIBDIR)/libzstd.a: third_party/zstd/lib | $(LIBDIR)
+	$(MAKE) -C $< libzstd.a
+	cp $</libzstd.a $@
 
 
 $(LIBDIR)/jsonvalidator.o: tools/jsonvalidator.cpp $(INCDIR)/jsoncons $(INCDIR)/jsoncons_ext | $(LIBDIR)

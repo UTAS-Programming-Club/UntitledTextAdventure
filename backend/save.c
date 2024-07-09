@@ -1,13 +1,13 @@
-#include <arena.h>
-#include <assert.h>
-#include <math.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <string.h>
-#include <types.h>
+#include <arena.h>   // Arena, arena_alloc
+#include <assert.h>  // static_assert
+#include <math.h>    // pow
+#include <stdbool.h> // bool, false, true
+#include <stdint.h>  // uint8_t, uint16_t, uint32_t, uint_fast8_t, uint_fast32_t, UINT_FAST8_MAX
+#include <string.h>  // memcpy, NULL, size_t, strlen
+#include <types.h>   // EquipmentIDSave, PlayerStatSave, RoomCoordSave
+#include <zstd.h>    // ZSTD_compress, ZSTD_compressBound, ZSTD_CONTENTSIZE_ERROR, ZSTD_CONTENTSIZE_UNKNOWN, ZSTD_decompress, ZSTD_findFrameCompressedSize, ZSTD_getFrameContentSize, ZSTD_isError
 
-#include "game.h"
+#include "game.h" // EquippedItemsSlots
 #include "save.h"
 
 #define BASE 85
@@ -15,6 +15,7 @@
 #define STARTING_CHAR_STR "!"
 
 static_assert(sizeof(unsigned char) == sizeof(uint8_t), "Need 8 bit bytes.");
+static_assert(sizeof(size_t) <= sizeof(unsigned long long), "Need to store size_t in unsigned long long.");
 
 // 65535 is reserved
 static const uint16_t PasswordVersion = 0;
@@ -53,16 +54,23 @@ static inline uint_fast8_t GetVal(char c) {
   return c - STARTING_CHAR;
 }
 
+
 // Encode state to ascii string using base 85 with 4 bytes to 5 chars
-static const char *EncodeData(Arena *arena, const unsigned char *data, size_t dataSize) {
+static const char *EncodeData(Arena *arena, const unsigned char *data, size_t dataSize, size_t *passwordSize) {
+#ifdef _DEBUG
+  if (!arena || !data || !passwordSize) {
+    return NULL;
+  }
+#endif
+
   // Note that this overestimates if dataSize is not a multiple of 4
   // This is corrected by reversing the order of each group of chars
   // so that the password ends with ! which can then be stripped out
   // to get a password that is shorter by 0 to 4 chars.
-  // Integer formula that gives the same result as 5*ceil(size/4.)+1 for integer sizes
-  size_t passwordSize = 5 * ((dataSize + 3) / 4) + 1;
+  // Integer formula that gives the same result as 5*ceil(size/4.) for integer sizes
+  *passwordSize = 5 * ((dataSize + 3) / 4);
 
-  char *password = arena_alloc(arena, passwordSize);
+  char *password = arena_alloc(arena, *passwordSize + 1);
   if (!password) {
     return NULL;
   }
@@ -131,16 +139,23 @@ static const char *EncodeData(Arena *arena, const unsigned char *data, size_t da
 
   for (int i = 0; i < 4 && passwordPos[-1] == STARTING_CHAR; ++i) {
     --passwordPos;
+    --*passwordSize;
   }
   *passwordPos = '\0';
 
   return password;
 }
 
-static const unsigned char *DecodeData(Arena *arena, const char *password, size_t *dataSize) {
+static const void *DecodeData(Arena *arena, const char *password, size_t *dataSize) {
+#ifdef _DEBUG
+  if (!arena || !password || !dataSize) {
+    return NULL;
+  }
+#endif
+
   size_t passwordSize = strlen(password);
-  // Integer formula that gives the same result as ceil(4*size/5.) for integer sizes
-  *dataSize = (4 * (passwordSize + 1)) / 5;
+  // Integer formula that gives the same result as 4*ceil(size/5.) for integer sizes
+  *dataSize = 4 * ((passwordSize + 4) / 5);
 
   uint32_t *decodedData = arena_alloc(arena, *dataSize);
   if (!decodedData) {
@@ -177,14 +192,139 @@ static const unsigned char *DecodeData(Arena *arena, const char *password, size_
     decodedData[i / 5] = digit4 * powers[4] + digit3 * powers[3] + digit2 * powers[2] + digit1 * powers[1] + digit0 * powers[0];
   }
 
-#ifdef _DEBUG
-#endif
-
-  return (unsigned char *)decodedData;
+  return decodedData;
 }
 
 
-// TODO: Add zstd compression
+static const void *CompressData(Arena *arena, const void *data, size_t dataSize, size_t *compressedDataSize) {
+#ifdef _DEBUG
+  if (!arena || !data || !compressedDataSize) {
+    return NULL;
+  }
+#endif
+
+  size_t maxCompressedDataSize = ZSTD_compressBound(dataSize);
+  if (ZSTD_isError(maxCompressedDataSize)) {
+    return NULL;
+  }
+
+  void *compressedData = arena_alloc(arena, maxCompressedDataSize);
+  if (!compressedData) {
+    return NULL;
+  }
+
+  // TODO: Try other compression levels
+  *compressedDataSize = ZSTD_compress(compressedData, maxCompressedDataSize, data, dataSize, 3);
+  if (ZSTD_isError(*compressedDataSize)) {
+    return NULL;
+  }
+
+  return compressedData;
+}
+
+static bool DecompressData(Arena *arena, const void *data, size_t dataSize, void **decompressedData, unsigned long long *decompressedDataSize) {
+#ifdef _DEBUG
+  if (!arena || !data || !decompressedData) {
+    return NULL;
+  }
+#endif
+
+  *decompressedDataSize = ZSTD_getFrameContentSize(data, dataSize);
+  if (ZSTD_CONTENTSIZE_UNKNOWN == *decompressedDataSize) {
+    return false;
+  }
+
+  if (ZSTD_CONTENTSIZE_ERROR == *decompressedDataSize) {
+    *decompressedData = NULL;
+    return true;
+  }
+
+  size_t compressedDataSize = ZSTD_findFrameCompressedSize(data, dataSize);
+  if (ZSTD_isError(compressedDataSize)) {
+    return false;
+  }
+
+  *decompressedData = arena_alloc(arena, *decompressedDataSize);
+  if (!*decompressedData) {
+    return false;
+  }
+
+  size_t res = ZSTD_decompress(*decompressedData, *decompressedDataSize, data, compressedDataSize);
+  if (ZSTD_isError(res)) {
+    return false;
+  }
+
+  return true;
+}
+
+
+static const char *CompressAndEncodeData(Arena *arena, const void *data, size_t dataSize) {
+#if _DEBUG
+  if (!arena || !data) {
+    return NULL;
+  }
+#endif
+
+  // TODO: Determine encodedDataSize without calling EncodeData, only need the size unless compressedDataSize is larger
+  size_t encodedDataSize;
+  const char *encodedData = EncodeData(arena, data, dataSize, &encodedDataSize);
+  if (!encodedData) {
+    return NULL;
+  }
+
+  size_t compressedDataSize;
+  const void *compressedData = CompressData(arena, data, dataSize, &compressedDataSize);
+  if (!compressedData) {
+    return NULL;
+  }
+
+  size_t encodedCompressedDataSize;
+  const char *encodedCompressedData = EncodeData(arena, compressedData, compressedDataSize, &encodedCompressedDataSize);
+  if (!encodedCompressedData) {
+    return NULL;
+  }
+
+  const char *password;
+  if (encodedCompressedDataSize < encodedDataSize) {
+    password = encodedCompressedData;
+  } else {
+    password = encodedData;
+  }
+
+  return password;
+}
+
+static const void *DecodeAndDecompressData(Arena *arena, const char *password, unsigned long long *dataSize) {
+#ifdef _DEBUG
+  if (!arena || !password) {
+    return NULL;
+  }
+#endif
+
+  size_t decodedPasswordSize;
+  const void *decodedPassword = DecodeData(arena, password, &decodedPasswordSize);
+  if (!decodedPassword) {
+    return NULL;
+  }
+
+  unsigned long long decompressedDataSize;
+  void *decompressedData;
+  bool decompressionResult = DecompressData(arena, decodedPassword, decodedPasswordSize, &decompressedData, &decompressedDataSize);
+  if (!decompressionResult) {
+    return NULL;
+  }
+
+  if (!decompressedData) {
+    *dataSize = decodedPasswordSize;
+    return decodedPassword;
+  }
+
+  *dataSize = decompressedDataSize;
+  return decompressedData;
+}
+
+
+// TODO: Test zstd compression
 const char *SaveState(struct GameState *state) {
   if (!state || !state->startedGame) {
     return NULL;
@@ -211,7 +351,7 @@ const char *SaveState(struct GameState *state) {
 
   memcpy(pData + sizeof *data, state->stateData, state->stateDataSize);
 
-  return EncodeData(&state->arena, pData, dataSize);
+  return CompressAndEncodeData(&state->arena, pData, dataSize);
 }
 
 bool LoadState(const struct GameInfo *info, struct GameState *state, const char *password) {
@@ -219,8 +359,8 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
     return false;
   }
 
-  size_t dataSize;
-  struct SaveData *data = (struct SaveData *)DecodeData(&state->arena, password, &dataSize);
+  unsigned long long dataSize;
+  struct SaveData *data = (struct SaveData *)DecodeAndDecompressData(&state->arena, password, &dataSize);
   if (!data || sizeof *data + state->stateDataSize != dataSize) {
     return false;
   }

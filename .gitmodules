@@ -7,3 +7,6 @@
 [submodule "third_party/jsoncons"]
 	path = third_party/jsoncons
 	url = https://github.com/danielaparker/jsoncons.git
+[submodule "third_party/zstd"]
+	path = third_party/zstd
+	url = https://github.com/facebook/zstd.git
