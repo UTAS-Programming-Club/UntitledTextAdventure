@@ -22,7 +22,7 @@ if not exist %COSMOS%\mkdir curl.exe -o %COSMOS%\mkdir %COSMOS_URL%/mkdir.ape
 if not exist %COSMOS%\mv curl.exe -o %COSMOS%\mv %COSMOS_URL%/mv.ape
 if not exist %COSMOS%\rm curl.exe -o %COSMOS%\rm %COSMOS_URL%/rm.ape
 if not exist %COSMOS%\sed curl.exe -o %COSMOS%\sed %COSMOS_URL%/sed
-if not exist %COSMOS%\sh curl.exe -o %COSMOS%\sh https://cosmo.zip/pub/cosmos/v/3.3.1/bin/dash
+if not exist %COSMOS%\sh curl.exe -o %COSMOS%\sh %COSMOS_URL%/dash
 if not exist %COSMOS%\tr curl.exe -o %COSMOS%\tr %COSMOS_URL%/tr
 if not exist %COSMOS%\uname curl.exe -o %COSMOS%\uname %COSMOS_URL%/uname.ape
 
