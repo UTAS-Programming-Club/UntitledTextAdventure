@@ -1,6 +1,6 @@
 # Untitled Text Adventure
 
-## Targets:
+## Targets
 The plan is to implement the game in c with three frontends:
 1. Console program  
    This will likely need full unicode and ansi sequences as we do not wanted to be limited in usable characters and want to have some support for simple images displayed via a image to text library which requires colour text printing.
@@ -25,7 +25,7 @@ The plan is to implement the game in c with three frontends:
 
 We have only just started so everything we have is a bit rough. So any contributions are welcome. There are a number of TODOs in various places for you don't know what to work on.
 
-## General TODOs:
+## General TODOs
 * Embed GameData.json in unix like cmd build
 * Switch gdi to libschrift for text rendering for < vista rendering(2000 and xp can work as is but not worth it)
 * Add python/crescent frontend
@@ -52,8 +52,8 @@ Notes:
 * If any changes do not make it to the game, also try cleaning first.
 * The discord and gdi builds are often broken and may not even build, fixes are welcome.
 
+Debug on wsl(making windows binaries):  
 Copying wsl mingw output to windows is to get around wsl being slow at starting exes on it's own fs.
-Debug on wsl(making windows binaries):
 ```sh
 clear && make CC=x86_64-w64-mingw32-gcc debug && cp out/x86_64-w64-mingw32/bin/cmdgame.exe /mnt/c/Projects/PCGame/Windows/ && /mnt/c/Projects/PCGame/Windows/cmdgame.exe
 clear && make CC=x86_64-w64-mingw32-gcc debug && cp out/x86_64-w64-mingw32/bin/gdigame.exe /mnt/c/Projects/PCGame/Windows/ && /mnt/c/Projects/PCGame/Windows/gdigame.exe
@@ -64,9 +64,9 @@ Debug on linux, hopefully other unix likes and possibly cygwin or msys2:
 clear && make debug && ./out/x86_64-pc-linux-gnu/bin/cmdgame
 ```
 
+Debug on windows 10/11 in powershell core:  
 For cmd replace `clear` with `cls`.
 For older versions of powershell either run the commands seperately or switch to cmd or powershell core.
-Debug on windows 10/11 in powershell core:
 ```pwsh
 .\getwindeps.bat && clear && .\make.bat debug && .\out\x86_64-pc-linux-cosmo\bin\cmdgame.com
 .\getwindeps.bat && clear && .\make.bat debug && .\out\x86_64-pc-linux-cosmo\bin\gdigame.com
@@ -98,9 +98,9 @@ clear && make tools && ./out/x86_64-pc-linux-gnu/bin/mapwatch
 clear && make tools && ./out/x86_64-pc-linux-gnu/bin/printgamedata GameData.json
 ```
 
+Tools on windows 10/11 in powershell core:  
 For cmd replace `clear` with `cls`.
 For older versions of powershell either run the commands seperately or switch to cmd or powershell core.
-Tools on windows 10/11 in powershell core:
 ```pwsh
 .\getwindeps.bat && clear && .\make.bat tools && .\out\x86_64-pc-linux-cosmo\bin\jsonvalidator.com
 .\getwindeps.bat && clear && .\make.bat tools && .\out\x86_64-pc-linux-cosmo\bin\mapwatch.com
