@@ -4,7 +4,7 @@ ifneq (,$(findstring tools,$(MAKECMDGOALS)))
 NEEDCXX := TRUE
 endif # tools build
 
-include compiler.mk
+include build/compiler.mk
 
 OUTPUT := out/
 OUTDIR := $(OUTPUT)/$(TARGET)/

@@ -43,58 +43,65 @@ Release game binaries for windows pack the json file into the binary.
 Only tested with gcc but should work with clang. Unlikely to work with msvc as is.
 Requires gnu make, will accept contributions to support other versions of make.
 
-Downloading repo:
+### Downloading repo
 ```sh
 git clone --recurse-submodules https://github.com/UTAS-Programming-Club/UntitledTextAdventure.git
 ```
 Optionally with -jSOME_NUMBER to download submodules in parallel.
 Also need to make sure git keeps lf line endings but the entries in .gitattributes should deal with that.
 
+### Building
+Notes:
+* If switching from a debug build to a release build, run `make clean`/`./make.bat clean` first.
+* If any changes do not make it to the game, also try cleaning first.
+* The discord and gdi builds are often broken and may not even build, fixes are welcome.
+
 Copying wsl mingw output to windows is to get around wsl being slow at starting exes on it's own fs.
 Debug on wsl(making windows binaries):
 ```sh
-make clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 debug && cp out/x86_64-w64-mingw32/bin/cmdgame.exe /mnt/c/Projects/PCGame/Windows/ && /mnt/c/Projects/PCGame/Windows/cmdgame.exe
-make clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 debug && cp out/x86_64-w64-mingw32/bin/gdigame.exe /mnt/c/Projects/PCGame/Windows/ && /mnt/c/Projects/PCGame/Windows/gdigame.exe
+clear && make CC=x86_64-w64-mingw32-gcc debug && cp out/x86_64-w64-mingw32/bin/cmdgame.exe /mnt/c/Projects/PCGame/Windows/ && /mnt/c/Projects/PCGame/Windows/cmdgame.exe
+clear && make CC=x86_64-w64-mingw32-gcc debug && cp out/x86_64-w64-mingw32/bin/gdigame.exe /mnt/c/Projects/PCGame/Windows/ && /mnt/c/Projects/PCGame/Windows/gdigame.exe
 ```
 
 For cmd replace `clear` with `cls`.
 For older versions of powershell either run the commands seperately or switch to cmd or powershell core.
 Debug on windows 10/11 in powershell core:
 ```pwsh
-.\getwindeps.bat && .\make.bat clean && clear && .\make.bat debug && .\out\x86_64-pc-linux-cosmo\bin\cmdgame.com
-.\getwindeps.bat && .\make.bat clean && clear && .\make.bat debug && .\out\x86_64-pc-linux-cosmo\bin\gdigame.com
+.\getwindeps.bat && clear && .\make.bat debug && .\out\x86_64-pc-linux-cosmo\bin\cmdgame.com
+.\getwindeps.bat && clear && .\make.bat debug && .\out\x86_64-pc-linux-cosmo\bin\gdigame.com
 ```
 
 Release on wsl(making windows binaries):
 ```sh
-make clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 WINDRES=x86_64-w64-mingw32-windres release && cp out/x86_64-w64-mingw32/bin/cmdgame.exe /mnt/c/Projects/PCGame/Windows/ && /mnt/c/Projects/PCGame/Windows/cmdgame.exe
-make clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 WINDRES=x86_64-w64-mingw32-windres release && cp out/x86_64-w64-mingw32/bin/gdigame.exe /mnt/c/Projects/PCGame/Windows/ && /mnt/c/Projects/PCGame/Windows/gdigame.exe
+clear && make CC=x86_64-w64-mingw32-gcc WINDRES=x86_64-w64-mingw32-windres release && cp out/x86_64-w64-mingw32/bin/cmdgame.exe /mnt/c/Projects/PCGame/Windows/ && /mnt/c/Projects/PCGame/Windows/cmdgame.exe
+clear && make CC=x86_64-w64-mingw32-gcc WINDRES=x86_64-w64-mingw32-windres release && cp out/x86_64-w64-mingw32/bin/gdigame.exe /mnt/c/Projects/PCGame/Windows/ && /mnt/c/Projects/PCGame/Windows/gdigame.exe
 ```
 
 Release on linux, hopefully other unix likes and possibly cygwin or msys2:
 ```sh
-make clean && clear && make CC=gcc release && ./out/x86_64-pc-linux-gnu/bin/cmdgame
+clear && make release && ./out/x86_64-pc-linux-gnu/bin/cmdgame
+clear && make discord
 ```
 
 Tools on wsl(making windows binaries):
 ```sh
-make clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 CXX=x86_64-w64-mingw32-g++-win32 tools && cp out/x86_64-w64-mingw32/bin/jsonvalidator.exe /mnt/c/Projects/PCGame/Windows/ && /mnt/c/Projects/PCGame/Windows/jsonvalidator.exe
-make clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 CXX=x86_64-w64-mingw32-g++-win32 tools && cp out/x86_64-w64-mingw32/bin/mapwatch.exe /mnt/c/Projects/PCGame/Windows/ && /mnt/c/Projects/PCGame/Windows/mapwatch.exe
-make clean && clear && make CC=x86_64-w64-mingw32-gcc-10-win32 CXX=x86_64-w64-mingw32-g++-win32 tools && cp out/x86_64-w64-mingw32/bin/printgamedata.exe /mnt/c/Projects/PCGame/Windows/ && /mnt/c/Projects/PCGame/Windows/printgamedata.exe GameData.json
+clear && make CC=x86_64-w64-mingw32-gcc-10-win32 CXX=x86_64-w64-mingw32-g++-win32 tools && cp out/x86_64-w64-mingw32/bin/jsonvalidator.exe /mnt/c/Projects/PCGame/Windows/ && /mnt/c/Projects/PCGame/Windows/jsonvalidator.exe
+clear && make CC=x86_64-w64-mingw32-gcc-10-win32 CXX=x86_64-w64-mingw32-g++-win32 tools && cp out/x86_64-w64-mingw32/bin/mapwatch.exe /mnt/c/Projects/PCGame/Windows/ && /mnt/c/Projects/PCGame/Windows/mapwatch.exe
+clear && make CC=x86_64-w64-mingw32-gcc-10-win32 CXX=x86_64-w64-mingw32-g++-win32 tools && cp out/x86_64-w64-mingw32/bin/printgamedata.exe /mnt/c/Projects/PCGame/Windows/ && /mnt/c/Projects/PCGame/Windows/printgamedata.exe GameData.json
 ```
 
 Tools on linux, hopefully other unix likes and possibly cygwin or msys2:
 ```sh
-make clean && clear && make CC=gcc CXX=g++ tools && ./out/x86_64-pc-linux-gnu/bin/jsonvalidator
-make clean && clear && make CC=gcc CXX=g++ tools && ./out/x86_64-pc-linux-gnu/bin/mapwatch
-make clean && clear && make CC=gcc CXX=g++ tools && ./out/x86_64-pc-linux-gnu/bin/printgamedata GameData.json
+clear && make tools && ./out/x86_64-pc-linux-gnu/bin/jsonvalidator
+clear && make tools && ./out/x86_64-pc-linux-gnu/bin/mapwatch
+clear && make tools && ./out/x86_64-pc-linux-gnu/bin/printgamedata GameData.json
 ```
 
 For cmd replace `clear` with `cls`.
 For older versions of powershell either run the commands seperately or switch to cmd or powershell core.
-Tools on windows 10 in powershell core:
+Tools on windows 10/11 in powershell core:
 ```pwsh
-.\getwindeps.bat && .\make.bat clean && clear && .\make.bat tools && .\out\x86_64-pc-linux-cosmo\bin\jsonvalidator.com
-.\getwindeps.bat && .\make.bat clean && clear && .\make.bat tools && .\out\x86_64-pc-linux-cosmo\bin\mapwatch.com
-.\getwindeps.bat && .\make.bat clean && clear && .\make.bat tools && .\out\x86_64-pc-linux-cosmo\bin\printgamedata.com GameData.json
+.\getwindeps.bat && clear && .\make.bat tools && .\out\x86_64-pc-linux-cosmo\bin\jsonvalidator.com
+.\getwindeps.bat && clear && .\make.bat tools && .\out\x86_64-pc-linux-cosmo\bin\mapwatch.com
+.\getwindeps.bat && clear && .\make.bat tools && .\out\x86_64-pc-linux-cosmo\bin\printgamedata.com GameData.json
 ```
