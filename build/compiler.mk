@@ -1,3 +1,14 @@
+findany = $(strip $(foreach W,$1,$(filter $W,$2)))
+
+ifeq (,$(call findany,$(CLEAN_TARGETS),$(MAKECMDGOALS)))
+NEEDCC := TRUE
+endif # !clean targets
+
+ifneq (,$(call findany,$(CXX_TARGETS),$(MAKECMDGOALS)))
+NEEDCXX := TRUE
+endif # cxx targets
+
+
 # CC Configuation
 CCCOMPILERTARGET := $(shell $(CC) -print-multiarch 2>/dev/null)
 ifeq ($(COMPILERTARGET),)
@@ -40,11 +51,10 @@ ifeq (,$(findstring gnu,$(CXXTARGET)))
 ifeq (,$(findstring mingw,$(CXXTARGET)))
 ifdef CXX
 ifneq (,$(CXXTARGET))
-$(error Compiler $(CXX)" for $(CXXTARGET) is not supported, only Clang and GCC based compilers are supported)
+$(error Compiler $(CXX) for $(CXXTARGET) is not supported, only Clang and GCC based compilers are supported)
 else
 $(error Compiler $(CXX) is not supported, only Clang and GCC based compilers are supported)
 endif # !TARGET
-
 else # !CXX
 $(error CXX variable not set)
 endif # CXX/!CXX
