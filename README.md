@@ -43,13 +43,13 @@ Also need to make sure git keeps lf line endings but the entries in .gitattribut
 
 ## Basic build instructions
 Notes:
-* Debug game binaries for windows and Debug and Release binaries for other OSes require GameData.json in the starting directory.
-* Release game binaries for windows pack the json file into the binary.
-* Only tested with gcc but should work with clang. Unlikely to work with msvc as is.
-* Requires gnu make which is provided for the cosmocc build. We accept contributions to support other versions of make.
-* If any changes do not make it to the game,  try cleaning with `make clean`/`.\make.bat clean`.
-* The discord and gdi builds are often broken and may not even build, fixes are welcome.
-* Add -jSOME_NUMBER to build in parallel. This is currently ignored when building zstd with cosmo on windows.
+* Debug game binaries for Windows and debug and release binaries for other OSes require GameData.json in the starting directory.
+* Release game binaries for Windows with MinGW-w64 pack the json file into the binary.
+* Only tested with GCC but should work with Clang. Unlikely to work with MSVC as is.
+* Requires GNU Make which is provided for the cosmocc build. We accept contributions to support other versions of make.
+* If any changes do not appear in the game after a rebuild, try cleaning first with `make clean`/`.\make.bat clean`.
+* The Discord and GDI builds are often broken and may not even build, fixes are welcome.
+* Add -jSOME_NUMBER to build in parallel. This is currently ignored when building zstd with cosmocc on Windows.
 * The below example commands are for x86_64 but other arches should be fine as well, open an issue if something does not work.
 * All builds require a C compiler, release builds with MinGW-w64 need windres and tool builds needs a C++ compiler.
 
