@@ -1,8 +1,20 @@
-.PHONY: clean debug discord release tools
+# CC_TARGETS = ~CLEAN_TARGETS
+CLEAN_TARGETS := clean distclean
+CXX_TARGETS   := tools
 
-ifneq (,$(findstring tools,$(MAKECMDGOALS)))
+.PHONY: $(CLEAN_TARGETS)
+.PHONY: debug discord release
+.PHONY: $(CXX_TARGETS)
+
+findany = $(strip $(foreach W,$1,$(filter $W,$2)))
+
+ifeq (,$(call findany,$(CLEAN_TARGETS),$(MAKECMDGOALS)))
+NEEDCC := TRUE
+endif # !clean targets
+
+ifneq (,$(call findany,$(CXX_TARGETS),$(MAKECMDGOALS)))
 NEEDCXX := TRUE
-endif # tools build
+endif # cxx targets
 
 include build/compiler.mk
 
@@ -56,6 +68,8 @@ tools: $(BINDIR)/jsonvalidator$(EXECSUFFIX) $(BINDIR)/mapwatch$(EXECSUFFIX) $(BI
 
 clean:
 	rm -r $(OUTPUT) GameData.json 2> /dev/null || true
+
+distclean: clean
 	$(MAKE) -C third_party/zstd/lib clean
 
 %/:

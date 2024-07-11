@@ -48,7 +48,7 @@ Notes:
 * Release game binaries for windows pack the json file into the binary.
 * Only tested with gcc but should work with clang. Unlikely to work with msvc as is.
 * Requires gnu make, will accept contributions to support other versions of make.
-* If switching from a debug build to a release build, run `make clean`/`./make.bat clean` first.
+* If switching from a debug build to a release build, run `make clean`/`.\make.bat clean` first.
 * If any changes do not make it to the game, also try cleaning first.
 * The discord and gdi builds are often broken and may not even build, fixes are welcome.
 
