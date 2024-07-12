@@ -400,6 +400,13 @@ bool CreateNewState(const struct GameInfo *info, struct GameState *state) {
   }
   UpdateStats(state);
 
+  state->playerInfo.helmetSlot[0] = &info->equipment[0];
+  state->playerInfo.helmetSlot[1] = NULL;
+  state->playerInfo.helmetSlot[2] = &info->equipment[1];
+  for (uint_fast8_t i = 3; i < EquipmentSlotLength; ++i) {
+      state->playerInfo.helmetSlot[i] = NULL;
+  }
+
   // TODO: Reset state, requires removing main menu state
 
   state->roomInfo = GetGameRoom(info, DefaultRoomCoordX, DefaultRoomCoordY);

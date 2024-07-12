@@ -291,6 +291,38 @@ static bool CreateSaveScreen(const struct GameInfo *info, struct GameState *stat
   return true;
 }
 
+static bool CreatePlayerEquipmentScreen(const struct GameInfo* info, struct GameState* state)
+{
+    (void)info;
+
+    struct GameScreen screen = { 0 };
+    if (!GetGameScreen(state->screenID, &screen)) {
+        return false;
+    }
+
+    state->body = CreateString(&state->arena, "%s\n\n"
+        "Health: %" PRIPlayerStat "\n"
+        "Stamina: %" PRIPlayerStat "\n"
+        "Physical Attack: %" PRIPlayerStat "\n"
+        "Magic Attack: %" PRIPlayerStat "\n"
+        "Physical Defence: %" PRIPlayerStat "\n"
+        "Magic Defence: %" PRIPlayerStat "\n\n"
+        "Helmet: %s",
+        screen.body,
+        state->playerInfo.health, state->playerInfo.stamina,
+        state->playerInfo.physAtk, state->playerInfo.magAtk,
+        state->playerInfo.physDef, state->playerInfo.magDef,
+        state->playerInfo.equippedItems[0]->name
+
+
+    );
+    if (!state->body) {
+        return false;
+    }
+
+    return true;
+}
+
 
 // TODO: Add GameScreen parameter
 // TODO: Allow loading these dynamically to support adding new custom rooms? If so the api needs to be versioned
@@ -299,6 +331,7 @@ bool (*CustomScreenCode[])(const struct GameInfo *, struct GameState *) = {
   CreateMainMenuScreen,
   CreateGameScreen,
   CreatePlayerStatsScreen,
-  CreateSaveScreen
+  CreateSaveScreen,
+  CreatePlayerEquipmentScreen
 };
 size_t CustomScreenCodeCount = sizeof CustomScreenCode / sizeof *CustomScreenCode;

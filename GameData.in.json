@@ -67,6 +67,11 @@
           "newScreenID": PlayerStatsScreen
         },
         {
+          "title": "Change Equipment",
+          "outcome": GotoScreenOutcome,
+          "newScreenID": PlayerEquipmentScreen
+        },
+        {
           "title": "Save and Quit",
           "outcome": GotoScreenOutcome,
           "newScreenID": SaveScreen
@@ -116,6 +121,55 @@
           "newScreenID": MainMenuScreen
         }
       ]
+    },
+    {
+      // ID: 5
+      "body": "Player Equipment",
+      "extraText": "",
+      "customScreenCode": PlayerEquipmentCustomScreenCode,
+      "inputType": ButtonScreenInputType,
+      "buttons": [
+        {
+            "title": "Swap Equipment 1",
+            "outcome": GameSwapEquipmentOutcome,
+            "equipmentSlot": 0
+        },
+        {
+            "title": "Swap Equipment 2",
+            "outcome": GameSwapEquipmentOutcome,
+            "equipmentSlot": 1
+        },
+        {
+            "title": "Swap Equipment 3",
+            "outcome": GameSwapEquipmentOutcome,
+            "equipmentSlot": 2
+        },
+                {
+            "title": "Swap Equipment 4",
+            "outcome": GameSwapEquipmentOutcome,
+            "equipmentSlot": 3
+        },
+        {
+            "title": "Swap Equipment 5",
+            "outcome": GameSwapEquipmentOutcome,
+            "equipmentSlot": 4
+        },
+        {
+            "title": "Swap Equipment 6",
+            "outcome": GameSwapEquipmentOutcome,
+            "equipmentSlot": 5
+        },
+        {
+            "title": "Swap Equipment 7",
+            "outcome": GameSwapEquipmentOutcome,
+            "equipmentSlot": 6
+        },
+        {
+          "title": "Return to Game",
+          "outcome": GotoScreenOutcome,
+          "newScreenID": GameScreen
+        }
+      ]
     }
   ],
   "state": [
@@ -163,11 +217,18 @@
   // TODO: Make stats optional
   "equipment": [
     {
-      "name": "Leather",
+      "name": "Leather Helmet",
       "physAtkMod": 5,
       "magAtkMod": 4,
       "physDefMod": 90,
       "magDefMod": 10
+    },
+    {
+      "name": "Iron Helmet",
+      "physAtkMod": 9,
+      "magAtkMod": 79,
+      "physDefMod": 30,
+      "magDefMod": 20
     }
   ]
 }

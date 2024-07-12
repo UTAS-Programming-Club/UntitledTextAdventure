@@ -36,12 +36,13 @@ C_EMIT(#include <stdint.h>)
 // Must match indices in screen array in GameData.in.json
 // Screen 0 is the default screen and is shown on startup
 JSON_ENUM_START(Screen)
-  JSON_ENUM_ITEM(MainMenuScreen,    0)
-  JSON_ENUM_ITEM(GameScreen,        1)
-  JSON_ENUM_ITEM(PlayerStatsScreen, 2)
-  JSON_ENUM_ITEM(LoadScreen,        3)
-  JSON_ENUM_ITEM(SaveScreen,        4)
-  JSON_ENUM_ITEM(InvalidScreen, 65535)
+  JSON_ENUM_ITEM(MainMenuScreen,        0)
+  JSON_ENUM_ITEM(GameScreen,            1)
+  JSON_ENUM_ITEM(PlayerStatsScreen,	    2)
+  JSON_ENUM_ITEM(LoadScreen,	        3)
+  JSON_ENUM_ITEM(SaveScreen,		    4)
+  JSON_ENUM_ITEM(PlayerEquipmentScreen,	5)
+  JSON_ENUM_ITEM(InvalidScreen,     65535)
 JSON_ENUM_END
 
 // ScreenType is a uint16_t with (0, 255]
@@ -64,16 +65,18 @@ JSON_ENUM_START(InputOutcome)
   JSON_ENUM_ITEM(GameGoSouthOutcome,      6) // -> GetNextOutput, Needs next room to exist in json
   JSON_ENUM_ITEM(GameGoWestOutcome,       7) // -> GetNextOutput, Needs next room to exist in json
   JSON_ENUM_ITEM(GameHealthChangeOutcome, 8) // -> GetNextOutput, Needs percentageChance and healthChange in current room's json entry
+  JSON_ENUM_ITEM(GameSwapEquipmentOutcome,9) // -> GetNextOutput, Needs equipmentSlot to exist in json
 JSON_ENUM_END
 
 // CustomScreenCode is a uint16_t with [0, 65535)
 // Must match indices in CustomScreenCode array in specialscreens.c
 JSON_ENUM_START(CustomScreenCode)
-  JSON_ENUM_ITEM(MainMenuCustomScreenCode,    0)
-  JSON_ENUM_ITEM(GameCustomScreenCode,        1)
-  JSON_ENUM_ITEM(PlayerStatsCustomScreenCode, 2)
-  JSON_ENUM_ITEM(SaveCustomScreenCode,        3)
-  JSON_ENUM_ITEM(InvalidCustomScreenCode, 65535)
+  JSON_ENUM_ITEM(MainMenuCustomScreenCode,        0)
+  JSON_ENUM_ITEM(GameCustomScreenCode,            1)
+  JSON_ENUM_ITEM(PlayerStatsCustomScreenCode,     2)
+  JSON_ENUM_ITEM(SaveCustomScreenCode,            3)
+  JSON_ENUM_ITEM(PlayerEquipmentCustomScreenCode, 4)
+  JSON_ENUM_ITEM(InvalidCustomScreenCode,     65535)
 JSON_ENUM_END
 
 // RoomType is a uint8_t with [0, 255)
@@ -112,6 +115,7 @@ C_EMIT(typedef int_fast8_t PlayerStatDiff;)
 
 // EquipmentID is a uint8_t with [0, 62]
 // With 7 category of items, this gives 9 items per type
+C_EMIT(#define EquipmentSlotLength 9)
 VALUE_EMIT(EquipmentIDSave, InvalidEquipmentIDSave, 0)
 SAVED_INTEGRAL_TYPE_EMIT(uint, 8, EquipmentID)
 
