@@ -66,7 +66,7 @@ make CC=gcc CXX=g++ debug-tools # Produces ./out/x86_64-pc-linux-gnu/debug/bin/{
 ```
 Release:
 ```sh
-make CC=gcc release       # Produces ./out/x86_64-pc-linux-gnu/debug/release/cmdgame
+make CC=gcc release       # Produces ./out/x86_64-pc-linux-gnu/release/bin/cmdgame
 make CC=gcc discord       # Produces ./out/x86_64-pc-linux-gnu/release/bin/game.so
 make CC=gcc CXX=g++ tools # Produces ./out/x86_64-pc-linux-gnu/release/bin/{jsonvalidator, mapwatch, printgamedata}
 ```
