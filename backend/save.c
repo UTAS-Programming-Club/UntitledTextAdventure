@@ -394,16 +394,17 @@ bool CreateNewState(const struct GameInfo *info, struct GameState *state) {
   memcpy(&state->playerInfo, &info->defaultPlayerStats, sizeof info->defaultPlayerStats);
 
   // TODO: Remove hardcoded item once inventory works, perhaps have starting items?
-  state->playerInfo.equippedItems[0] = &info->equipment[0];
+  state->playerInfo.equippedItems[0] = info->equipment + 0;
   for (EquipmentID i = 1; i < EquippedItemsSlots; ++i) {
     state->playerInfo.equippedItems[i] = NULL;
   }
   UpdateStats(state);
 
-  state->playerInfo.helmetSlot[0] = &info->equipment[0];
-  state->playerInfo.helmetSlot[1] = &info->equipment[1];
-  for (uint_fast8_t i = 2; i < EquipmentSlotLength; ++i) {
-      state->playerInfo.helmetSlot[i] = NULL;
+  // TODO: fix for loading saves
+  state->playerInfo.unlockedItems[0] = true;
+  state->playerInfo.unlockedItems[1] = true;
+  for (uint_fast8_t i = 2; i < EquipmentSlotLength*EquippedItemsSlots; ++i) {
+      state->playerInfo.unlockedItems[i] = false;
   }
 
   // TODO: Reset state, requires removing main menu state

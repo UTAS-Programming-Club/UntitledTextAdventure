@@ -220,7 +220,7 @@ bool LoadGameEquipment(uint_fast8_t *equipmentCount, struct EquipmentInfo **equi
   cJSON *jsonEquipment;
   JSON_GETJSONARRAYERROR(jsonEquipment, GameData, "equipment", false);
 
-  *equipmentCount = cJSON_GetArraySize(jsonEquipment);
+  *equipmentCount = EquipmentSlotLength*EquippedItemsSlots;
   *equipment = calloc(*equipmentCount, sizeof **equipment);
   if (!*equipment) {
     return false;
@@ -242,6 +242,10 @@ bool LoadGameEquipment(uint_fast8_t *equipmentCount, struct EquipmentInfo **equi
     ++currentItem;
   }
 
+  for(; i < *equipmentCount; ++i, ++currentItem)
+  {
+	currentItem->id = InvalidEquipmentID;
+  }
   return true;
 }
 

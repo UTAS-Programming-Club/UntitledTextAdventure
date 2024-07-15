@@ -192,36 +192,25 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
           UpdatePlayerStat(&state->playerInfo.health, state->roomInfo->eventStatChange);
         }
         return GetNextOutputOutcome;
-      case GameSwapEquipmentOutcome: ;
-        // TODO: swap players equipment at index to next item
-        uint_fast8_t loopNum = 0;
-        uint_fast8_t currentID = 0;
-
-        if (button.equipmentSlot != 0)
-        {
-            return GetNextOutputOutcome;
-        }
-        else
-        {
-            currentID = state->playerInfo.equippedItems[button.equipmentSlot]->id;
-        }
-
-        for (uint_fast8_t i = currentID+1; i < EquipmentSlotLength + currentID; i++)
-        {
-            loopNum++;
-            if ((i >= EquipmentSlotLength) && (loopNum < EquipmentSlotLength))
-            {
-                i = 0;
-            }
-            const struct EquipmentInfo* item = state->playerInfo.helmetSlot[i];
-            if (!item) {
-                continue;
-            }
-
-            // TODO: continue if null
-            state->playerInfo.equippedItems[button.equipmentSlot] = state->playerInfo.helmetSlot[i];
-            UpdateStats(state);
-            break;
+      case GameSwapEquipmentOutcome:
+		if(button.equipmentSlot != 0) return GetNextOutputOutcome;
+	    
+        EquipmentID curID = state->playerInfo.equippedItems[button.equipmentSlot]->id + 1;
+        EquipmentID minID = EquipmentSlotLength * (curID / EquipmentSlotLength);
+        EquipmentID maxID = minID + EquipmentSlotLength;
+		
+        for (uint_fast8_t slotsChecked = 0; slotsChecked < EquipmentSlotLength; ++slotsChecked, ++curID) {
+          if (curID == maxID) {
+            curID = minID;
+          }
+        
+          if (!state->playerInfo.unlockedItems[curID]) {
+             continue;
+          }
+        
+          state->playerInfo.equippedItems[button.equipmentSlot] = info->equipment + curID;
+          UpdateStats(state);
+          break;
         }
         return GetNextOutputOutcome;
       case QuitGameOutcome:

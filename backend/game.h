@@ -40,8 +40,8 @@ struct PlayerInfo {
   PlayerStat magAtk;
   PlayerStat physDef;
   PlayerStat magDef;
-  // TODO: turn into 2D array
-  const struct EquipmentInfo *helmetSlot[EquipmentSlotLength];
+
+  bool unlockedItems[EquipmentSlotLength*EquippedItemsSlots];
 
   // TODO: Add other stats such as agility that can be impacted by equipment
 };

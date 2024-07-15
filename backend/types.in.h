@@ -117,6 +117,7 @@ C_EMIT(typedef int_fast8_t PlayerStatDiff;)
 // With 7 category of items, this gives 9 items per type
 C_EMIT(#define EquipmentSlotLength 9)
 VALUE_EMIT(EquipmentIDSave, InvalidEquipmentIDSave, 0)
+VALUE_EMIT(EquipmentID, InvalidEquipmentID, UINT_FAST8_MAX)
 SAVED_INTEGRAL_TYPE_EMIT(uint, 8, EquipmentID)
 
 // TODO: Add enum for state vars
