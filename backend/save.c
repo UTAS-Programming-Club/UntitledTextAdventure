@@ -385,6 +385,7 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
 
   return true;
 }
+#include <stdio.h>
 
 bool CreateNewState(const struct GameInfo *info, struct GameState *state) {
   if (!info || !state) {
@@ -394,18 +395,37 @@ bool CreateNewState(const struct GameInfo *info, struct GameState *state) {
   memcpy(&state->playerInfo, &info->defaultPlayerStats, sizeof info->defaultPlayerStats);
 
   // TODO: Remove hardcoded item once inventory works, perhaps have starting items?
-  state->playerInfo.equippedItems[0] = info->equipment + 0;
-  for (EquipmentID i = 1; i < EquippedItemsSlots; ++i) {
+  for (EquipmentID i = 0; i < EquippedItemsSlots; ++i) {
     state->playerInfo.equippedItems[i] = NULL;
   }
+  state->playerInfo.equippedItems[0] = info->equipment + 1;
+  state->playerInfo.equippedItems[1] = info->equipment + 9;
+  state->playerInfo.equippedItems[2] = info->equipment + 18;
+  state->playerInfo.equippedItems[3] = info->equipment + 27;
+  state->playerInfo.equippedItems[4] = info->equipment + 36;
+  state->playerInfo.equippedItems[5] = info->equipment + 45;
+  state->playerInfo.equippedItems[6] = info->equipment + 54;
+  
   UpdateStats(state);
 
   // TODO: fix for loading saves
-  state->playerInfo.unlockedItems[0] = true;
-  state->playerInfo.unlockedItems[1] = true;
-  for (uint_fast8_t i = 2; i < EquipmentSlotLength*EquippedItemsSlots; ++i) {
+
+  for (uint_fast8_t i = 0; i < EquipmentSlotLength*EquippedItemsSlots; ++i) {
       state->playerInfo.unlockedItems[i] = false;
   }
+  state->playerInfo.unlockedItems[1] = true;
+  state->playerInfo.unlockedItems[3] = true;
+  state->playerInfo.unlockedItems[9] = true;
+  state->playerInfo.unlockedItems[10] = true;
+  state->playerInfo.unlockedItems[18] = true;
+  state->playerInfo.unlockedItems[19] = true;
+  state->playerInfo.unlockedItems[27] = true;
+  state->playerInfo.unlockedItems[28] = true;
+  state->playerInfo.unlockedItems[36] = true;
+  state->playerInfo.unlockedItems[37] = true;
+  state->playerInfo.unlockedItems[45] = true;
+  state->playerInfo.unlockedItems[46] = true;
+  state->playerInfo.unlockedItems[54] = true;
 
   // TODO: Reset state, requires removing main menu state
 

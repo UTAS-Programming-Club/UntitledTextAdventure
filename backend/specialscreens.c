@@ -299,7 +299,7 @@ static bool CreatePlayerEquipmentScreen(const struct GameInfo* info, struct Game
     if (!GetGameScreen(state->screenID, &screen)) {
         return false;
     }
-
+	
     state->body = CreateString(&state->arena, "%s\n\n"
         "Health: %" PRIPlayerStat "\n"
         "Stamina: %" PRIPlayerStat "\n"
@@ -307,12 +307,24 @@ static bool CreatePlayerEquipmentScreen(const struct GameInfo* info, struct Game
         "Magic Attack: %" PRIPlayerStat "\n"
         "Physical Defence: %" PRIPlayerStat "\n"
         "Magic Defence: %" PRIPlayerStat "\n\n"
-        "Helmet: %s",
+        "Helmet: %s\n"
+		"Chest: %s\n"
+		"Gloves: %s\n"
+		"Pants: %s\n"
+		"Boots: %s\n"
+		"Primary Weapon: %s\n"
+		"Secondary Weapon: %s\n",
         screen.body,
         state->playerInfo.health, state->playerInfo.stamina,
         state->playerInfo.physAtk, state->playerInfo.magAtk,
         state->playerInfo.physDef, state->playerInfo.magDef,
-        state->playerInfo.equippedItems[0]->name
+        state->playerInfo.equippedItems[0]->name,
+		state->playerInfo.equippedItems[1]->name,
+		state->playerInfo.equippedItems[2]->name,
+		state->playerInfo.equippedItems[3]->name,
+		state->playerInfo.equippedItems[4]->name,
+		state->playerInfo.equippedItems[5]->name,
+		state->playerInfo.equippedItems[6]->name
 
 
     );

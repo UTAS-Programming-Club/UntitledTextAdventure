@@ -192,9 +192,7 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
           UpdatePlayerStat(&state->playerInfo.health, state->roomInfo->eventStatChange);
         }
         return GetNextOutputOutcome;
-      case GameSwapEquipmentOutcome:
-		if(button.equipmentSlot != 0) return GetNextOutputOutcome;
-	    
+      case GameSwapEquipmentOutcome: ;
         EquipmentID curID = state->playerInfo.equippedItems[button.equipmentSlot]->id + 1;
         EquipmentID minID = EquipmentSlotLength * (curID / EquipmentSlotLength);
         EquipmentID maxID = minID + EquipmentSlotLength;

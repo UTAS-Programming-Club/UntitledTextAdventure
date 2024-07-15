@@ -1,5 +1,14 @@
 #include <types.json.h>
 
+#define NoItem \
+    {\
+      "name": "",\
+      "physAtkMod": 0,\
+      "magAtkMod": 0,\
+      "physDefMod": 0,\
+      "magDefMod": 0\
+    }
+
 {
   "name": "Untitled Text Adventure",
   "defaultStats": {
@@ -216,7 +225,17 @@
   },
   // TODO: Make stats optional
   "equipment": [
+    // Helmet Items
     {
+	    // id = 0
+      "name": "Nothing",
+      "physAtkMod": 0,
+      "magAtkMod": 0,
+      "physDefMod": 0,
+      "magDefMod": 0
+    },
+    {
+        // id = 1
       "name": "Leather Helmet",
       "physAtkMod": 5,
       "magAtkMod": 4,
@@ -224,11 +243,170 @@
       "magDefMod": 10
     },
     {
+		// id = 2
+      "name": "Something Else",
+      "physAtkMod": 9,
+      "magAtkMod": 79,
+      "physDefMod": 30,
+      "magDefMod": 20
+    },
+    {
+		// id = 3
       "name": "Iron Helmet",
       "physAtkMod": 9,
       "magAtkMod": 79,
       "physDefMod": 30,
       "magDefMod": 20
-    }
+    },
+    NoItem,
+    NoItem,
+    NoItem,
+    NoItem,
+    NoItem,
+	
+	// Chest Items
+		{
+		// id = 9
+	  "name": "Rags",
+      "physAtkMod": 0,
+      "magAtkMod": 0,
+      "physDefMod": 0,
+      "magDefMod": 0
+	},
+    {
+		// id = 10
+      "name": "Chainmail",
+      "physAtkMod": 3,
+      "magAtkMod": 20,
+      "physDefMod": 2,
+      "magDefMod": 1000
+    },
+    {
+		// id = 11
+      "name": "Mythril Vest",
+      "physAtkMod": 3,
+      "magAtkMod": 11,
+      "physDefMod": 2,
+      "magDefMod": 1
+    },
+	NoItem,
+	NoItem,
+	NoItem,
+	NoItem,
+	NoItem,
+	NoItem,
+	// Glove Items
+	{
+		// id = 18
+	  "name": "Nothing",
+      "physAtkMod": 0,
+      "magAtkMod": 0,
+      "physDefMod": 0,
+      "magDefMod": 0
+	},
+	{
+		// id = 19
+	  "name": "Spiked Gloves",
+      "physAtkMod": 15,
+      "magAtkMod": 0,
+      "physDefMod": 0,
+      "magDefMod": 0
+	},
+	NoItem,
+	NoItem,
+	NoItem,
+	NoItem,
+	NoItem,
+	NoItem,
+	NoItem,
+	// Pants Items
+	{
+		// id = 27
+	  "name": "Rags",
+      "physAtkMod": 0,
+      "magAtkMod": 0,
+      "physDefMod": 0,
+      "magDefMod": 0
+	},
+	{
+		// id = 28
+	  "name": "Fancy Pants",
+      "physAtkMod": 0,
+      "magAtkMod": 0,
+      "physDefMod": 10,
+      "magDefMod": 20
+	},
+	NoItem,
+	NoItem,
+	NoItem,
+	NoItem,
+	NoItem,
+	NoItem,
+	NoItem,
+	// Boot Items
+    {
+		// id = 36
+	  "name": "Old Leather Boots",
+      "physAtkMod": 0,
+      "magAtkMod": 0,
+      "physDefMod": 0,
+      "magDefMod": 0
+	},
+	{
+		// id = 37
+	  "name": "Nikes",
+      "physAtkMod": 0,
+      "magAtkMod": 0,
+      "physDefMod": 5,
+      "magDefMod": 10
+	},
+	NoItem,
+	NoItem,
+	NoItem,
+	NoItem,
+	NoItem,
+	NoItem,
+	NoItem,
+	// Primary Weapons
+    {
+		// id = 45
+	  "name": "Fist",
+      "physAtkMod": 5,
+      "magAtkMod": 0,
+      "physDefMod": 0,
+      "magDefMod": 0
+	},
+	{
+		// id = 46
+	  "name": "Shotgun",
+      "physAtkMod": 20,
+      "magAtkMod": 0,
+      "physDefMod": 0,
+      "magDefMod": 0
+	},
+	NoItem,
+	NoItem,
+	NoItem,
+	NoItem,
+	NoItem,
+	NoItem,
+	NoItem,
+	// Secondary Weapons
+	{
+		// id = 54
+	  "name": "Fist",
+      "physAtkMod": 5,
+      "magAtkMod": 0,
+      "physDefMod": 0,
+      "magDefMod": 0
+	},
+	NoItem,
+	NoItem,
+	NoItem,
+	NoItem,
+	NoItem,
+	NoItem,
+	NoItem,
+	NoItem
   ]
 }
