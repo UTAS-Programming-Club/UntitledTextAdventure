@@ -192,9 +192,8 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
           UpdatePlayerStat(&state->playerInfo.health, state->roomInfo->eventStatChange);
         }
         return GetNextOutputOutcome;
-      case GameSwapEquipmentOutcome:
+      case GameSwapEquipmentOutcome: ;
         // TODO: swap players equipment at index to next item
-        uint_fast8_t max = 7;
         uint_fast8_t loopNum = 0;
         uint_fast8_t currentID = 0;
 
@@ -207,10 +206,10 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
             currentID = state->playerInfo.equippedItems[button.equipmentSlot]->id;
         }
 
-        for (uint_fast8_t i = currentID; i < max + currentID; i++)
+        for (uint_fast8_t i = currentID+1; i < EquipmentSlotLength + currentID; i++)
         {
             loopNum++;
-            if ((i >= max) && (loopNum < max))
+            if ((i >= EquipmentSlotLength) && (loopNum < EquipmentSlotLength))
             {
                 i = 0;
             }
@@ -220,7 +219,7 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
             }
 
             // TODO: continue if null
-            state->playerInfo.equippedItems[button.equipmentSlot] = &state->playerInfo.helmetSlot[i];
+            state->playerInfo.equippedItems[button.equipmentSlot] = state->playerInfo.helmetSlot[i];
             UpdateStats(state);
             break;
         }
