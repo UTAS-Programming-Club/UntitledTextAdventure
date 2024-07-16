@@ -27,7 +27,7 @@ struct __attribute__((packed, scalar_storage_order("little-endian"))) SaveData {
   PlayerStatSave health;
   PlayerStatSave stamina;
   // TODO: EquipmentIDSave is [0, 63], switch to 6 bits items? ceil(6 * 7 / 8.) == 6, might not be worth it
-  EquipmentIDSave equippedItems[EquippedItemsSlots];
+  EquipmentIDSave equippedItems[EquipmentTypeCount];
 };
 
 
@@ -324,7 +324,7 @@ static const void *DecodeAndDecompressData(Arena *arena, const char *password, u
 
 
 // TODO: Test zstd compression
-const char *SaveState(struct GameState *state) {
+const char *SaveState(const struct GameInfo *info, struct GameState *state) {
   if (!state || !state->startedGame) {
     return NULL;
   }
@@ -343,9 +343,10 @@ const char *SaveState(struct GameState *state) {
   data->health  = state->playerInfo.health;
   data->stamina = state->playerInfo.stamina;
 
-  for (EquipmentID i = 0; i < EquippedItemsSlots; ++i) {
-    const struct EquipmentInfo *item = state->playerInfo.equippedItems[i];
-    data->equippedItems[i] = item ? item->id + 1 : InvalidEquipmentIDSave;
+  for (uint_fast8_t i = 0; i < EquipmentTypeCount; ++i) {
+    // Maps [0, 7*9) = [0, 62] to [1, 63] so 0 can be the invalid value
+    const struct EquipmentInfo *item = info->equipment + state->playerInfo.equippedItems[i];
+    data->equippedItems[i] = item && InvalidEquipmentID != item->id ? item->id + 1 : InvalidEquipmentIDSave;
   }
 
   memcpy(pData + sizeof *data, state->stateData, state->stateDataSize);
@@ -368,15 +369,14 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
     return false;
   }
 
-  memcpy(&state->playerInfo, &info->defaultPlayerStats, sizeof info->defaultPlayerStats);
   state->playerInfo.health = data->health;
   state->playerInfo.stamina = data->stamina;
 
-  for (EquipmentID i = 0; i < EquippedItemsSlots; ++i) {
+  for (uint_fast8_t i = 0; i < EquipmentTypeCount; ++i) {
     EquipmentID id = data->equippedItems[i];
-    state->playerInfo.equippedItems[i] = id != InvalidEquipmentIDSave ? info->equipment + id - 1 : NULL;
+    state->playerInfo.equippedItems[i] = id != InvalidEquipmentIDSave ? id - 1 : InvalidEquipmentID;
   }
-  UpdateStats(state);
+  UpdateStats(info, state);
 
   memcpy(state->stateData, (uint8_t *)data + sizeof *data, state->stateDataSize);
 
@@ -385,7 +385,6 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
 
   return true;
 }
-#include <stdio.h>
 
 bool CreateNewState(const struct GameInfo *info, struct GameState *state) {
   if (!info || !state) {
@@ -395,23 +394,22 @@ bool CreateNewState(const struct GameInfo *info, struct GameState *state) {
   memcpy(&state->playerInfo, &info->defaultPlayerStats, sizeof info->defaultPlayerStats);
 
   // TODO: Remove hardcoded item once inventory works, perhaps have starting items?
-  for (EquipmentID i = 0; i < EquippedItemsSlots; ++i) {
-    state->playerInfo.equippedItems[i] = NULL;
+  for (uint_fast8_t i = 0; i < EquipmentTypeCount; ++i) {
+    state->playerInfo.equippedItems[i] = InvalidEquipmentID;
   }
-  state->playerInfo.equippedItems[0] = info->equipment + 1;
-  state->playerInfo.equippedItems[1] = info->equipment + 9;
-  state->playerInfo.equippedItems[2] = info->equipment + 18;
-  state->playerInfo.equippedItems[3] = info->equipment + 27;
-  state->playerInfo.equippedItems[4] = info->equipment + 36;
-  state->playerInfo.equippedItems[5] = info->equipment + 45;
-  state->playerInfo.equippedItems[6] = info->equipment + 54;
-  
-  UpdateStats(state);
+  // TODO: Add a function to ensure ids are all valid
+  state->playerInfo.equippedItems[0] = 0 * EquipmentPerTypeCount + 1;
+  state->playerInfo.equippedItems[1] = 1 * EquipmentPerTypeCount;
+  state->playerInfo.equippedItems[2] = 2 * EquipmentPerTypeCount;
+  state->playerInfo.equippedItems[3] = 3 * EquipmentPerTypeCount;
+  state->playerInfo.equippedItems[4] = 4 * EquipmentPerTypeCount;
+  state->playerInfo.equippedItems[5] = 5 * EquipmentPerTypeCount;
+  state->playerInfo.equippedItems[6] = 6 * EquipmentPerTypeCount;
+  UpdateStats(info, state);
 
   // TODO: fix for loading saves
-
-  for (uint_fast8_t i = 0; i < EquipmentSlotLength*EquippedItemsSlots; ++i) {
-      state->playerInfo.unlockedItems[i] = false;
+  for (EquipmentID i = 0; i < EquipmentTypeCount * EquipmentPerTypeCount; ++i) {
+    state->playerInfo.unlockedItems[i] = false;
   }
   state->playerInfo.unlockedItems[1] = true;
   state->playerInfo.unlockedItems[3] = true;

@@ -212,16 +212,16 @@ bool LoadGameRooms(uint_fast8_t *floorSize, struct RoomInfo **rooms) {
   return true;
 }
 
-bool LoadGameEquipment(uint_fast8_t *equipmentCount, struct EquipmentInfo **equipment) {
-  if (!GameData || !equipmentCount || !equipment) {
+bool LoadGameEquipment(struct EquipmentInfo **equipment) {
+  if (!GameData || !equipment) {
     return false;
   }
 
   cJSON *jsonEquipment;
   JSON_GETJSONARRAYERROR(jsonEquipment, GameData, "equipment", false);
 
-  *equipmentCount = EquipmentSlotLength*EquippedItemsSlots;
-  *equipment = calloc(*equipmentCount, sizeof **equipment);
+  uint_fast8_t equipmentCount = EquipmentTypeCount * EquipmentPerTypeCount;
+  *equipment = malloc(equipmentCount * sizeof **equipment);
   if (!*equipment) {
     return false;
   }
@@ -233,7 +233,7 @@ bool LoadGameEquipment(uint_fast8_t *equipmentCount, struct EquipmentInfo **equi
   cJSON *jsonItem;
   cJSON_ArrayForEach(jsonItem, jsonEquipment) {
     currentItem->id = i;
-    if (!GetGameEquipmentItemData(jsonItem, currentItem)) {
+    if (i >= equipmentCount || !GetGameEquipmentItemData(jsonItem, currentItem)) {
       free(equipment);
       return false;
     }
@@ -242,10 +242,10 @@ bool LoadGameEquipment(uint_fast8_t *equipmentCount, struct EquipmentInfo **equi
     ++currentItem;
   }
 
-  for(; i < *equipmentCount; ++i, ++currentItem)
-  {
-	currentItem->id = InvalidEquipmentID;
+  for(; i < equipmentCount; ++i, ++currentItem) {
+    currentItem->id = InvalidEquipmentID;
   }
+
   return true;
 }
 

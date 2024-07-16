@@ -271,14 +271,12 @@ static bool CreatePlayerStatsScreen(const struct GameInfo *info, struct GameStat
 }
 
 static bool CreateSaveScreen(const struct GameInfo *info, struct GameState *state) {
-  (void)info;
-
   struct GameScreen screen = {0};
   if (!GetGameScreen(state->screenID, &screen)) {
     return false;
   }
 
-  const char *password = SaveState(state);
+  const char *password = SaveState(info, state);
   if (!password) {
     return false;
   }
@@ -291,48 +289,43 @@ static bool CreateSaveScreen(const struct GameInfo *info, struct GameState *stat
   return true;
 }
 
-static bool CreatePlayerEquipmentScreen(const struct GameInfo* info, struct GameState* state)
-{
-    (void)info;
+static bool CreatePlayerEquipmentScreen(const struct GameInfo* info, struct GameState* state) {
+  struct GameScreen screen = { 0 };
+  if (!GetGameScreen(state->screenID, &screen)) {
+    return false;
+  }
 
-    struct GameScreen screen = { 0 };
-    if (!GetGameScreen(state->screenID, &screen)) {
-        return false;
-    }
-	
-    state->body = CreateString(&state->arena, "%s\n\n"
-        "Health: %" PRIPlayerStat "\n"
-        "Stamina: %" PRIPlayerStat "\n"
-        "Physical Attack: %" PRIPlayerStat "\n"
-        "Magic Attack: %" PRIPlayerStat "\n"
-        "Physical Defence: %" PRIPlayerStat "\n"
-        "Magic Defence: %" PRIPlayerStat "\n\n"
-        "Helmet: %s\n"
-		"Chest: %s\n"
-		"Gloves: %s\n"
-		"Pants: %s\n"
-		"Boots: %s\n"
-		"Primary Weapon: %s\n"
-		"Secondary Weapon: %s\n",
-        screen.body,
-        state->playerInfo.health, state->playerInfo.stamina,
-        state->playerInfo.physAtk, state->playerInfo.magAtk,
-        state->playerInfo.physDef, state->playerInfo.magDef,
-        state->playerInfo.equippedItems[0]->name,
-		state->playerInfo.equippedItems[1]->name,
-		state->playerInfo.equippedItems[2]->name,
-		state->playerInfo.equippedItems[3]->name,
-		state->playerInfo.equippedItems[4]->name,
-		state->playerInfo.equippedItems[5]->name,
-		state->playerInfo.equippedItems[6]->name
+  state->body = CreateString(&state->arena, "%s\n\n"
+    "Health: %" PRIPlayerStat "\n"
+    "Stamina: %" PRIPlayerStat "\n"
+    "Physical Attack: %" PRIPlayerStat "\n"
+    "Magic Attack: %" PRIPlayerStat "\n"
+    "Physical Defence: %" PRIPlayerStat "\n"
+    "Magic Defence: %" PRIPlayerStat "\n\n"
+    "Helmet: %s\n"
+    "Chest: %s\n"
+    "Gloves: %s\n"
+    "Pants: %s\n"
+    "Boots: %s\n"
+    "Primary Weapon: %s\n"
+    "Secondary Weapon: %s\n",
+    screen.body,
+    state->playerInfo.health, state->playerInfo.stamina,
+    state->playerInfo.physAtk, state->playerInfo.magAtk,
+    state->playerInfo.physDef, state->playerInfo.magDef,
+    info->equipment[state->playerInfo.equippedItems[0]].name,
+    info->equipment[state->playerInfo.equippedItems[1]].name,
+    info->equipment[state->playerInfo.equippedItems[2]].name,
+    info->equipment[state->playerInfo.equippedItems[3]].name,
+    info->equipment[state->playerInfo.equippedItems[4]].name,
+    info->equipment[state->playerInfo.equippedItems[5]].name,
+    info->equipment[state->playerInfo.equippedItems[6]].name
+  );
+  if (!state->body) {
+    return false;
+  }
 
-
-    );
-    if (!state->body) {
-        return false;
-    }
-
-    return true;
+  return true;
 }
 
 

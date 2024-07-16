@@ -14,9 +14,10 @@
 // items equipable by player
 // Never modify after creation
 struct EquipmentInfo {
+  // TODO: Remove?
   EquipmentID id;
   char *name;
-  // TODO: Add enum for type (helmet, boots, etc)
+  // TODO: Add enum for type (helmet, boots, etc). Is this actually needed?
 
   // stats
   PlayerStatDiff physAtkMod;
@@ -27,13 +28,9 @@ struct EquipmentInfo {
   // TODO: Add other stats such as dex, int, etc
 };
 
-#define EquippedItemsSlots 7
-
 // Do not use outside of backend
 struct PlayerInfo {
-  // TODO: Add custom types in types.in.h
-  // helmet, shirts, gloves, pants, boots, 2x weapons
-  const struct EquipmentInfo *equippedItems[EquippedItemsSlots];
+  // TODO: Add other stats such as agility that can be impacted by equipment
   PlayerStat health;
   PlayerStat stamina;
   PlayerStat physAtk;
@@ -41,9 +38,9 @@ struct PlayerInfo {
   PlayerStat physDef;
   PlayerStat magDef;
 
-  bool unlockedItems[EquipmentSlotLength*EquippedItemsSlots];
-
-  // TODO: Add other stats such as agility that can be impacted by equipment
+  // Equipment types: helmets, chest pieces, gloves, pants, boots, primary weapon, secondary weapon
+  bool unlockedItems[EquipmentTypeCount * EquipmentPerTypeCount];
+  EquipmentID equippedItems[EquipmentTypeCount];
 };
 
 // Always make this const when possible to avoid accidental modification
@@ -59,8 +56,8 @@ struct GameInfo {
   uint_fast8_t floorSize;
   struct RoomInfo *rooms;
 
-  uint_fast8_t equipmentCount;
-  struct EquipmentInfo *equipment;
+  // TODO: Require struct to be on heap and then make this an actual array?
+  struct EquipmentInfo *equipment; // Length is EquipmentTypeCount * EquipmentPerTypeCount
 };
 
 // Never modify after creation
@@ -88,6 +85,7 @@ struct RoomInfo {
 };
 
 // Always make this const when possible to avoid accidental modification
+// TODO: Require struct to be on heap?
 struct GameState {
 // public, safe to use outside of backend
   enum Screen screenID;
@@ -114,7 +112,7 @@ struct GameState {
 };
 
 // TODO: Move to another file that just handles equipment
-void UpdateStats(struct GameState *);
+void UpdateStats(const struct GameInfo *, struct GameState *);
 
 // GameInfo should be zero initialised before first call
 bool SetupBackend(struct GameInfo *);

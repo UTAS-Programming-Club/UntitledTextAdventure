@@ -53,7 +53,7 @@ bool SetupBackend(struct GameInfo *info) {
     goto free_rooms;
   }
 
-  if (!LoadGameEquipment(&info->equipmentCount, &info->equipment)) {
+  if (!LoadGameEquipment(&info->equipment)) {
     PrintError("Failed to load equipment from %s", dataFile);
     goto free_rooms;
   }
@@ -88,15 +88,14 @@ static bool UpdatePlayerStat(PlayerStat *base, PlayerStatDiff diff) {
   return true;
 }
 
-// TODO: Replace test with real impl with pickups
-void UpdateStats(struct GameState *state) {
+void UpdateStats(const struct GameInfo *info, struct GameState *state) {
   state->playerInfo.physAtk = MinimumPlayerStat;
   state->playerInfo.magAtk = MinimumPlayerStat;
   state->playerInfo.physDef = MinimumPlayerStat;
   state->playerInfo.magDef = MinimumPlayerStat;
 
-  for (EquipmentID i = 0; i < EquippedItemsSlots; ++i) {
-    const struct EquipmentInfo *item = state->playerInfo.equippedItems[i];
+  for (uint_fast8_t i = 0; i < EquipmentTypeCount; ++i) {
+    const struct EquipmentInfo *item = info->equipment + state->playerInfo.equippedItems[i];
     if (!item) {
       continue;
     }
@@ -193,11 +192,11 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
         }
         return GetNextOutputOutcome;
       case GameSwapEquipmentOutcome: ;
-        EquipmentID curID = state->playerInfo.equippedItems[button.equipmentSlot]->id + 1;
-        EquipmentID minID = EquipmentSlotLength * (curID / EquipmentSlotLength);
-        EquipmentID maxID = minID + EquipmentSlotLength;
-		
-        for (uint_fast8_t slotsChecked = 0; slotsChecked < EquipmentSlotLength; ++slotsChecked, ++curID) {
+        EquipmentID curID = state->playerInfo.equippedItems[button.equipmentSlot] + 1;
+        EquipmentID minID = EquipmentPerTypeCount * (curID / EquipmentPerTypeCount);
+        EquipmentID maxID = minID + EquipmentPerTypeCount;
+
+        for (uint_fast8_t slotsChecked = 0; slotsChecked < EquipmentPerTypeCount; ++slotsChecked, ++curID) {
           if (curID == maxID) {
             curID = minID;
           }
@@ -206,8 +205,8 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
              continue;
           }
         
-          state->playerInfo.equippedItems[button.equipmentSlot] = info->equipment + curID;
-          UpdateStats(state);
+          state->playerInfo.equippedItems[button.equipmentSlot] = curID;
+          UpdateStats(info, state);
           break;
         }
         return GetNextOutputOutcome;

@@ -103,6 +103,7 @@ SAVED_INTEGRAL_TYPE_EMIT(uint, 8, RoomCoord)
 
 // PlayerStat is a uint8_t with [0, 100]
 C_EMIT(#define PRIPlayerStat PRIuFAST8)
+// TODO: Use json loaded default stats when possible instead of these
 VALUE_EMIT(PlayerStat, MinimumPlayerStat,   0)
 VALUE_EMIT(PlayerStat, MaximumPlayerStat, 100)
 SAVED_INTEGRAL_TYPE_EMIT(uint, 8, PlayerStat)
@@ -114,10 +115,12 @@ VALUE_EMIT(PlayerStatDiff, InvalidPlayerStatDiff, INT_FAST8_MAX)
 C_EMIT(typedef int_fast8_t PlayerStatDiff;)
 
 // EquipmentID is a uint8_t with [0, 62]
-// With 7 category of items, this gives 9 items per type
-C_EMIT(#define EquipmentSlotLength 9)
-VALUE_EMIT(EquipmentIDSave, InvalidEquipmentIDSave, 0)
+// With 7 types of items, this gives 9 items per type
+// Equipment types: helmets, chest pieces, gloves, pants, boots, primary weapon, secondary weapon
+C_EMIT(#define EquipmentTypeCount 7)
+C_EMIT(#define EquipmentPerTypeCount 9)
 VALUE_EMIT(EquipmentID, InvalidEquipmentID, UINT_FAST8_MAX)
+VALUE_EMIT(EquipmentIDSave, InvalidEquipmentIDSave, 0)
 SAVED_INTEGRAL_TYPE_EMIT(uint, 8, EquipmentID)
 
 // TODO: Add enum for state vars

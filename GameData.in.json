@@ -225,6 +225,7 @@
     ]
   },
   // TODO: Make stats optional
+  // TODO: Hardcode max length in schema
   "equipment": [
     // Helmet Items
     {
