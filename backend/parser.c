@@ -1,5 +1,7 @@
 //#define DEBUG_STATE
 
+// TODO: Make sure values used with array functions are <= INT_MAX
+
 #include <cJSON.h>
 #include <inttypes.h>
 #include <limits.h>
@@ -13,6 +15,7 @@
 #endif
 
 #include "../frontends/frontend.h"
+#include "equipment.h"
 #include "fileloading.h"
 #include "game.h"
 #include "parser.h"
@@ -149,20 +152,43 @@ char *LoadGameName(void) {
   return name;
 }
 
-bool LoadDefaultPlayerStats(struct PlayerInfo *playerStats) {
-  if (!GameData || !playerStats) {
+bool LoadDefaultPlayerInfo(struct PlayerInfo *playerInfo) {
+  if (!GameData || !playerInfo) {
     return false;
   }
 
-  cJSON *jsonDefaultStats;
-  JSON_GETJSONOBJECTERROR(jsonDefaultStats, GameData, "defaultStats", false);
+  cJSON *jsonDefaultPlayerInfo;
+  JSON_GETJSONOBJECTERROR(jsonDefaultPlayerInfo, GameData, "defaultPlayerInfo", false);
 
-  JSON_GETNUMBERVALUEERROR(playerStats->health, jsonDefaultStats, "health", false);
-  JSON_GETNUMBERVALUEERROR(playerStats->stamina, jsonDefaultStats, "stamina", false);
-  JSON_GETNUMBERVALUEERROR(playerStats->physAtk, jsonDefaultStats, "physAtk", false);
-  JSON_GETNUMBERVALUEERROR(playerStats->magAtk, jsonDefaultStats, "magAtk", false);
-  JSON_GETNUMBERVALUEERROR(playerStats->physDef, jsonDefaultStats, "physDef", false);
-  JSON_GETNUMBERVALUEERROR(playerStats->magDef, jsonDefaultStats, "magDef", false);
+  JSON_GETNUMBERVALUEERROR(playerInfo->health, jsonDefaultPlayerInfo, "health", false);
+  JSON_GETNUMBERVALUEERROR(playerInfo->stamina, jsonDefaultPlayerInfo, "stamina", false);
+  JSON_GETNUMBERVALUEERROR(playerInfo->physAtk, jsonDefaultPlayerInfo, "physAtk", false);
+  JSON_GETNUMBERVALUEERROR(playerInfo->magAtk, jsonDefaultPlayerInfo, "magAtk", false);
+  JSON_GETNUMBERVALUEERROR(playerInfo->physDef, jsonDefaultPlayerInfo, "physDef", false);
+  JSON_GETNUMBERVALUEERROR(playerInfo->magDef, jsonDefaultPlayerInfo, "magDef", false);
+
+  cJSON *jsonEquippedEquipmentArray;
+  JSON_GETJSONARRAYERROR(jsonEquippedEquipmentArray, jsonDefaultPlayerInfo, "equippedEquipment", false);
+
+  // cJSON_ArrayForEach uses int for idx, likely fine as INT_MAX >= 2^15 - 1
+  uint_fast8_t equipmentSlot = 0;
+  cJSON *jsonEquippedEquipment;
+  cJSON_ArrayForEach(jsonEquippedEquipment, jsonEquippedEquipmentArray) {
+    if (EquipmentTypeCount <= equipmentSlot) {
+      return false;
+    }
+
+    if (!cJSON_IsNumber(jsonEquippedEquipment)) {
+      return false;
+    }
+    EquipmentID id = cJSON_GetNumberValue(jsonEquippedEquipment);
+
+    if (!SetEquippedItem(playerInfo, equipmentSlot, id)) {
+      return false;
+    }
+
+    ++equipmentSlot;
+  }
 
   return true;
 }
@@ -241,8 +267,8 @@ bool LoadGameEquipment(struct EquipmentInfo **equipment) {
     ++currentItem;
   }
 
-  for(; i < EquipmentCount; ++i, ++currentItem) {
-    currentItem->id = InvalidEquipmentID;
+  if (EquipmentCount != i) {
+    return false;
   }
 
   return true;
@@ -263,6 +289,7 @@ bool InitGameState(size_t *gameStateSize, unsigned char **gameState) {
   size_t totalSize = 0;
   size_t stateSize;
 
+  // cJSON_ArrayForEach uses int for idx, likely fine as INT_MAX >= 2^15 - 1
   cJSON *jsonStateVar;
   cJSON_ArrayForEach(jsonStateVar, jsonStateVars) {
     cJSON *jsonStateSize = cJSON_GetObjectItemCaseSensitive(jsonStateVar, "size");
@@ -296,6 +323,7 @@ bool InitGameState(size_t *gameStateSize, unsigned char **gameState) {
     return false;
   }
 
+  // cJSON_ArrayForEach uses int for idx, likely fine as INT_MAX >= 2^15 - 1
   size_t currentOffset = 0;
   cJSON_ArrayForEach(jsonStateVar, jsonStateVars) {
     cJSON *jsonStateSize = cJSON_GetObjectItemCaseSensitive(jsonStateVar, "size");
@@ -342,6 +370,7 @@ size_t GetGameStateOffset(enum Screen screenID, uint_fast8_t stateID) {
   size_t currentOffset = 0;
   cJSON *jsonStateVar;
 
+  // cJSON_ArrayForEach uses int for idx, likely fine as INT_MAX >= 2^15 - 1
   cJSON_ArrayForEach(jsonStateVar, jsonStateVars) {
     cJSON *jsonStateSize = cJSON_GetObjectItemCaseSensitive(jsonStateVar, "size");
     if (!cJSON_IsNumber(jsonStateSize)) {

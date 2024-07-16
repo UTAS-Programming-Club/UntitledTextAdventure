@@ -11,13 +11,16 @@
 
 {
   "name": "Untitled Text Adventure",
-  "defaultStats": {
+  "defaultPlayerInfo": {
     "health": MaximumPlayerStat,
     "stamina": MaximumPlayerStat,
     "physAtk": MinimumPlayerStat,
     "magAtk": MinimumPlayerStat,
     "physDef": MinimumPlayerStat,
-    "magDef": MinimumPlayerStat
+    "magDef": MinimumPlayerStat,
+    "equippedEquipment": [
+      0, 9, 18, 27, 36, 45, 54
+    ]
   },
   // TODO: Add default equipment
   "screens": [

@@ -35,6 +35,6 @@ bool UpdateStats(const struct GameInfo *, struct GameState *);
 EquipmentID GetEquippedItemID(const struct GameState *, uint_fast8_t);
 // Returns NULL or a valid EquipmentInfo
 struct EquipmentInfo *GetEquippedItem(const struct GameInfo *, const struct GameState *, uint_fast8_t);
-bool SetEquippedItem(struct GameState *, uint_fast8_t, EquipmentID);
+bool SetEquippedItem(struct PlayerInfo *, uint_fast8_t, EquipmentID);
 
 #endif // PCGAME_EQUIPMENT_H

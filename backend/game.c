@@ -44,8 +44,8 @@ bool SetupBackend(struct GameInfo *info) {
     goto end;
   }
 
-  if (!LoadDefaultPlayerStats(&info->defaultPlayerStats)) {
-    PrintError("Failed to load default player stats from %s", dataFile);
+  if (!LoadDefaultPlayerInfo(&info->defaultPlayerInfo)) {
+    PrintError("Failed to load default player info from %s", dataFile);
     goto end;
   }
 
@@ -176,7 +176,7 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
              continue;
           }
         
-          if (!SetEquippedItem(state, button.equipmentSlot, curID)
+          if (!SetEquippedItem(&state->playerInfo, button.equipmentSlot, curID)
               || !UpdateStats(info, state)) {
             return InvalidInputOutcome;
           }

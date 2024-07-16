@@ -30,7 +30,7 @@ bool LoadGameData(char *);
 void UnloadGameData(void);
 
 char *LoadGameName(void);
-bool LoadDefaultPlayerStats(struct PlayerInfo *);
+bool LoadDefaultPlayerInfo(struct PlayerInfo *);
 // The RoomInfo array must be freed, even if this function returns false
 bool LoadGameRooms(uint_fast8_t *, struct RoomInfo **);
 bool LoadGameEquipment(struct EquipmentInfo **);

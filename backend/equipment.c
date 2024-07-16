@@ -75,12 +75,17 @@ struct EquipmentInfo *GetEquippedItem(const struct GameInfo *info, const struct 
   return info->equipment + id;
 }
 
-bool SetEquippedItem(struct GameState *state, uint_fast8_t equipmentSlot, EquipmentID newID) {
-  if (!state || EquipmentTypeCount <= equipmentSlot || EquipmentCount <= newID
+bool SetEquippedItem(struct PlayerInfo *playerInfo, uint_fast8_t equipmentSlot, EquipmentID newID) {
+  if (!playerInfo || EquipmentTypeCount <= equipmentSlot || EquipmentCount <= newID
       || InvalidEquipmentID == newID) {
     return false;
   }
 
-  state->playerInfo.equippedItems[equipmentSlot] = newID;
+  // TODO: Load in initially unlocked items from json and then turn this on
+  // if (!playerInfo->unlockedItems[newID]) {
+  //   return false;
+  // }
+
+  playerInfo->equippedItems[equipmentSlot] = newID;
   return true;
 }

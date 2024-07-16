@@ -4,9 +4,10 @@
 #include <stdbool.h> // bool, false, true
 #include <stdint.h>  // uint8_t, uint16_t, uint32_t, uint_fast8_t, uint_fast32_t, UINT_FAST8_MAX
 #include <string.h>  // memcpy, NULL, size_t, strlen
-#include <types.h>   // EquipmentIDSave, PlayerStatSave, RoomCoordSave
+#include <types.h>   // EquipmentIDSave, EquipmentID, PlayerStatSave, RoomCoordSave
 #include <zstd.h>    // ZSTD_compress, ZSTD_compressBound, ZSTD_CONTENTSIZE_ERROR, ZSTD_CONTENTSIZE_UNKNOWN, ZSTD_decompress, ZSTD_findFrameCompressedSize, ZSTD_getFrameContentSize, ZSTD_isError
 
+#include "equipment.h" // GetEquippedItemID, SetEquippedItem
 #include "game.h" // EquippedItemsSlots
 #include "save.h"
 
@@ -345,8 +346,8 @@ const char *SaveState(const struct GameInfo *info, struct GameState *state) {
 
   for (uint_fast8_t i = 0; i < EquipmentTypeCount; ++i) {
     // Maps [0, 7*9) = [0, 62] to [1, 63] so 0 can be the invalid value
-    const struct EquipmentInfo *item = GetEquippedItem(info, state, i);
-    data->equippedItems[i] = item && InvalidEquipmentID != item->id ? item->id + 1 : InvalidEquipmentIDSave;
+    EquipmentID id = GetEquippedItemID(info, state, i);
+    data->equippedItems[i] = InvalidEquipmentID != id ? id + 1 : InvalidEquipmentIDSave;
   }
 
   memcpy(pData + sizeof *data, state->stateData, state->stateDataSize);
@@ -377,7 +378,7 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
     EquipmentIDSave idSave = data->equippedItems[i];
     EquipmentID id = idSave != InvalidEquipmentIDSave ? idSave - 1 : InvalidEquipmentID;
 
-    if (!SetEquippedItem(state, i, id)) {
+    if (!SetEquippedItem(&state->playerInfo, i, id)) {
       return false;
     }
   }
@@ -398,22 +399,7 @@ bool CreateNewState(const struct GameInfo *info, struct GameState *state) {
     return false;
   }
 
-  memcpy(&state->playerInfo, &info->defaultPlayerStats, sizeof info->defaultPlayerStats);
-
-  // TODO: Remove hardcoded item once inventory works, perhaps have starting items?
-  for (uint_fast8_t i = 0; i < EquipmentTypeCount; ++i) {
-    state->playerInfo.equippedItems[i] = InvalidEquipmentID;
-  }
-  if (   !SetEquippedItem(state, 0, 0 * EquipmentPerTypeCount + 1)
-      || !SetEquippedItem(state, 1, 1 * EquipmentPerTypeCount)
-      || !SetEquippedItem(state, 2, 2 * EquipmentPerTypeCount)
-      || !SetEquippedItem(state, 3, 3 * EquipmentPerTypeCount)
-      || !SetEquippedItem(state, 4, 4 * EquipmentPerTypeCount)
-      || !SetEquippedItem(state, 5, 5 * EquipmentPerTypeCount)
-      || !SetEquippedItem(state, 6, 6 * EquipmentPerTypeCount)
-      || !UpdateStats(info, state)) {
-    return false;
-  }
+  memcpy(&state->playerInfo, &info->defaultPlayerInfo, sizeof info->defaultPlayerInfo);
 
   // TODO: fix for loading saves
   for (EquipmentID i = 0; i < EquipmentCount; ++i) {

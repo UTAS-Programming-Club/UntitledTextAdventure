@@ -4,7 +4,7 @@
   "additionalProperties": false,
   "required": [
     "name",
-    "defaultStats",
+    "defaultPlayerInfo",
     "screens",
     "state",
     "rooms",
@@ -14,7 +14,7 @@
     "name": {
       "type": "string"
     },
-    "defaultStats": {
+    "defaultPlayerInfo": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -23,7 +23,8 @@
         "physAtk",
         "magAtk",
         "physDef",
-        "magDef"
+        "magDef",
+        "equippedEquipment"
       ],
       "properties": {
         "health": {
@@ -55,6 +56,16 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 100
+        },
+        "equippedEquipment": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "items": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 62
+          }
         }
       }
     },
@@ -219,6 +230,8 @@
     },
     "equipment": {
       "type": "array",
+       "minItems": 63,
+       "maxItems": 63,
       "items": {
         "type": "object",
         "additionalProperties": false,
