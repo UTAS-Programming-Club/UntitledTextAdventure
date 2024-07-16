@@ -108,6 +108,11 @@
                   "type": "integer",
                   "minimum": 0,
                   "exclusiveMaximum": 65565
+                },
+                "equipmentSlot": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 8
                 }
               }
             }
