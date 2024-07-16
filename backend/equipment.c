@@ -48,13 +48,23 @@ bool UpdateStats(const struct GameInfo *info, struct GameState *state) {
 }
 
 
+bool UnlockItem(struct PlayerInfo *playerInfo, EquipmentID ID) {
+  if (!playerInfo || EquipmentCount <= ID || InvalidEquipmentID == ID) {
+    return false;
+  }
+
+  playerInfo->unlockedItems[ID] = true;
+  return true;
+}
+
+
 // TODO: Add type for equipmentSlot
-EquipmentID GetEquippedItemID(const struct GameState *state, uint_fast8_t equipmentSlot) {
-  if (!state || EquipmentTypeCount <= equipmentSlot) {
+EquipmentID GetEquippedItemID(const struct PlayerInfo *playerInfo, uint_fast8_t equipmentSlot) {
+  if (!playerInfo || EquipmentTypeCount <= equipmentSlot) {
     return InvalidEquipmentID;
   }
 
-  EquipmentID id = state->playerInfo.equippedItems[equipmentSlot];
+  EquipmentID id = playerInfo->equippedItems[equipmentSlot];
   if (EquipmentCount <= id) {
     return InvalidEquipmentID;
   }
@@ -62,12 +72,12 @@ EquipmentID GetEquippedItemID(const struct GameState *state, uint_fast8_t equipm
   return id;
 }
 
-struct EquipmentInfo *GetEquippedItem(const struct GameInfo *info, const struct GameState *state, uint_fast8_t equipmentSlot) {
-  if (!info || !info->initialised || !state || EquipmentTypeCount <= equipmentSlot) {
+struct EquipmentInfo *GetEquippedItem(const struct GameInfo *info, const struct PlayerInfo *playerInfo, uint_fast8_t equipmentSlot) {
+  if (!info || !info->initialised || !playerInfo || EquipmentTypeCount <= equipmentSlot) {
     return NULL;
   }
 
-  EquipmentID id = GetEquippedItemID(state, equipmentSlot);
+  EquipmentID id = GetEquippedItemID(playerInfo, equipmentSlot);
   if (InvalidEquipmentID == id) {
     return NULL;
   }
@@ -81,10 +91,9 @@ bool SetEquippedItem(struct PlayerInfo *playerInfo, uint_fast8_t equipmentSlot, 
     return false;
   }
 
-  // TODO: Load in initially unlocked items from json and then turn this on
-  // if (!playerInfo->unlockedItems[newID]) {
-  //   return false;
-  // }
+  if (!playerInfo->unlockedItems[newID]) {
+    return false;
+  }
 
   playerInfo->equippedItems[equipmentSlot] = newID;
   return true;

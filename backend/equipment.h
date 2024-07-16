@@ -24,17 +24,16 @@ struct EquipmentInfo {
   // TODO: Add other stats such as dex, int, etc
 };
 
-// Only call for health or stamina, other uses are reserved for UpdateStats
+// Only call for health or stamina, other uses of UpdatePlayerStat are reserved for UpdateStats
 bool UpdatePlayerStat(PlayerStat *, PlayerStatDiff);
-
 bool UpdateStats(const struct GameInfo *, struct GameState *);
 
-// void UnlockItem(state GameState *);
+bool UnlockItem(struct PlayerInfo *, EquipmentID);
 
 // Returns InvalidEquipmentID or a valid EquipmentID
-EquipmentID GetEquippedItemID(const struct GameState *, uint_fast8_t);
+EquipmentID GetEquippedItemID(const struct PlayerInfo *, uint_fast8_t);
 // Returns NULL or a valid EquipmentInfo
-struct EquipmentInfo *GetEquippedItem(const struct GameInfo *, const struct GameState *, uint_fast8_t);
+struct EquipmentInfo *GetEquippedItem(const struct GameInfo *, const struct PlayerInfo *, uint_fast8_t);
 bool SetEquippedItem(struct PlayerInfo *, uint_fast8_t, EquipmentID);
 
 #endif // PCGAME_EQUIPMENT_H

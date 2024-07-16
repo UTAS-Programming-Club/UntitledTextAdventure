@@ -24,6 +24,7 @@
         "magAtk",
         "physDef",
         "magDef",
+        "unlockedEquipment",
         "equippedEquipment"
       ],
       "properties": {
@@ -56,6 +57,15 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 100
+        },
+        "unlockedEquipment": {
+          "type": "array",
+          "minItems": 7,
+          "items": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 62
+          }
         },
         "equippedEquipment": {
           "type": "array",

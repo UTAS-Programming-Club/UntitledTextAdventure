@@ -325,7 +325,7 @@ static const void *DecodeAndDecompressData(Arena *arena, const char *password, u
 
 
 // TODO: Test zstd compression
-const char *SaveState(const struct GameInfo *info, struct GameState *state) {
+const char *SaveState(struct GameState *state) {
   if (!state || !state->startedGame) {
     return NULL;
   }
@@ -346,7 +346,7 @@ const char *SaveState(const struct GameInfo *info, struct GameState *state) {
 
   for (uint_fast8_t i = 0; i < EquipmentTypeCount; ++i) {
     // Maps [0, 7*9) = [0, 62] to [1, 63] so 0 can be the invalid value
-    EquipmentID id = GetEquippedItemID(info, state, i);
+    EquipmentID id = GetEquippedItemID(&state->playerInfo, i);
     data->equippedItems[i] = InvalidEquipmentID != id ? id + 1 : InvalidEquipmentIDSave;
   }
 
@@ -356,6 +356,7 @@ const char *SaveState(const struct GameInfo *info, struct GameState *state) {
 }
 
 // TODO: Fix loading
+// TODO: Save and load unlocked items
 bool LoadState(const struct GameInfo *info, struct GameState *state, const char *password) {
   if (!state || state->startedGame || !password) {
     return false;
@@ -400,24 +401,6 @@ bool CreateNewState(const struct GameInfo *info, struct GameState *state) {
   }
 
   memcpy(&state->playerInfo, &info->defaultPlayerInfo, sizeof info->defaultPlayerInfo);
-
-  // TODO: fix for loading saves
-  for (EquipmentID i = 0; i < EquipmentCount; ++i) {
-    state->playerInfo.unlockedItems[i] = false;
-  }
-  state->playerInfo.unlockedItems[1] = true;
-  state->playerInfo.unlockedItems[3] = true;
-  state->playerInfo.unlockedItems[9] = true;
-  state->playerInfo.unlockedItems[10] = true;
-  state->playerInfo.unlockedItems[18] = true;
-  state->playerInfo.unlockedItems[19] = true;
-  state->playerInfo.unlockedItems[27] = true;
-  state->playerInfo.unlockedItems[28] = true;
-  state->playerInfo.unlockedItems[36] = true;
-  state->playerInfo.unlockedItems[37] = true;
-  state->playerInfo.unlockedItems[45] = true;
-  state->playerInfo.unlockedItems[46] = true;
-  state->playerInfo.unlockedItems[54] = true;
 
   // TODO: Reset state, requires removing main menu state
 

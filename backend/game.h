@@ -32,7 +32,6 @@ struct GameInfo {
 // implementation, do not use outside of backend
   bool initialised;
 
-  // Only health, stamina, physAtk, magAtk, physDef, magDef and equippedItems are available
   struct PlayerInfo defaultPlayerInfo;
 
   uint_fast8_t floorSize;

@@ -18,11 +18,26 @@
     "magAtk": MinimumPlayerStat,
     "physDef": MinimumPlayerStat,
     "magDef": MinimumPlayerStat,
+    "unlockedEquipment": [
+      // Helmet Items
+      0, 1, 3,
+      // Chest Items
+      9, 10,
+      // Glove Items
+      18, 19,
+      // Pants Items
+      27, 28,
+      // Shoe Items
+      36, 37,
+      // Primary Weapons
+      45, 46,
+      // Secondary Weapons
+      54
+    ],
     "equippedEquipment": [
-      0, 9, 18, 27, 36, 45, 54
+      1, 9, 18, 27, 36, 45, 54
     ]
   },
-  // TODO: Add default equipment
   "screens": [
     {
       // ID: 0
@@ -228,7 +243,6 @@
     ]
   },
   // TODO: Make stats optional
-  // TODO: Hardcode max length in schema
   "equipment": [
     // Helmet Items
     {

@@ -271,12 +271,14 @@ static bool CreatePlayerStatsScreen(const struct GameInfo *info, struct GameStat
 }
 
 static bool CreateSaveScreen(const struct GameInfo *info, struct GameState *state) {
+  (void)info;
+
   struct GameScreen screen = {0};
   if (!GetGameScreen(state->screenID, &screen)) {
     return false;
   }
 
-  const char *password = SaveState(info, state);
+  const char *password = SaveState(state);
   if (!password) {
     return false;
   }
@@ -295,13 +297,13 @@ static bool CreatePlayerEquipmentScreen(const struct GameInfo* info, struct Game
     return false;
   }
 
-  struct EquipmentInfo *slot0 = GetEquippedItem(info, state, 0);
-  struct EquipmentInfo *slot1 = GetEquippedItem(info, state, 1);
-  struct EquipmentInfo *slot2 = GetEquippedItem(info, state, 2);
-  struct EquipmentInfo *slot3 = GetEquippedItem(info, state, 3);
-  struct EquipmentInfo *slot4 = GetEquippedItem(info, state, 4);
-  struct EquipmentInfo *slot5 = GetEquippedItem(info, state, 5);
-  struct EquipmentInfo *slot6 = GetEquippedItem(info, state, 6);
+  struct EquipmentInfo *slot0 = GetEquippedItem(info, &state->playerInfo, 0);
+  struct EquipmentInfo *slot1 = GetEquippedItem(info, &state->playerInfo, 1);
+  struct EquipmentInfo *slot2 = GetEquippedItem(info, &state->playerInfo, 2);
+  struct EquipmentInfo *slot3 = GetEquippedItem(info, &state->playerInfo, 3);
+  struct EquipmentInfo *slot4 = GetEquippedItem(info, &state->playerInfo, 4);
+  struct EquipmentInfo *slot5 = GetEquippedItem(info, &state->playerInfo, 5);
+  struct EquipmentInfo *slot6 = GetEquippedItem(info, &state->playerInfo, 6);
   if (!slot0 || !slot1 || !slot2 || !slot3 || !slot4 || !slot5 || !slot6) {
     return false;
   }

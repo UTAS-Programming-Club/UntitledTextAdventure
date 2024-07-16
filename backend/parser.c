@@ -167,6 +167,30 @@ bool LoadDefaultPlayerInfo(struct PlayerInfo *playerInfo) {
   JSON_GETNUMBERVALUEERROR(playerInfo->physDef, jsonDefaultPlayerInfo, "physDef", false);
   JSON_GETNUMBERVALUEERROR(playerInfo->magDef, jsonDefaultPlayerInfo, "magDef", false);
 
+  cJSON *jsonUnlockedEquipmentArray;
+  JSON_GETJSONARRAYERROR(jsonUnlockedEquipmentArray, jsonDefaultPlayerInfo, "unlockedEquipment", false);
+
+  // cJSON_ArrayForEach uses int for idx, likely fine as INT_MAX >= 2^15 - 1
+  uint_fast8_t equipmentCount = 0;
+  cJSON *jsonUnlockedEquipment;
+  cJSON_ArrayForEach(jsonUnlockedEquipment, jsonUnlockedEquipmentArray) {
+    if (EquipmentCount <= equipmentCount) {
+      return false;
+    }
+
+    // TODO: Add macro
+    if (!cJSON_IsNumber(jsonUnlockedEquipment)) {
+      return false;
+    }
+    EquipmentID id = cJSON_GetNumberValue(jsonUnlockedEquipment);
+
+    if (!UnlockItem(playerInfo, id)) {
+      return false;
+    }
+
+    ++equipmentCount;
+  }
+
   cJSON *jsonEquippedEquipmentArray;
   JSON_GETJSONARRAYERROR(jsonEquippedEquipmentArray, jsonDefaultPlayerInfo, "equippedEquipment", false);
 
@@ -178,6 +202,7 @@ bool LoadDefaultPlayerInfo(struct PlayerInfo *playerInfo) {
       return false;
     }
 
+    // TODO: Add macro
     if (!cJSON_IsNumber(jsonEquippedEquipment)) {
       return false;
     }
@@ -188,6 +213,10 @@ bool LoadDefaultPlayerInfo(struct PlayerInfo *playerInfo) {
     }
 
     ++equipmentSlot;
+  }
+
+  if (EquipmentTypeCount != equipmentSlot) {
+    return false;
   }
 
   return true;
