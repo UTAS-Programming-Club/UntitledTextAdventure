@@ -33,7 +33,8 @@ GameData.json: GameData.in.json $(INCDIR)/types.json.h
 # I had an issue with save.c not being rebuilt if types.in.h
 # changed because it did not depend on types.h directly,
 # despite depending on game.h which does depend on types.h.
-backend/game.h: $(INCDIR)/arena.h $(INCDIR)/types.h
+backend/equipment.h: backend/game.h
+backend/game.h: $(INCDIR)/arena.h $(INCDIR)/types.h # backend/equipment.h
 backend/parser.h: backend/game.h $(INCDIR)/types.h
 backend/save.h: backend/game.h
 backend/screens.h: backend/game.h
@@ -50,7 +51,10 @@ $(LIBDIR)/fileloading_frontend.o: backend/fileloading.c backend/fileloading.h fr
 $(LIBDIR)/fileloading_printgamedata.o: backend/fileloading.c backend/fileloading.h frontends/frontend.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
-$(LIBDIR)/game.o: backend/game.c backend/game.h backend/parser.h backend/screens.h backend/save.h backend/specialscreens.h frontends/frontend.h $(INCDIR)/arena.h $(INCDIR)/types.h | $(LIBDIR)
+$(LIBDIR)/equipment.o: backend/equipment.c backend/equipment.h backend/game.h $(INCDIR)/types.h | $(LIBDIR)
+	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
+
+$(LIBDIR)/game.o: backend/game.c backend/equipment.h backend/game.h backend/parser.h backend/screens.h backend/save.h backend/specialscreens.h frontends/frontend.h $(INCDIR)/arena.h $(INCDIR)/types.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 $(LIBDIR)/parser.o: backend/parser.c backend/fileloading.h backend/game.h backend/parser.h backend/specialscreens.h backend/winresources.h frontends/frontend.h $(INCDIR)/cJSON.h $(INCDIR)/types.h | $(LIBDIR)
@@ -107,9 +111,9 @@ $(BINDIR)/mapwatch$(EXECSUFFIX): $(LIBDIR)/mapwatch.o
 	$(call MAKEEXEC,$@,$(basename $@))
 
 ifdef ISWINDOWS
-$(BINDIR)/printgamedata$(EXECSUFFIX): $(LIBDIR)/cJSON.o $(LIBDIR)/crossprint.o $(LIBDIR)/fileloading_printgamedata.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/printgamedata.o $(LIBDIR)/save.o $(LIBDIR)/screens.o $(LIBDIR)/specialscreens.o $(LIBDIR)/libzstd.a | $(BINDIR)
+$(BINDIR)/printgamedata$(EXECSUFFIX): $(LIBDIR)/cJSON.o $(LIBDIR)/crossprint.o $(LIBDIR)/equipment.o $(LIBDIR)/fileloading_printgamedata.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/printgamedata.o $(LIBDIR)/save.o $(LIBDIR)/screens.o $(LIBDIR)/specialscreens.o $(LIBDIR)/libzstd.a | $(BINDIR)
 else # !ISWINDOWS
-$(BINDIR)/printgamedata$(EXECSUFFIX): $(LIBDIR)/cJSON.o $(LIBDIR)/fileloading_printgamedata.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/printgamedata.o $(LIBDIR)/save.o $(LIBDIR)/screens.o $(LIBDIR)/specialscreens.o $(LIBDIR)/libzstd.a | $(BINDIR)
+$(BINDIR)/printgamedata$(EXECSUFFIX): $(LIBDIR)/cJSON.o $(LIBDIR)/equipment.o $(LIBDIR)/fileloading_printgamedata.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/printgamedata.o $(LIBDIR)/save.o $(LIBDIR)/screens.o $(LIBDIR)/specialscreens.o $(LIBDIR)/libzstd.a | $(BINDIR)
 endif # ISWINDOWS/!ISWINDOWS
 	$(CC) -o $(basename $@) $^ $(CFLAGS) -lm
 	$(call MAKEEXEC,$@,$(basename $@))

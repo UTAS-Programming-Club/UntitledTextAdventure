@@ -7,6 +7,7 @@
 #include <types.h>
 
 #include "../frontends/frontend.h"
+#include "equipment.h"
 #include "game.h"
 #include "parser.h"
 #include "save.h"
@@ -70,41 +71,6 @@ free_rooms:
 
 end:
   return info->initialised;
-}
-
-static bool UpdatePlayerStat(PlayerStat *base, PlayerStatDiff diff) {
-  if (!base || MaximumPlayerStat < *base
-      || MinimumPlayerStatDiff > diff || MaximumPlayerStatDiff < diff) {
-    return false;
-  }
-
-  if (0 > diff && MinimumPlayerStat > *base + diff) {
-    *base = MinimumPlayerStat;
-  } else if (0 < diff && MaximumPlayerStat < *base + diff) {
-    *base = MaximumPlayerStat;
-  } else {
-    *base += diff;
-  }
-  return true;
-}
-
-void UpdateStats(const struct GameInfo *info, struct GameState *state) {
-  state->playerInfo.physAtk = MinimumPlayerStat;
-  state->playerInfo.magAtk = MinimumPlayerStat;
-  state->playerInfo.physDef = MinimumPlayerStat;
-  state->playerInfo.magDef = MinimumPlayerStat;
-
-  for (uint_fast8_t i = 0; i < EquipmentTypeCount; ++i) {
-    const struct EquipmentInfo *item = info->equipment + state->playerInfo.equippedItems[i];
-    if (!item) {
-      continue;
-    }
-
-    UpdatePlayerStat(&state->playerInfo.physAtk, item->physAtkMod);
-    UpdatePlayerStat(&state->playerInfo.magAtk,  item->magAtkMod);
-    UpdatePlayerStat(&state->playerInfo.physDef, item->physDefMod);
-    UpdatePlayerStat(&state->playerInfo.magDef,  item->magDefMod);
-  }
 }
 
 bool UpdateGameState(const struct GameInfo *info, struct GameState *state) {
@@ -192,7 +158,12 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
         }
         return GetNextOutputOutcome;
       case GameSwapEquipmentOutcome: ;
-        EquipmentID curID = state->playerInfo.equippedItems[button.equipmentSlot] + 1;
+        EquipmentID curID = GetEquippedItemID(state, button.equipmentSlot);
+        if (InvalidEquipmentID == curID) {
+          return InvalidInputOutcome;
+        }
+        ++curID; // Start at next item to avoid the loop always stopping at the current item
+
         EquipmentID minID = EquipmentPerTypeCount * (curID / EquipmentPerTypeCount);
         EquipmentID maxID = minID + EquipmentPerTypeCount;
 
@@ -205,8 +176,10 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
              continue;
           }
         
-          state->playerInfo.equippedItems[button.equipmentSlot] = curID;
-          UpdateStats(info, state);
+          if (!SetEquippedItem(state, button.equipmentSlot, curID)
+              || !UpdateStats(info, state)) {
+            return InvalidInputOutcome;
+          }
           break;
         }
         return GetNextOutputOutcome;

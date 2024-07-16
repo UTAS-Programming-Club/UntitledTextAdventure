@@ -11,24 +11,6 @@
 #include <types.h>
 
 // Do not use outside of backend
-// items equipable by player
-// Never modify after creation
-struct EquipmentInfo {
-  // TODO: Remove?
-  EquipmentID id;
-  char *name;
-  // TODO: Add enum for type (helmet, boots, etc). Is this actually needed?
-
-  // stats
-  PlayerStatDiff physAtkMod;
-  PlayerStatDiff physDefMod;
-  PlayerStatDiff magAtkMod;
-  PlayerStatDiff magDefMod;
-
-  // TODO: Add other stats such as dex, int, etc
-};
-
-// Do not use outside of backend
 struct PlayerInfo {
   // TODO: Add other stats such as agility that can be impacted by equipment
   PlayerStat health;
@@ -39,7 +21,7 @@ struct PlayerInfo {
   PlayerStat magDef;
 
   // Equipment types: helmets, chest pieces, gloves, pants, boots, primary weapon, secondary weapon
-  bool unlockedItems[EquipmentTypeCount * EquipmentPerTypeCount];
+  bool unlockedItems[EquipmentCount];
   EquipmentID equippedItems[EquipmentTypeCount];
 };
 
@@ -57,7 +39,7 @@ struct GameInfo {
   struct RoomInfo *rooms;
 
   // TODO: Require struct to be on heap and then make this an actual array?
-  struct EquipmentInfo *equipment; // Length is EquipmentTypeCount * EquipmentPerTypeCount
+  struct EquipmentInfo *equipment; // Length is EquipmentCount
 };
 
 // Never modify after creation
@@ -111,9 +93,6 @@ struct GameState {
   enum CustomScreenCode customScreenCodeID;
 };
 
-// TODO: Move to another file that just handles equipment
-void UpdateStats(const struct GameInfo *, struct GameState *);
-
 // GameInfo should be zero initialised before first call
 bool SetupBackend(struct GameInfo *);
 // GameState should be zero initialised before first call
@@ -122,5 +101,8 @@ enum InputOutcome HandleGameInput(const struct GameInfo *, struct GameState *, u
 const struct RoomInfo *GetGameRoom(const struct GameInfo *, RoomCoord, RoomCoord);
 void CleanupGame(struct GameState *);
 void CleanupBackend(struct GameInfo *);
+
+// This header depends on structs in this header
+#include "equipment.h"
 
 #endif // PCGAME_GAME_H

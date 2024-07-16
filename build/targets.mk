@@ -1,4 +1,4 @@
-COMMONOBJS := $(LIBDIR)/cJSON.o $(LIBDIR)/fileloading_frontend.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/save.o $(LIBDIR)/screens.o $(LIBDIR)/specialscreens.o $(LIBDIR)/libzstd.a
+COMMONOBJS := $(LIBDIR)/cJSON.o $(LIBDIR)/equipment.o $(LIBDIR)/fileloading_frontend.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/save.o $(LIBDIR)/screens.o $(LIBDIR)/specialscreens.o $(LIBDIR)/libzstd.a
 
 CFLAGS += -I $(INCDIR)
 CXXFLAGS += -I $(INCDIR)

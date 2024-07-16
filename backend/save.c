@@ -345,7 +345,7 @@ const char *SaveState(const struct GameInfo *info, struct GameState *state) {
 
   for (uint_fast8_t i = 0; i < EquipmentTypeCount; ++i) {
     // Maps [0, 7*9) = [0, 62] to [1, 63] so 0 can be the invalid value
-    const struct EquipmentInfo *item = info->equipment + state->playerInfo.equippedItems[i];
+    const struct EquipmentInfo *item = GetEquippedItem(info, state, i);
     data->equippedItems[i] = item && InvalidEquipmentID != item->id ? item->id + 1 : InvalidEquipmentIDSave;
   }
 
@@ -354,6 +354,7 @@ const char *SaveState(const struct GameInfo *info, struct GameState *state) {
   return CompressAndEncodeData(&state->arena, pData, dataSize);
 }
 
+// TODO: Fix loading
 bool LoadState(const struct GameInfo *info, struct GameState *state, const char *password) {
   if (!state || state->startedGame || !password) {
     return false;
@@ -373,10 +374,16 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
   state->playerInfo.stamina = data->stamina;
 
   for (uint_fast8_t i = 0; i < EquipmentTypeCount; ++i) {
-    EquipmentID id = data->equippedItems[i];
-    state->playerInfo.equippedItems[i] = id != InvalidEquipmentIDSave ? id - 1 : InvalidEquipmentID;
+    EquipmentIDSave idSave = data->equippedItems[i];
+    EquipmentID id = idSave != InvalidEquipmentIDSave ? idSave - 1 : InvalidEquipmentID;
+
+    if (!SetEquippedItem(state, i, id)) {
+      return false;
+    }
   }
-  UpdateStats(info, state);
+  if (!UpdateStats(info, state)) {
+    return false;
+  }
 
   memcpy(state->stateData, (uint8_t *)data + sizeof *data, state->stateDataSize);
 
@@ -397,18 +404,19 @@ bool CreateNewState(const struct GameInfo *info, struct GameState *state) {
   for (uint_fast8_t i = 0; i < EquipmentTypeCount; ++i) {
     state->playerInfo.equippedItems[i] = InvalidEquipmentID;
   }
-  // TODO: Add a function to ensure ids are all valid
-  state->playerInfo.equippedItems[0] = 0 * EquipmentPerTypeCount + 1;
-  state->playerInfo.equippedItems[1] = 1 * EquipmentPerTypeCount;
-  state->playerInfo.equippedItems[2] = 2 * EquipmentPerTypeCount;
-  state->playerInfo.equippedItems[3] = 3 * EquipmentPerTypeCount;
-  state->playerInfo.equippedItems[4] = 4 * EquipmentPerTypeCount;
-  state->playerInfo.equippedItems[5] = 5 * EquipmentPerTypeCount;
-  state->playerInfo.equippedItems[6] = 6 * EquipmentPerTypeCount;
-  UpdateStats(info, state);
+  if (   !SetEquippedItem(state, 0, 0 * EquipmentPerTypeCount + 1)
+      || !SetEquippedItem(state, 1, 1 * EquipmentPerTypeCount)
+      || !SetEquippedItem(state, 2, 2 * EquipmentPerTypeCount)
+      || !SetEquippedItem(state, 3, 3 * EquipmentPerTypeCount)
+      || !SetEquippedItem(state, 4, 4 * EquipmentPerTypeCount)
+      || !SetEquippedItem(state, 5, 5 * EquipmentPerTypeCount)
+      || !SetEquippedItem(state, 6, 6 * EquipmentPerTypeCount)
+      || !UpdateStats(info, state)) {
+    return false;
+  }
 
   // TODO: fix for loading saves
-  for (EquipmentID i = 0; i < EquipmentTypeCount * EquipmentPerTypeCount; ++i) {
+  for (EquipmentID i = 0; i < EquipmentCount; ++i) {
     state->playerInfo.unlockedItems[i] = false;
   }
   state->playerInfo.unlockedItems[1] = true;

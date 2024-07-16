@@ -16,7 +16,7 @@
 #define JSON_ENUM_ITEM(name, value) name = value,
 #define JSON_ENUM_END };
 
-#define VALUE_EMIT(type, name, value) hash define name (type)value
+#define VALUE_EMIT(type, name, value) hash define name (type)(value)
 #define SAVED_INTEGRAL_TYPE_EMIT(type, size, name) \
 typedef type##_fast##size##_t name; \
 typedef type##size##_t name##Save;
@@ -119,6 +119,7 @@ C_EMIT(typedef int_fast8_t PlayerStatDiff;)
 // Equipment types: helmets, chest pieces, gloves, pants, boots, primary weapon, secondary weapon
 C_EMIT(#define EquipmentTypeCount 7)
 C_EMIT(#define EquipmentPerTypeCount 9)
+C_EMIT(#define EquipmentCount EquipmentTypeCount * EquipmentPerTypeCount)
 VALUE_EMIT(EquipmentID, InvalidEquipmentID, UINT_FAST8_MAX)
 VALUE_EMIT(EquipmentIDSave, InvalidEquipmentIDSave, 0)
 SAVED_INTEGRAL_TYPE_EMIT(uint, 8, EquipmentID)
