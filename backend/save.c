@@ -154,8 +154,8 @@ static const void *DecodeData(Arena *arena, const char *password, size_t *dataSi
 #endif
 
   size_t passwordSize = strlen(password);
-  // Integer formula that gives the same result as 4*ceil(size/5.) for integer sizes
-  *dataSize = 4 * ((passwordSize + 4) / 5);
+  // Integer formula that gives the same result as ceil((4*size)/5.) for integer sizes
+  *dataSize = (4 * passwordSize + 4) / 5;
 
   uint32_t *decodedData = arena_alloc(arena, *dataSize);
   if (!decodedData) {
