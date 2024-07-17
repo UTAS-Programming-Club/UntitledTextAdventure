@@ -290,7 +290,6 @@ bool LoadGameEquipment(struct EquipmentInfo **equipment) {
   // cJSON_ArrayForEach uses int for idx, likely fine as INT_MAX >= 2^15 - 1
   cJSON *jsonItem;
   cJSON_ArrayForEach(jsonItem, jsonEquipment) {
-    currentItem->id = i;
     if (i >= EquipmentCount || !GetGameEquipmentItemData(jsonItem, currentItem)) {
       free(equipment);
       return false;

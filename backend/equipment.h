@@ -10,8 +10,6 @@
 // items equipable by player
 // Never modify after creation
 struct EquipmentInfo {
-  // TODO: Remove?
-  EquipmentID id;
   char *name;
   // TODO: Add enum for type (helmet, boots, etc). Is this actually needed?
 
