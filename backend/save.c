@@ -27,6 +27,7 @@ struct __attribute__((packed, scalar_storage_order("little-endian"))) SaveData {
   RoomCoordSave y;
   PlayerStatSave health;
   PlayerStatSave stamina;
+  uint8_t unlockedItems[(EquipmentCount + 7) / 8];
   // TODO: EquipmentIDSave is [0, 63], switch to 6 bits items? ceil(6 * 7 / 8.) == 6, might not be worth it
   EquipmentIDSave equippedItems[EquipmentTypeCount];
 };
@@ -344,7 +345,20 @@ const char *SaveState(struct GameState *state) {
   data->health  = state->playerInfo.health;
   data->stamina = state->playerInfo.stamina;
 
-  for (uint_fast8_t i = 0; i < EquipmentTypeCount; ++i) {
+  memset(data->unlockedItems, 0, sizeof data->unlockedItems);
+  // TODO: Unroll to multiples of 8
+  for (EquipmentID i = 0; i < EquipmentCount; ++i) {
+    bool unlocked;
+    if (!CheckItemUnlocked(&state->playerInfo, i, &unlocked)) {
+      return NULL;
+    }
+
+    uint_fast8_t arrIdx = i / 8;
+    uint_fast8_t arrOff = i % 8;
+    data->unlockedItems[arrIdx] |= unlocked << arrOff;
+  }
+
+  for (EquipmentType i = 0; i < EquipmentTypeCount; ++i) {
     // Maps [0, 7*9) = [0, 62] to [1, 63] so 0 can be the invalid value
     EquipmentID id = GetEquippedItemID(&state->playerInfo, i);
     data->equippedItems[i] = InvalidEquipmentID != id ? id + 1 : InvalidEquipmentIDSave;
@@ -374,7 +388,20 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
   state->playerInfo.health = data->health;
   state->playerInfo.stamina = data->stamina;
 
-  for (uint_fast8_t i = 0; i < EquipmentTypeCount; ++i) {
+  // TODO: Unroll to multiples of 8?
+  for (EquipmentID i = 0; i < EquipmentCount; ++i) {
+    uint_fast8_t arrIdx = i / 8;
+    uint_fast8_t arrOff = i % 8;
+
+    if (!(data->unlockedItems[arrIdx] & 1 << arrOff)) {
+      continue;
+    }
+    if (!UnlockItem(&state->playerInfo, i)) {
+      return NULL;
+    }
+  }
+
+  for (EquipmentType i = 0; i < EquipmentTypeCount; ++i) {
     EquipmentIDSave idSave = data->equippedItems[i];
     EquipmentID id = idSave != InvalidEquipmentIDSave ? idSave - 1 : InvalidEquipmentID;
 
@@ -400,6 +427,9 @@ bool CreateNewState(const struct GameInfo *info, struct GameState *state) {
   }
 
   memcpy(&state->playerInfo, &info->defaultPlayerInfo, sizeof info->defaultPlayerInfo);
+  if (!UpdateStats(info, state)) {
+    return false;
+  }
 
   // TODO: Reset state, requires removing main menu state
 
