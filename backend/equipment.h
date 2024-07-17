@@ -29,6 +29,7 @@ bool UpdatePlayerStat(PlayerStat *, PlayerStatDiff);
 bool UpdateStats(const struct GameInfo *, struct GameState *);
 
 bool UnlockItem(struct PlayerInfo *, EquipmentID);
+bool CheckItemUnlocked(const struct PlayerInfo *, EquipmentID, bool *);
 
 // Returns InvalidEquipmentID or a valid EquipmentID
 EquipmentID GetEquippedItemID(const struct PlayerInfo *, uint_fast8_t);

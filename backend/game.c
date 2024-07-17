@@ -171,11 +171,15 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
           if (curID == maxID) {
             curID = minID;
           }
-        
-          if (!state->playerInfo.unlockedItems[curID]) {
+
+          bool itemUnlocked;
+          if (!CheckItemUnlocked(&state->playerInfo, curID, &itemUnlocked)) {
+            return InvalidInputOutcome;
+          }
+          if (!itemUnlocked) {
              continue;
           }
-        
+
           if (!SetEquippedItem(&state->playerInfo, button.equipmentSlot, curID)
               || !UpdateStats(info, state)) {
             return InvalidInputOutcome;

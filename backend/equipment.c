@@ -57,6 +57,15 @@ bool UnlockItem(struct PlayerInfo *playerInfo, EquipmentID ID) {
   return true;
 }
 
+bool CheckItemUnlocked(const struct PlayerInfo *playerInfo, EquipmentID ID, bool *unlocked) {
+  if (!playerInfo || EquipmentCount <= ID || InvalidEquipmentID == ID) {
+    return false;
+  }
+
+  *unlocked = playerInfo->unlockedItems[ID];
+  return true;
+}
+
 
 // TODO: Add type for equipmentSlot
 EquipmentID GetEquippedItemID(const struct PlayerInfo *playerInfo, uint_fast8_t equipmentSlot) {

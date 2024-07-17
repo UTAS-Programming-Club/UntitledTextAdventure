@@ -191,6 +191,10 @@ bool LoadDefaultPlayerInfo(struct PlayerInfo *playerInfo) {
     ++equipmentCount;
   }
 
+  if (EquipmentTypeCount > equipmentCount) {
+    return false;
+  }
+
   cJSON *jsonEquippedEquipmentArray;
   JSON_GETJSONARRAYERROR(jsonEquippedEquipmentArray, jsonDefaultPlayerInfo, "equippedEquipment", false);
 

@@ -20,6 +20,7 @@ struct PlayerInfo {
   PlayerStat physDef;
   PlayerStat magDef;
 
+  // Do not access directly, use functions in equipment.h
   // Equipment types: helmets, chest pieces, gloves, pants, boots, primary weapon, secondary weapon
   bool unlockedItems[EquipmentCount];
   EquipmentID equippedItems[EquipmentTypeCount];
