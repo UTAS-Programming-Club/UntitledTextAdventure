@@ -103,7 +103,7 @@ SAVED_INTEGRAL_TYPE_EMIT(uint, 8, RoomCoord)
 
 // PlayerStat is a uint8_t with [0, 100]
 C_EMIT(#define PRIPlayerStat PRIuFAST8)
-// TODO: Use json loaded default stats when possible instead of these
+// TODO: Use json loaded default stats when possible instead of these?
 VALUE_EMIT(PlayerStat, MinimumPlayerStat,   0)
 VALUE_EMIT(PlayerStat, MaximumPlayerStat, 100)
 SAVED_INTEGRAL_TYPE_EMIT(uint, 8, PlayerStat)

@@ -369,7 +369,6 @@ const char *SaveState(struct GameState *state) {
   return CompressAndEncodeData(&state->arena, pData, dataSize);
 }
 
-// TODO: Save and load unlocked items
 bool LoadState(const struct GameInfo *info, struct GameState *state, const char *password) {
   if (!state || state->startedGame || !password) {
     return false;
