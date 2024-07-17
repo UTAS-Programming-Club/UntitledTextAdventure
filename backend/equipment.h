@@ -32,9 +32,9 @@ bool UnlockItem(struct PlayerInfo *, EquipmentID);
 bool CheckItemUnlocked(const struct PlayerInfo *, EquipmentID, bool *);
 
 // Returns InvalidEquipmentID or a valid EquipmentID
-EquipmentID GetEquippedItemID(const struct PlayerInfo *, uint_fast8_t);
+EquipmentID GetEquippedItemID(const struct PlayerInfo *, EquipmentType);
 // Returns NULL or a valid EquipmentInfo
-struct EquipmentInfo *GetEquippedItem(const struct GameInfo *, const struct PlayerInfo *, uint_fast8_t);
-bool SetEquippedItem(struct PlayerInfo *, uint_fast8_t, EquipmentID);
+struct EquipmentInfo *GetEquippedItem(const struct GameInfo *, const struct PlayerInfo *, EquipmentType);
+bool SetEquippedItem(struct PlayerInfo *, EquipmentType, EquipmentID);
 
 #endif // PCGAME_EQUIPMENT_H

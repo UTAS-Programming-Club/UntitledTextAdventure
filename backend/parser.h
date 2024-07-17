@@ -23,7 +23,7 @@ struct GameScreenButton {
   char *title; // utf-8
   enum InputOutcome outcome;
   enum Screen newScreenID; // Only set if outcome == GotoScreenOutcome
-  uint_fast8_t equipmentSlot;
+  EquipmentType equipmentType;
 };
 
 bool LoadGameData(char *);

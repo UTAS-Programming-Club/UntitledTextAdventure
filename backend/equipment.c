@@ -31,8 +31,7 @@ bool UpdateStats(const struct GameInfo *info, struct GameState *state) {
   state->playerInfo.physDef = MinimumPlayerStat;
   state->playerInfo.magDef = MinimumPlayerStat;
 
-  // TODO: Add type for equipmentType
-  for (uint_fast8_t i = 0; i < EquipmentTypeCount; ++i) {
+  for (EquipmentType i = 0; i < EquipmentTypeCount; ++i) {
     const struct EquipmentInfo *item = info->equipment + state->playerInfo.equippedItems[i];
     if (!item) {
       continue;
@@ -67,13 +66,12 @@ bool CheckItemUnlocked(const struct PlayerInfo *playerInfo, EquipmentID ID, bool
 }
 
 
-// TODO: Add type for equipmentSlot
-EquipmentID GetEquippedItemID(const struct PlayerInfo *playerInfo, uint_fast8_t equipmentSlot) {
-  if (!playerInfo || EquipmentTypeCount <= equipmentSlot) {
+EquipmentID GetEquippedItemID(const struct PlayerInfo *playerInfo, EquipmentType equipmentType) {
+  if (!playerInfo || EquipmentTypeCount <= equipmentType) {
     return InvalidEquipmentID;
   }
 
-  EquipmentID id = playerInfo->equippedItems[equipmentSlot];
+  EquipmentID id = playerInfo->equippedItems[equipmentType];
   if (EquipmentCount <= id) {
     return InvalidEquipmentID;
   }
@@ -81,12 +79,12 @@ EquipmentID GetEquippedItemID(const struct PlayerInfo *playerInfo, uint_fast8_t 
   return id;
 }
 
-struct EquipmentInfo *GetEquippedItem(const struct GameInfo *info, const struct PlayerInfo *playerInfo, uint_fast8_t equipmentSlot) {
-  if (!info || !info->initialised || !playerInfo || EquipmentTypeCount <= equipmentSlot) {
+struct EquipmentInfo *GetEquippedItem(const struct GameInfo *info, const struct PlayerInfo *playerInfo, EquipmentType equipmentType) {
+  if (!info || !info->initialised || !playerInfo || EquipmentTypeCount <= equipmentType) {
     return NULL;
   }
 
-  EquipmentID id = GetEquippedItemID(playerInfo, equipmentSlot);
+  EquipmentID id = GetEquippedItemID(playerInfo, equipmentType);
   if (InvalidEquipmentID == id) {
     return NULL;
   }
@@ -94,8 +92,8 @@ struct EquipmentInfo *GetEquippedItem(const struct GameInfo *info, const struct 
   return info->equipment + id;
 }
 
-bool SetEquippedItem(struct PlayerInfo *playerInfo, uint_fast8_t equipmentSlot, EquipmentID newID) {
-  if (!playerInfo || EquipmentTypeCount <= equipmentSlot || EquipmentCount <= newID
+bool SetEquippedItem(struct PlayerInfo *playerInfo, EquipmentType equipmentType, EquipmentID newID) {
+  if (!playerInfo || EquipmentTypeCount <= equipmentType || EquipmentCount <= newID
       || InvalidEquipmentID == newID) {
     return false;
   }
@@ -104,6 +102,6 @@ bool SetEquippedItem(struct PlayerInfo *playerInfo, uint_fast8_t equipmentSlot, 
     return false;
   }
 
-  playerInfo->equippedItems[equipmentSlot] = newID;
+  playerInfo->equippedItems[equipmentType] = newID;
   return true;
 }

@@ -199,10 +199,10 @@ bool LoadDefaultPlayerInfo(struct PlayerInfo *playerInfo) {
   JSON_GETJSONARRAYERROR(jsonEquippedEquipmentArray, jsonDefaultPlayerInfo, "equippedEquipment", false);
 
   // cJSON_ArrayForEach uses int for idx, likely fine as INT_MAX >= 2^15 - 1
-  uint_fast8_t equipmentSlot = 0;
+  EquipmentType equipmentType = 0;
   cJSON *jsonEquippedEquipment;
   cJSON_ArrayForEach(jsonEquippedEquipment, jsonEquippedEquipmentArray) {
-    if (EquipmentTypeCount <= equipmentSlot) {
+    if (EquipmentTypeCount <= equipmentType) {
       return false;
     }
 
@@ -212,14 +212,14 @@ bool LoadDefaultPlayerInfo(struct PlayerInfo *playerInfo) {
     }
     EquipmentID id = cJSON_GetNumberValue(jsonEquippedEquipment);
 
-    if (!SetEquippedItem(playerInfo, equipmentSlot, id)) {
+    if (!SetEquippedItem(playerInfo, equipmentType, id)) {
       return false;
     }
 
-    ++equipmentSlot;
+    ++equipmentType;
   }
 
-  if (EquipmentTypeCount != equipmentSlot) {
+  if (EquipmentTypeCount != equipmentType) {
     return false;
   }
 
@@ -539,8 +539,8 @@ bool GetGameScreenButton(enum Screen screenID, uint_fast8_t buttonID, struct Gam
     return false;
   }
 
-  button->equipmentSlot = cJSON_GetOptNumberValue(jsonButton, "equipmentSlot", InvalidScreen, invalidOptNumberVal);
-  if (invalidOptNumberVal == button->equipmentSlot) {
+  button->equipmentType = cJSON_GetOptNumberValue(jsonButton, "equipmentSlot", InvalidScreen, invalidOptNumberVal);
+  if (invalidOptNumberVal == button->equipmentType) {
       return false;
   }
 

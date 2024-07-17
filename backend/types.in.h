@@ -55,17 +55,17 @@ JSON_ENUM_END
 // InputOutcome is a uint16_t with (0, 65535]
 JSON_ENUM_START(InputOutcome)
   // Can be given to frontend
-  JSON_ENUM_ITEM(InvalidInputOutcome,     0) // Do not use in json or use in screens.c
-  JSON_ENUM_ITEM(GetNextOutputOutcome,    1) // Do not use in json or use in screens.c
-  JSON_ENUM_ITEM(QuitGameOutcome,         2)
+  JSON_ENUM_ITEM(InvalidInputOutcome,      0) // Do not use in json or use in screens.c
+  JSON_ENUM_ITEM(GetNextOutputOutcome,     1) // Do not use in json or use in screens.c
+  JSON_ENUM_ITEM(QuitGameOutcome,          2)
   // Do not give to frontend
-  JSON_ENUM_ITEM(GotoScreenOutcome,       3) // -> GetNextOutput, Needs newScreen field in the same screen's json entry
-  JSON_ENUM_ITEM(GameGoNorthOutcome,      4) // -> GetNextOutput, Needs next room to exist in json
-  JSON_ENUM_ITEM(GameGoEastOutcome,       5) // -> GetNextOutput, Needs next room to exist in json
-  JSON_ENUM_ITEM(GameGoSouthOutcome,      6) // -> GetNextOutput, Needs next room to exist in json
-  JSON_ENUM_ITEM(GameGoWestOutcome,       7) // -> GetNextOutput, Needs next room to exist in json
-  JSON_ENUM_ITEM(GameHealthChangeOutcome, 8) // -> GetNextOutput, Needs percentageChance and healthChange in current room's json entry
-  JSON_ENUM_ITEM(GameSwapEquipmentOutcome,9) // -> GetNextOutput, Needs equipmentSlot to exist in json
+  JSON_ENUM_ITEM(GotoScreenOutcome,        3) // -> GetNextOutput, Needs newScreen field in the same button's json entry
+  JSON_ENUM_ITEM(GameGoNorthOutcome,       4) // -> GetNextOutput, Needs next room to exist in json
+  JSON_ENUM_ITEM(GameGoEastOutcome,        5) // -> GetNextOutput, Needs next room to exist in json
+  JSON_ENUM_ITEM(GameGoSouthOutcome,       6) // -> GetNextOutput, Needs next room to exist in json
+  JSON_ENUM_ITEM(GameGoWestOutcome,        7) // -> GetNextOutput, Needs next room to exist in json
+  JSON_ENUM_ITEM(GameHealthChangeOutcome,  8) // -> GetNextOutput, Needs percentageChance and healthChange in current room's json entry
+  JSON_ENUM_ITEM(GameSwapEquipmentOutcome, 9) // -> GetNextOutput, Needs equipmentSlot field in the same butto's json entry
 JSON_ENUM_END
 
 // CustomScreenCode is a uint16_t with [0, 65535)
@@ -114,10 +114,14 @@ VALUE_EMIT(PlayerStatDiff, MaximumPlayerStatDiff,  100)
 VALUE_EMIT(PlayerStatDiff, InvalidPlayerStatDiff, INT_FAST8_MAX)
 C_EMIT(typedef int_fast8_t PlayerStatDiff;)
 
+// TODO: Change json to use equipmentType once the sword slots are merged
+// EquipmentType is a uint8_t with [0, EquipmentTypeCount)
+C_EMIT(#define EquipmentTypeCount (EquipmentType)7)
+C_EMIT(typedef uint_fast8_t EquipmentType;)
+
 // EquipmentID is a uint8_t with [0, 62]
 // With 7 types of items, this gives 9 items per type
 // Equipment types: helmets, chest pieces, gloves, pants, boots, primary weapon, secondary weapon
-C_EMIT(#define EquipmentTypeCount 7)
 C_EMIT(#define EquipmentPerTypeCount 9)
 C_EMIT(#define EquipmentCount EquipmentTypeCount * EquipmentPerTypeCount)
 VALUE_EMIT(EquipmentID, InvalidEquipmentID, UINT_FAST8_MAX)

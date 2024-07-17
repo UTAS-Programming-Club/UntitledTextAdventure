@@ -158,7 +158,7 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
         }
         return GetNextOutputOutcome;
       case GameSwapEquipmentOutcome: ;
-        EquipmentID curID = GetEquippedItemID(&state->playerInfo, button.equipmentSlot);
+        EquipmentID curID = GetEquippedItemID(&state->playerInfo, button.equipmentType);
         if (InvalidEquipmentID == curID) {
           return InvalidInputOutcome;
         }
@@ -180,7 +180,7 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
              continue;
           }
 
-          if (!SetEquippedItem(&state->playerInfo, button.equipmentSlot, curID)
+          if (!SetEquippedItem(&state->playerInfo, button.equipmentType, curID)
               || !UpdateStats(info, state)) {
             return InvalidInputOutcome;
           }
