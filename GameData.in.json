@@ -1,14 +1,42 @@
 #include <types.json.h>
 
+#define NoItem         \
+    {                  \
+      "name": "",      \
+      "physAtkMod": 0, \
+      "magAtkMod": 0,  \
+      "physDefMod": 0, \
+      "magDefMod": 0   \
+    }
+
 {
   "name": "Untitled Text Adventure",
-  "defaultStats": {
+  "defaultPlayerInfo": {
     "health": MaximumPlayerStat,
     "stamina": MaximumPlayerStat,
     "physAtk": MinimumPlayerStat,
     "magAtk": MinimumPlayerStat,
     "physDef": MinimumPlayerStat,
-    "magDef": MinimumPlayerStat
+    "magDef": MinimumPlayerStat,
+    "unlockedEquipment": [
+      // Helmet Items
+      0, 1,
+      // Chest Items
+      9, 10,
+      // Glove Items
+      18, 19,
+      // Pants Items
+      27, 28,
+      // Shoe Items
+      36, 37,
+      // Primary Weapons
+      45, 46,
+      // Secondary Weapons
+      54
+    ],
+    "equippedEquipment": [
+      1, 9, 18, 27, 36, 45, 54
+    ]
   },
   "screens": [
     {
@@ -67,6 +95,11 @@
           "newScreenID": PlayerStatsScreen
         },
         {
+          "title": "Change Equipment",
+          "outcome": GotoScreenOutcome,
+          "newScreenID": PlayerEquipmentScreen
+        },
+        {
           "title": "Save and Quit",
           "outcome": GotoScreenOutcome,
           "newScreenID": SaveScreen
@@ -116,6 +149,55 @@
           "newScreenID": MainMenuScreen
         }
       ]
+    },
+    {
+      // ID: 5
+      "body": "Player Equipment",
+      "extraText": "",
+      "customScreenCode": PlayerEquipmentCustomScreenCode,
+      "inputType": ButtonScreenInputType,
+      "buttons": [
+        {
+          "title": "Swap Equipment 1",
+          "outcome": GameSwapEquipmentOutcome,
+          "equipmentSlot": 0
+        },
+        {
+          "title": "Swap Equipment 2",
+          "outcome": GameSwapEquipmentOutcome,
+          "equipmentSlot": 1
+        },
+        {
+          "title": "Swap Equipment 3",
+          "outcome": GameSwapEquipmentOutcome,
+          "equipmentSlot": 2
+        },
+        {
+          "title": "Swap Equipment 4",
+          "outcome": GameSwapEquipmentOutcome,
+          "equipmentSlot": 3
+        },
+        {
+          "title": "Swap Equipment 5",
+          "outcome": GameSwapEquipmentOutcome,
+          "equipmentSlot": 4
+        },
+        {
+          "title": "Swap Equipment 6",
+          "outcome": GameSwapEquipmentOutcome,
+          "equipmentSlot": 5
+        },
+        {
+          "title": "Swap Equipment 7",
+          "outcome": GameSwapEquipmentOutcome,
+          "equipmentSlot": 6
+        },
+        {
+          "title": "Return to Game",
+          "outcome": GotoScreenOutcome,
+          "newScreenID": GameScreen
+        }
+      ]
     }
   ],
   "state": [
@@ -162,12 +244,201 @@
   },
   // TODO: Make stats optional
   "equipment": [
+    // Helmet Items
     {
-      "name": "Leather",
+      // ID: 0
+      "name": "Nothing",
+      "physAtkMod": 0,
+      "magAtkMod": 0,
+      "physDefMod": 0,
+      "magDefMod": 0
+    },
+    {
+      // ID: 1
+      "name": "Leather Helmet",
       "physAtkMod": 5,
       "magAtkMod": 4,
       "physDefMod": 90,
       "magDefMod": 10
-    }
+    },
+    {
+      // ID: 2
+      "name": "Something Else",
+      "physAtkMod": 9,
+      "magAtkMod": 79,
+      "physDefMod": 30,
+      "magDefMod": 20
+    },
+    {
+      // ID: 3
+      "name": "Iron Helmet",
+      "physAtkMod": 9,
+      "magAtkMod": 79,
+      "physDefMod": 30,
+      "magDefMod": 20
+    },
+    // IDs: 4 to 8
+    NoItem,
+    NoItem,
+    NoItem,
+    NoItem,
+    NoItem,
+
+    // Chest Items
+    {
+      // ID: 9
+      "name": "Rags",
+      "physAtkMod": 0,
+      "magAtkMod": 0,
+      "physDefMod": 0,
+      "magDefMod": 0
+    },
+    {
+      // ID: 10
+      "name": "Chainmail",
+      "physAtkMod": 3,
+      "magAtkMod": 20,
+      "physDefMod": 2,
+      "magDefMod": 100
+    },
+    {
+      // ID: 11
+      "name": "Mythril Vest",
+      "physAtkMod": 3,
+      "magAtkMod": 11,
+      "physDefMod": 2,
+      "magDefMod": 1
+    },
+    // IDs: 12 to 17
+    NoItem,
+    NoItem,
+    NoItem,
+    NoItem,
+    NoItem,
+    NoItem,
+
+    // Glove Items
+    {
+      // ID: 18
+      "name": "Nothing",
+      "physAtkMod": 0,
+      "magAtkMod": 0,
+      "physDefMod": 0,
+      "magDefMod": 0
+    },
+    {
+      // ID: 19
+      "name": "Spiked Gloves",
+      "physAtkMod": 15,
+      "magAtkMod": 0,
+      "physDefMod": 0,
+      "magDefMod": 0
+    },
+    // IDs: 20 to 26
+    NoItem,
+    NoItem,
+    NoItem,
+    NoItem,
+    NoItem,
+    NoItem,
+    NoItem,
+
+    // Pants Items
+    {
+      // ID: 27
+      "name": "Rags",
+      "physAtkMod": 0,
+      "magAtkMod": 0,
+      "physDefMod": 0,
+      "magDefMod": 0
+    },
+    {
+      // ID: 28
+      "name": "Fancy Pants",
+      "physAtkMod": 0,
+      "magAtkMod": 0,
+      "physDefMod": 10,
+      "magDefMod": 20
+    },
+    // IDs: 29 to 35
+    NoItem,
+    NoItem,
+    NoItem,
+    NoItem,
+    NoItem,
+    NoItem,
+    NoItem,
+
+    // Boot Items
+      {
+      // ID: 36
+      "name": "Old Leather Boots",
+      "physAtkMod": 0,
+      "magAtkMod": 0,
+      "physDefMod": 0,
+      "magDefMod": 0
+    },
+    {
+      // ID: 37
+      "name": "Nikes",
+      "physAtkMod": 0,
+      "magAtkMod": 0,
+      "physDefMod": 5,
+      "magDefMod": 10
+    },
+    // IDs: 38 to 44
+    NoItem,
+    NoItem,
+    NoItem,
+    NoItem,
+    NoItem,
+    NoItem,
+    NoItem,
+
+    // TODO: Figure out how to handle weapons having different stats
+    // Primary Weapons
+    {
+      // ID: 45
+      "name": "Fist",
+      "physAtkMod": 5,
+      "magAtkMod": 0,
+      "physDefMod": 0,
+      "magDefMod": 0
+    },
+    {
+      // ID: 46
+      "name": "Shotgun",
+      "physAtkMod": 20,
+      "magAtkMod": 0,
+      "physDefMod": 0,
+      "magDefMod": 0
+    },
+    // IDs: 47 to 53
+    NoItem,
+    NoItem,
+    NoItem,
+    NoItem,
+    NoItem,
+    NoItem,
+    NoItem,
+
+    // Secondary Weapons
+    {
+      // ID: 54
+      "name": "Fist",
+      "physAtkMod": 5,
+      "magAtkMod": 0,
+      "physDefMod": 0,
+      "magDefMod": 0
+    },
+    // IDS: 55 to 62
+    NoItem,
+    NoItem,
+    NoItem,
+    NoItem,
+    NoItem,
+    NoItem,
+    NoItem,
+    NoItem
   ]
 }

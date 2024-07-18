@@ -7,6 +7,7 @@
 #include <types.h>
 
 #include "../frontends/frontend.h"
+#include "equipment.h"
 #include "game.h"
 #include "parser.h"
 #include "save.h"
@@ -43,8 +44,8 @@ bool SetupBackend(struct GameInfo *info) {
     goto end;
   }
 
-  if (!LoadDefaultPlayerStats(&info->defaultPlayerStats)) {
-    PrintError("Failed to load default player stats from %s", dataFile);
+  if (!LoadDefaultPlayerInfo(&info->defaultPlayerInfo)) {
+    PrintError("Failed to load default player info from %s", dataFile);
     goto end;
   }
 
@@ -53,7 +54,7 @@ bool SetupBackend(struct GameInfo *info) {
     goto free_rooms;
   }
 
-  if (!LoadGameEquipment(&info->equipmentCount, &info->equipment)) {
+  if (!LoadGameEquipment(&info->equipment)) {
     PrintError("Failed to load equipment from %s", dataFile);
     goto free_rooms;
   }
@@ -70,42 +71,6 @@ free_rooms:
 
 end:
   return info->initialised;
-}
-
-static bool UpdatePlayerStat(PlayerStat *base, PlayerStatDiff diff) {
-  if (!base || MaximumPlayerStat < *base
-      || MinimumPlayerStatDiff > diff || MaximumPlayerStatDiff < diff) {
-    return false;
-  }
-
-  if (0 > diff && MinimumPlayerStat > *base + diff) {
-    *base = MinimumPlayerStat;
-  } else if (0 < diff && MaximumPlayerStat < *base + diff) {
-    *base = MaximumPlayerStat;
-  } else {
-    *base += diff;
-  }
-  return true;
-}
-
-// TODO: Replace test with real impl with pickups
-void UpdateStats(struct GameState *state) {
-  state->playerInfo.physAtk = MinimumPlayerStat;
-  state->playerInfo.magAtk = MinimumPlayerStat;
-  state->playerInfo.physDef = MinimumPlayerStat;
-  state->playerInfo.magDef = MinimumPlayerStat;
-
-  for (EquipmentID i = 0; i < EquippedItemsSlots; ++i) {
-    const struct EquipmentInfo *item = state->playerInfo.equippedItems[i];
-    if (!item) {
-      continue;
-    }
-
-    UpdatePlayerStat(&state->playerInfo.physAtk, item->physAtkMod);
-    UpdatePlayerStat(&state->playerInfo.magAtk,  item->magAtkMod);
-    UpdatePlayerStat(&state->playerInfo.physDef, item->physDefMod);
-    UpdatePlayerStat(&state->playerInfo.magDef,  item->magDefMod);
-  }
 }
 
 bool UpdateGameState(const struct GameInfo *info, struct GameState *state) {
@@ -190,6 +155,36 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
         uint_fast8_t chance = rand() % MaximumPlayerStat + 1;
         if(state->roomInfo->eventPercentageChance > chance) {
           UpdatePlayerStat(&state->playerInfo.health, state->roomInfo->eventStatChange);
+        }
+        return GetNextOutputOutcome;
+      case GameSwapEquipmentOutcome: ;
+        EquipmentID curID = GetEquippedItemID(&state->playerInfo, button.equipmentType);
+        if (InvalidEquipmentID == curID) {
+          return InvalidInputOutcome;
+        }
+        ++curID; // Start at next item to avoid the loop always stopping at the current item
+
+        EquipmentID minID = EquipmentPerTypeCount * (curID / EquipmentPerTypeCount);
+        EquipmentID maxID = minID + EquipmentPerTypeCount;
+
+        for (uint_fast8_t slotsChecked = 0; slotsChecked < EquipmentPerTypeCount; ++slotsChecked, ++curID) {
+          if (curID == maxID) {
+            curID = minID;
+          }
+
+          bool itemUnlocked;
+          if (!CheckItemUnlocked(&state->playerInfo, curID, &itemUnlocked)) {
+            return InvalidInputOutcome;
+          }
+          if (!itemUnlocked) {
+             continue;
+          }
+
+          if (!SetEquippedItem(&state->playerInfo, button.equipmentType, curID)
+              || !UpdateStats(info, state)) {
+            return InvalidInputOutcome;
+          }
+          break;
         }
         return GetNextOutputOutcome;
       case QuitGameOutcome:

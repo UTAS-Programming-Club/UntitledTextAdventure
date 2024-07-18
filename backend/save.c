@@ -4,9 +4,10 @@
 #include <stdbool.h> // bool, false, true
 #include <stdint.h>  // uint8_t, uint16_t, uint32_t, uint_fast8_t, uint_fast32_t, UINT_FAST8_MAX
 #include <string.h>  // memcpy, NULL, size_t, strlen
-#include <types.h>   // EquipmentIDSave, PlayerStatSave, RoomCoordSave
+#include <types.h>   // EquipmentIDSave, EquipmentID, PlayerStatSave, RoomCoordSave
 #include <zstd.h>    // ZSTD_compress, ZSTD_compressBound, ZSTD_CONTENTSIZE_ERROR, ZSTD_CONTENTSIZE_UNKNOWN, ZSTD_decompress, ZSTD_findFrameCompressedSize, ZSTD_getFrameContentSize, ZSTD_isError
 
+#include "equipment.h" // GetEquippedItemID, SetEquippedItem
 #include "game.h" // EquippedItemsSlots
 #include "save.h"
 
@@ -26,8 +27,9 @@ struct __attribute__((packed, scalar_storage_order("little-endian"))) SaveData {
   RoomCoordSave y;
   PlayerStatSave health;
   PlayerStatSave stamina;
+  uint8_t unlockedItems[(EquipmentCount + 7) / 8];
   // TODO: EquipmentIDSave is [0, 63], switch to 6 bits items? ceil(6 * 7 / 8.) == 6, might not be worth it
-  EquipmentIDSave equippedItems[EquippedItemsSlots];
+  EquipmentIDSave equippedItems[EquipmentTypeCount];
 };
 
 
@@ -343,9 +345,23 @@ const char *SaveState(struct GameState *state) {
   data->health  = state->playerInfo.health;
   data->stamina = state->playerInfo.stamina;
 
-  for (EquipmentID i = 0; i < EquippedItemsSlots; ++i) {
-    const struct EquipmentInfo *item = state->playerInfo.equippedItems[i];
-    data->equippedItems[i] = item ? item->id + 1 : InvalidEquipmentIDSave;
+  memset(data->unlockedItems, 0, sizeof data->unlockedItems);
+  // TODO: Unroll to multiples of 8
+  for (EquipmentID i = 0; i < EquipmentCount; ++i) {
+    bool unlocked;
+    if (!CheckItemUnlocked(&state->playerInfo, i, &unlocked)) {
+      return NULL;
+    }
+
+    uint_fast8_t arrIdx = i / 8;
+    uint_fast8_t arrOff = i % 8;
+    data->unlockedItems[arrIdx] |= unlocked << arrOff;
+  }
+
+  for (EquipmentType i = 0; i < EquipmentTypeCount; ++i) {
+    // Maps [0, 7*9) = [0, 62] to [1, 63] so 0 can be the invalid value
+    EquipmentID id = GetEquippedItemID(&state->playerInfo, i);
+    data->equippedItems[i] = InvalidEquipmentID != id ? id + 1 : InvalidEquipmentIDSave;
   }
 
   memcpy(pData + sizeof *data, state->stateData, state->stateDataSize);
@@ -368,15 +384,33 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
     return false;
   }
 
-  memcpy(&state->playerInfo, &info->defaultPlayerStats, sizeof info->defaultPlayerStats);
   state->playerInfo.health = data->health;
   state->playerInfo.stamina = data->stamina;
 
-  for (EquipmentID i = 0; i < EquippedItemsSlots; ++i) {
-    EquipmentID id = data->equippedItems[i];
-    state->playerInfo.equippedItems[i] = id != InvalidEquipmentIDSave ? info->equipment + id - 1 : NULL;
+  // TODO: Unroll to multiples of 8?
+  for (EquipmentID i = 0; i < EquipmentCount; ++i) {
+    uint_fast8_t arrIdx = i / 8;
+    uint_fast8_t arrOff = i % 8;
+
+    if (!(data->unlockedItems[arrIdx] & 1 << arrOff)) {
+      continue;
+    }
+    if (!UnlockItem(&state->playerInfo, i)) {
+      return NULL;
+    }
   }
-  UpdateStats(state);
+
+  for (EquipmentType i = 0; i < EquipmentTypeCount; ++i) {
+    EquipmentIDSave idSave = data->equippedItems[i];
+    EquipmentID id = idSave != InvalidEquipmentIDSave ? idSave - 1 : InvalidEquipmentID;
+
+    if (!SetEquippedItem(&state->playerInfo, i, id)) {
+      return false;
+    }
+  }
+  if (!UpdateStats(info, state)) {
+    return false;
+  }
 
   memcpy(state->stateData, (uint8_t *)data + sizeof *data, state->stateDataSize);
 
@@ -391,14 +425,10 @@ bool CreateNewState(const struct GameInfo *info, struct GameState *state) {
     return false;
   }
 
-  memcpy(&state->playerInfo, &info->defaultPlayerStats, sizeof info->defaultPlayerStats);
-
-  // TODO: Remove hardcoded item once inventory works, perhaps have starting items?
-  state->playerInfo.equippedItems[0] = &info->equipment[0];
-  for (EquipmentID i = 1; i < EquippedItemsSlots; ++i) {
-    state->playerInfo.equippedItems[i] = NULL;
+  memcpy(&state->playerInfo, &info->defaultPlayerInfo, sizeof info->defaultPlayerInfo);
+  if (!UpdateStats(info, state)) {
+    return false;
   }
-  UpdateStats(state);
 
   // TODO: Reset state, requires removing main menu state
 

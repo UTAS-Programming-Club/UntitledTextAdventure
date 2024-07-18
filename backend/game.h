@@ -11,29 +11,8 @@
 #include <types.h>
 
 // Do not use outside of backend
-// items equipable by player
-// Never modify after creation
-struct EquipmentInfo {
-  EquipmentID id;
-  char *name;
-  // TODO: Add enum for type (helmet, boots, etc)
-
-  // stats
-  PlayerStatDiff physAtkMod;
-  PlayerStatDiff physDefMod;
-  PlayerStatDiff magAtkMod;
-  PlayerStatDiff magDefMod;
-
-  // TODO: Add other stats such as dex, int, etc
-};
-
-#define EquippedItemsSlots 7
-
-// Do not use outside of backend
 struct PlayerInfo {
-  // TODO: Add custom types in types.in.h
-  // helmet, shirts, gloves, pants, boots, 2x weapons
-  const struct EquipmentInfo *equippedItems[EquippedItemsSlots];
+  // TODO: Add other stats such as agility that can be impacted by equipment
   PlayerStat health;
   PlayerStat stamina;
   PlayerStat physAtk;
@@ -41,7 +20,10 @@ struct PlayerInfo {
   PlayerStat physDef;
   PlayerStat magDef;
 
-  // TODO: Add other stats such as agility that can be impacted by equipment
+  // Do not access directly, use functions in equipment.h
+  // Equipment types: helmets, chest pieces, gloves, pants, boots, primary weapon, secondary weapon
+  bool unlockedItems[EquipmentCount];
+  EquipmentID equippedItems[EquipmentTypeCount];
 };
 
 // Always make this const when possible to avoid accidental modification
@@ -51,14 +33,13 @@ struct GameInfo {
 // implementation, do not use outside of backend
   bool initialised;
 
-  // Only health, stamina, physAtk, magAtk, physDef, and magDef as available
-  struct PlayerInfo defaultPlayerStats;
+  struct PlayerInfo defaultPlayerInfo;
 
   uint_fast8_t floorSize;
   struct RoomInfo *rooms;
 
-  uint_fast8_t equipmentCount;
-  struct EquipmentInfo *equipment;
+  // TODO: Require struct to be on heap and then make this an actual array?
+  struct EquipmentInfo *equipment; // Length is EquipmentCount
 };
 
 // Never modify after creation
@@ -86,6 +67,7 @@ struct RoomInfo {
 };
 
 // Always make this const when possible to avoid accidental modification
+// TODO: Require struct to be on heap?
 struct GameState {
 // public, safe to use outside of backend
   enum Screen screenID;
@@ -111,9 +93,6 @@ struct GameState {
   enum CustomScreenCode customScreenCodeID;
 };
 
-// TODO: Move to another file that just handles equipment
-void UpdateStats(struct GameState *);
-
 // GameInfo should be zero initialised before first call
 bool SetupBackend(struct GameInfo *);
 // GameState should be zero initialised before first call
@@ -122,5 +101,8 @@ enum InputOutcome HandleGameInput(const struct GameInfo *, struct GameState *, u
 const struct RoomInfo *GetGameRoom(const struct GameInfo *, RoomCoord, RoomCoord);
 void CleanupGame(struct GameState *);
 void CleanupBackend(struct GameInfo *);
+
+// This header depends on structs in this header
+#include "equipment.h"
 
 #endif // PCGAME_GAME_H
