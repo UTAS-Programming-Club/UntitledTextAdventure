@@ -209,9 +209,9 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
         return false;
       }
       break;
+    // TODO: Use data from json
     case CustomChestRoomType:
-      if(*pOpenedChest == 1)
-      {
+      if(*pOpenedChest == 1) {
         roomInfoStr = CreateString(&state->arena, "\n\nYou open the chest and recieve a mythril vest.");
         if (!roomInfoStr) {
           return false;

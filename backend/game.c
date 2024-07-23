@@ -164,7 +164,6 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
         }
         uint8_t *pOpenedChest = (uint8_t *)(state->stateData + openedChestVarOffset);
         *pOpenedChest = 1;
-        
         return GetNextOutputOutcome;
       case GameSwapEquipmentOutcome: ;
         EquipmentID curID = GetEquippedItemID(&state->playerInfo, button.equipmentType);
