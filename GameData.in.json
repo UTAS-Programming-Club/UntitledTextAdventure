@@ -90,6 +90,10 @@
           "outcome": GameHealthChangeOutcome
         },
         {
+          "title": "Open Chest",
+          "outcome": GameOpenChestOutcome
+        },
+        {
           "title": "Check Player Stats",
           "outcome": GotoScreenOutcome,
           "newScreenID": PlayerStatsScreen
@@ -208,6 +212,13 @@
       // type: uint32_t
       "size": 4,
       "default": 0
+    },
+    {
+      "screenID": GameScreen,
+      // name: scuffed (picked up item)
+      "stateID": 1,
+      "size": 1,
+      "default": 0
     }
   ],
   // TODO: Support multiple floors
@@ -239,6 +250,13 @@
         "description": "You have come across a trap",
         "percentageChance": 50,
         "healthChange": -10
+      },
+      // TODO: Add random loot/loot pools
+      {
+        "type": CustomChestRoomType,
+        "position": [1, 3],
+        "description": "A room with a chest lays before you",
+        "itemContainedID": 11
       }
     ]
   },

@@ -194,6 +194,12 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
   WriteMap(info, state->roomInfo);
 #endif
 
+  size_t openedChestVarOffset = GetGameStateOffset(state->screenID, 1);
+  if (openedChestVarOffset == SIZE_MAX) {
+    return InvalidInputOutcome;
+  }
+  uint8_t *pOpenedChest = (uint8_t *)(state->stateData + openedChestVarOffset);
+
   char *roomInfoStr = "";
   switch (state->roomInfo->type) {
     // TODO: Add other options w/ extra info such as failing etc
@@ -201,6 +207,17 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
       roomInfoStr = CreateString(&state->arena, "\n\n%s.", state->roomInfo->eventDescription);
       if (!roomInfoStr) {
         return false;
+      }
+      break;
+    case CustomChestRoomType:
+      if(*pOpenedChest == 1)
+      {
+        roomInfoStr = CreateString(&state->arena, "\n\nYou open the chest and recieve a mythril vest.");
+        if (!roomInfoStr) {
+          return false;
+        }
+        UnlockItem(&state->playerInfo, 11);
+        *pOpenedChest = 2;
       }
       break;
     default:
@@ -235,6 +252,10 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
         break;
       case GameHealthChangeOutcome:
         state->inputs[i].visible = state->roomInfo->type == HealthChangeRoomType;
+        break;
+      case GameOpenChestOutcome: ;
+        state->inputs[i].visible = *pOpenedChest == 0 && state->roomInfo->type == CustomChestRoomType;
+        break;
       default:
         break;
     }
