@@ -157,6 +157,14 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
           UpdatePlayerStat(&state->playerInfo.health, state->roomInfo->eventStatChange);
         }
         return GetNextOutputOutcome;
+      case GameOpenChestOutcome:
+        size_t openedChestVarOffset = GetGameStateOffset(state->screenID, 1);
+        if (openedChestVarOffset == SIZE_MAX) {
+          return InvalidInputOutcome;
+        }
+        uint8_t *pOpenedChest = (uint8_t *)(state->stateData + openedChestVarOffset);
+        *pOpenedChest = 1;
+        return GetNextOutputOutcome;
       case GameSwapEquipmentOutcome: ;
         EquipmentID curID = GetEquippedItemID(&state->playerInfo, button.equipmentType);
         if (InvalidEquipmentID == curID) {
