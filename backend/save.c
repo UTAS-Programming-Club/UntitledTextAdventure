@@ -148,7 +148,7 @@ static const char *EncodeData(Arena *arena, const unsigned char *data, size_t da
   return password;
 }
 
-static const void *DecodeData(Arena *arena, const char *password, size_t *dataSize) {
+static const void *DecodeData(Arena *arena, const char *password, size_t expectedSize, size_t *dataSize) {
 #ifdef _DEBUG
   if (!arena || !password || !dataSize) {
     return NULL;
@@ -156,13 +156,16 @@ static const void *DecodeData(Arena *arena, const char *password, size_t *dataSi
 #endif
 
   size_t passwordSize = strlen(password);
-  // Integer formula that gives the same result as ceil((4*size)/5.) for integer sizes
-  *dataSize = (4 * passwordSize + 4) / 5;
+  // Integer formula that gives the same result as 4*ceil(size/5.) for integer sizes
+  // This overshots which is corrected by shrinking to match expectedSize at the end
+  *dataSize = 4 * ((passwordSize + 4) / 5);
 
   uint32_t *decodedData = arena_alloc(arena, *dataSize);
   if (!decodedData) {
     return NULL;
   }
+  // TODO: Only set the last 4*ceil(size/5.) - ceil((4*size)/5.) bytes?
+  memset(decodedData, 0, *dataSize);
 
   uint_fast32_t powers[] = {
     pow(BASE, 0),
@@ -192,6 +195,10 @@ static const void *DecodeData(Arena *arena, const char *password, size_t *dataSi
 #endif
 
     decodedData[i / 5] = digit4 * powers[4] + digit3 * powers[3] + digit2 * powers[2] + digit1 * powers[1] + digit0 * powers[0];
+  }
+
+  while (*dataSize > expectedSize && !*((uint8_t *)decodedData + *dataSize - 1)) {
+    --*dataSize;
   }
 
   return decodedData;
@@ -296,7 +303,7 @@ static const char *CompressAndEncodeData(Arena *arena, const void *data, size_t 
   return password;
 }
 
-static const void *DecodeAndDecompressData(Arena *arena, const char *password, unsigned long long *dataSize) {
+static const void *DecodeAndDecompressData(Arena *arena, const char *password, size_t expectedSize, unsigned long long *dataSize) {
 #ifdef _DEBUG
   if (!arena || !password) {
     return NULL;
@@ -304,7 +311,7 @@ static const void *DecodeAndDecompressData(Arena *arena, const char *password, u
 #endif
 
   size_t decodedPasswordSize;
-  const void *decodedPassword = DecodeData(arena, password, &decodedPasswordSize);
+  const void *decodedPassword = DecodeData(arena, password, expectedSize, &decodedPasswordSize);
   if (!decodedPassword) {
     return NULL;
   }
@@ -375,9 +382,11 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
     return false;
   }
 
+  struct SaveData *data;
+  size_t expectedSize = sizeof *data + state->stateDataSize;
   unsigned long long dataSize;
-  struct SaveData *data = (struct SaveData *)DecodeAndDecompressData(&state->arena, password, &dataSize);
-  if (!data || sizeof *data + state->stateDataSize != dataSize) {
+  data = (struct SaveData *)DecodeAndDecompressData(&state->arena, password, expectedSize, &dataSize);
+  if (!data || expectedSize != dataSize) {
     return false;
   }
 
