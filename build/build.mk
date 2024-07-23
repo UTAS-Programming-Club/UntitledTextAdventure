@@ -77,6 +77,10 @@ $(LIBDIR)/libzstd.a: third_party/zstd/lib | $(LIBDIR)
 	$(MAKE) -C $< libzstd.a ZSTD_NO_ASM=1
 	cp $</libzstd.a $@
 
+$(LIBDIR)/libzstd.so: third_party/zstd/lib | $(LIBDIR)
+	$(MAKE) -C $< libzstd.so ZSTD_NO_ASM=1
+	cp $</libzstd.so $@
+
 
 $(LIBDIR)/jsonvalidator.o: tools/jsonvalidator.cpp $(INCDIR)/jsoncons $(INCDIR)/jsoncons_ext | $(LIBDIR)
 	$(CXX) $(CXXSTD) $(CXXWARNINGS) -c -o $@ $< $(CXXFLAGS)
@@ -91,13 +95,16 @@ $(LIBDIR)/printgamedata.o: tools/printgamedata.c backend/crossprint.h backend/pa
 $(LIBDIR)/cmdfrontend.o: frontends/cmdfrontend.c backend/crossprint.h backend/game.h frontends/frontend.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
+$(LIBDIR)/discordfrontend.o: frontends/discordfrontend.c frontends/frontend.h | $(LIBDIR)
+	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
+
 $(LIBDIR)/gdifrontend.o: frontends/gdifrontend.c backend/crossprint.h backend/game.h frontends/frontend.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS) $(GDICFLAGS)
 
 $(LIBDIR)/winresources.o: frontends/winresources.rc backend/winresources.h GameData.json | $(LIBDIR)
 	$(WINDRES) $< -o $@
 
-$(LIBDIR)/game.so: $(COMMONOBJS) | $(LIBDIR)
+$(LIBDIR)/game.so: $(filter-out $(LIBDIR)/libzstd.a,$(COMMONOBJS)) $(LIBDIR)/discordfrontend.o $(LIBDIR)/libzstd.so | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -o $@ $^ $(CFLAGS) -shared
 
 

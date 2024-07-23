@@ -38,6 +38,7 @@ static inline size_t min(size_t a, size_t b) {
 }
 
 // Assumes ascii
+// TODO: Remove ` and \ to allow storing in discord
 static inline char GetChar(uint_fast8_t val) {
   if (BASE < val) {
     return ' ';
