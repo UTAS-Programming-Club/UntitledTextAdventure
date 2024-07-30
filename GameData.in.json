@@ -94,6 +94,11 @@
           "outcome": GameOpenChestOutcome
         },
         {
+          "title": "Fight",
+          "outcome": GameFightEnemiesOutcome
+        },
+        // Non-room outcomes
+        {
           "title": "Check Player Stats",
           "outcome": GotoScreenOutcome,
           "newScreenID": PlayerStatsScreen
@@ -202,6 +207,29 @@
           "newScreenID": GameScreen
         }
       ]
+    },
+    {
+      // ID: 6
+      "body": "Combat",
+      "extraText": "A creature has appeared",
+      "customScreenCode": CombatCustomScreenCode,
+      "inputType": ButtonScreenInputType,
+      "buttons": [
+        {
+          "title": "Attack",
+          "outcome": GameFightEnemiesOutcome
+        },
+        {
+          "title": "Check Player Stats",
+          "outcome": GotoScreenOutcome,
+          "newScreenID": PlayerStatsScreen
+        },
+        {
+          "title": "Flee",
+          "outcome": GotoScreenOutcome,
+          "newScreenID": GameScreen
+        }
+      ]
     }
   ],
   "state": [
@@ -259,6 +287,11 @@
         "description": "A room with a chest lays before you",
         // TODO: Actually use this
         "itemContainedID": 11
+      },
+      {
+        "type": CombatRoomType,
+        "position": [1, 4],
+        "description": "You find yourself surrounded"
       }
     ]
   },

@@ -195,6 +195,9 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
           break;
         }
         return GetNextOutputOutcome;
+      case GameFightEnemiesOutcome:
+        state->screenID = 6;
+        return GetNextOutputOutcome;
       case QuitGameOutcome:
         return button.outcome;
       default:
