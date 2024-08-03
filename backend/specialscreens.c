@@ -245,6 +245,7 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
             state->inputs[i].visible = state->roomInfo->type == CombatRoomType;
             break;
         }
+        break;
       case GameGoNorthOutcome:
         state->inputs[i].visible =
           GetGameRoom(info, state->roomInfo->x, state->roomInfo->y + 1)->type != InvalidRoomType;
