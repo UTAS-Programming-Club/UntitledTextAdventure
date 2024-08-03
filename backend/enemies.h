@@ -5,7 +5,7 @@
 
 #include "game.h"
 
-struct Enemy{
+struct Enemy {
 	// stats here
 	bool dead;
 	PlayerStat maxHealth;

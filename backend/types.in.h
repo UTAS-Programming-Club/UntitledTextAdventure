@@ -68,7 +68,7 @@ JSON_ENUM_START(InputOutcome)
   JSON_ENUM_ITEM(GameHealthChangeOutcome,  8) // -> GetNextOutput, Needs percentageChance and healthChange in current room's json entry
   JSON_ENUM_ITEM(GameSwapEquipmentOutcome, 9) // -> GetNextOutput, Needs equipmentSlot field in the same button's json entry
   JSON_ENUM_ITEM(GameOpenChestOutcome,    10) // -> GetNextOutput, Needs ID of item contained in current room's json entry
-  JSON_ENUM_ITEM(GameFightEnemiesOutcome, 11) // -> GetNextOutput, Needs next room to exist in json
+  JSON_ENUM_ITEM(GameFightEnemiesOutcome, 11) // -> GetNextOutput
 JSON_ENUM_END
 
 // CustomScreenCode is a uint16_t with [0, 65535)

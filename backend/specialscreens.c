@@ -240,7 +240,7 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
           return false;
         }
         
-        switch (button.newScreenID){
+        switch (button.newScreenID) {
           case CombatScreen:
             state->inputs[i].visible = state->roomInfo->type == CombatRoomType;
             break;
@@ -378,10 +378,10 @@ static bool CreateCombatScreen(const struct GameInfo *info, struct GameState *st
   }
 
   state->body = CreateString(&state->arena, "%s\n\n"
-                                    "Health: %" PRIPlayerStat "\n"
-                                    "Stamina: %" PRIPlayerStat "\n",
-                             screen.body,
-                             state->playerInfo.health, state->playerInfo.stamina
+    "Health: %" PRIPlayerStat "\n"
+    "Stamina: %" PRIPlayerStat "\n",
+    screen.body,
+    state->playerInfo.health, state->playerInfo.stamina
   );
   if (!state->body) {
     return false;

@@ -8,7 +8,7 @@
 bool PlayerTakeDamage(struct PlayerInfo *playerInfo, PlayerStatDiff diff) {
   // calculate actual diff based on defences
   diff = diff + playerInfo->physDef;
-  if(diff >= 0){
+  if(diff >= 0) {
     diff = 0;
   }
   

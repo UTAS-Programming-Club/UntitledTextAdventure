@@ -162,7 +162,7 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
           UpdatePlayerStat(&state->playerInfo.health, state->roomInfo->eventStatChange);
         }
         return GetNextOutputOutcome;
-      case GameOpenChestOutcome:;
+      case GameOpenChestOutcome: ;
         size_t openedChestVarOffset = GetGameStateOffset(state->screenID, 1);
         if (openedChestVarOffset == SIZE_MAX) {
           return InvalidInputOutcome;
@@ -201,7 +201,7 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
         }
         return GetNextOutputOutcome;
       case GameFightEnemiesOutcome:
-          EnemyAttackSequ(state, &testEnemy);
+        EnemyAttackSequ(state, &testEnemy);
         return GetNextOutputOutcome;
       case QuitGameOutcome:
         return button.outcome;
