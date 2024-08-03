@@ -5,6 +5,18 @@
 #include "equipment.h"
 #include "game.h"
 
+bool PlayerTakeDamage(struct PlayerInfo *playerInfo, PlayerStatDiff diff) {
+  // calculate actual diff based on defences
+  diff = diff + playerInfo->physDef;
+  if(diff >= 0) {
+    diff = 0;
+  }
+  
+  // TODO: Dodge chance based on agility or something return false
+  UpdatePlayerStat(&playerInfo->health, diff);
+  return true;
+}
+
 bool UpdatePlayerStat(PlayerStat *base, PlayerStatDiff diff) {
   if (!base || MaximumPlayerStat < *base
       || MinimumPlayerStatDiff > diff || MaximumPlayerStatDiff < diff) {

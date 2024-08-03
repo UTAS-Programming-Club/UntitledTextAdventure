@@ -23,6 +23,7 @@ struct EquipmentInfo {
 };
 
 // Only call for health or stamina, other uses of UpdatePlayerStat are reserved for UpdateStats
+bool PlayerTakeDamage(struct PlayerInfo *, PlayerStatDiff);
 bool UpdatePlayerStat(PlayerStat *, PlayerStatDiff);
 bool UpdateStats(const struct GameInfo *, struct GameState *);
 

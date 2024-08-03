@@ -234,6 +234,18 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
 
   for (uint_fast8_t i = 0; i < state->inputCount; ++i) {
     switch (state->inputs[i].outcome) {
+      case GotoScreenOutcome:
+        struct GameScreenButton button = {0};
+        if (!GetGameScreenButton(state->screenID, i, &button)) {
+          return false;
+        }
+        
+        switch (button.newScreenID) {
+          case CombatScreen:
+            state->inputs[i].visible = state->roomInfo->type == CombatRoomType;
+            break;
+        }
+        break;
       case GameGoNorthOutcome:
         state->inputs[i].visible =
           GetGameRoom(info, state->roomInfo->x, state->roomInfo->y + 1)->type != InvalidRoomType;
@@ -253,7 +265,7 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
       case GameHealthChangeOutcome:
         state->inputs[i].visible = state->roomInfo->type == HealthChangeRoomType;
         break;
-      case GameOpenChestOutcome: ;
+      case GameOpenChestOutcome:
         state->inputs[i].visible = *pOpenedChest == 0 && state->roomInfo->type == CustomChestRoomType;
         break;
       default:
@@ -357,6 +369,27 @@ static bool CreatePlayerEquipmentScreen(const struct GameInfo* info, struct Game
   return true;
 }
 
+static bool CreateCombatScreen(const struct GameInfo *info, struct GameState *state) {
+  (void)info;
+
+  struct GameScreen screen = {0};
+  if (!GetGameScreen(state->screenID, &screen)) {
+    return false;
+  }
+
+  state->body = CreateString(&state->arena, "%s\n\n"
+    "Health: %" PRIPlayerStat "\n"
+    "Stamina: %" PRIPlayerStat "\n",
+    screen.body,
+    state->playerInfo.health, state->playerInfo.stamina
+  );
+  if (!state->body) {
+    return false;
+  }
+
+  return true;
+}
+
 
 // TODO: Add GameScreen parameter
 // TODO: Allow loading these dynamically to support adding new custom rooms? If so the api needs to be versioned
@@ -366,6 +399,7 @@ bool (*CustomScreenCode[])(const struct GameInfo *, struct GameState *) = {
   CreateGameScreen,
   CreatePlayerStatsScreen,
   CreateSaveScreen,
-  CreatePlayerEquipmentScreen
+  CreatePlayerEquipmentScreen,
+  CreateCombatScreen
 };
 size_t CustomScreenCodeCount = sizeof CustomScreenCode / sizeof *CustomScreenCode;

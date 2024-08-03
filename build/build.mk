@@ -33,6 +33,7 @@ GameData.json: GameData.in.json $(INCDIR)/types.json.h
 # I had an issue with save.c not being rebuilt if types.in.h
 # changed because it did not depend on types.h directly,
 # despite depending on game.h which does depend on types.h.
+backend/enemies.h: backend/game.h
 backend/equipment.h: backend/game.h
 backend/game.h: $(INCDIR)/arena.h $(INCDIR)/types.h # backend/equipment.h
 backend/parser.h: backend/game.h $(INCDIR)/types.h
@@ -45,13 +46,16 @@ backend/specialscreens.h: backend/game.h
 $(LIBDIR)/crossprint.o: backend/crossprint.c backend/crossprint.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
+$(LIBDIR)/enemies.o: backend/enemies.c backend/enemies.h backend/equipment.h backend/game.h | $(LIBDIR)
+	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
+
+$(LIBDIR)/equipment.o: backend/equipment.c backend/equipment.h backend/game.h $(INCDIR)/types.h | $(LIBDIR)
+	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
+
 $(LIBDIR)/fileloading_frontend.o: backend/fileloading.c backend/fileloading.h frontends/frontend.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS) -D FRONTEND
 
 $(LIBDIR)/fileloading_printgamedata.o: backend/fileloading.c backend/fileloading.h frontends/frontend.h | $(LIBDIR)
-	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
-
-$(LIBDIR)/equipment.o: backend/equipment.c backend/equipment.h backend/game.h $(INCDIR)/types.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 $(LIBDIR)/game.o: backend/game.c backend/equipment.h backend/game.h backend/parser.h backend/screens.h backend/save.h backend/specialscreens.h frontends/frontend.h $(INCDIR)/arena.h $(INCDIR)/types.h | $(LIBDIR)
