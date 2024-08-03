@@ -95,7 +95,8 @@
         },
         {
           "title": "Fight",
-          "outcome": GameFightEnemiesOutcome
+          "outcome": GotoScreenOutcome,
+          "newScreenID": CombatScreen
         },
         // Non-room outcomes
         {

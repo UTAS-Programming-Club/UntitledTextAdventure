@@ -234,6 +234,17 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
 
   for (uint_fast8_t i = 0; i < state->inputCount; ++i) {
     switch (state->inputs[i].outcome) {
+      case GotoScreenOutcome:
+        struct GameScreenButton button = {0};
+        if (!GetGameScreenButton(state->screenID, i, &button)) {
+          return false;
+        }
+        
+        switch (button.newScreenID){
+          case CombatScreen:
+            state->inputs[i].visible = state->roomInfo->type == CombatRoomType;
+            break;
+        }
       case GameGoNorthOutcome:
         state->inputs[i].visible =
           GetGameRoom(info, state->roomInfo->x, state->roomInfo->y + 1)->type != InvalidRoomType;
@@ -253,11 +264,8 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
       case GameHealthChangeOutcome:
         state->inputs[i].visible = state->roomInfo->type == HealthChangeRoomType;
         break;
-      case GameOpenChestOutcome: ;
+      case GameOpenChestOutcome:
         state->inputs[i].visible = *pOpenedChest == 0 && state->roomInfo->type == CustomChestRoomType;
-        break;
-      case GameFightEnemiesOutcome:
-        state->inputs[i].visible = state->roomInfo->type == CombatRoomType;
         break;
       default:
         break;

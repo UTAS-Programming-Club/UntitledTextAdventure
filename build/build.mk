@@ -51,6 +51,9 @@ $(LIBDIR)/fileloading_frontend.o: backend/fileloading.c backend/fileloading.h fr
 $(LIBDIR)/fileloading_printgamedata.o: backend/fileloading.c backend/fileloading.h frontends/frontend.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
+$(LIBDIR)/enemies.o: backend/enemies.c backend/enemies.h | $(LIBDIR)
+	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
+
 $(LIBDIR)/equipment.o: backend/equipment.c backend/equipment.h backend/game.h $(INCDIR)/types.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 

@@ -13,8 +13,11 @@
 #include "save.h"
 #include "screens.h"
 #include "specialscreens.h"
+#include "enemies.h"
 
 static const struct RoomInfo DefaultRoom = {.type = InvalidRoomType};
+
+struct Enemy testEnemy = {0, 100, 100, 0, -20};
 
 bool SetupBackend(struct GameInfo *info) {
   if (!info) {
@@ -58,6 +61,8 @@ bool SetupBackend(struct GameInfo *info) {
     PrintError("Failed to load equipment from %s", dataFile);
     goto free_rooms;
   }
+  
+  // TODO: set up loading enemies from json
 
   unsigned int currentTimestamp = time(NULL);
   srand(currentTimestamp);
@@ -157,7 +162,7 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
           UpdatePlayerStat(&state->playerInfo.health, state->roomInfo->eventStatChange);
         }
         return GetNextOutputOutcome;
-      case GameOpenChestOutcome:
+      case GameOpenChestOutcome:;
         size_t openedChestVarOffset = GetGameStateOffset(state->screenID, 1);
         if (openedChestVarOffset == SIZE_MAX) {
           return InvalidInputOutcome;
@@ -196,7 +201,7 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
         }
         return GetNextOutputOutcome;
       case GameFightEnemiesOutcome:
-        state->screenID = 6;
+          EnemyAttackSequ(state, &testEnemy);
         return GetNextOutputOutcome;
       case QuitGameOutcome:
         return button.outcome;
