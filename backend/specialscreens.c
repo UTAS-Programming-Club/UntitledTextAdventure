@@ -7,9 +7,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "enemies.h"
 #include "game.h"
 #include "parser.h"
 #include "save.h"
+#include "stringhelpers.h"
 
 // Each room take 6x4 but the 6 required calls to WriteRoomRow per room only
 // handle the top left most 5x3 unless it is the right and/or bottom most room
@@ -121,37 +123,6 @@ static void WriteMap(const struct GameInfo *info, const struct RoomInfo *current
 #endif
 
 
-// TODO: Use arena's arena_sprintf?
-static char *CreateString(Arena *arena, const char *restrict format, ...) {
-  va_list args1, args2;
-  va_start(args1, format);
-  va_copy(args2, args1);
-
-  char *res = NULL;
-
-  int allocatedCharCount = vsnprintf(NULL, 0, format, args1);
-  va_end(args1);
-  if (allocatedCharCount <= 0) {
-    goto cleanup;
-  }
-  ++allocatedCharCount;
-
-  res = arena_alloc(arena, allocatedCharCount);
-  if (!res) {
-    goto cleanup;
-  }
-
-  if (vsnprintf(res, allocatedCharCount, format, args2) <= 0) {
-    free(res);
-    res = NULL;
-  }
-
-cleanup:
-  va_end(args2);
-  return res;
-}
-
-
 static bool CreateMainMenuScreen(const struct GameInfo *info, struct GameState *state) {
   (void)info;
 
@@ -200,7 +171,7 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
   }
   uint8_t *pOpenedChest = (uint8_t *)(state->stateData + openedChestVarOffset);
 
-  char *roomInfoStr = "";
+  const char *roomInfoStr = "";
   switch (state->roomInfo->type) {
     // TODO: Add other options w/ extra info such as failing etc
     case HealthChangeRoomType:
@@ -234,7 +205,7 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
 
   for (uint_fast8_t i = 0; i < state->inputCount; ++i) {
     switch (state->inputs[i].outcome) {
-      case GotoScreenOutcome:
+      case GotoScreenOutcome: ;
         struct GameScreenButton button = {0};
         if (!GetGameScreenButton(state->screenID, i, &button)) {
           return false;
@@ -243,6 +214,8 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
         switch (button.newScreenID) {
           case CombatScreen:
             state->inputs[i].visible = state->roomInfo->type == CombatRoomType;
+            break;
+          default:
             break;
         }
         break;
@@ -369,6 +342,9 @@ static bool CreatePlayerEquipmentScreen(const struct GameInfo* info, struct Game
   return true;
 }
 
+
+extern struct Enemy testEnemy;
+
 static bool CreateCombatScreen(const struct GameInfo *info, struct GameState *state) {
   (void)info;
 
@@ -377,12 +353,7 @@ static bool CreateCombatScreen(const struct GameInfo *info, struct GameState *st
     return false;
   }
 
-  state->body = CreateString(&state->arena, "%s\n\n"
-    "Health: %" PRIPlayerStat "\n"
-    "Stamina: %" PRIPlayerStat "\n",
-    screen.body,
-    state->playerInfo.health, state->playerInfo.stamina
-  );
+  state->body = CreateCombatString(state, &testEnemy);
   if (!state->body) {
     return false;
   }

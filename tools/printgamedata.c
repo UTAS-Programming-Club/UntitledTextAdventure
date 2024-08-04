@@ -6,8 +6,8 @@
 #include <stdlib.h>
 #include <wchar.h>
 
-#include "../backend/crossprint.h"
 #include "../backend/parser.h"
+#include "../backend/stringhelpers.h"
 #include "../frontends/frontend.h"
 
 #define INDENT "  "

@@ -40,13 +40,11 @@ backend/parser.h: backend/game.h $(INCDIR)/types.h
 backend/save.h: backend/game.h
 backend/screens.h: backend/game.h
 backend/specialscreens.h: backend/game.h
+backend/stringhelpers.h: $(INCDIR)/arena.h
 
 
 # Objects
-$(LIBDIR)/crossprint.o: backend/crossprint.c backend/crossprint.h | $(LIBDIR)
-	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
-
-$(LIBDIR)/enemies.o: backend/enemies.c backend/enemies.h backend/equipment.h backend/game.h | $(LIBDIR)
+$(LIBDIR)/enemies.o: backend/enemies.c backend/enemies.h backend/equipment.h backend/game.h backend/stringhelpers.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 $(LIBDIR)/equipment.o: backend/equipment.c backend/equipment.h backend/game.h $(INCDIR)/types.h | $(LIBDIR)
@@ -70,7 +68,10 @@ $(LIBDIR)/save.o: backend/save.c backend/equipment.h backend/game.h backend/save
 $(LIBDIR)/screens.o: backend/screens.c backend/game.h backend/parser.h backend/screens.h $(INCDIR)/arena.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
-$(LIBDIR)/specialscreens.o: backend/specialscreens.c backend/game.h backend/parser.h backend/save.h backend/specialscreens.h $(INCDIR)/arena.h | $(LIBDIR)
+$(LIBDIR)/specialscreens.o: backend/specialscreens.c backend/game.h backend/parser.h backend/save.h backend/specialscreens.h backend/stringhelpers.h $(INCDIR)/arena.h | $(LIBDIR)
+	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
+
+$(LIBDIR)/stringhelpers.o: backend/stringhelpers.c backend/stringhelpers.h $(INCDIR)/arena.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 
@@ -92,17 +93,17 @@ $(LIBDIR)/jsonvalidator.o: tools/jsonvalidator.cpp $(INCDIR)/jsoncons $(INCDIR)/
 $(LIBDIR)/mapwatch.o: tools/mapwatch.c | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
-$(LIBDIR)/printgamedata.o: tools/printgamedata.c backend/crossprint.h backend/parser.h frontends/frontend.h | $(LIBDIR)
+$(LIBDIR)/printgamedata.o: tools/printgamedata.c backend/parser.h backend/stringhelpers.h frontends/frontend.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 
-$(LIBDIR)/cmdfrontend.o: frontends/cmdfrontend.c backend/crossprint.h backend/game.h frontends/frontend.h | $(LIBDIR)
+$(LIBDIR)/cmdfrontend.o: frontends/cmdfrontend.c backend/game.h backend/stringhelpers.h frontends/frontend.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 $(LIBDIR)/discordfrontend.o: frontends/discordfrontend.c frontends/frontend.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
-$(LIBDIR)/gdifrontend.o: frontends/gdifrontend.c backend/crossprint.h backend/game.h frontends/frontend.h | $(LIBDIR)
+$(LIBDIR)/gdifrontend.o: frontends/gdifrontend.c backend/game.h backend/stringhelpers.h frontends/frontend.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS) $(GDICFLAGS)
 
 $(LIBDIR)/winresources.o: frontends/winresources.rc backend/winresources.h GameData.json | $(LIBDIR)
@@ -121,11 +122,7 @@ $(BINDIR)/mapwatch$(EXECSUFFIX): $(LIBDIR)/mapwatch.o
 	$(CC) -o $(basename $@) $^ $(CFLAGS)
 	$(call MAKEEXEC,$@,$(basename $@))
 
-ifdef ISWINDOWS
-$(BINDIR)/printgamedata$(EXECSUFFIX): $(LIBDIR)/cJSON.o $(LIBDIR)/crossprint.o $(LIBDIR)/equipment.o $(LIBDIR)/fileloading_printgamedata.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/printgamedata.o $(LIBDIR)/save.o $(LIBDIR)/screens.o $(LIBDIR)/specialscreens.o $(LIBDIR)/libzstd.a | $(BINDIR)
-else # !ISWINDOWS
-$(BINDIR)/printgamedata$(EXECSUFFIX): $(LIBDIR)/cJSON.o $(LIBDIR)/equipment.o $(LIBDIR)/fileloading_printgamedata.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/printgamedata.o $(LIBDIR)/save.o $(LIBDIR)/screens.o $(LIBDIR)/specialscreens.o $(LIBDIR)/libzstd.a | $(BINDIR)
-endif # ISWINDOWS/!ISWINDOWS
+$(BINDIR)/printgamedata$(EXECSUFFIX): $(LIBDIR)/cJSON.o $(LIBDIR)/enemies.o $(LIBDIR)/equipment.o $(LIBDIR)/fileloading_printgamedata.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/printgamedata.o $(LIBDIR)/save.o $(LIBDIR)/screens.o $(LIBDIR)/specialscreens.o $(LIBDIR)/stringhelpers.o $(LIBDIR)/libzstd.a | $(BINDIR)
 	$(CC) -o $(basename $@) $^ $(CFLAGS) -lm
 	$(call MAKEEXEC,$@,$(basename $@))
 

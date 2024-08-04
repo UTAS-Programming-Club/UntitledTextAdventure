@@ -17,6 +17,7 @@
 
 static const struct RoomInfo DefaultRoom = {.type = InvalidRoomType};
 
+// TODO: Remove
 struct Enemy testEnemy = {0, 100, 100, 0, -20};
 
 bool SetupBackend(struct GameInfo *info) {

@@ -16,6 +16,7 @@ struct Enemy {
 };
 
 void EnemyAttackSequ(struct GameState *, struct Enemy *);
+const char *CreateCombatString(struct GameState *, struct Enemy *);
 
 // TODO: Individual attacks enemies can use with status' and stuff idk
 // would have attack list with things like descriptor (blasted, stabbed etc.)

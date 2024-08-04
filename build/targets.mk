@@ -1,4 +1,4 @@
-COMMONOBJS := $(LIBDIR)/cJSON.o $(LIBDIR)/enemies.o $(LIBDIR)/equipment.o $(LIBDIR)/fileloading_frontend.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/save.o $(LIBDIR)/screens.o $(LIBDIR)/specialscreens.o $(LIBDIR)/libzstd.a
+COMMONOBJS := $(LIBDIR)/cJSON.o $(LIBDIR)/enemies.o $(LIBDIR)/equipment.o $(LIBDIR)/fileloading_frontend.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/save.o $(LIBDIR)/screens.o $(LIBDIR)/specialscreens.o $(LIBDIR)/stringhelpers.o $(LIBDIR)/libzstd.a
 
 CFLAGS += -I $(INCDIR)
 CXXFLAGS += -I $(INCDIR)
@@ -6,7 +6,6 @@ CXXFLAGS += -I $(INCDIR)
 ifdef ISCOSMO
 CFLAGS += -mcosmo
 CXXFLAGS += -mcosmo -fexceptions
-COMMONOBJS += $(LIBDIR)/crossprint.o
 EXECSUFFIX := .com
 define MAKEEXEC =
 $(APELINK) -l $(x86_64APEELF) -o $(1) $(2)
@@ -20,7 +19,6 @@ endef
 ifdef ISWINDOWS
 CXXFLAGS += -Wa,-mbig-obj
 GDICFLAGS := -municode -lgdi32
-COMMONOBJS += $(LIBDIR)/crossprint.o
 EXECSUFFIX := .exe
 
 ifneq (,$(findstring release,$(MAKECMDGOALS)))

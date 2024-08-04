@@ -13,8 +13,8 @@
 #include <termios.h>
 #endif
 
-#include "../backend/crossprint.h"
 #include "../backend/game.h"
+#include "../backend/stringhelpers.h"
 #include "frontend.h"
 
 #define ESC "\x1B"
