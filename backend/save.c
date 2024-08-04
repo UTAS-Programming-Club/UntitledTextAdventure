@@ -25,8 +25,8 @@ struct __attribute__((packed, scalar_storage_order("little-endian"))) SaveData {
   uint16_t version;
   RoomCoordSave x;
   RoomCoordSave y;
-  PlayerStatSave health;
-  PlayerStatSave stamina;
+  EntityStatSave health;
+  EntityStatSave stamina;
   uint8_t unlockedItems[(EquipmentCount + 7) / 8];
   // TODO: EquipmentIDSave is [0, 63], switch to 6 bits items? ceil(6 * 7 / 8.) == 6, might not be worth it
   EquipmentIDSave equippedItems[EquipmentTypeCount];
@@ -418,7 +418,7 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
       return false;
     }
   }
-  if (!UpdateStats(info, state)) {
+  if (!RefreshStats(info, state)) {
     return false;
   }
 
@@ -436,7 +436,7 @@ bool CreateNewState(const struct GameInfo *info, struct GameState *state) {
   }
 
   memcpy(&state->playerInfo, &info->defaultPlayerInfo, sizeof info->defaultPlayerInfo);
-  if (!UpdateStats(info, state)) {
+  if (!RefreshStats(info, state)) {
     return false;
   }
 

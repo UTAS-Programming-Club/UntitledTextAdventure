@@ -107,18 +107,18 @@ VALUE_EMIT(RoomCoord, InvalidRoomCoord, 255)
 SAVED_INTEGRAL_TYPE_EMIT(uint, 8, RoomCoord)
 
 
-// PlayerStat is a uint8_t with [0, 100]
-C_EMIT(#define PRIPlayerStat PRIuFAST8)
+// EntityStat is a uint8_t with [0, 100]
+C_EMIT(#define PRIEntityStat PRIuFAST8)
 // TODO: Use json loaded default stats when possible instead of these?
-VALUE_EMIT(PlayerStat, MinimumPlayerStat,   0)
-VALUE_EMIT(PlayerStat, MaximumPlayerStat, 100)
-SAVED_INTEGRAL_TYPE_EMIT(uint, 8, PlayerStat)
+VALUE_EMIT(EntityStat, MinimumEntityStat,   0)
+VALUE_EMIT(EntityStat, MaximumEntityStat, 100)
+SAVED_INTEGRAL_TYPE_EMIT(uint, 8, EntityStat)
 
-// PlayerStatDiff is a int8_t with [-100, 100]
-VALUE_EMIT(PlayerStatDiff, MinimumPlayerStatDiff, -100)
-VALUE_EMIT(PlayerStatDiff, MaximumPlayerStatDiff,  100)
-VALUE_EMIT(PlayerStatDiff, InvalidPlayerStatDiff, INT_FAST8_MAX)
-C_EMIT(typedef int_fast8_t PlayerStatDiff;)
+// EntityStatDiff is a int8_t with [-100, 100]
+VALUE_EMIT(EntityStatDiff, MinimumEntityStatDiff, -100)
+VALUE_EMIT(EntityStatDiff, MaximumEntityStatDiff,  100)
+VALUE_EMIT(EntityStatDiff, InvalidEntityStatDiff, INT_FAST8_MAX)
+C_EMIT(typedef int_fast8_t EntityStatDiff;)
 
 // TODO: Change json to use equipmentType once the sword slots are merged
 // EquipmentType is a uint8_t with [0, EquipmentTypeCount)

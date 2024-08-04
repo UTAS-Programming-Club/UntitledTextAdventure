@@ -565,7 +565,7 @@ static bool GetGameRoomData(cJSON *jsonRoom, struct RoomInfo *room) {
 
   room->eventDescription = cJSON_GetOptStringValue(jsonRoom, "description", "", NULL);
   room->eventPercentageChance = cJSON_GetOptNumberValue(jsonRoom, "percentageChance", UINT_FAST8_MAX, invalidOptNumberVal);
-  room->eventStatChange = cJSON_GetOptNumberValue(jsonRoom, "healthChange", InvalidPlayerStatDiff, invalidOptNumberVal);
+  room->eventStatChange = cJSON_GetOptNumberValue(jsonRoom, "healthChange", InvalidEntityStatDiff, invalidOptNumberVal);
   if (!room->eventDescription
       || invalidOptNumberVal == room->eventPercentageChance
       || invalidOptNumberVal == room->eventStatChange) {

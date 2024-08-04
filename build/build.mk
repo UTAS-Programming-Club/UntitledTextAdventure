@@ -68,7 +68,7 @@ $(LIBDIR)/save.o: backend/save.c backend/equipment.h backend/game.h backend/save
 $(LIBDIR)/screens.o: backend/screens.c backend/game.h backend/parser.h backend/screens.h $(INCDIR)/arena.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
-$(LIBDIR)/specialscreens.o: backend/specialscreens.c backend/game.h backend/parser.h backend/save.h backend/specialscreens.h backend/stringhelpers.h $(INCDIR)/arena.h | $(LIBDIR)
+$(LIBDIR)/specialscreens.o: backend/specialscreens.c backend/game.h backend/parser.h backend/save.h backend/specialscreens.h backend/stringhelpers.h $(INCDIR)/arena.h $(INCDIR)/types.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 $(LIBDIR)/stringhelpers.o: backend/stringhelpers.c backend/stringhelpers.h $(INCDIR)/arena.h | $(LIBDIR)

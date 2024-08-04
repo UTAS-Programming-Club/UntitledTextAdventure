@@ -1,11 +1,8 @@
-#include <arena.h>
 #include <inttypes.h>
-#include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <types.h>
 
 #include "enemies.h"
 #include "game.h"
@@ -258,12 +255,12 @@ static bool CreatePlayerStatsScreen(const struct GameInfo *info, struct GameStat
   }
 
   state->body = CreateString(&state->arena, "%s\n\n"
-                                    "Health: %" PRIPlayerStat "\n"
-                                    "Stamina: %" PRIPlayerStat "\n"
-                                    "Physical Attack: %" PRIPlayerStat "\n"
-                                    "Magic Attack: %" PRIPlayerStat "\n"
-                                    "Physical Defence: %" PRIPlayerStat "\n"
-                                    "Magic Defence: %" PRIPlayerStat,
+                                    "Health: %" PRIEntityStat "\n"
+                                    "Stamina: %" PRIEntityStat "\n"
+                                    "Physical Attack: %" PRIEntityStat "\n"
+                                    "Magic Attack: %" PRIEntityStat "\n"
+                                    "Physical Defence: %" PRIEntityStat "\n"
+                                    "Magic Defence: %" PRIEntityStat,
                              screen.body,
                              state->playerInfo.health, state->playerInfo.stamina,
                              state->playerInfo.physAtk, state->playerInfo.magAtk,
@@ -315,12 +312,12 @@ static bool CreatePlayerEquipmentScreen(const struct GameInfo* info, struct Game
   }
 
   state->body = CreateString(&state->arena, "%s\n\n"
-    "Health: %" PRIPlayerStat "\n"
-    "Stamina: %" PRIPlayerStat "\n"
-    "Physical Attack: %" PRIPlayerStat "\n"
-    "Magic Attack: %" PRIPlayerStat "\n"
-    "Physical Defence: %" PRIPlayerStat "\n"
-    "Magic Defence: %" PRIPlayerStat "\n\n"
+    "Health: %" PRIEntityStat "\n"
+    "Stamina: %" PRIEntityStat "\n"
+    "Physical Attack: %" PRIEntityStat "\n"
+    "Magic Attack: %" PRIEntityStat "\n"
+    "Physical Defence: %" PRIEntityStat "\n"
+    "Magic Defence: %" PRIEntityStat "\n\n"
     "Helmet: %s\n"
     "Chest: %s\n"
     "Gloves: %s\n"

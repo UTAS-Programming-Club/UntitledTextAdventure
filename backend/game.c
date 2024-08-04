@@ -18,7 +18,7 @@
 static const struct RoomInfo DefaultRoom = {.type = InvalidRoomType};
 
 // TODO: Remove
-struct Enemy testEnemy = {0, 100, 100, 0, -20};
+struct Enemy testEnemy = {MaximumEntityStat, -20};
 
 bool SetupBackend(struct GameInfo *info) {
   if (!info) {
@@ -158,9 +158,9 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
         // TODO: Ensure this only trigger once, track room completion?
         // TODO: End game when health is 0
         // eventPercentageChance is (0, 100] so chance must be as well
-        uint_fast8_t chance = rand() % MaximumPlayerStat + 1;
+        uint_fast8_t chance = rand() % MaximumEntityStat + 1;
         if(state->roomInfo->eventPercentageChance > chance) {
-          UpdatePlayerStat(&state->playerInfo.health, state->roomInfo->eventStatChange);
+          ModifyPlayerStat(&state->playerInfo.health, state->roomInfo->eventStatChange);
         }
         return GetNextOutputOutcome;
       case GameOpenChestOutcome: ;
@@ -195,14 +195,15 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
           }
 
           if (!SetEquippedItem(&state->playerInfo, button.equipmentType, curID)
-              || !UpdateStats(info, state)) {
+              || !RefreshStats(info, state)) {
             return InvalidInputOutcome;
           }
           break;
         }
         return GetNextOutputOutcome;
       case GameFightEnemiesOutcome:
-        EnemyAttackSequ(state, &testEnemy);
+        // TODO: Add PlayerPerformAttack(state, &testEnemy, hand/weapon)
+        EnemyPerformAttack(state, &testEnemy);
         return GetNextOutputOutcome;
       case QuitGameOutcome:
         return button.outcome;

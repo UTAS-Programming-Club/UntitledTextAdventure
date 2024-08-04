@@ -5,7 +5,7 @@
 #include "equipment.h"
 #include "game.h"
 
-bool PlayerTakeDamage(struct PlayerInfo *playerInfo, PlayerStatDiff diff) {
+bool ApplyPlayerDamage(struct PlayerInfo *playerInfo, EntityStatDiff diff) {
   // calculate actual diff based on defences
   diff = diff + playerInfo->physDef;
   if(diff >= 0) {
@@ -13,35 +13,35 @@ bool PlayerTakeDamage(struct PlayerInfo *playerInfo, PlayerStatDiff diff) {
   }
   
   // TODO: Dodge chance based on agility or something return false
-  UpdatePlayerStat(&playerInfo->health, diff);
+  ModifyPlayerStat(&playerInfo->health, diff);
   return true;
 }
 
-bool UpdatePlayerStat(PlayerStat *base, PlayerStatDiff diff) {
-  if (!base || MaximumPlayerStat < *base
-      || MinimumPlayerStatDiff > diff || MaximumPlayerStatDiff < diff) {
+bool ModifyPlayerStat(EntityStat *base, EntityStatDiff diff) {
+  if (!base || MaximumEntityStat < *base
+      || MinimumEntityStatDiff > diff || MaximumEntityStatDiff < diff) {
     return false;
   }
 
-  if (0 > diff && MinimumPlayerStat > *base + diff) {
-    *base = MinimumPlayerStat;
-  } else if (0 < diff && MaximumPlayerStat < *base + diff) {
-    *base = MaximumPlayerStat;
+  if (0 > diff && MinimumEntityStat > *base + diff) {
+    *base = MinimumEntityStat;
+  } else if (0 < diff && MaximumEntityStat < *base + diff) {
+    *base = MaximumEntityStat;
   } else {
     *base += diff;
   }
   return true;
 }
 
-bool UpdateStats(const struct GameInfo *info, struct GameState *state) {
+bool RefreshStats(const struct GameInfo *info, struct GameState *state) {
   if (!info || !state) {
     return false;
   }
 
-  state->playerInfo.physAtk = MinimumPlayerStat;
-  state->playerInfo.magAtk = MinimumPlayerStat;
-  state->playerInfo.physDef = MinimumPlayerStat;
-  state->playerInfo.magDef = MinimumPlayerStat;
+  state->playerInfo.physAtk = MinimumEntityStat;
+  state->playerInfo.magAtk = MinimumEntityStat;
+  state->playerInfo.physDef = MinimumEntityStat;
+  state->playerInfo.magDef = MinimumEntityStat;
 
   for (EquipmentType i = 0; i < EquipmentTypeCount; ++i) {
     const struct EquipmentInfo *item = info->equipment + state->playerInfo.equippedItems[i];
@@ -49,10 +49,10 @@ bool UpdateStats(const struct GameInfo *info, struct GameState *state) {
       continue;
     }
 
-    UpdatePlayerStat(&state->playerInfo.physAtk, item->physAtkMod);
-    UpdatePlayerStat(&state->playerInfo.magAtk,  item->magAtkMod);
-    UpdatePlayerStat(&state->playerInfo.physDef, item->physDefMod);
-    UpdatePlayerStat(&state->playerInfo.magDef,  item->magDefMod);
+    ModifyPlayerStat(&state->playerInfo.physAtk, item->physAtkMod);
+    ModifyPlayerStat(&state->playerInfo.magAtk,  item->magAtkMod);
+    ModifyPlayerStat(&state->playerInfo.physDef, item->physDefMod);
+    ModifyPlayerStat(&state->playerInfo.magDef,  item->magDefMod);
   }
 
   return true;

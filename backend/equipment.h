@@ -14,18 +14,18 @@ struct EquipmentInfo {
   // TODO: Add enum for type (helmet, boots, etc). Is this actually needed?
 
   // stats
-  PlayerStatDiff physAtkMod;
-  PlayerStatDiff physDefMod;
-  PlayerStatDiff magAtkMod;
-  PlayerStatDiff magDefMod;
+  EntityStatDiff physAtkMod;
+  EntityStatDiff physDefMod;
+  EntityStatDiff magAtkMod;
+  EntityStatDiff magDefMod;
 
   // TODO: Add other stats such as dex, int, etc
 };
 
-// Only call for health or stamina, other uses of UpdatePlayerStat are reserved for UpdateStats
-bool PlayerTakeDamage(struct PlayerInfo *, PlayerStatDiff);
-bool UpdatePlayerStat(PlayerStat *, PlayerStatDiff);
-bool UpdateStats(const struct GameInfo *, struct GameState *);
+bool ApplyPlayerDamage(struct PlayerInfo *, EntityStatDiff);
+// Only call for health (if diff ignores others stats) and stamina, other uses of UpdatePlayerStat are reserved for UpdateStats
+bool ModifyPlayerStat(EntityStat *, EntityStatDiff);
+bool RefreshStats(const struct GameInfo *, struct GameState *);
 
 bool UnlockItem(struct PlayerInfo *, EquipmentID);
 bool CheckItemUnlocked(const struct PlayerInfo *, EquipmentID, bool *);

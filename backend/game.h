@@ -13,12 +13,12 @@
 // Do not use outside of backend
 struct PlayerInfo {
   // TODO: Add other stats such as agility that can be impacted by equipment
-  PlayerStat health;
-  PlayerStat stamina;
-  PlayerStat physAtk;
-  PlayerStat magAtk;
-  PlayerStat physDef;
-  PlayerStat magDef;
+  EntityStat health;
+  EntityStat stamina;
+  EntityStat physAtk;
+  EntityStat magAtk;
+  EntityStat physDef;
+  EntityStat magDef;
 
   // Do not access directly, use functions in equipment.h
   // Equipment types: helmets, chest pieces, gloves, pants, boots, primary weapon, secondary weapon
@@ -63,7 +63,7 @@ struct RoomInfo {
   // Only set if type == HealthChangeRoomType
   const char *eventDescription; // utf-8
   uint_fast8_t eventPercentageChance;
-  PlayerStatDiff eventStatChange;
+  EntityStatDiff eventStatChange;
 };
 
 // Always make this const when possible to avoid accidental modification

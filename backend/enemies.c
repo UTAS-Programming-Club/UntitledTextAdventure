@@ -8,12 +8,14 @@
 #include "stringhelpers.h"
 
   // TODO: Record game state
-void EnemyAttackSequ(struct GameState *state, struct Enemy *enemy) {
+void EnemyPerformAttack(struct GameState *state, const struct Enemy *enemy) {
   // TODO: loops throuhg enemy array and takes their actions
   // TODO: choses random attack
   // TODO: if attack is physical/magical pass in as a bool
 
-  if(PlayerTakeDamage(&state->playerInfo, enemy->damage)) {
+  // EntityStatDiff damage = enemy->damage;
+
+  if(ApplyPlayerDamage(&state->playerInfo, enemy->damage)) {
     // TODO: make enemy attacks and events in combat modify string
   } else {
     // changes outcome if dodged
@@ -22,7 +24,7 @@ void EnemyAttackSequ(struct GameState *state, struct Enemy *enemy) {
 
 #define LINE_ENDING ".\n"
 
-const char *CreateCombatString(struct GameState *state, struct Enemy *enemy) {
+const char *CreateCombatString(struct GameState *state, const struct Enemy *enemy) {
   struct DStr *str = DStrNew(&state->arena);
   if (!str) {
     return NULL;
@@ -54,6 +56,8 @@ const char *CreateCombatString(struct GameState *state, struct Enemy *enemy) {
   //       DStrAppend(str, ", you tried to dodge but they still managed to hit you" LINE_ENDING);
   //     } else {
   //       DStrAppend(str, "and managed to hit you" LINE_ENDING);
+  //     }
+  //     if (!PlayerDodgedEnemyIAttack) {
   //     }
   //   }
   // }
