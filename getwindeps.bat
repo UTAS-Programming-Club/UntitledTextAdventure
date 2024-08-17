@@ -36,7 +36,7 @@ if not exist %COSMOS%\x86_64-unknown-cosmo-cc (
     %COSMOS%\unzip.exe %COSMOS%\cosmocc.zip -d %COSMOS%\..\
     del %COSMOS%\cosmocc.zip
   ) else (
-    cd /d "%~dp0" && ( if exist "%temp%\getadmin.vbs" del "%temp%\getadmin.vbs" ) && fsutil dirty query %systemdrive% 1>nul 2>nul || (  echo Set UAC = CreateObject^("Shell.Application"^) : UAC.ShellExecute "cmd.exe", "/c cd ""%~sdp0"" &&net session >nul 2>&1
+    cd /d "%~dp0" && ( if exist "%temp%\getadmin.vbs" del "%temp%\getadmin.vbs" ) && fsutil dirty query %systemdrive% 1>nul 2>nul || (  echo Set UAC = CreateObject^("Shell.Application"^) : UAC.ShellExecute "cmd.exe", "/c cd ""%~sdp0"" && %COSMOS%\unzip.exe %COSMOS%\cosmocc.zip -d %COSMOS%\..\ && del %COSMOS%\cosmocc.zip", "", "runas", 1 >> "%temp%\getadmin.vbs" && "%temp%\getadmin.vbs" )
   )
 
   :WaitForUnzip
