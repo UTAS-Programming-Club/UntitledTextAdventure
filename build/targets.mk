@@ -9,7 +9,7 @@ CXXFLAGS += -mcosmo -fexceptions
 COMMONOBJS += $(LIBDIR)/crossprint.o
 EXECSUFFIX := .com
 define MAKEEXEC =
-$(APELINK) -l $(x86_64APEELF) -o $(1) $(2)
+$(APELINK) -o $(1) $(2)
 endef
 else # !ISCOSMO
 # mingw64 appends .exe if not present so copy will fail

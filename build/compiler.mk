@@ -42,7 +42,7 @@ ifeq ($(CXXCOMPILERTARGET),)
 CXXCOMPILERTARGET := $(shell $(CXX) -dumpmachine 2>/dev/null)
 endif
 # TODO: download config.sub instead of hardcoding it in the repo
-CXXTARGET := $(shell sh build//config.sub $(CXXCOMPILERTARGET))
+CXXTARGET := $(shell sh build//config.sub $(CXXCOMPILERTARGET) 2>/dev/null)
 
 ifdef NEEDCXX
 

@@ -1,14 +1,14 @@
 @echo off
 
-set COSMOSBIN=%cd:\=/%/third_party/cosmos/bin
-set SHELL=sh
+setlocal
+set COSMOSBIN=%~dp0third_party\cosmos\bin
+set POSIXCOSMOBIN=%COSMOSBIN:\=/%
+set PATH=%~dp0/build/bootstrap;%COSMOSBIN%;%PATH%
 
-%COSMOSBIN%/make.exe %* ^
-PATH=%COSMOSBIN% ^
-APELINK="apelink.exe" x86_64APEELF="%COSMOSBIN%/ape-x86_64.elf" ^
-AR="x86_64-unknown-cosmo-ar" ^
-AS="x86_64-unknown-cosmo-as" ^
-CC="%SHELL% %COSMOSBIN%/x86_64-unknown-cosmo-cc" ^
-CXX="%SHELL% %COSMOSBIN%/x86_64-unknown-cosmo-c++" ^
-MAKE=make ^
-SHELL=%SHELL%
+set APELINK=apelink.exe -l %POSIXCOSMOBIN%/ape-x86_64.elf
+set AR=sh %POSIXCOSMOBIN%/x86_64-unknown-cosmo-ar
+set AS=sh %POSIXCOSMOBIN%/x86_64-unknown-cosmo-as
+set CC=sh %POSIXCOSMOBIN%/x86_64-unknown-cosmo-cc
+set CXX=sh %POSIXCOSMOBIN%/x86_64-unknown-cosmo-c++
+sh build/batchtodash.sh make SHELL=sh %*
+endlocal
