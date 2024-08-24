@@ -14,6 +14,7 @@
   "defaultPlayerInfo": {
     "health": MaximumEntityStat,
     "stamina": MaximumEntityStat,
+    "agility": MinimumEntityStat,
     "physAtk": MinimumEntityStat,
     "magAtk": MinimumEntityStat,
     "physDef": MinimumEntityStat,
@@ -35,7 +36,7 @@
       54
     ],
     "equippedEquipment": [
-      1, 9, 18, 27, 36, 45, 54
+      0, 9, 18, 27, 36, 45, 54
     ]
   },
   "screens": [

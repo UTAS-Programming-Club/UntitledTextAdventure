@@ -2,21 +2,25 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "../frontends/frontend.h"
 #include "entities.h"
 #include "equipment.h"
 #include "game.h"
 #include "stringhelpers.h"
 
-bool ApplyPlayerDamage(struct PlayerInfo *playerInfo, EntityStatDiff diff) {
-  // calculate actual diff based on defences
-  diff = diff + playerInfo->physDef;
-  if(diff >= 0) {
-    diff = 0;
+static EntityStat ApplyPlayerAgility(const struct PlayerInfo *playerInfo, const struct EnemyAttackInfo *attackInfo) {
+  // Performs (agility_max - min(agility_max, max(agility_max, agility))) / (agility_max - agility_min)
+  // Turns x in [0, 100] to [0, 1] for the percentage of agility in [min, max]
+  // e.g. x <= min -> 0, x half way between min and max -> 0.5, max <= x -> 1
+  EntityStat playerAgility = playerInfo->agility;
+  if (playerAgility <= attackInfo->minDodgeAgility) {
+      playerAgility = attackInfo->minDodgeAgility;
+  } else if (playerAgility >= attackInfo->maxDodgeAgility) {
+      playerAgility = attackInfo->maxDodgeAgility;
   }
 
-  // TODO: Dodge chance based on agility or something return false
-  ModifyPlayerStat(&playerInfo->health, diff);
-  return true;
+  return ((attackInfo->maxDodgeAgility - playerAgility) * attackInfo->damage) /
+         (attackInfo->maxDodgeAgility - attackInfo->minDodgeAgility);
 }
 
 bool ModifyPlayerStat(EntityStat *base, EntityStatDiff diff) {
@@ -61,19 +65,32 @@ bool RefreshStats(const struct GameInfo *info, struct GameState *state) {
 }
 
 
-// TODO: Record game state
-void EnemyPerformAttack(struct GameState *state, const struct EnemyInfo *enemy) {
-  // TODO: loops throuhg enemy array and takes their actions
-  // TODO: choses random attack
-  // TODO: if attack is physical/magical pass in as a bool
+bool EnemyPerformAttack(struct PlayerInfo *playerInfo, const struct EnemyAttackInfo *attackInfo) {
+  // TODO: Loop through enemy array and takes their actions, put elsewhere?
+  // TODO: Allow enemies to have multiple attacks?
+  // TODO: Record outcomes for CreateCombatString
+  // TODO: Add crits/some randomness to damage done
 
-  // EntityStatDiff damage = enemy->damage;
+  EntityStatDiff damage = ApplyPlayerAgility(playerInfo, attackInfo);
 
-  if(ApplyPlayerDamage(&state->playerInfo, enemy->damage)) {
-    // TODO: make enemy attacks and events in combat modify string
-  } else {
-    // changes outcome if dodged
+  switch (attackInfo->type) {
+    case PhysEnemyAttackType:
+      damage += playerInfo->physDef;
+      break;
+    case MagEnemyAttackType:
+      damage += playerInfo->magDef;
+      break;
+    default:
+      PrintError("Enemy has invalid attack type");
+      return false;
   }
+
+  if(damage >= 0) {
+    return true;
+  }
+
+  ModifyPlayerStat(&playerInfo->health, damage);
+  return true;
 }
 
 #define LINE_ENDING ".\n"

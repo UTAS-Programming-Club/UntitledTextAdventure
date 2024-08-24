@@ -85,7 +85,7 @@ endif
 
 
 CSTD := -std=c17
-CWARNINGS := -Wall -Wextra -pedantic -Wmissing-prototypes -Wstrict-prototypes -Wold-style-definition
+CWARNINGS := -Wall -Wextra -pedantic -Werror -Wmissing-prototypes -Wstrict-prototypes -Wold-style-definition
 
 CXXSTD := -std=c++17
 CXXWARNINGS := -Wall -Wextra -pedantic

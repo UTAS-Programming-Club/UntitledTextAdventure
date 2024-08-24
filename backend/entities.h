@@ -27,23 +27,27 @@ struct PlayerInfo {
   EquipmentID equippedItems[EquipmentTypeCount];
 };
 
+
+struct EnemyAttackInfo {
+  enum EnemyAttackType type;
+  EntityStatDiff damage;
+  EntityStat minDodgeAgility;
+  EntityStat maxDodgeAgility;
+};
+
 // Do not use outside of backend
 struct EnemyInfo {
   // stats here
   // bool dead;
   EntityStat health;
-  // 0 physical/1 magic
-  // bool dmgType;
-  // TODO: Use weapon?
-  EntityStatDiff damage;
+  struct EnemyAttackInfo attackInfo;
 };
 
-bool ApplyPlayerDamage(struct PlayerInfo *, EntityStatDiff);
 // Only call for health (if diff ignores others stats) and stamina, other uses of UpdatePlayerStat are reserved for UpdateStats
 bool ModifyPlayerStat(EntityStat *, EntityStatDiff);
 bool RefreshStats(const struct GameInfo *, struct GameState *);
 
-void EnemyPerformAttack(struct GameState *, const struct EnemyInfo *);
+bool EnemyPerformAttack(struct PlayerInfo *, const struct EnemyAttackInfo *);
 const char *CreateCombatString(struct GameState *, const struct EnemyInfo *);
 
 // TODO: Individual attacks enemies can use with status' and stuff idk

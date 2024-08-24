@@ -18,7 +18,7 @@
 static const struct RoomInfo DefaultRoom = {.type = InvalidRoomType};
 
 // TODO: Remove
-struct EnemyInfo testEnemy = {MaximumEntityStat, -20};
+struct EnemyInfo testEnemy = {MaximumEntityStat, {PhysEnemyAttackType, -20, 5, 10}};
 
 bool SetupBackend(struct GameInfo *info) {
   if (!info) {
@@ -203,7 +203,7 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
         return GetNextOutputOutcome;
       case GameFightEnemiesOutcome:
         // TODO: Add PlayerPerformAttack(state, &testEnemy, hand/weapon)
-        EnemyPerformAttack(state, &testEnemy);
+        EnemyPerformAttack(&state->playerInfo, &testEnemy.attackInfo);
         return GetNextOutputOutcome;
       case QuitGameOutcome:
         return button.outcome;

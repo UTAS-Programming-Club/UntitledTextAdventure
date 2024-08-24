@@ -134,6 +134,13 @@ VALUE_EMIT(EquipmentID, InvalidEquipmentID, UINT_FAST8_MAX)
 VALUE_EMIT(EquipmentIDSave, InvalidEquipmentIDSave, 0)
 SAVED_INTEGRAL_TYPE_EMIT(uint, 8, EquipmentID)
 
+// EnemyAttackType is a uint8_t with [1, 2]
+JSON_ENUM_START(EnemyAttackType)
+  JSON_ENUM_ITEM(InvalidEnemyAttackType, 0)
+  JSON_ENUM_ITEM(PhysEnemyAttackType,    1)
+  JSON_ENUM_ITEM(MagEnemyAttackType,     2)
+JSON_ENUM_END
+
 // TODO: Add enum for state vars
 
 EMIT(#endif /* PCGAME_TYPES_H */)

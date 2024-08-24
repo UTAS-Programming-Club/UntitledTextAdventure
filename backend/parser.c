@@ -162,6 +162,7 @@ bool LoadDefaultPlayerInfo(struct PlayerInfo *playerInfo) {
 
   JSON_GETNUMBERVALUEERROR(playerInfo->health, jsonDefaultPlayerInfo, "health", false);
   JSON_GETNUMBERVALUEERROR(playerInfo->stamina, jsonDefaultPlayerInfo, "stamina", false);
+  JSON_GETNUMBERVALUEERROR(playerInfo->agility, jsonDefaultPlayerInfo, "agility", false);
   JSON_GETNUMBERVALUEERROR(playerInfo->physAtk, jsonDefaultPlayerInfo, "physAtk", false);
   JSON_GETNUMBERVALUEERROR(playerInfo->magAtk, jsonDefaultPlayerInfo, "magAtk", false);
   JSON_GETNUMBERVALUEERROR(playerInfo->physDef, jsonDefaultPlayerInfo, "physDef", false);
