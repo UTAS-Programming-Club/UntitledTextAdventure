@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <types.h>
 
+#include "entities.h"
 #include "game.h"
 
 // Do not use outside of backend
@@ -21,11 +22,6 @@ struct EquipmentInfo {
 
   // TODO: Add other stats such as dex, int, etc
 };
-
-bool ApplyPlayerDamage(struct PlayerInfo *, EntityStatDiff);
-// Only call for health (if diff ignores others stats) and stamina, other uses of UpdatePlayerStat are reserved for UpdateStats
-bool ModifyPlayerStat(EntityStat *, EntityStatDiff);
-bool RefreshStats(const struct GameInfo *, struct GameState *);
 
 bool UnlockItem(struct PlayerInfo *, EquipmentID);
 bool CheckItemUnlocked(const struct PlayerInfo *, EquipmentID, bool *);

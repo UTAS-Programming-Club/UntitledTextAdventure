@@ -7,8 +7,9 @@
 #include <types.h>   // EquipmentIDSave, EquipmentID, PlayerStatSave, RoomCoordSave
 #include <zstd.h>    // ZSTD_compress, ZSTD_compressBound, ZSTD_CONTENTSIZE_ERROR, ZSTD_CONTENTSIZE_UNKNOWN, ZSTD_decompress, ZSTD_findFrameCompressedSize, ZSTD_getFrameContentSize, ZSTD_isError
 
+#include "entities.h"  // RefreshStats
 #include "equipment.h" // GetEquippedItemID, SetEquippedItem
-#include "game.h" // EquippedItemsSlots
+#include "game.h"      // EquippedItemsSlots
 #include "save.h"
 
 #define BASE 85

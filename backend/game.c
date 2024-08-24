@@ -7,18 +7,18 @@
 #include <types.h>
 
 #include "../frontends/frontend.h"
+#include "entities.h"
 #include "equipment.h"
 #include "game.h"
 #include "parser.h"
 #include "save.h"
 #include "screens.h"
 #include "specialscreens.h"
-#include "enemies.h"
 
 static const struct RoomInfo DefaultRoom = {.type = InvalidRoomType};
 
 // TODO: Remove
-struct Enemy testEnemy = {MaximumEntityStat, -20};
+struct EnemyInfo testEnemy = {MaximumEntityStat, -20};
 
 bool SetupBackend(struct GameInfo *info) {
   if (!info) {

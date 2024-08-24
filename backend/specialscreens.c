@@ -4,10 +4,12 @@
 #include <stdio.h>
 #include <types.h>
 
-#include "enemies.h"
+#include "entities.h"  // CreateCombatString
+#include "equipment.h" // struct EquipmentInfo, GetEquippedItem, UnlockItem
 #include "game.h"
 #include "parser.h"
 #include "save.h"
+#include "specialscreens.h"
 #include "stringhelpers.h"
 
 // Each room take 6x4 but the 6 required calls to WriteRoomRow per room only
@@ -340,7 +342,7 @@ static bool CreatePlayerEquipmentScreen(const struct GameInfo* info, struct Game
 }
 
 
-extern struct Enemy testEnemy;
+extern struct EnemyInfo testEnemy;
 
 static bool CreateCombatScreen(const struct GameInfo *info, struct GameState *state) {
   (void)info;

@@ -10,21 +10,7 @@
 #include <stdint.h>
 #include <types.h>
 
-// Do not use outside of backend
-struct PlayerInfo {
-  // TODO: Add other stats such as agility that can be impacted by equipment
-  EntityStat health;
-  EntityStat stamina;
-  EntityStat physAtk;
-  EntityStat magAtk;
-  EntityStat physDef;
-  EntityStat magDef;
-
-  // Do not access directly, use functions in equipment.h
-  // Equipment types: helmets, chest pieces, gloves, pants, boots, primary weapon, secondary weapon
-  bool unlockedItems[EquipmentCount];
-  EquipmentID equippedItems[EquipmentTypeCount];
-};
+#include "entities.h"
 
 // Always make this const when possible to avoid accidental modification
 struct GameInfo {
@@ -101,8 +87,5 @@ enum InputOutcome HandleGameInput(const struct GameInfo *, struct GameState *, u
 const struct RoomInfo *GetGameRoom(const struct GameInfo *, RoomCoord, RoomCoord);
 void CleanupGame(struct GameState *);
 void CleanupBackend(struct GameInfo *);
-
-// This header depends on structs in this header
-#include "equipment.h"
 
 #endif // PCGAME_GAME_H
