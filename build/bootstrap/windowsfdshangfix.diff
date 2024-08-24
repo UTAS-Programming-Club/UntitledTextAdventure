@@ -1,0 +1,13 @@
+diff --git a/libc/intrin/fds.c b/libc/intrin/fds.c
+index d2883cccf..2c7780faa 100644
+--- a/libc/intrin/fds.c
++++ b/libc/intrin/fds.c
+@@ -168,7 +168,7 @@ textstartup void __init_fds(int argc, char **argv, char **envp) {
+         f->protocol = protocol;
+         atomic_store_explicit(&fds->f, fd + 1, memory_order_relaxed);
+ 
+-        if (shand) {
++        if ((!IsWindows() || fd >= 3 || kind != kFdFile) && shand) {
+           struct Map *map;
+           struct CursorShared *shared;
+           if ((shared = MapViewOfFileEx(shand, kNtFileMapWrite, 0, 0,
