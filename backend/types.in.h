@@ -115,6 +115,7 @@ VALUE_EMIT(EntityStat, MaximumEntityStat, 100)
 SAVED_INTEGRAL_TYPE_EMIT(uint, 8, EntityStat)
 
 // EntityStatDiff is a int8_t with [-100, 100]
+C_EMIT(#define PRIEntityStatDiff PRIdFAST8)
 VALUE_EMIT(EntityStatDiff, MinimumEntityStatDiff, -100)
 VALUE_EMIT(EntityStatDiff, MaximumEntityStatDiff,  100)
 VALUE_EMIT(EntityStatDiff, InvalidEntityStatDiff, INT_FAST8_MAX)
@@ -134,11 +135,21 @@ VALUE_EMIT(EquipmentID, InvalidEquipmentID, UINT_FAST8_MAX)
 VALUE_EMIT(EquipmentIDSave, InvalidEquipmentIDSave, 0)
 SAVED_INTEGRAL_TYPE_EMIT(uint, 8, EquipmentID)
 
+
 // EnemyAttackType is a uint8_t with [1, 2]
 JSON_ENUM_START(EnemyAttackType)
   JSON_ENUM_ITEM(InvalidEnemyAttackType, 0)
   JSON_ENUM_ITEM(PhysEnemyAttackType,    1)
   JSON_ENUM_ITEM(MagEnemyAttackType,     2)
+JSON_ENUM_END
+
+C_EMIT(#define CombatEventInfoCount (size_t)10)
+// CombatEventCauser is a uint8_t with [1, 3]
+JSON_ENUM_START(CombatEventCause)
+  JSON_ENUM_ITEM(InvalidCombatEventCause, 0)
+  JSON_ENUM_ITEM(UnusedCombatEventCause,  1)
+  JSON_ENUM_ITEM(PlayerCombatEventCause,  2)
+  JSON_ENUM_ITEM(EnemyCombatEventCause,   3)
 JSON_ENUM_END
 
 // TODO: Add enum for state vars

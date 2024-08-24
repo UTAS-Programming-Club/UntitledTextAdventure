@@ -203,7 +203,9 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
         return GetNextOutputOutcome;
       case GameFightEnemiesOutcome:
         // TODO: Add PlayerPerformAttack(state, &testEnemy, hand/weapon)
-        EnemyPerformAttack(&state->playerInfo, &testEnemy.attackInfo);
+        if (!EnemyPerformAttack(state, &testEnemy)) {
+          return InvalidInputOutcome;
+        }
         return GetNextOutputOutcome;
       case QuitGameOutcome:
         return button.outcome;

@@ -9,7 +9,7 @@
 
 #include "entities.h"  // RefreshStats
 #include "equipment.h" // GetEquippedItemID, SetEquippedItem
-#include "game.h"      // EquippedItemsSlots
+#include "game.h"      // EquippedItemsSlots, struct GameInfo, struct GameState
 #include "save.h"
 
 #define BASE 85
@@ -398,6 +398,12 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
   state->playerInfo.health = data->health;
   state->playerInfo.stamina = data->stamina;
 
+  // TODO: Move to combat setup to ensure it resets every time combat is started
+  state->lastCombatEventInfoIdx = 0;
+  for (size_t i = 0; i < CombatEventInfoCount; ++i) {
+    state->combatEventInfo[i].cause = UnusedCombatEventCause;
+  }
+
   // TODO: Unroll to multiples of 8?
   for (EquipmentID i = 0; i < EquipmentCount; ++i) {
     uint_fast8_t arrIdx = i / 8;
@@ -439,6 +445,12 @@ bool CreateNewState(const struct GameInfo *info, struct GameState *state) {
   memcpy(&state->playerInfo, &info->defaultPlayerInfo, sizeof info->defaultPlayerInfo);
   if (!RefreshStats(info, state)) {
     return false;
+  }
+
+  // TODO: Move to combat setup to ensure it resets every time combat is started
+  state->lastCombatEventInfoIdx = 0;
+  for (size_t i = 0; i < CombatEventInfoCount; ++i) {
+    state->combatEventInfo[i].cause = UnusedCombatEventCause;
   }
 
   // TODO: Reset state, requires removing main menu state

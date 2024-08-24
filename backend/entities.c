@@ -65,23 +65,23 @@ bool RefreshStats(const struct GameInfo *info, struct GameState *state) {
 }
 
 
-bool EnemyPerformAttack(struct PlayerInfo *playerInfo, const struct EnemyAttackInfo *attackInfo) {
+bool EnemyPerformAttack(struct GameState *state, const struct EnemyInfo *enemyInfo) {
   // TODO: Loop through enemy array and takes their actions, put elsewhere?
   // TODO: Allow enemies to have multiple attacks?
   // TODO: Record outcomes for CreateCombatString
   // TODO: Add crits/some randomness to damage done
 
-  EntityStatDiff damage = ApplyPlayerAgility(playerInfo, attackInfo);
+  EntityStatDiff damage = ApplyPlayerAgility(&state->playerInfo, &enemyInfo->attackInfo);
 
-  switch (attackInfo->type) {
+  switch (enemyInfo->attackInfo.type) {
     case PhysEnemyAttackType:
-      damage += playerInfo->physDef;
+      damage += state->playerInfo.physDef;
       break;
     case MagEnemyAttackType:
-      damage += playerInfo->magDef;
+      damage += state->playerInfo.magDef;
       break;
     default:
-      PrintError("Enemy has invalid attack type");
+      PrintError("Attacking enemy has an invalid attack type");
       return false;
   }
 
@@ -89,7 +89,18 @@ bool EnemyPerformAttack(struct PlayerInfo *playerInfo, const struct EnemyAttackI
     return true;
   }
 
-  ModifyPlayerStat(&playerInfo->health, damage);
+  ModifyPlayerStat(&state->playerInfo.health, damage);
+
+  // TODO: Use ssize_t to avoid this?
+  if (state->lastCombatEventInfoIdx == 0) {
+    state->lastCombatEventInfoIdx = 10;
+  }
+  --state->lastCombatEventInfoIdx;
+  struct CombatEventInfo *eventInfo = &state->combatEventInfo[state->lastCombatEventInfoIdx];
+  eventInfo->cause = EnemyCombatEventCause;
+  eventInfo->damage = damage;
+  eventInfo->enemyInfo = enemyInfo;
+
   return true;
 }
 
@@ -153,13 +164,38 @@ const char *CreateCombatString(struct GameState *state, const struct EnemyInfo *
   size_t i = 0;
     int enemyHealthBarCount = (enemy->health + 9) / 10;
     // int enemyStaminaBarCount = (enemyIStamina + 9) / 10;
-    DStrPrintf(str, "Enemy %zu Health: %.*s%*s : %3i%%", i + 1,
+    DStrPrintf(str, "Enemy %zu Health: %.*s%*s : %3i%%\n", i + 1,
       enemyHealthBarCount * blockSize, bar, 10 - enemyHealthBarCount, "", enemy->health
     );
     // DStrPrintf(str, "Enemy %zu Stamina: %.*s%*s : %3i%%\n\n",
     //   enemyStaminaBarCount * blockSize, bar, 10 - enemyStaminaBarCount, "", enemyIStamina
     // );
   // }
+
+  size_t eventInfoIdx = state->lastCombatEventInfoIdx;
+  struct CombatEventInfo *eventInfo = &state->combatEventInfo[eventInfoIdx];
+  if (eventInfo->cause != UnusedCombatEventCause) {
+    DStrAppend(str, "\nCombat log:\n");
+  }
+  while (eventInfo->cause != UnusedCombatEventCause) {
+    switch (state->combatEventInfo[eventInfoIdx].cause) {
+      case PlayerCombatEventCause:
+        DStrPrintf(str, "You attacked the enemy and did %" PRIEntityStatDiff " damage.\n", -eventInfo->damage);
+        break;
+      case EnemyCombatEventCause:
+        DStrPrintf(str, "The enemy attacked you and did %" PRIEntityStatDiff " damage.\n", -eventInfo->damage);
+        break;
+      default:
+        PrintError("Recorded combat event was caused by an invalid entity");
+        return NULL;
+    }
+
+    eventInfoIdx = (eventInfoIdx + 1) % CombatEventInfoCount;
+    eventInfo = &state->combatEventInfo[eventInfoIdx];
+    if (eventInfoIdx == state->lastCombatEventInfoIdx) {
+      break;
+    }
+  }
 
   return str->str;
 }

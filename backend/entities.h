@@ -28,6 +28,7 @@ struct PlayerInfo {
 };
 
 
+// Do not use outside of backend
 struct EnemyAttackInfo {
   enum EnemyAttackType type;
   EntityStatDiff damage;
@@ -43,11 +44,20 @@ struct EnemyInfo {
   struct EnemyAttackInfo attackInfo;
 };
 
+
+// TODO: Track events other than attacks
+struct CombatEventInfo {
+  enum CombatEventCause cause;
+  EntityStatDiff damage;
+  const struct EnemyInfo *enemyInfo; // Only set if cause == EnemyCombatEventCause
+};
+
+
 // Only call for health (if diff ignores others stats) and stamina, other uses of UpdatePlayerStat are reserved for UpdateStats
 bool ModifyPlayerStat(EntityStat *, EntityStatDiff);
 bool RefreshStats(const struct GameInfo *, struct GameState *);
 
-bool EnemyPerformAttack(struct PlayerInfo *, const struct EnemyAttackInfo *);
+bool EnemyPerformAttack(struct GameState *, const struct EnemyInfo *);
 const char *CreateCombatString(struct GameState *, const struct EnemyInfo *);
 
 // TODO: Individual attacks enemies can use with status' and stuff idk
