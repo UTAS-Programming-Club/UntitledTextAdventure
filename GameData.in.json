@@ -12,12 +12,12 @@
 {
   "name": "Untitled Text Adventure",
   "defaultPlayerInfo": {
-    "health": MaximumPlayerStat,
-    "stamina": MaximumPlayerStat,
-    "physAtk": MinimumPlayerStat,
-    "magAtk": MinimumPlayerStat,
-    "physDef": MinimumPlayerStat,
-    "magDef": MinimumPlayerStat,
+    "health": MaximumEntityStat,
+    "stamina": MaximumEntityStat,
+    "physAtk": MinimumEntityStat,
+    "magAtk": MinimumEntityStat,
+    "physDef": MinimumEntityStat,
+    "magDef": MinimumEntityStat,
     "unlockedEquipment": [
       // Helmet Items
       0, 1,
