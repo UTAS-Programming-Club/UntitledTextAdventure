@@ -67,8 +67,7 @@ struct GameState {
   enum Screen nextScreenID;     // Only set if inputType == TextScreenInputType
 
   struct PlayerInfo playerInfo;
-  struct CombatEventInfo combatEventInfo[CombatEventInfoCount];
-  size_t lastCombatEventInfoIdx;
+  struct CombatInfo combatInfo;
   const struct RoomInfo *roomInfo;
   bool startedGame;
 // implementation, do not use outside of backend

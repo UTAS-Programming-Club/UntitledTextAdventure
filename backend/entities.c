@@ -65,12 +65,17 @@ bool RefreshStats(const struct GameInfo *info, struct GameState *state) {
 }
 
 
-bool EnemyPerformAttack(struct GameState *state, const struct EnemyInfo *enemyInfo) {
+// TODO: Remove
+extern size_t TestEnemyCount;
+extern const struct EnemyInfo TestEnemies[];
+
+bool EnemyPerformAttack(struct GameState *state, size_t enemyID) {
   // TODO: Loop through enemy array and takes their actions, put elsewhere?
   // TODO: Allow enemies to have multiple attacks?
   // TODO: Record outcomes for CreateCombatString
   // TODO: Add crits/some randomness to damage done
 
+  const struct EnemyInfo *enemyInfo = &TestEnemies[enemyID];
   EntityStatDiff damage = ApplyPlayerAgility(&state->playerInfo, &enemyInfo->attackInfo);
 
   switch (enemyInfo->attackInfo.type) {
@@ -92,21 +97,29 @@ bool EnemyPerformAttack(struct GameState *state, const struct EnemyInfo *enemyIn
   ModifyPlayerStat(&state->playerInfo.health, damage);
 
   // TODO: Use ssize_t to avoid this?
-  if (state->lastCombatEventInfoIdx == 0) {
-    state->lastCombatEventInfoIdx = 10;
+  if (state->combatInfo.lastCombatEventInfoID == 0) {
+    state->combatInfo.lastCombatEventInfoID = CombatEventInfoCount;
   }
-  --state->lastCombatEventInfoIdx;
-  struct CombatEventInfo *eventInfo = &state->combatEventInfo[state->lastCombatEventInfoIdx];
+  --state->combatInfo.lastCombatEventInfoID;
+  struct CombatEventInfo *eventInfo = &state->combatInfo.combatEventInfo[
+    state->combatInfo.lastCombatEventInfoID
+  ];
+  // TODO: Mention dodging and armor absorption
   eventInfo->cause = EnemyCombatEventCause;
   eventInfo->damage = damage;
-  eventInfo->enemyInfo = enemyInfo;
+  eventInfo->enemyID = enemyID;
 
   return true;
 }
 
 #define LINE_ENDING ".\n"
+#define LOG_LINE_START "⬤ " // Black Large Circle
 
-const char *CreateCombatString(struct GameState *state, const struct EnemyInfo *enemy) {
+const char *CreateCombatString(struct GameState *state, const struct EnemyInfo *enemies) {
+  if (!state || !enemies) {
+    return NULL;
+  }
+
   struct DStr *str = DStrNew(&state->arena);
   if (!str) {
     return NULL;
@@ -160,41 +173,47 @@ const char *CreateCombatString(struct GameState *state, const struct EnemyInfo *
 
   // TODO: Support multiple enemies
   // TODO: Add enemy stamina
-  // for (size_t i = 0; i < enemyCount; ++i) {
-  size_t i = 0;
-    int enemyHealthBarCount = (enemy->health + 9) / 10;
+  for (size_t i = 0; i < TestEnemyCount; ++i) {
+    int enemyHealthBarCount = (enemies[i].health + 9) / 10;
     // int enemyStaminaBarCount = (enemyIStamina + 9) / 10;
     DStrPrintf(str, "Enemy %zu Health: %.*s%*s : %3i%%\n", i + 1,
-      enemyHealthBarCount * blockSize, bar, 10 - enemyHealthBarCount, "", enemy->health
+      enemyHealthBarCount * blockSize, bar, 10 - enemyHealthBarCount, "", enemies[i].health
     );
     // DStrPrintf(str, "Enemy %zu Stamina: %.*s%*s : %3i%%\n\n",
     //   enemyStaminaBarCount * blockSize, bar, 10 - enemyStaminaBarCount, "", enemyIStamina
     // );
-  // }
+  }
 
-  size_t eventInfoIdx = state->lastCombatEventInfoIdx;
-  struct CombatEventInfo *eventInfo = &state->combatEventInfo[eventInfoIdx];
+  size_t eventInfoID = state->combatInfo.lastCombatEventInfoID;
+  struct CombatEventInfo *eventInfo = &state->combatInfo.combatEventInfo[eventInfoID];
   if (eventInfo->cause != UnusedCombatEventCause) {
     DStrAppend(str, "\nCombat log:\n");
-  }
-  while (eventInfo->cause != UnusedCombatEventCause) {
-    switch (state->combatEventInfo[eventInfoIdx].cause) {
-      case PlayerCombatEventCause:
-        DStrPrintf(str, "You attacked the enemy and did %" PRIEntityStatDiff " damage.\n", -eventInfo->damage);
-        break;
-      case EnemyCombatEventCause:
-        DStrPrintf(str, "The enemy attacked you and did %" PRIEntityStatDiff " damage.\n", -eventInfo->damage);
-        break;
-      default:
-        PrintError("Recorded combat event was caused by an invalid entity");
-        return NULL;
-    }
 
-    eventInfoIdx = (eventInfoIdx + 1) % CombatEventInfoCount;
-    eventInfo = &state->combatEventInfo[eventInfoIdx];
-    if (eventInfoIdx == state->lastCombatEventInfoIdx) {
-      break;
-    }
+    do {
+      switch (eventInfo->cause) {
+        case PlayerCombatEventCause:
+          DStrPrintf(str, LOG_LINE_START "You did %" PRIEntityStatDiff " damage to enemy %zu\n",
+                     -eventInfo->damage, eventInfo->enemyID + 1);
+          break;
+        case EnemyCombatEventCause:
+          DStrPrintf(str, LOG_LINE_START "Enemy %zu did %" PRIEntityStatDiff " damage to you\n",
+                     eventInfo->enemyID + 1, -eventInfo->damage);
+          break;
+        default:
+          PrintError("Recorded combat event was caused by an invalid entity");
+          return NULL;
+      }
+
+      eventInfoID = (eventInfoID + 1) % CombatEventInfoCount;
+      eventInfo = &state->combatInfo.combatEventInfo[eventInfoID];
+      if (eventInfoID == state->combatInfo.lastCombatEventInfoID) {
+        break;
+      }
+    } while (eventInfo->cause != UnusedCombatEventCause);
+  }
+
+  if (state->combatInfo.performingEnemyAttacks) {
+    DStrPrintf(str, "\nWaiting for enemy %zu to attack" LINE_ENDING, state->combatInfo.currentEnemyNumber + 1);
   }
 
   return str->str;

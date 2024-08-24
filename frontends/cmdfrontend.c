@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <threads.h>
 #include <unistd.h>
 #include <wchar.h>
 #ifdef _WIN32
@@ -245,12 +246,20 @@ static bool HandleOutput(const struct GameInfo *info, struct GameState *state) {
   }
   PrintOutputBody(state->body);
 
-  if (ButtonScreenInputType == state->inputType) {
-    PrintButtonInputs(state->inputCount, state->inputs);
-  } else if (TextScreenInputType == state->inputType) {
-    PrintTextInput();
+  switch(state->inputType) {
+    case ButtonScreenInputType:
+      PrintButtonInputs(state->inputCount, state->inputs);
+      return true;
+    case TextScreenInputType:
+      PrintTextInput();
+      return true;
+    case NoneScreenInputType:
+      thrd_sleep(&(struct timespec){.tv_sec=1}, NULL);
+      return true;
+    default:
+      PrintError("Unexpected input type with id %i received while handling output", state->inputType);
+      return false;
   }
-  return true;
 }
 
 // Returned bool indicates whether or not to continue, true meaning continue
@@ -261,13 +270,21 @@ static bool HandleInput(const struct GameInfo *info, struct GameState *state, in
 
   *res = 1;
 
-  if (ButtonScreenInputType == state->inputType) {
-    buttonInput = GetButtonInput();
-  } else if (TextScreenInputType == state->inputType) {
-    textInput = GetTextInput();
-    if (!textInput) {
+  switch(state->inputType) {
+    case ButtonScreenInputType:
+      buttonInput = GetButtonInput();
+      break;
+    case TextScreenInputType:
+      textInput = GetTextInput();
+      if (!textInput) {
+        return false;
+      }
+      break;
+    case NoneScreenInputType:
+      break;
+    default:
+      PrintError("Unexpected input type with id %i received while handling input", state->inputType);
       return false;
-    }
   }
 
   enum InputOutcome outcome = HandleGameInput(info, state, buttonInput, textInput);
@@ -283,15 +300,16 @@ static bool HandleInput(const struct GameInfo *info, struct GameState *state, in
       } else if (TextScreenInputType == state->inputType) {
         return true;
       } else {
+        PrintError("Invalid input outcome received");
         return false;
       }
     case GetNextOutputOutcome:
-      *res = 0;
       return true;
     case QuitGameOutcome:
       *res = 0;
-      // fallthrough
+      return false;
     default:
+      PrintError("Unexpected input outcome with id %i received", outcome);
       return false;
   }
 }

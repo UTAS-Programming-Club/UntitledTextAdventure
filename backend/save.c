@@ -399,9 +399,9 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
   state->playerInfo.stamina = data->stamina;
 
   // TODO: Move to combat setup to ensure it resets every time combat is started
-  state->lastCombatEventInfoIdx = 0;
+  state->combatInfo.lastCombatEventInfoID = 0;
   for (size_t i = 0; i < CombatEventInfoCount; ++i) {
-    state->combatEventInfo[i].cause = UnusedCombatEventCause;
+    state->combatInfo.combatEventInfo[i].cause = UnusedCombatEventCause;
   }
 
   // TODO: Unroll to multiples of 8?
@@ -448,9 +448,9 @@ bool CreateNewState(const struct GameInfo *info, struct GameState *state) {
   }
 
   // TODO: Move to combat setup to ensure it resets every time combat is started
-  state->lastCombatEventInfoIdx = 0;
+  state->combatInfo.lastCombatEventInfoID = 0;
   for (size_t i = 0; i < CombatEventInfoCount; ++i) {
-    state->combatEventInfo[i].cause = UnusedCombatEventCause;
+    state->combatInfo.combatEventInfo[i].cause = UnusedCombatEventCause;
   }
 
   // TODO: Reset state, requires removing main menu state

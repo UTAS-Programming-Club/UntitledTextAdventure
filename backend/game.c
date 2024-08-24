@@ -18,7 +18,11 @@
 static const struct RoomInfo DefaultRoom = {.type = InvalidRoomType};
 
 // TODO: Remove
-struct EnemyInfo testEnemy = {MaximumEntityStat, {PhysEnemyAttackType, -20, 5, 10}};
+size_t TestEnemyCount = 2;
+const struct EnemyInfo TestEnemies[] = {
+  {MaximumEntityStat, {PhysEnemyAttackType, -20, 20, 35}},
+  {MaximumEntityStat, {MagEnemyAttackType, -10, 5, 10}}
+};
 
 bool SetupBackend(struct GameInfo *info) {
   if (!info) {
@@ -120,6 +124,28 @@ static uint_fast8_t MapInputIndex(const struct GameState *state, uint_fast8_t in
   return UINT_FAST8_MAX;
 }
 
+static enum InputOutcome HandleGameCombat(struct GameState *state) {
+  // TODO: Add PlayerPerformAttack(state, &testEnemy, hand/weapon)
+  if (!state->combatInfo.performingEnemyAttacks) {
+    state->combatInfo.performingEnemyAttacks = true;
+    state->combatInfo.currentEnemyNumber = 0;
+    return GetNextOutputOutcome;
+  }
+
+  if (state->combatInfo.performingEnemyAttacks &&
+      EnemyPerformAttack(state, state->combatInfo.currentEnemyNumber)) {
+    ++state->combatInfo.currentEnemyNumber;
+
+    if (state->combatInfo.currentEnemyNumber == TestEnemyCount) {
+      state->combatInfo.performingEnemyAttacks = false;
+    }
+
+    return GetNextOutputOutcome;
+  }
+
+  return InvalidInputOutcome;
+}
+
 enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState *state,
                                   uint_fast8_t buttonInputIndex, const char *textInput) {
   if (!info || !info->initialised || !state) {
@@ -202,24 +228,27 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
         }
         return GetNextOutputOutcome;
       case GameFightEnemiesOutcome:
-        // TODO: Add PlayerPerformAttack(state, &testEnemy, hand/weapon)
-        if (!EnemyPerformAttack(state, &testEnemy)) {
-          return InvalidInputOutcome;
-        }
-        return GetNextOutputOutcome;
+        return HandleGameCombat(state);
       case QuitGameOutcome:
-        return button.outcome;
+        return QuitGameOutcome;
       default:
         return InvalidInputOutcome;
     }
   } else if (TextScreenInputType == state->inputType && textInput) {
-      if ('\x1B' /* ESC */ == textInput[0] && '\0' == textInput[1]) {
-        state->screenID = state->previousScreenID;
-        return GetNextOutputOutcome;
-      } else if (LoadState(info, state, textInput)) {
-        state->screenID = state->nextScreenID;
-        return GetNextOutputOutcome;
-      }
+    if ('\x1B' /* ESC */ == textInput[0] && '\0' == textInput[1]) {
+      state->screenID = state->previousScreenID;
+      return GetNextOutputOutcome;
+    } else if (LoadState(info, state, textInput)) {
+      state->screenID = state->nextScreenID;
+      return GetNextOutputOutcome;
+    }
+  } else if (NoneScreenInputType == state->inputType) {
+    switch (state->screenID) {
+      case CombatScreen:
+        return HandleGameCombat(state);
+      default:
+        return InvalidInputOutcome;
+    }
   }
 
   return InvalidInputOutcome;

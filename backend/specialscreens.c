@@ -342,7 +342,8 @@ static bool CreatePlayerEquipmentScreen(const struct GameInfo* info, struct Game
 }
 
 
-extern struct EnemyInfo testEnemy;
+// TODO: Remove
+extern const struct EnemyInfo TestEnemies[];
 
 static bool CreateCombatScreen(const struct GameInfo *info, struct GameState *state) {
   (void)info;
@@ -352,9 +353,13 @@ static bool CreateCombatScreen(const struct GameInfo *info, struct GameState *st
     return false;
   }
 
-  state->body = CreateCombatString(state, &testEnemy);
+  state->body = CreateCombatString(state, TestEnemies);
   if (!state->body) {
     return false;
+  }
+
+  if (state->combatInfo.performingEnemyAttacks) {
+    state->inputType = NoneScreenInputType;
   }
 
   return true;

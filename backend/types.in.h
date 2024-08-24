@@ -51,13 +51,14 @@ JSON_ENUM_START(ScreenInputType)
   JSON_ENUM_ITEM(InvalidScreenInputType, 0)
   JSON_ENUM_ITEM(ButtonScreenInputType,  1)
   JSON_ENUM_ITEM(TextScreenInputType,    2)
+  JSON_ENUM_ITEM(NoneScreenInputType,    3)
 JSON_ENUM_END
 
 // InputOutcome is a uint16_t with (0, 65535]
 JSON_ENUM_START(InputOutcome)
   // Can be given to frontend
-  JSON_ENUM_ITEM(InvalidInputOutcome,      0) // Do not use in json or use in screens.c
-  JSON_ENUM_ITEM(GetNextOutputOutcome,     1) // Do not use in json or use in screens.c
+  JSON_ENUM_ITEM(InvalidInputOutcome,      0) // Do not use in json or screens.c
+  JSON_ENUM_ITEM(GetNextOutputOutcome,     1) // Do not use in json or screens.c
   JSON_ENUM_ITEM(QuitGameOutcome,          2)
   // Do not give to frontend
   JSON_ENUM_ITEM(GotoScreenOutcome,        3) // -> GetNextOutput, Needs newScreen field in the same button's json entry
@@ -143,7 +144,7 @@ JSON_ENUM_START(EnemyAttackType)
   JSON_ENUM_ITEM(MagEnemyAttackType,     2)
 JSON_ENUM_END
 
-C_EMIT(#define CombatEventInfoCount (size_t)10)
+C_EMIT(#define CombatEventInfoCount (size_t)8)
 // CombatEventCauser is a uint8_t with [1, 3]
 JSON_ENUM_START(CombatEventCause)
   JSON_ENUM_ITEM(InvalidCombatEventCause, 0)
