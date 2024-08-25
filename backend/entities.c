@@ -1,14 +1,16 @@
-#include <stdbool.h>
-#include <stdint.h>
-#include <string.h>
+#include <stdbool.h> // bool, false, true
+#include <string.h>  // size_t, strlen
+#include <types.h>   // defines: EquipmentTypeCount, MaximumEntityStat, MaximumEntityStatDiff, MinimumEntityStat, MinimumEntityStatDiff, PRIEntityStatDiff
+                     // enums: CombatEventCause, EnemyAttackType
+                     // types: EntityStat, EntityStatDiff, EquipmentType
 
 #include "../frontends/frontend.h"
-#include "entities.h"
-#include "equipment.h"
-#include "game.h"
-#include "stringhelpers.h"
+#include "entities.h"       // structs: CombatEventInfo, EnemyAttackInfo, EnemyInfo, PlayerInfo
+#include "equipment.h"      // struct EquipmentInfo
+#include "game.h"           // struct GameInfo, struct GameState
+#include "stringhelpers.h"  // struct DStr, DStrAppend, DStrNew, DStrPrintf
 
-static EntityStat ApplyPlayerAgility(const struct PlayerInfo *playerInfo, const struct EnemyAttackInfo *attackInfo) {
+static EntityStatDiff ApplyPlayerAgility(const struct PlayerInfo *restrict playerInfo, const struct EnemyAttackInfo *restrict attackInfo) {
   // Performs (agility_max - min(agility_max, max(agility_max, agility))) / (agility_max - agility_min)
   // Turns x in [0, 100] to [0, 1] for the percentage of agility in [min, max]
   // e.g. x <= min -> 0, x half way between min and max -> 0.5, max <= x -> 1
@@ -74,27 +76,31 @@ bool EnemyPerformAttack(struct GameState *state, size_t enemyID) {
   // TODO: Allow enemies to have multiple attacks?
   // TODO: Record outcomes for CreateCombatString
   // TODO: Add crits/some randomness to damage done
+  if (!state || enemyID >= TestEnemyCount) {
+    return false;
+  }
 
   const struct EnemyInfo *enemyInfo = &TestEnemies[enemyID];
-  EntityStatDiff damage = ApplyPlayerAgility(&state->playerInfo, &enemyInfo->attackInfo);
+  EntityStatDiff dodgedDamage = ApplyPlayerAgility(&state->playerInfo, &enemyInfo->attackInfo);
+  EntityStatDiff absorbedDamage = dodgedDamage;
 
   switch (enemyInfo->attackInfo.type) {
     case PhysEnemyAttackType:
-      damage += state->playerInfo.physDef;
+      absorbedDamage += state->playerInfo.physDef;
       break;
     case MagEnemyAttackType:
-      damage += state->playerInfo.magDef;
+      absorbedDamage += state->playerInfo.magDef;
       break;
     default:
       PrintError("Attacking enemy has an invalid attack type");
       return false;
   }
 
-  if(damage >= 0) {
-    return true;
+  if (0 < absorbedDamage) {
+    absorbedDamage = 0;
   }
 
-  ModifyPlayerStat(&state->playerInfo.health, damage);
+  ModifyPlayerStat(&state->playerInfo.health, absorbedDamage);
 
   // TODO: Use ssize_t to avoid this?
   if (state->combatInfo.lastCombatEventInfoID == 0) {
@@ -106,8 +112,9 @@ bool EnemyPerformAttack(struct GameState *state, size_t enemyID) {
   ];
   // TODO: Mention dodging and armor absorption
   eventInfo->cause = EnemyCombatEventCause;
-  eventInfo->damage = damage;
+  eventInfo->damage = absorbedDamage;
   eventInfo->enemyID = enemyID;
+  eventInfo->playerAbsorbed = dodgedDamage < absorbedDamage;
 
   return true;
 }
@@ -115,7 +122,7 @@ bool EnemyPerformAttack(struct GameState *state, size_t enemyID) {
 #define LINE_ENDING ".\n"
 #define LOG_LINE_START "⬤ " // Black Large Circle
 
-const char *CreateCombatString(struct GameState *state, const struct EnemyInfo *enemies) {
+const char *CreateCombatString(struct GameState *state, size_t enemyCount, const struct EnemyInfo *enemies) {
   if (!state || !enemies) {
     return NULL;
   }
@@ -139,41 +146,85 @@ const char *CreateCombatString(struct GameState *state, const struct EnemyInfo *
   //   }
   // }
 
-  // TODO: Mention magic attacks
-  // TODO: Mention rest turns for stamina recovery
-  // for (size_t i = 0; i < enemyCount; ++i) {
-  // size_t i = 0;
-  //   if (EnemyIAttackedPlayer) {
-  //     DStrPrintf(str, "Enemy %zu swung at you with their sword", i);
-  //     if (PlayerDodgedEnemyIAttack) {
-  //       DStrAppend(str, "but you dodged" LINE_ENDING);
-  //     } else if (PlayerFailedToDodgeEnemyIAttack) {
-  //       DStrAppend(str, ", you tried to dodge but they still managed to hit you" LINE_ENDING);
-  //     } else {
-  //       DStrAppend(str, "and managed to hit you" LINE_ENDING);
-  //     }
-  //     if (!PlayerDodgedEnemyIAttack) {
-  //     }
-  //   }
-  // }
+  size_t eventID = state->combatInfo.lastCombatEventInfoID;
+  struct CombatEventInfo *event;
 
-  // DStrAppend(str, "\n");
+  // combatEventInfo order:
+  // 0: Enemy n - 1 event
+  // ...
+  // n - 1: Enemy 1 event
+  // n: Enemy 0 event
+  // n + 1: Player event(s)
+  // ...
+  // If an enemy is dead, no event will exist for them
+  // Listed IDs are the i in (lastCombatEventInfoID + i) % CombatEventInfoCount
+  // TODO: Add rest turns for stamina recovery
+  // TODO: Reorder as 0 to n - 1?
+  // NOTE: This will show all events in the log until player events are actually a thing, not worth fixing
+  for (size_t i = 0; i < CombatEventInfoCount; ++i) {
+    event = &state->combatInfo.combatEventInfo[
+      (eventID + i) % CombatEventInfoCount
+    ];
+    if (event->cause != EnemyCombatEventCause) {
+      break;
+    }
+    const struct EnemyInfo *enemy = &enemies[event->enemyID];
+    DStrPrintf(str, "Enemy %zu ", event->enemyID + 1);
+    switch (enemy->attackInfo.type) {
+      case PhysEnemyAttackType:
+        // TODO: Allow enemies to have different kinds of physical attacks
+        bool playerPartiallyDodged = state->playerInfo.agility > enemy->attackInfo.minDodgeAgility;
+        bool playerFullyDodged = state->playerInfo.agility >= enemy->attackInfo.maxDodgeAgility;
+        // full dodge, no/partial/full absorb
+        if (playerFullyDodged) {
+          DStrAppend(str, "tried to attack");
+        } else {
+          DStrAppend(str, "attacked");
+        }
+        DStrAppend(str, " you with their sword");
+        // full dodge, no/partial/full absorb
+        if (playerFullyDodged) {
+          DStrAppend(str, " but missed");
+        // no/partial dodge, full absorb
+        } else if (event->playerAbsorbed && event->damage == 0) {
+          DStrAppend(str, " but your armor absorbed the impact");
+        // partial dodge, no absorb
+        } else if (playerPartiallyDodged && !event->playerAbsorbed) {
+          DStrAppend(str, ", you tried to dodge but were still hit");
+        // partial dodge, partial absorb. playerPartiallyDodged would be enough but this is better for clarity
+        } else if (playerPartiallyDodged && event->playerAbsorbed) {
+          DStrAppend(str, ", you tried to dodge but were still hit with your armor softening the blow");
+        // no dodge, partial absorb. event->playerAbsorbed would again be enough
+        } else if (!playerPartiallyDodged && event->playerAbsorbed) {
+          DStrAppend(str, " but your armor softened the blow");
+        }
+        break;
+      case MagEnemyAttackType:
+        // TODO: Repeat the above attack reporting for magic attacks
+        // TODO: Support multiple types of magic
+        DStrAppend(str, "launched a fireball at you");
+        break;
+      case InvalidEnemyAttackType:
+        PrintError("Recorded combat event involved an invalid attack type");
+        return NULL;
+    }
+    DStrAppend(str, LINE_ENDING);
+  }
 
   char bar[] = "██████████";
   size_t blockSize = strlen("█");
 
   uint_fast8_t playerHealthBarCount = (state->playerInfo.health + 9) / 10;
   uint_fast8_t playerStaminaBarCount = (state->playerInfo.stamina + 9) / 10;
-  DStrPrintf(str, "Your Health:  %.*s%*s : %3i%%\n",
+  DStrPrintf(str, "\nYour Health:  %.*s%*s : %3i%%\n",
     playerHealthBarCount * blockSize, bar, 10 - playerHealthBarCount, "", state->playerInfo.health
   );
   DStrPrintf(str, "Your Stamina: %.*s%*s : %3i%%\n\n",
     playerStaminaBarCount * blockSize, bar, 10 - playerStaminaBarCount, "", state->playerInfo.stamina
   );
 
-  // TODO: Support multiple enemies
   // TODO: Add enemy stamina
-  for (size_t i = 0; i < TestEnemyCount; ++i) {
+  for (size_t i = 0; i < enemyCount; ++i) {
     int enemyHealthBarCount = (enemies[i].health + 9) / 10;
     // int enemyStaminaBarCount = (enemyIStamina + 9) / 10;
     DStrPrintf(str, "Enemy %zu Health: %.*s%*s : %3i%%\n", i + 1,
@@ -184,32 +235,48 @@ const char *CreateCombatString(struct GameState *state, const struct EnemyInfo *
     // );
   }
 
-  size_t eventInfoID = state->combatInfo.lastCombatEventInfoID;
-  struct CombatEventInfo *eventInfo = &state->combatInfo.combatEventInfo[eventInfoID];
-  if (eventInfo->cause != UnusedCombatEventCause) {
+  event = &state->combatInfo.combatEventInfo[eventID];
+
+  if (event->cause != UnusedCombatEventCause) {
     DStrAppend(str, "\nCombat log:\n");
 
+    // TODO: Don't show 0 damage events?
+    // TODO: Switch to a for loop like the one for last round reporting
     do {
-      switch (eventInfo->cause) {
+      switch (event->cause) {
         case PlayerCombatEventCause:
+          // TODO: Record attack type for player
           DStrPrintf(str, LOG_LINE_START "You did %" PRIEntityStatDiff " damage to enemy %zu\n",
-                     -eventInfo->damage, eventInfo->enemyID + 1);
+                     -event->damage, event->enemyID + 1);
           break;
-        case EnemyCombatEventCause:
-          DStrPrintf(str, LOG_LINE_START "Enemy %zu did %" PRIEntityStatDiff " damage to you\n",
-                     eventInfo->enemyID + 1, -eventInfo->damage);
+        case EnemyCombatEventCause: ;
+          DStrPrintf(str, LOG_LINE_START "Enemy %zu did %" PRIEntityStatDiff " ",
+                     event->enemyID + 1, -event->damage);
+          switch (enemies[event->enemyID].attackInfo.type) {
+            case PhysEnemyAttackType:
+              DStrAppend(str, "physical");
+              break;
+            case MagEnemyAttackType:
+              DStrAppend(str, "magic");
+              break;
+            case InvalidEnemyAttackType:
+              PrintError("Recorded combat event involved an invalid attack type");
+              return NULL;
+          }
+          DStrAppend(str, " damage to you\n");
           break;
+        // TODO: Replace default with Invalid and Unused cases
         default:
           PrintError("Recorded combat event was caused by an invalid entity");
           return NULL;
       }
 
-      eventInfoID = (eventInfoID + 1) % CombatEventInfoCount;
-      eventInfo = &state->combatInfo.combatEventInfo[eventInfoID];
-      if (eventInfoID == state->combatInfo.lastCombatEventInfoID) {
+      eventID = (eventID + 1) % CombatEventInfoCount;
+      event = &state->combatInfo.combatEventInfo[eventID];
+      if (eventID == state->combatInfo.lastCombatEventInfoID) {
         break;
       }
-    } while (eventInfo->cause != UnusedCombatEventCause);
+    } while (event->cause != UnusedCombatEventCause);
   }
 
   if (state->combatInfo.performingEnemyAttacks) {

@@ -343,6 +343,7 @@ static bool CreatePlayerEquipmentScreen(const struct GameInfo* info, struct Game
 
 
 // TODO: Remove
+extern size_t TestEnemyCount;
 extern const struct EnemyInfo TestEnemies[];
 
 static bool CreateCombatScreen(const struct GameInfo *info, struct GameState *state) {
@@ -353,10 +354,15 @@ static bool CreateCombatScreen(const struct GameInfo *info, struct GameState *st
     return false;
   }
 
-  state->body = CreateCombatString(state, TestEnemies);
+  state->body = CreateCombatString(state, TestEnemyCount, TestEnemies);
   if (!state->body) {
     return false;
   }
+
+  // TODO: Allow changing weapons during combat
+  // TODO: Add health, stamina potions
+  // TODO: Fix player stats going back to the room screen instead of the combat one. Change outcome to go to last screen instead of a specific one?
+  // TODO: List one attack button per enemy
 
   if (state->combatInfo.performingEnemyAttacks) {
     state->inputType = NoneScreenInputType;

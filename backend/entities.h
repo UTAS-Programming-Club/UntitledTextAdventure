@@ -1,10 +1,11 @@
 #ifndef PCGAME_ENTITIES_H
 #define PCGAME_ENTITIES_H
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <string.h>
-#include <types.h>
+#include <stdbool.h> // bool
+#include <stddef.h>  // size_t
+#include <types.h>   // defines: EquipmentCount, EquipmentTypeCount
+                     // enums: CombatEventCause, EnemyAttackType
+                     // types: EntityStat, EntityStatDiff, EquipmentID
 
 // Game.h predefs
 struct GameInfo;
@@ -51,6 +52,7 @@ struct CombatEventInfo {
   enum CombatEventCause cause;
   EntityStatDiff damage;
   size_t enemyID;
+  bool playerAbsorbed; // Only set if cause == EnemyCombatEventCause
 };
 
 // Do not use outside of backend
@@ -67,7 +69,7 @@ bool ModifyPlayerStat(EntityStat *, EntityStatDiff);
 bool RefreshStats(const struct GameInfo *, struct GameState *);
 
 bool EnemyPerformAttack(struct GameState *, size_t);
-const char *CreateCombatString(struct GameState *, const struct EnemyInfo *);
+const char *CreateCombatString(struct GameState *, size_t, const struct EnemyInfo *);
 
 // TODO: Individual attacks enemies can use with status' and stuff idk
 // would have attack list with things like descriptor (blasted, stabbed etc.)

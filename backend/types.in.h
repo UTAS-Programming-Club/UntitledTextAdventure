@@ -124,7 +124,7 @@ C_EMIT(typedef int_fast8_t EntityStatDiff;)
 
 // TODO: Change json to use equipmentType once the sword slots are merged
 // EquipmentType is a uint8_t with [0, EquipmentTypeCount)
-C_EMIT(#define EquipmentTypeCount (EquipmentType)7)
+VALUE_EMIT(EquipmentType, EquipmentTypeCount, 7)
 C_EMIT(typedef uint_fast8_t EquipmentType;)
 
 // EquipmentID is a uint8_t with [0, 62]
