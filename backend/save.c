@@ -367,7 +367,7 @@ const char *SaveState(struct GameState *state) {
     data->unlockedItems[arrIdx] |= unlocked << arrOff;
   }
 
-  for (EquipmentType i = 0; i < EquipmentTypeCount; ++i) {
+  for (enum EquipmentType i = 0; i < EquipmentTypeCount; ++i) {
     // Maps [0, 7*9) = [0, 62] to [1, 63] so 0 can be the invalid value
     EquipmentID id = GetEquippedItemID(&state->playerInfo, i);
     data->equippedItems[i] = InvalidEquipmentID != id ? id + 1 : InvalidEquipmentIDSave;
@@ -399,7 +399,9 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
   state->playerInfo.stamina = data->stamina;
 
   // TODO: Move to combat setup to ensure it resets every time combat is started
-  state->combatInfo.lastCombatEventInfoID = 0;
+  state->combatInfo.lastReadCombatEventInfoID = 0;
+  state->combatInfo.lastWriteCombatEventInfoID = 0;
+  state->combatInfo.performingEnemyAttacks = false;
   for (size_t i = 0; i < CombatEventInfoCount; ++i) {
     state->combatInfo.combatEventInfo[i].cause = UnusedCombatEventCause;
   }
@@ -417,7 +419,7 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
     }
   }
 
-  for (EquipmentType i = 0; i < EquipmentTypeCount; ++i) {
+  for (enum EquipmentType i = 0; i < EquipmentTypeCount; ++i) {
     EquipmentIDSave idSave = data->equippedItems[i];
     EquipmentID id = idSave != InvalidEquipmentIDSave ? idSave - 1 : InvalidEquipmentID;
 
@@ -425,7 +427,7 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
       return false;
     }
   }
-  if (!RefreshStats(info, state)) {
+  if (!RefreshPlayerStats(info, state)) {
     return false;
   }
 
@@ -443,12 +445,14 @@ bool CreateNewState(const struct GameInfo *info, struct GameState *state) {
   }
 
   memcpy(&state->playerInfo, &info->defaultPlayerInfo, sizeof info->defaultPlayerInfo);
-  if (!RefreshStats(info, state)) {
+  if (!RefreshPlayerStats(info, state)) {
     return false;
   }
 
   // TODO: Move to combat setup to ensure it resets every time combat is started
-  state->combatInfo.lastCombatEventInfoID = 0;
+  state->combatInfo.lastReadCombatEventInfoID = 0;
+  state->combatInfo.lastWriteCombatEventInfoID = 0;
+  state->combatInfo.performingEnemyAttacks = false;
   for (size_t i = 0; i < CombatEventInfoCount; ++i) {
     state->combatInfo.combatEventInfo[i].cause = UnusedCombatEventCause;
   }

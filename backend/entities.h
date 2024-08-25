@@ -16,9 +16,12 @@ struct PlayerInfo {
   // TODO: Add other stats that can be impacted by equipment
   EntityStat health;
   EntityStat stamina;
+  // TODO: Decide how agility is increased. Perhaps inverse to armour weight and/or levels
   EntityStat agility;
-  EntityStat physAtk;
-  EntityStat magAtk;
+  EntityStatDiff priPhysAtk;
+  EntityStatDiff priMagAtk;
+  EntityStatDiff secPhysAtk;
+  EntityStatDiff secMagAtk;
   EntityStat physDef;
   EntityStat magDef;
 
@@ -40,7 +43,7 @@ struct EnemyAttackInfo {
 // Do not use outside of backend
 struct EnemyInfo {
   // stats here
-  // bool dead;
+  bool dead;
   EntityStat health;
   struct EnemyAttackInfo attackInfo;
 };
@@ -58,17 +61,19 @@ struct CombatEventInfo {
 // Do not use outside of backend
 struct CombatInfo {
   struct CombatEventInfo combatEventInfo[CombatEventInfoCount];
-  size_t lastCombatEventInfoID;
+  size_t lastReadCombatEventInfoID;
+  size_t lastWriteCombatEventInfoID;
   bool performingEnemyAttacks;
   size_t currentEnemyNumber; // Only set if performingEnemyAttacks == true
 };
 
 
 // Only call for health (if diff ignores others stats) and stamina, other uses of UpdatePlayerStat are reserved for UpdateStats
-bool ModifyPlayerStat(EntityStat *, EntityStatDiff);
-bool RefreshStats(const struct GameInfo *, struct GameState *);
+bool ModifyEntityStat(EntityStat *restrict, EntityStatDiff);
+bool RefreshPlayerStats(const struct GameInfo *, struct GameState *);
 
-bool EnemyPerformAttack(struct GameState *, size_t);
+bool PlayerPerformAttack(const struct GameInfo *restrict, struct GameState *restrict, size_t);
+bool EnemyPerformAttack(struct GameState *restrict, size_t);
 const char *CreateCombatString(struct GameState *, size_t, const struct EnemyInfo *);
 
 // TODO: Individual attacks enemies can use with status' and stuff idk

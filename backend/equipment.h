@@ -12,9 +12,7 @@
 // Never modify after creation
 struct EquipmentInfo {
   char *name;
-  // TODO: Add enum for type (helmet, boots, etc). Is this actually needed?
-
-  // stats
+  enum EquipmentType type;
   EntityStatDiff physAtkMod;
   EntityStatDiff physDefMod;
   EntityStatDiff magAtkMod;
@@ -27,9 +25,9 @@ bool UnlockItem(struct PlayerInfo *, EquipmentID);
 bool CheckItemUnlocked(const struct PlayerInfo *, EquipmentID, bool *);
 
 // Returns InvalidEquipmentID or a valid EquipmentID
-EquipmentID GetEquippedItemID(const struct PlayerInfo *, EquipmentType);
+EquipmentID GetEquippedItemID(const struct PlayerInfo *, enum EquipmentType);
 // Returns NULL or a valid EquipmentInfo
-struct EquipmentInfo *GetEquippedItem(const struct GameInfo *, const struct PlayerInfo *, EquipmentType);
-bool SetEquippedItem(struct PlayerInfo *, EquipmentType, EquipmentID);
+struct EquipmentInfo *GetEquippedItem(const struct GameInfo *, const struct PlayerInfo *, enum EquipmentType);
+bool SetEquippedItem(struct PlayerInfo *, enum EquipmentType, EquipmentID);
 
 #endif // PCGAME_EQUIPMENT_H

@@ -15,8 +15,10 @@
     "health": MaximumEntityStat,
     "stamina": MaximumEntityStat,
     "agility": MinimumEntityStat,
-    "physAtk": MinimumEntityStat,
-    "magAtk": MinimumEntityStat,
+    "priPhysAtk":MinimumEntityStat,
+    "priMagAtk": MinimumEntityStat,
+    "secPhysAtk": MinimumEntityStat,
+    "secMagAtk": MinimumEntityStat,
     "physDef": MinimumEntityStat,
     "magDef": MinimumEntityStat,
     "unlockedEquipment": [
@@ -298,6 +300,7 @@
     ]
   },
   // TODO: Make stats optional
+  // TODO: Remove attack modifiers from non weapons?
   "equipment": [
     // Helmet Items
     {
@@ -305,30 +308,30 @@
       "name": "Nothing",
       "physAtkMod": 0,
       "magAtkMod": 0,
-      "physDefMod": 0,
+      "physDefMod": 7,
       "magDefMod": 0
     },
     {
       // ID: 1
       "name": "Leather Helmet",
-      "physAtkMod": 5,
-      "magAtkMod": 4,
+      "physAtkMod": -5,
+      "magAtkMod": -4,
       "physDefMod": 90,
       "magDefMod": 10
     },
     {
       // ID: 2
       "name": "Something Else",
-      "physAtkMod": 9,
-      "magAtkMod": 79,
+      "physAtkMod": -9,
+      "magAtkMod": -79,
       "physDefMod": 30,
       "magDefMod": 20
     },
     {
       // ID: 3
       "name": "Iron Helmet",
-      "physAtkMod": 9,
-      "magAtkMod": 79,
+      "physAtkMod": -9,
+      "magAtkMod": -79,
       "physDefMod": 30,
       "magDefMod": 20
     },
@@ -351,16 +354,16 @@
     {
       // ID: 10
       "name": "Chainmail",
-      "physAtkMod": 3,
-      "magAtkMod": 20,
+      "physAtkMod": -3,
+      "magAtkMod": -20,
       "physDefMod": 2,
       "magDefMod": 100
     },
     {
       // ID: 11
       "name": "Mythril Vest",
-      "physAtkMod": 3,
-      "magAtkMod": 11,
+      "physAtkMod": -3,
+      "magAtkMod": -11,
       "physDefMod": 2,
       "magDefMod": 1
     },
@@ -384,7 +387,7 @@
     {
       // ID: 19
       "name": "Spiked Gloves",
-      "physAtkMod": 15,
+      "physAtkMod": -15,
       "magAtkMod": 0,
       "physDefMod": 0,
       "magDefMod": 0
@@ -455,7 +458,7 @@
     {
       // ID: 45
       "name": "Fist",
-      "physAtkMod": 5,
+      "physAtkMod": -5,
       "magAtkMod": 0,
       "physDefMod": 0,
       "magDefMod": 0
@@ -463,7 +466,7 @@
     {
       // ID: 46
       "name": "Shotgun",
-      "physAtkMod": 20,
+      "physAtkMod": -20,
       "magAtkMod": 0,
       "physDefMod": 0,
       "magDefMod": 0
@@ -481,7 +484,7 @@
     {
       // ID: 54
       "name": "Fist",
-      "physAtkMod": 5,
+      "physAtkMod": -5,
       "magAtkMod": 0,
       "physDefMod": 0,
       "magDefMod": 0

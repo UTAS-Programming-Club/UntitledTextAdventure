@@ -6,31 +6,31 @@
 #include "equipment.h"
 #include "game.h"
 
-bool UnlockItem(struct PlayerInfo *playerInfo, EquipmentID ID) {
-  if (!playerInfo || EquipmentCount <= ID || InvalidEquipmentID == ID) {
+bool UnlockItem(struct PlayerInfo *player, EquipmentID ID) {
+  if (!player || EquipmentCount <= ID || InvalidEquipmentID == ID) {
     return false;
   }
 
-  playerInfo->unlockedItems[ID] = true;
+  player->unlockedItems[ID] = true;
   return true;
 }
 
-bool CheckItemUnlocked(const struct PlayerInfo *playerInfo, EquipmentID ID, bool *unlocked) {
-  if (!playerInfo || EquipmentCount <= ID || InvalidEquipmentID == ID) {
+bool CheckItemUnlocked(const struct PlayerInfo *player, EquipmentID ID, bool *unlocked) {
+  if (!player || EquipmentCount <= ID || InvalidEquipmentID == ID) {
     return false;
   }
 
-  *unlocked = playerInfo->unlockedItems[ID];
+  *unlocked = player->unlockedItems[ID];
   return true;
 }
 
 
-EquipmentID GetEquippedItemID(const struct PlayerInfo *playerInfo, EquipmentType equipmentType) {
-  if (!playerInfo || EquipmentTypeCount <= equipmentType) {
+EquipmentID GetEquippedItemID(const struct PlayerInfo *player, enum EquipmentType equipmentType) {
+  if (!player || EquipmentTypeCount <= equipmentType) {
     return InvalidEquipmentID;
   }
 
-  EquipmentID id = playerInfo->equippedItems[equipmentType];
+  EquipmentID id = player->equippedItems[equipmentType];
   if (EquipmentCount <= id) {
     return InvalidEquipmentID;
   }
@@ -38,12 +38,12 @@ EquipmentID GetEquippedItemID(const struct PlayerInfo *playerInfo, EquipmentType
   return id;
 }
 
-struct EquipmentInfo *GetEquippedItem(const struct GameInfo *info, const struct PlayerInfo *playerInfo, EquipmentType equipmentType) {
-  if (!info || !info->initialised || !playerInfo || EquipmentTypeCount <= equipmentType) {
+struct EquipmentInfo *GetEquippedItem(const struct GameInfo *info, const struct PlayerInfo *player, enum EquipmentType equipmentType) {
+  if (!info || !info->initialised || !player || EquipmentTypeCount <= equipmentType) {
     return NULL;
   }
 
-  EquipmentID id = GetEquippedItemID(playerInfo, equipmentType);
+  EquipmentID id = GetEquippedItemID(player, equipmentType);
   if (InvalidEquipmentID == id) {
     return NULL;
   }
@@ -51,16 +51,16 @@ struct EquipmentInfo *GetEquippedItem(const struct GameInfo *info, const struct 
   return info->equipment + id;
 }
 
-bool SetEquippedItem(struct PlayerInfo *playerInfo, EquipmentType equipmentType, EquipmentID newID) {
-  if (!playerInfo || EquipmentTypeCount <= equipmentType || EquipmentCount <= newID
+bool SetEquippedItem(struct PlayerInfo *player, enum EquipmentType equipmentType, EquipmentID newID) {
+  if (!player || EquipmentTypeCount <= equipmentType || EquipmentCount <= newID
       || InvalidEquipmentID == newID) {
     return false;
   }
 
-  if (!playerInfo->unlockedItems[newID]) {
+  if (!player->unlockedItems[newID]) {
     return false;
   }
 
-  playerInfo->equippedItems[equipmentType] = newID;
+  player->equippedItems[equipmentType] = newID;
   return true;
 }

@@ -152,21 +152,23 @@ char *LoadGameName(void) {
   return name;
 }
 
-bool LoadDefaultPlayerInfo(struct PlayerInfo *playerInfo) {
-  if (!GameData || !playerInfo) {
+bool LoadDefaultPlayerInfo(struct PlayerInfo *player) {
+  if (!GameData || !player) {
     return false;
   }
 
   cJSON *jsonDefaultPlayerInfo;
   JSON_GETJSONOBJECTERROR(jsonDefaultPlayerInfo, GameData, "defaultPlayerInfo", false);
 
-  JSON_GETNUMBERVALUEERROR(playerInfo->health, jsonDefaultPlayerInfo, "health", false);
-  JSON_GETNUMBERVALUEERROR(playerInfo->stamina, jsonDefaultPlayerInfo, "stamina", false);
-  JSON_GETNUMBERVALUEERROR(playerInfo->agility, jsonDefaultPlayerInfo, "agility", false);
-  JSON_GETNUMBERVALUEERROR(playerInfo->physAtk, jsonDefaultPlayerInfo, "physAtk", false);
-  JSON_GETNUMBERVALUEERROR(playerInfo->magAtk, jsonDefaultPlayerInfo, "magAtk", false);
-  JSON_GETNUMBERVALUEERROR(playerInfo->physDef, jsonDefaultPlayerInfo, "physDef", false);
-  JSON_GETNUMBERVALUEERROR(playerInfo->magDef, jsonDefaultPlayerInfo, "magDef", false);
+  JSON_GETNUMBERVALUEERROR(player->health, jsonDefaultPlayerInfo, "health", false);
+  JSON_GETNUMBERVALUEERROR(player->stamina, jsonDefaultPlayerInfo, "stamina", false);
+  JSON_GETNUMBERVALUEERROR(player->agility, jsonDefaultPlayerInfo, "agility", false);
+  JSON_GETNUMBERVALUEERROR(player->priPhysAtk, jsonDefaultPlayerInfo, "priPhysAtk", false);
+  JSON_GETNUMBERVALUEERROR(player->priMagAtk, jsonDefaultPlayerInfo, "priMagAtk", false);
+  JSON_GETNUMBERVALUEERROR(player->secPhysAtk, jsonDefaultPlayerInfo, "secPhysAtk", false);
+  JSON_GETNUMBERVALUEERROR(player->secMagAtk, jsonDefaultPlayerInfo, "secMagAtk", false);
+  JSON_GETNUMBERVALUEERROR(player->physDef, jsonDefaultPlayerInfo, "physDef", false);
+  JSON_GETNUMBERVALUEERROR(player->magDef, jsonDefaultPlayerInfo, "magDef", false);
 
   cJSON *jsonUnlockedEquipmentArray;
   JSON_GETJSONARRAYERROR(jsonUnlockedEquipmentArray, jsonDefaultPlayerInfo, "unlockedEquipment", false);
@@ -185,7 +187,7 @@ bool LoadDefaultPlayerInfo(struct PlayerInfo *playerInfo) {
     }
     EquipmentID id = cJSON_GetNumberValue(jsonUnlockedEquipment);
 
-    if (!UnlockItem(playerInfo, id)) {
+    if (!UnlockItem(player, id)) {
       return false;
     }
 
@@ -200,7 +202,7 @@ bool LoadDefaultPlayerInfo(struct PlayerInfo *playerInfo) {
   JSON_GETJSONARRAYERROR(jsonEquippedEquipmentArray, jsonDefaultPlayerInfo, "equippedEquipment", false);
 
   // cJSON_ArrayForEach uses int for idx, likely fine as INT_MAX >= 2^15 - 1
-  EquipmentType equipmentType = 0;
+  enum EquipmentType equipmentType = 0;
   cJSON *jsonEquippedEquipment;
   cJSON_ArrayForEach(jsonEquippedEquipment, jsonEquippedEquipmentArray) {
     if (EquipmentTypeCount <= equipmentType) {
@@ -213,7 +215,7 @@ bool LoadDefaultPlayerInfo(struct PlayerInfo *playerInfo) {
     }
     EquipmentID id = cJSON_GetNumberValue(jsonEquippedEquipment);
 
-    if (!SetEquippedItem(playerInfo, equipmentType, id)) {
+    if (!SetEquippedItem(player, equipmentType, id)) {
       return false;
     }
 
@@ -295,6 +297,7 @@ bool LoadGameEquipment(struct EquipmentInfo **equipment) {
       free(equipment);
       return false;
     }
+    currentItem->type = (enum EquipmentType)(i / EquipmentPerTypeCount);
 
     ++i;
     ++currentItem;

@@ -19,9 +19,9 @@ static const struct RoomInfo DefaultRoom = {.type = InvalidRoomType};
 
 // TODO: Remove
 size_t TestEnemyCount = 2;
-const struct EnemyInfo TestEnemies[] = {
-  {MaximumEntityStat, {PhysEnemyAttackType, -20, 20, 35}},
-  {MaximumEntityStat, {MagEnemyAttackType, -10, 5, 10}}
+struct EnemyInfo TestEnemies[] = {
+  {false, MaximumEntityStat, {PhysEnemyAttackType, -20, 20, 35}},
+  {false, MaximumEntityStat, {MagEnemyAttackType, -10, 5, 10}}
 };
 
 bool SetupBackend(struct GameInfo *info) {
@@ -124,9 +124,14 @@ static uint_fast8_t MapInputIndex(const struct GameState *state, uint_fast8_t in
   return UINT_FAST8_MAX;
 }
 
-static enum InputOutcome HandleGameCombat(struct GameState *state) {
-  // TODO: Add PlayerPerformAttack(state, &testEnemy, hand/weapon)
+// TODO: Move to entities.c?
+static enum InputOutcome HandleGameCombat(const struct GameInfo *restrict info, struct GameState *restrict state) {
   if (!state->combatInfo.performingEnemyAttacks) {
+    // TODO: Allow attacking enemies other than the first one
+    if (!PlayerPerformAttack(info, state, 0)) {
+      return InvalidInputOutcome;
+    }
+
     state->combatInfo.performingEnemyAttacks = true;
     state->combatInfo.currentEnemyNumber = 0;
     return GetNextOutputOutcome;
@@ -186,7 +191,7 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
         // eventPercentageChance is (0, 100] so chance must be as well
         uint_fast8_t chance = rand() % MaximumEntityStat + 1;
         if(state->roomInfo->eventPercentageChance > chance) {
-          ModifyPlayerStat(&state->playerInfo.health, state->roomInfo->eventStatChange);
+          ModifyEntityStat(&state->playerInfo.health, state->roomInfo->eventStatChange);
         }
         return GetNextOutputOutcome;
       case GameOpenChestOutcome: ;
@@ -221,14 +226,14 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
           }
 
           if (!SetEquippedItem(&state->playerInfo, button.equipmentType, curID)
-              || !RefreshStats(info, state)) {
+              || !RefreshPlayerStats(info, state)) {
             return InvalidInputOutcome;
           }
           break;
         }
         return GetNextOutputOutcome;
       case GameFightEnemiesOutcome:
-        return HandleGameCombat(state);
+        return HandleGameCombat(info, state);
       case QuitGameOutcome:
         return QuitGameOutcome;
       default:
@@ -245,7 +250,7 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
   } else if (NoneScreenInputType == state->inputType) {
     switch (state->screenID) {
       case CombatScreen:
-        return HandleGameCombat(state);
+        return HandleGameCombat(info, state);
       default:
         return InvalidInputOutcome;
     }

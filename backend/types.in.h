@@ -124,8 +124,16 @@ C_EMIT(typedef int_fast8_t EntityStatDiff;)
 
 // TODO: Change json to use equipmentType once the sword slots are merged
 // EquipmentType is a uint8_t with [0, EquipmentTypeCount)
-VALUE_EMIT(EquipmentType, EquipmentTypeCount, 7)
-C_EMIT(typedef uint_fast8_t EquipmentType;)
+JSON_ENUM_START(EquipmentType)
+  JSON_ENUM_ITEM(HelmetEquipmentType,     0)
+  JSON_ENUM_ITEM(ChestPieceEquipmentType, 1)
+  JSON_ENUM_ITEM(GlovesEquipmentType,     2)
+  JSON_ENUM_ITEM(PantsEquipmentType,      3)
+  JSON_ENUM_ITEM(BootsEquipmentType,      4)
+  JSON_ENUM_ITEM(PriWeapEquipmentType,    5)
+  JSON_ENUM_ITEM(SecWeapEquipmentType,    6)
+  JSON_ENUM_ITEM(EquipmentTypeCount,      7)
+JSON_ENUM_END
 
 // EquipmentID is a uint8_t with [0, 62]
 // With 7 types of items, this gives 9 items per type
@@ -144,6 +152,8 @@ JSON_ENUM_START(EnemyAttackType)
   JSON_ENUM_ITEM(MagEnemyAttackType,     2)
 JSON_ENUM_END
 
+// CombatEventInfoCount must be at least max enemy count + 1, ideally a few more than that
+// More than 3 or 4 enemies would likely be difficult to deal with so want at least 5 here
 C_EMIT(#define CombatEventInfoCount (size_t)8)
 // CombatEventCauser is a uint8_t with [1, 3]
 JSON_ENUM_START(CombatEventCause)
