@@ -44,7 +44,7 @@ backend/stringhelpers.h: $(INCDIR)/arena.h
 
 
 # Objects
-$(LIBDIR)/entities.o: backend/entities.c backend/entities.h backend/equipment.h backend/game.h backend/stringhelpers.h frontends/frontend.h | $(LIBDIR)
+$(LIBDIR)/entities.o: backend/entities.c backend/entities.h backend/equipment.h backend/game.h backend/stringhelpers.h frontends/frontend.h $(INCDIR)/types.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 $(LIBDIR)/equipment.o: backend/equipment.c backend/entities.h backend/equipment.h backend/game.h $(INCDIR)/types.h | $(LIBDIR)

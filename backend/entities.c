@@ -107,10 +107,10 @@ bool EnemyPerformAttack(struct GameState *state, size_t enemyID) {
     state->combatInfo.lastCombatEventInfoID = CombatEventInfoCount;
   }
   --state->combatInfo.lastCombatEventInfoID;
+
   struct CombatEventInfo *eventInfo = &state->combatInfo.combatEventInfo[
     state->combatInfo.lastCombatEventInfoID
   ];
-  // TODO: Mention dodging and armor absorption
   eventInfo->cause = EnemyCombatEventCause;
   eventInfo->damage = absorbedDamage;
   eventInfo->enemyID = enemyID;
@@ -168,13 +168,15 @@ const char *CreateCombatString(struct GameState *state, size_t enemyCount, const
     if (event->cause != EnemyCombatEventCause) {
       break;
     }
+
     const struct EnemyInfo *enemy = &enemies[event->enemyID];
+    bool playerPartiallyDodged = state->playerInfo.agility > enemy->attackInfo.minDodgeAgility;
+    bool playerFullyDodged = state->playerInfo.agility >= enemy->attackInfo.maxDodgeAgility;
+
     DStrPrintf(str, "Enemy %zu ", event->enemyID + 1);
     switch (enemy->attackInfo.type) {
       case PhysEnemyAttackType:
         // TODO: Allow enemies to have different kinds of physical attacks
-        bool playerPartiallyDodged = state->playerInfo.agility > enemy->attackInfo.minDodgeAgility;
-        bool playerFullyDodged = state->playerInfo.agility >= enemy->attackInfo.maxDodgeAgility;
         // full dodge, no/partial/full absorb
         if (playerFullyDodged) {
           DStrAppend(str, "tried to attack");
@@ -187,22 +189,43 @@ const char *CreateCombatString(struct GameState *state, size_t enemyCount, const
           DStrAppend(str, " but missed");
         // no/partial dodge, full absorb
         } else if (event->playerAbsorbed && event->damage == 0) {
-          DStrAppend(str, " but your armor absorbed the impact");
+          DStrAppend(str, " but your armour absorbed the impact");
         // partial dodge, no absorb
         } else if (playerPartiallyDodged && !event->playerAbsorbed) {
           DStrAppend(str, ", you tried to dodge but were still hit");
         // partial dodge, partial absorb. playerPartiallyDodged would be enough but this is better for clarity
         } else if (playerPartiallyDodged && event->playerAbsorbed) {
-          DStrAppend(str, ", you tried to dodge but were still hit with your armor softening the blow");
+          DStrAppend(str, ", you tried to dodge but were still hit with your armour softening the blow");
         // no dodge, partial absorb. event->playerAbsorbed would again be enough
         } else if (!playerPartiallyDodged && event->playerAbsorbed) {
-          DStrAppend(str, " but your armor softened the blow");
+          DStrAppend(str, " but your armour softened the blow");
         }
         break;
       case MagEnemyAttackType:
-        // TODO: Repeat the above attack reporting for magic attacks
-        // TODO: Support multiple types of magic
-        DStrAppend(str, "launched a fireball at you");
+        // TODO: Support multiple types of magic attacks
+        // full dodge, no/partial/full absorb
+        if (playerFullyDodged) {
+          DStrAppend(str, "tried to launch");
+        } else {
+          DStrAppend(str, "launched");
+        }
+        DStrAppend(str, " a fireball at you");
+        // full dodge, no/partial/full absorb
+        if (playerFullyDodged) {
+          DStrAppend(str, " but it missed");
+        // no/partial dodge, full absorb
+        } else if (event->playerAbsorbed && event->damage == 0) {
+          DStrAppend(str, " but your armour absorbed the impact");
+        // partial dodge, no absorb
+        } else if (playerPartiallyDodged && !event->playerAbsorbed) {
+          DStrAppend(str, ", you tried to dodge it but were still hit");
+        // partial dodge, partial absorb. playerPartiallyDodged would be enough but this is better for clarity
+        } else if (playerPartiallyDodged && event->playerAbsorbed) {
+          DStrAppend(str, ", you tried to dodge it but were still hit with your armour softening the blow");
+        // no dodge, partial absorb. event->playerAbsorbed would again be enough
+        } else if (!playerPartiallyDodged && event->playerAbsorbed) {
+          DStrAppend(str, " but your armour softened the blow");
+        }
         break;
       case InvalidEnemyAttackType:
         PrintError("Recorded combat event involved an invalid attack type");
