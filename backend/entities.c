@@ -75,7 +75,7 @@ bool RefreshPlayerStats(const struct GameInfo *info, struct GameState *state) {
   state->playerInfo.magDef = MinimumEntityStat;
 
   for (enum EquipmentType i = 0; i < EquipmentTypeCount; ++i) {
-    const struct EquipmentInfo *item = &info->equipment[state->playerInfo.equippedItems[i]];
+    const struct EquipmentInfo *item = GetEquippedItem(info, &state->playerInfo, i);
     if (!item) {
       continue;
     }
@@ -87,11 +87,6 @@ bool RefreshPlayerStats(const struct GameInfo *info, struct GameState *state) {
     if (item->type != SecWeapEquipmentType) {
       ModifyEntityStatDiff(&state->playerInfo.priPhysAtk, item->physAtkMod);
       ModifyEntityStatDiff(&state->playerInfo.priMagAtk,  item->magAtkMod);
-    } else {
-      ModifyEntityStatDiff(&state->playerInfo.priPhysAtk, item->physAtkMod);
-      ModifyEntityStatDiff(&state->playerInfo.priMagAtk,  item->magAtkMod);
-      ModifyEntityStatDiff(&state->playerInfo.secPhysAtk, item->physAtkMod);
-      ModifyEntityStatDiff(&state->playerInfo.secMagAtk,  item->magAtkMod);
     }
     ModifyEntityStat(&state->playerInfo.physDef, item->physDefMod);
     ModifyEntityStat(&state->playerInfo.magDef,  item->magDefMod);
