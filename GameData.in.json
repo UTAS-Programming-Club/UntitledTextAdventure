@@ -290,7 +290,7 @@
         "position": [1, 3],
         "description": "A room with a chest lays before you",
         // TODO: Actually use this
-        "itemContainedID": 11
+        "chestItemID": 11
       },
       {
         "type": CombatRoomType,
