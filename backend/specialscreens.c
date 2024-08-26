@@ -248,6 +248,7 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
   return true;
 }
 
+// TODO: Remove?
 static bool CreatePlayerStatsScreen(const struct GameInfo *info, struct GameState *state) {
   (void)info;
 
@@ -267,8 +268,8 @@ static bool CreatePlayerStatsScreen(const struct GameInfo *info, struct GameStat
                                     "Magic Defence: %" PRIEntityStat,
                              screen.body,
                              state->playerInfo.health, state->playerInfo.stamina,
-                             state->playerInfo.priPhysAtk, state->playerInfo.priMagAtk,
-                             state->playerInfo.secPhysAtk, state->playerInfo.secMagAtk,
+                             -state->playerInfo.priPhysAtk, -state->playerInfo.priMagAtk,
+                             -state->playerInfo.secPhysAtk, -state->playerInfo.secMagAtk,
                              state->playerInfo.physDef, state->playerInfo.magDef
   );
   if (!state->body) {
@@ -334,8 +335,8 @@ static bool CreatePlayerEquipmentScreen(const struct GameInfo* info, struct Game
     "Secondary Weapon: %s\n",
     screen.body,
     state->playerInfo.health, state->playerInfo.stamina,
-    state->playerInfo.priPhysAtk, state->playerInfo.priMagAtk,
-    state->playerInfo.secPhysAtk, state->playerInfo.secMagAtk,
+    -state->playerInfo.priPhysAtk, -state->playerInfo.priMagAtk,
+    -state->playerInfo.secPhysAtk, -state->playerInfo.secMagAtk,
     state->playerInfo.physDef, state->playerInfo.magDef,
     slot0->name, slot1->name, slot2->name, slot3->name,
     slot4->name, slot5->name, slot6->name
