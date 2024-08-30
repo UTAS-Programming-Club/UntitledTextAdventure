@@ -97,7 +97,6 @@ bool RefreshPlayerStats(const struct GameInfo *info, struct GameState *state) {
 extern size_t TestEnemyCount;
 extern struct EnemyInfo TestEnemies[];
 
-// TODO: Use ssize_t to avoid this?
 static size_t DecMod(size_t val, size_t mod) {
   if (val == 0) {
     val = mod;

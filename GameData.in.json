@@ -124,11 +124,6 @@
         },
         // Non-room outcomes
         {
-          "title": "Check Player Stats",
-          "outcome": GotoScreenOutcome,
-          "newScreenID": PlayerStatsScreen
-        },
-        {
           "title": "Change Equipment",
           "outcome": GotoScreenOutcome,
           "newScreenID": PlayerEquipmentScreen
@@ -147,20 +142,6 @@
     },
     {
       // ID: 2
-      "body": "Player Stats",
-      "extraText": "",
-      "customScreenCode": PlayerStatsCustomScreenCode,
-      "inputType": ButtonScreenInputType,
-      "buttons": [
-        {
-          "title": "Return to Game",
-          "outcome": GotoScreenOutcome,
-          "newScreenID": GameScreen
-        }
-      ]
-    },
-    {
-      // ID: 3
       "body": "Enter your password: ",
       "extraText": "",
       "inputType": TextScreenInputType,
@@ -171,7 +152,7 @@
       "nextScreenID": GameScreen
     },
     {
-      // ID: 4
+      // ID: 3
       "body": "Here is your password: \n",
       "extraText": "",
       "customScreenCode": SaveCustomScreenCode,
@@ -185,7 +166,7 @@
       ]
     },
     {
-      // ID: 5
+      // ID: 4
       "body": "Player Equipment",
       "extraText": "",
       "customScreenCode": PlayerEquipmentCustomScreenCode,
@@ -234,7 +215,7 @@
       ]
     },
     {
-      // ID: 6
+      // ID: 5
       "body": "Combat",
       "extraText": "A creature has appeared",
       "customScreenCode": CombatCustomScreenCode,
@@ -244,7 +225,7 @@
         {
           "title": "Check Player Stats",
           "outcome": GotoScreenOutcome,
-          "newScreenID": PlayerStatsScreen
+          "newScreenID": PlayerEquipmentScreen
         },
         {
           "title": "Flee",
@@ -254,7 +235,7 @@
       ]
     },
     {
-      // ID: 7
+      // ID: 6
       "body": "You died.\n\nGoodbye.",
       "extraText": "",
       "inputType": ButtonScreenInputType,

@@ -255,37 +255,6 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
   return true;
 }
 
-// TODO: Remove?
-static bool CreatePlayerStatsScreen(const struct GameInfo *info, struct GameState *state) {
-  (void)info;
-
-  struct GameScreen screen = {0};
-  if (!GetGameScreen(state->screenID, &screen)) {
-    return false;
-  }
-
-  state->body = CreateString(&state->arena, "%s\n\n"
-                                    "Health: %" PRIEntityStat "\n"
-                                    "Stamina: %" PRIEntityStat "\n"
-                                    "Primary Physical Attack: %" PRIEntityStatDiff "\n"
-                                    "Primary Magic Attack: %" PRIEntityStatDiff "\n"
-                                    "Secondary Physical Attack: %" PRIEntityStatDiff "\n"
-                                    "Secondary Magic Attack: %" PRIEntityStatDiff "\n"
-                                    "Physical Defence: %" PRIEntityStat "\n"
-                                    "Magic Defence: %" PRIEntityStat,
-                             screen.body,
-                             state->playerInfo.health, state->playerInfo.stamina,
-                             -state->playerInfo.priPhysAtk, -state->playerInfo.priMagAtk,
-                             -state->playerInfo.secPhysAtk, -state->playerInfo.secMagAtk,
-                             state->playerInfo.physDef, state->playerInfo.magDef
-  );
-  if (!state->body) {
-    return false;
-  }
-
-  return true;
-}
-
 static bool CreateSaveScreen(const struct GameInfo *info, struct GameState *state) {
   (void)info;
 
@@ -307,6 +276,8 @@ static bool CreateSaveScreen(const struct GameInfo *info, struct GameState *stat
   return true;
 }
 
+// TODO: Hide some options or take a turn if in combat
+// TODO: Use bars for PlayerStats and PlayerStatDiffs
 static bool CreatePlayerEquipmentScreen(const struct GameInfo* info, struct GameState* state) {
   struct GameScreen screen = { 0 };
   if (!GetGameScreen(state->screenID, &screen)) {
@@ -375,7 +346,8 @@ static bool CreateCombatScreen(const struct GameInfo *info, struct GameState *st
 
   // TODO: Allow changing weapons during combat
   // TODO: Add health, stamina potions
-  // TODO: Fix player stats going back to the room screen instead of the combat one. Change outcome to go to last screen instead of a specific one?
+  // TODO: Fix player equipment screen going back to the room screen instead of the combat one.
+  //       Change outcome to go to last screen instead of a specific one?
 
   for (uint_fast8_t i = 0; i < state->inputCount; ++i) {
     if (state->inputs[i].outcome != GameFightEnemiesOutcome) {
@@ -416,7 +388,6 @@ static bool CreateCombatScreen(const struct GameInfo *info, struct GameState *st
 bool (*CustomScreenCode[])(const struct GameInfo *, struct GameState *) = {
   CreateMainMenuScreen,
   CreateGameScreen,
-  CreatePlayerStatsScreen,
   CreateSaveScreen,
   CreatePlayerEquipmentScreen,
   CreateCombatScreen
