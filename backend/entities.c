@@ -10,9 +10,6 @@
 #include "game.h"           // struct GameInfo, struct GameState
 #include "stringhelpers.h"  // struct DStr, DStrAppend, DStrNew, DStrPrintf
 
-// TODO: Fix enemy death
-// TODO: Fix player death
-
 static EntityStatDiff ApplyPlayerAgility(const struct PlayerInfo *restrict player, const struct EnemyAttackInfo *restrict attackInfo) {
   // Performs (agility_max - min(agility_max, max(agility_max, agility))) / (agility_max - agility_min)
   // Turns x in [0, 100] to [0, 1] for the percentage of agility in [min, max]
