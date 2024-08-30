@@ -82,7 +82,7 @@
         },
         {
           "title": "Quit Game",
-          "outcome": 2
+          "outcome": QuitGameOutcome
         }
       ]
     },
@@ -250,6 +250,18 @@
           "title": "Flee",
           "outcome": GotoScreenOutcome,
           "newScreenID": GameScreen
+        }
+      ]
+    },
+    {
+      // ID: 7
+      "body": "You died.\n\nGoodbye.",
+      "extraText": "",
+      "inputType": ButtonScreenInputType,
+      "buttons": [
+        {
+          "title": "Return to main menu",
+          "outcome": QuitGameOutcome
         }
       ]
     }
