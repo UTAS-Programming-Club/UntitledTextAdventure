@@ -551,6 +551,9 @@ bool GetGameScreenButton(enum Screen screenID, uint_fast8_t buttonID, struct Gam
   if (invalidOptNumberVal == button->enemyID) {
     return false;
   }
+  else if (button->enemyID != SIZE_MAX) {
+    --button->enemyID; // enemyIDs are 1 indexed in the json to be able to generate using the preprocessor
+  }
 
   return true;
 }

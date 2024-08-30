@@ -387,12 +387,13 @@ static bool CreateCombatScreen(const struct GameInfo *info, struct GameState *st
       return false;
     }
 
-    if (button.enemyID > TestEnemyCount) {
+    if (button.enemyID >= TestEnemyCount) {
       state->inputs[i].visible = false;
       continue;
     }
 
-    state->inputs[i].title = CreateString(&state->arena, "%s%zu", button.title, button.enemyID);
+    state->inputs[i].visible = !TestEnemies[button.enemyID].dead;
+    state->inputs[i].title = CreateString(&state->arena, "%s%zu", button.title, button.enemyID + 1);
     if (!state->inputs[i].title) {
       return false;
     }

@@ -221,7 +221,11 @@ const char *CreateCombatString(struct GameState *state, size_t enemyCount, const
     // TODO: Add rest turns for stamina recovery
     // TODO: Mention magic attacks and other items, splash items?
     if (event->cause == PlayerCombatEventCause) {
-      DStrPrintf(str, "You attacked enemy %i with your sword" LINE_ENDING, event->enemyID + 1);
+      DStrPrintf(str, "You attacked enemy %i with your sword", event->enemyID + 1);
+      if (TestEnemies[event->enemyID].dead) {
+        DStrAppend(str, " and it died");
+      }
+      DStrAppend(str, LINE_ENDING);
       // if (EnemyDodged) {
       //    DStrAppend(str, "but they dodged" LINE_ENDING);
       //  } else if (EnemyFailedToDodge) {

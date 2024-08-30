@@ -125,10 +125,10 @@ static uint_fast8_t MapInputIndex(const struct GameState *state, uint_fast8_t in
 }
 
 // TODO: Move to entities.c?
-static enum InputOutcome HandleGameCombat(const struct GameInfo *restrict info, struct GameState *restrict state) {
+static enum InputOutcome HandleGameCombat(const struct GameInfo *restrict info, struct GameState *restrict state, size_t playerEnemyID) {
   if (!state->combatInfo.performingEnemyAttacks) {
     // TODO: Allow attacking enemies other than the first one
-    if (!PlayerPerformAttack(info, state, 0)) {
+    if (!PlayerPerformAttack(info, state, playerEnemyID)) {
       return InvalidInputOutcome;
     }
 
@@ -137,9 +137,15 @@ static enum InputOutcome HandleGameCombat(const struct GameInfo *restrict info, 
     return GetNextOutputOutcome;
   }
 
-  if (state->combatInfo.performingEnemyAttacks &&
-      EnemyPerformAttack(state, state->combatInfo.currentEnemyNumber)) {
-    ++state->combatInfo.currentEnemyNumber;
+  if (state->combatInfo.performingEnemyAttacks) {
+    size_t *curEnemyID = &state->combatInfo.currentEnemyNumber;
+    while (TestEnemies[*curEnemyID].dead && *curEnemyID < TestEnemyCount) {
+      ++*curEnemyID;
+    }
+    if (*curEnemyID < TestEnemyCount && !EnemyPerformAttack(state, *curEnemyID)) {
+      return InvalidInputOutcome;
+    }
+    ++*curEnemyID;
 
     if (state->combatInfo.currentEnemyNumber == TestEnemyCount) {
       state->combatInfo.performingEnemyAttacks = false;
@@ -233,7 +239,7 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
         }
         return GetNextOutputOutcome;
       case GameFightEnemiesOutcome:
-        return HandleGameCombat(info, state);
+        return HandleGameCombat(info, state, button.enemyID);
       case QuitGameOutcome:
         return QuitGameOutcome;
       default:
@@ -250,7 +256,7 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
   } else if (NoneScreenInputType == state->inputType) {
     switch (state->screenID) {
       case CombatScreen:
-        return HandleGameCombat(info, state);
+        return HandleGameCombat(info, state, SIZE_MAX);
       default:
         return InvalidInputOutcome;
     }
