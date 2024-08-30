@@ -392,6 +392,9 @@ static bool CreateCombatScreen(const struct GameInfo *info, struct GameState *st
       continue;
     }
 
+    // TODO: Disable rather than hide to allow preplaning moves?
+    // Currently if you press multiple buttons at once, the cmd frontend runs them all in order but
+    // if an enemy dies it screws up the button ordering from then on and so causes undesired moves
     state->inputs[i].visible = 0 != TestEnemies[button.enemyID].health;
     state->inputs[i].title = CreateString(&state->arena, "%s%zu", button.title, button.enemyID + 1);
     if (!state->inputs[i].title) {
