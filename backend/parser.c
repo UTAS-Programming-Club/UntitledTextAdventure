@@ -542,9 +542,14 @@ bool GetGameScreenButton(enum Screen screenID, uint_fast8_t buttonID, struct Gam
     return false;
   }
 
-  button->equipmentType = cJSON_GetOptNumberValue(jsonButton, "equipmentSlot", InvalidScreen, invalidOptNumberVal);
+  button->equipmentType = cJSON_GetOptNumberValue(jsonButton, "equipmentSlot", EquipmentTypeCount, invalidOptNumberVal);
   if (invalidOptNumberVal == button->equipmentType) {
-      return false;
+    return false;
+  }
+
+  button->enemyID = cJSON_GetOptNumberValue(jsonButton, "enemyID", SIZE_MAX, invalidOptNumberVal);
+  if (invalidOptNumberVal == button->enemyID) {
+    return false;
   }
 
   return true;

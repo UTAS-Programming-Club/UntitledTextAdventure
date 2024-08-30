@@ -13,7 +13,7 @@
     {                                       \
         "title": "Attack Enemy ",           \
         "outcome": GameFightEnemiesOutcome, \
-        "enemyNumber": X                    \
+        "enemyID": X                        \
     }
 
 #define CONCAT(A, B) A##B

@@ -68,8 +68,8 @@ JSON_ENUM_START(InputOutcome)
   JSON_ENUM_ITEM(GameGoWestOutcome,        7) // -> GetNextOutput, Needs next room to exist in json
   JSON_ENUM_ITEM(GameHealthChangeOutcome,  8) // -> GetNextOutput, Needs percentageChance and healthChange in current room's json entry
   JSON_ENUM_ITEM(GameSwapEquipmentOutcome, 9) // -> GetNextOutput, Needs equipmentSlot field in the same button's json entry
-  JSON_ENUM_ITEM(GameOpenChestOutcome,    10) // -> GetNextOutput, Needs ID of item contained in current room's json entry
-  JSON_ENUM_ITEM(GameFightEnemiesOutcome, 11) // -> GetNextOutput
+  JSON_ENUM_ITEM(GameOpenChestOutcome,    10) // -> GetNextOutput, Needs chestItemID field in current room's json entry
+  JSON_ENUM_ITEM(GameFightEnemiesOutcome, 11) // -> GetNextOutput, Needs enemyID field in same button's json entry
 JSON_ENUM_END
 
 // CustomScreenCode is a uint16_t with [0, 65535)
@@ -90,7 +90,7 @@ JSON_ENUM_START(RoomType)
   // TODO: Change to general stat change room type, support more than one stat?
   JSON_ENUM_ITEM(HealthChangeRoomType,   1)
   // TODO: Readd stat check room type
-  JSON_ENUM_ITEM(CustomChestRoomType,    2)
+  JSON_ENUM_ITEM(CustomChestRoomType,    2) // Needs chestItemID field in same room's json entry
   JSON_ENUM_ITEM(CombatRoomType,         3)
   JSON_ENUM_ITEM(InvalidRoomType,      255)
 JSON_ENUM_END

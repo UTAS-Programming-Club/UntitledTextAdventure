@@ -172,6 +172,9 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
 
   const char *roomInfoStr = "";
   switch (state->roomInfo->type) {
+    case CombatRoomType:
+    case EmptyRoomType:
+      break;
     // TODO: Add other options w/ extra info such as failing etc
     case HealthChangeRoomType:
       roomInfoStr = CreateString(&state->arena, "\n\n%s.", state->roomInfo->eventDescription);
@@ -190,10 +193,9 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
         *pOpenedChest = 2;
       }
       break;
-    default:
-      break;
+    case InvalidRoomType:
+      return false;
   }
-
 
   state->body = CreateString(&state->arena, "%s%" PRIRoomCoord "%s%" PRIRoomCoord "%s%s",
                              bodyBeginning, state->roomInfo->x + 1, bodyMiddle,
@@ -204,12 +206,17 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
 
   for (uint_fast8_t i = 0; i < state->inputCount; ++i) {
     switch (state->inputs[i].outcome) {
+      case GameFightEnemiesOutcome:
+      case GameSwapEquipmentOutcome:
+      case GetNextOutputOutcome:
+      case QuitGameOutcome:
+        break;
       case GotoScreenOutcome: ;
         struct GameScreenButton button = {0};
         if (!GetGameScreenButton(state->screenID, i, &button)) {
           return false;
         }
-        
+
         switch (button.newScreenID) {
           case CombatScreen:
             state->inputs[i].visible = state->roomInfo->type == CombatRoomType;
@@ -240,8 +247,8 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
       case GameOpenChestOutcome:
         state->inputs[i].visible = *pOpenedChest == 0 && state->roomInfo->type == CustomChestRoomType;
         break;
-      default:
-        break;
+      case InvalidInputOutcome:
+        return false;
     }
   }
 
@@ -369,7 +376,27 @@ static bool CreateCombatScreen(const struct GameInfo *info, struct GameState *st
   // TODO: Allow changing weapons during combat
   // TODO: Add health, stamina potions
   // TODO: Fix player stats going back to the room screen instead of the combat one. Change outcome to go to last screen instead of a specific one?
-  // TODO: List one attack button per enemy
+
+  for (uint_fast8_t i = 0; i < state->inputCount; ++i) {
+    if (state->inputs[i].outcome != GameFightEnemiesOutcome) {
+      continue;
+    }
+
+    struct GameScreenButton button = {0};
+    if (!GetGameScreenButton(state->screenID, i, &button)) {
+      return false;
+    }
+
+    if (button.enemyID > TestEnemyCount) {
+      state->inputs[i].visible = false;
+      continue;
+    }
+
+    state->inputs[i].title = CreateString(&state->arena, "%s%zu", button.title, button.enemyID);
+    if (!state->inputs[i].title) {
+      return false;
+    }
+  }
 
   if (state->combatInfo.performingEnemyAttacks) {
     state->inputType = NoneScreenInputType;

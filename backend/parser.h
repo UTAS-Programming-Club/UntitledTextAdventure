@@ -22,8 +22,9 @@ struct GameScreen {
 struct GameScreenButton {
   char *title; // utf-8
   enum InputOutcome outcome;
-  enum Screen newScreenID; // Only set if outcome == GotoScreenOutcome
-  enum EquipmentType equipmentType;
+  enum Screen newScreenID;           // Only set if outcome == GotoScreenOutcome
+  enum EquipmentType equipmentType;  // Only set if outcome == GameSwapEquipmentOutcome
+  size_t enemyID;                    // Only set if outcome == GameFightEnemiesOutcome
 };
 
 bool LoadGameData(char *);
