@@ -328,18 +328,20 @@ const char *CreateCombatString(struct GameState *state, size_t enemyCount, const
 
   // TODO: Add enemy stamina
   for (size_t i = 0; i < enemyCount; ++i) {
-    int enemyHealthBarCount = (enemies[i].health + 9) / 10;
-    // int enemyStaminaBarCount = (enemyIStamina + 9) / 10;
-    DStrPrintf(str, "Enemy %zu Health: %.*s%*s : %3i%%", i + 1,
-      enemyHealthBarCount * blockSize, bar, 10 - enemyHealthBarCount, "", enemies[i].health
-    );
+    DStrPrintf(str, "Enemy %zu ", i + 1);
     if (0 == TestEnemies[i].health) {
-      DStrAppend(str, ", dead");
+      DStrAppend(str, "is dead");
+    } else {
+      int enemyHealthBarCount = (enemies[i].health + 9) / 10;
+      // int enemyStaminaBarCount = (enemies[i].Stamina + 9) / 10;
+      DStrPrintf(str, "Health: %.*s%*s : %3i%%", enemyHealthBarCount * blockSize,
+        bar, 10 - enemyHealthBarCount, "", enemies[i].health
+      );
+      // DStrPrintf(str, "Enemy %zu Stamina: %.*s%*s : %3i%%\n\n", i + 1,
+      //   enemyStaminaBarCount * blockSize, bar, 10 - enemyStaminaBarCount, "", enemies[i].Stamina
+      // );
     }
     DStrAppend(str, "\n");
-    // DStrPrintf(str, "Enemy %zu Stamina: %.*s%*s : %3i%%\n\n",
-    //   enemyStaminaBarCount * blockSize, bar, 10 - enemyStaminaBarCount, "", enemyIStamina
-    // );
   }
 
   eventID = state->combatInfo.lastWriteCombatEventInfoID;
