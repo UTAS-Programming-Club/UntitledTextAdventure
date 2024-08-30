@@ -71,8 +71,8 @@ bool ModifyEntityStat(EntityStat *restrict, EntityStatDiff);
 bool RefreshPlayerStats(const struct GameInfo *, struct GameState *);
 
 bool PlayerPerformAttack(const struct GameInfo *restrict, struct GameState *restrict, size_t);
-bool EnemyPerformAttack(struct GameState *restrict);
-const char *CreateCombatString(struct GameState *, size_t, const struct EnemyInfo *);
+bool EnemyPerformAttack(const struct GameInfo *restrict, struct GameState *restrict);
+const char *CreateCombatString(const struct GameInfo *restrict, struct GameState *restrict);
 
 // TODO: Individual attacks enemies can use with status' and stuff idk
 // would have attack list with things like descriptor (blasted, stabbed etc.)

@@ -27,7 +27,7 @@ bool CreateScreen(struct GameState *state) {
 
   if (state->inputType == ButtonScreenInputType) {
     uint_fast8_t buttonCount = GetGameScreenButtonCount(state->screenID);
-    if (buttonCount == UINT_FAST8_MAX) {
+    if (0 == buttonCount) {
       return false;
     }
     state->inputCount = buttonCount;

@@ -21,11 +21,16 @@ struct GameInfo {
 
   struct PlayerInfo defaultPlayerInfo;
 
+  // TODO: Change to size_t?
   uint_fast8_t floorSize;
   struct RoomInfo *rooms;
 
   // TODO: Require struct to be on heap and then make this an actual array?
   struct EquipmentInfo *equipment; // Length is EquipmentCount
+
+  // TODO: Use enemies per room rather than globally
+  size_t enemyCount;
+  struct EnemyInfo *enemies;
 };
 
 // Never modify after creation

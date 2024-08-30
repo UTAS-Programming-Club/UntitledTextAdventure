@@ -278,6 +278,7 @@ static bool CreateSaveScreen(const struct GameInfo *info, struct GameState *stat
 
 // TODO: Hide some options or take a turn if in combat
 // TODO: Use bars for PlayerStats and PlayerStatDiffs
+// TODO: Show agility
 static bool CreatePlayerEquipmentScreen(const struct GameInfo* info, struct GameState* state) {
   struct GameScreen screen = { 0 };
   if (!GetGameScreen(state->screenID, &screen)) {
@@ -326,11 +327,6 @@ static bool CreatePlayerEquipmentScreen(const struct GameInfo* info, struct Game
   return true;
 }
 
-
-// TODO: Remove
-extern size_t TestEnemyCount;
-extern struct EnemyInfo TestEnemies[];
-
 static bool CreateCombatScreen(const struct GameInfo *info, struct GameState *state) {
   (void)info;
 
@@ -339,7 +335,7 @@ static bool CreateCombatScreen(const struct GameInfo *info, struct GameState *st
     return false;
   }
 
-  state->body = CreateCombatString(state, TestEnemyCount, TestEnemies);
+  state->body = CreateCombatString(info, state);
   if (!state->body) {
     return false;
   }
@@ -359,7 +355,7 @@ static bool CreateCombatScreen(const struct GameInfo *info, struct GameState *st
       return false;
     }
 
-    if (button.enemyID >= TestEnemyCount) {
+    if (button.enemyID >= info->enemyCount) {
       state->inputs[i].visible = false;
       continue;
     }
@@ -367,7 +363,7 @@ static bool CreateCombatScreen(const struct GameInfo *info, struct GameState *st
     // TODO: Disable rather than hide to allow preplaning moves?
     // Currently if you press multiple buttons at once, the cmd frontend runs them all in order but
     // if an enemy dies it screws up the button ordering from then on and so causes undesired moves
-    state->inputs[i].visible = 0 != TestEnemies[button.enemyID].health;
+    state->inputs[i].visible = 0 != info->enemies[button.enemyID].health;
     state->inputs[i].title = CreateString(&state->arena, "%s%zu", button.title, button.enemyID + 1);
     if (!state->inputs[i].title) {
       return false;

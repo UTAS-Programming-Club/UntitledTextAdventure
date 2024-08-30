@@ -93,10 +93,6 @@ bool RefreshPlayerStats(const struct GameInfo *info, struct GameState *state) {
 }
 
 
-// TODO: Remove
-extern size_t TestEnemyCount;
-extern struct EnemyInfo TestEnemies[];
-
 static size_t DecMod(size_t val, size_t mod) {
   if (val == 0) {
     val = mod;
@@ -105,11 +101,11 @@ static size_t DecMod(size_t val, size_t mod) {
 }
 
 bool PlayerPerformAttack(const struct GameInfo *restrict info, struct GameState *restrict state, size_t enemyID) {
-  if (!info || !state || enemyID >= TestEnemyCount) {
+  if (!info || !state || enemyID >= info->enemyCount) {
     return false;
   }
 
-  struct EnemyInfo *enemy = &TestEnemies[enemyID];
+  struct EnemyInfo *enemy = &info->enemies[enemyID];
   if (0 == enemy->health) {
     return false;
   }
@@ -134,7 +130,7 @@ bool PlayerPerformAttack(const struct GameInfo *restrict info, struct GameState 
   return true;
 }
 
-bool EnemyPerformAttack(struct GameState *restrict state) {
+bool EnemyPerformAttack(const struct GameInfo *restrict info, struct GameState *restrict state) {
   // TODO: Allow enemies to have multiple attacks?
   // TODO: Add crits/some randomness to damage done
   if (!state) {
@@ -142,11 +138,11 @@ bool EnemyPerformAttack(struct GameState *restrict state) {
   }
 
   size_t enemyID = state->combatInfo.currentEnemyID;
-  if (enemyID >= TestEnemyCount) {
+  if (enemyID >= info->enemyCount) {
     return false;
   }
 
-  const struct EnemyInfo *enemy = &TestEnemies[enemyID];
+  const struct EnemyInfo *enemy = &info->enemies[enemyID];
   if (0 == enemy->health) {
     return false;
   }
@@ -189,8 +185,8 @@ bool EnemyPerformAttack(struct GameState *restrict state) {
 #define LINE_ENDING ".\n"
 #define LOG_LINE_START "⬤ " // Black Large Circle
 
-const char *CreateCombatString(struct GameState *state, size_t enemyCount, const struct EnemyInfo *enemies) {
-  if (!state || !enemies) {
+const char *CreateCombatString(const struct GameInfo *restrict info, struct GameState *restrict state) {
+  if (!info || !state) {
     return NULL;
   }
 
@@ -220,7 +216,7 @@ const char *CreateCombatString(struct GameState *state, size_t enemyCount, const
     // TODO: Mention magic attacks and other items, splash items?
     if (event->cause == PlayerCombatEventCause) {
       DStrPrintf(str, "You attacked enemy %i with your sword", event->enemyID + 1);
-      if (0 == TestEnemies[event->enemyID].health) {
+      if (0 == info->enemies[event->enemyID].health) {
         DStrAppend(str, " and it died");
       }
       DStrAppend(str, LINE_ENDING);
@@ -241,7 +237,7 @@ const char *CreateCombatString(struct GameState *state, size_t enemyCount, const
         break;
       }
 
-      const struct EnemyInfo *enemy = &enemies[event->enemyID];
+      const struct EnemyInfo *enemy = &info->enemies[event->enemyID];
       bool playerPartiallyDodged = state->playerInfo.agility > enemy->attackInfo.minDodgeAgility;
       bool playerFullyDodged = state->playerInfo.agility >= enemy->attackInfo.maxDodgeAgility;
 
@@ -323,15 +319,15 @@ const char *CreateCombatString(struct GameState *state, size_t enemyCount, const
   );
 
   // TODO: Add enemy stamina
-  for (size_t i = 0; i < enemyCount; ++i) {
+  for (size_t i = 0; i < info->enemyCount; ++i) {
     DStrPrintf(str, "Enemy %zu ", i + 1);
-    if (0 == TestEnemies[i].health) {
+    if (0 == info->enemies[i].health) {
       DStrAppend(str, "is dead");
     } else {
-      int enemyHealthBarCount = (enemies[i].health + 9) / 10;
+      int enemyHealthBarCount = (info->enemies[i].health + 9) / 10;
       // int enemyStaminaBarCount = (enemies[i].Stamina + 9) / 10;
       DStrPrintf(str, "Health: %.*s%*s : %3i%%", enemyHealthBarCount * blockSize,
-        bar, 10 - enemyHealthBarCount, "", enemies[i].health
+        bar, 10 - enemyHealthBarCount, "", info->enemies[i].health
       );
       // DStrPrintf(str, "Enemy %zu Stamina: %.*s%*s : %3i%%\n\n", i + 1,
       //   enemyStaminaBarCount * blockSize, bar, 10 - enemyStaminaBarCount, "", enemies[i].Stamina
@@ -358,7 +354,7 @@ const char *CreateCombatString(struct GameState *state, size_t enemyCount, const
         case EnemyCombatEventCause: ;
           DStrPrintf(str, LOG_LINE_START "Enemy %zu did %" PRIEntityStatDiff " ",
                      event->enemyID + 1, -event->damage);
-          switch (enemies[event->enemyID].attackInfo.type) {
+          switch (info->enemies[event->enemyID].attackInfo.type) {
             case PhysEnemyAttackType:
               DStrAppend(str, "physical");
               break;

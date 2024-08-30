@@ -16,6 +16,22 @@
         "enemyID": X                        \
     }
 
+#define EnemyPhysicalAttack              \
+    {                                    \
+      "attackType": PhysEnemyAttackType, \
+      "attackDamage": -20,               \
+      "attackMinDodgeAgility": 20,       \
+      "attackMaxDodgeAgility": 35        \
+    }
+
+#define EnemyMagicAttack                \
+    {                                   \
+      "attackType": MagEnemyAttackType, \
+      "attackDamage": -10,              \
+      "attackMinDodgeAgility":  5,      \
+      "attackMaxDodgeAgility": 10       \
+    }
+
 #define CONCAT(A, B) A##B
 
 // Based on https://dev.to/sgf4/repeat-macro-in-c-2hh0
@@ -470,5 +486,9 @@
     },
     // IDS: 55 to 62
     REPEAT(NoItem, 8)
+  ],
+  "enemies": [
+    EnemyPhysicalAttack,
+    EnemyMagicAttack
   ]
 }

@@ -17,13 +17,6 @@
 
 static const struct RoomInfo DefaultRoom = {.type = InvalidRoomType};
 
-// TODO: Remove
-size_t TestEnemyCount = 2;
-struct EnemyInfo TestEnemies[] = {
-  {MaximumEntityStat, {PhysEnemyAttackType, -20, 20, 35}},
-  {MaximumEntityStat, {MagEnemyAttackType, -10, 5, 10}}
-};
-
 bool SetupBackend(struct GameInfo *info) {
   if (!info) {
     PrintError("Required game info struct is inaccessable");
@@ -34,7 +27,7 @@ bool SetupBackend(struct GameInfo *info) {
     goto end;
   }
 
-  if (info->rooms || info->equipment) {
+  if (info->rooms || info->equipment || info->enemies) {
     PrintError("Parts of the game info struct are already initialised");
     goto end;
   }
@@ -43,18 +36,18 @@ bool SetupBackend(struct GameInfo *info) {
 
   if (!LoadGameData(dataFile)) {
     PrintError("Failed to load %s", dataFile);
-    goto end;
+    goto unload_data;
   }
 
   info->name = LoadGameName();
   if (!info->name) {
     PrintError("Failed to load game name from %s", dataFile);
-    goto end;
+    goto unload_data;
   }
 
   if (!LoadDefaultPlayerInfo(&info->defaultPlayerInfo)) {
     PrintError("Failed to load default player info from %s", dataFile);
-    goto end;
+    goto unload_data;
   }
 
   if (!LoadGameRooms(&info->floorSize, &info->rooms)) {
@@ -64,10 +57,13 @@ bool SetupBackend(struct GameInfo *info) {
 
   if (!LoadGameEquipment(&info->equipment)) {
     PrintError("Failed to load equipment from %s", dataFile);
-    goto free_rooms;
+    goto free_equipment;
   }
-  
-  // TODO: set up loading enemies from json
+
+  if (!LoadGameEnemies(&info->enemyCount, &info->enemies)) {
+    PrintError("Failed to load enemies from %s", dataFile);
+    goto free_enemies;
+  }
 
   unsigned int currentTimestamp = time(NULL);
   srand(currentTimestamp);
@@ -75,9 +71,22 @@ bool SetupBackend(struct GameInfo *info) {
   info->initialised = true;
   goto end;
 
+free_enemies:
+  free(info->enemies);
+  info->enemyCount = 0;
+  info->enemies = NULL;
+
+free_equipment:
+  free(info->equipment);
+  info->equipment = NULL;
+
 free_rooms:
   free(info->rooms);
+  info->floorSize = 0;
   info->rooms = NULL;
+
+unload_data:
+  UnloadGameData();
 
 end:
   return info->initialised;
@@ -131,10 +140,9 @@ static uint_fast8_t MapInputIndex(const struct GameState *state, uint_fast8_t in
 }
 
 // TODO: Move to entities.c?
-static enum InputOutcome HandleGameCombat(const struct GameInfo *restrict info, struct GameState *restrict state, size_t playerEnemyID) {
+static enum InputOutcome HandleGameCombat(const struct GameInfo *restrict info, struct GameState *restrict state, size_t attackedEnemyID) {
   if (!state->combatInfo.performingEnemyAttacks) {
-    // TODO: Allow attacking enemies other than the first one
-    if (!PlayerPerformAttack(info, state, playerEnemyID)) {
+    if (!PlayerPerformAttack(info, state, attackedEnemyID)) {
       return InvalidInputOutcome;
     }
 
@@ -145,15 +153,15 @@ static enum InputOutcome HandleGameCombat(const struct GameInfo *restrict info, 
 
   if (state->combatInfo.performingEnemyAttacks) {
     size_t *curEnemyID = &state->combatInfo.currentEnemyID;
-    while (0 == TestEnemies[*curEnemyID].health && *curEnemyID < TestEnemyCount) {
+    while (0 == info->enemies[*curEnemyID].health && *curEnemyID < info->enemyCount) {
       ++*curEnemyID;
     }
-    if (*curEnemyID < TestEnemyCount && !EnemyPerformAttack(state)) {
+    if (*curEnemyID < info->enemyCount && !EnemyPerformAttack(info, state)) {
       return InvalidInputOutcome;
     }
     ++*curEnemyID;
 
-    if (*curEnemyID >= TestEnemyCount) {
+    if (*curEnemyID >= info->enemyCount) {
       state->combatInfo.performingEnemyAttacks = false;
     }
 
@@ -297,8 +305,12 @@ void CleanupBackend(struct GameInfo *info) {
   if (info && info->initialised) {
     info->initialised = false;
     free(info->rooms);
+    info->floorSize = 0;
     info->rooms = NULL;
     free(info->equipment);
     info->equipment = NULL;
+    free(info->enemies);
+    info->enemyCount = 0;
+    info->enemies = NULL;
   }
 }
