@@ -152,6 +152,11 @@
                   "type": "integer",
                   "minimum": 0,
                   "maximum": 6
+                },
+                "enemyNumber": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 3
                 }
               }
             }

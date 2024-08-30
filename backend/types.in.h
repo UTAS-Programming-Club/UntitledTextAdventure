@@ -154,6 +154,7 @@ JSON_ENUM_END
 
 // CombatEventInfoCount must be at least max enemy count + 1, ideally a few more than that
 // More than 3 or 4 enemies would likely be difficult to deal with so want at least 5 here
+EMIT(#define MaxEnemyCount 3)
 C_EMIT(#define CombatEventInfoCount (size_t)8)
 // CombatEventCauser is a uint8_t with [1, 3]
 JSON_ENUM_START(CombatEventCause)
