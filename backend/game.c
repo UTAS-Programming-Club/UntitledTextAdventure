@@ -20,8 +20,8 @@ static const struct RoomInfo DefaultRoom = {.type = InvalidRoomType};
 // TODO: Remove
 size_t TestEnemyCount = 2;
 struct EnemyInfo TestEnemies[] = {
-  {false, MaximumEntityStat, {PhysEnemyAttackType, -20, 20, 35}},
-  {false, MaximumEntityStat, {MagEnemyAttackType, -10, 5, 10}}
+  {MaximumEntityStat, {PhysEnemyAttackType, -20, 20, 35}},
+  {MaximumEntityStat, {MagEnemyAttackType, -10, 5, 10}}
 };
 
 bool SetupBackend(struct GameInfo *info) {
@@ -94,6 +94,12 @@ bool UpdateGameState(const struct GameInfo *info, struct GameState *state) {
 
   arena_reset(&state->arena);
 
+  // TODO: Move to input handling
+  if (state->startedGame && 0 == state->playerInfo.health) {
+    state->screenID = PlayerDeathScreen;
+    state->startedGame = false;
+  }
+
   if (!CreateScreen(state)) {
     return false;
   }
@@ -133,21 +139,21 @@ static enum InputOutcome HandleGameCombat(const struct GameInfo *restrict info, 
     }
 
     state->combatInfo.performingEnemyAttacks = true;
-    state->combatInfo.currentEnemyNumber = 0;
+    state->combatInfo.currentEnemyID = 0;
     return GetNextOutputOutcome;
   }
 
   if (state->combatInfo.performingEnemyAttacks) {
-    size_t *curEnemyID = &state->combatInfo.currentEnemyNumber;
-    while (TestEnemies[*curEnemyID].dead && *curEnemyID < TestEnemyCount) {
+    size_t *curEnemyID = &state->combatInfo.currentEnemyID;
+    while (0 == TestEnemies[*curEnemyID].health && *curEnemyID < TestEnemyCount) {
       ++*curEnemyID;
     }
-    if (*curEnemyID < TestEnemyCount && !EnemyPerformAttack(state, *curEnemyID)) {
+    if (*curEnemyID < TestEnemyCount && !EnemyPerformAttack(state)) {
       return InvalidInputOutcome;
     }
     ++*curEnemyID;
 
-    if (state->combatInfo.currentEnemyNumber == TestEnemyCount) {
+    if (*curEnemyID >= TestEnemyCount) {
       state->combatInfo.performingEnemyAttacks = false;
     }
 

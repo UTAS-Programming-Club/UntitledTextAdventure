@@ -114,7 +114,7 @@ bool PlayerPerformAttack(const struct GameInfo *restrict info, struct GameState 
   }
 
   struct EnemyInfo *enemy = &TestEnemies[enemyID];
-  if (enemy->dead) {
+  if (0 == enemy->health) {
     return false;
   }
 
@@ -124,9 +124,6 @@ bool PlayerPerformAttack(const struct GameInfo *restrict info, struct GameState 
   EntityStat originalHealth = enemy->health;
   ModifyEntityStat(&enemy->health, state->playerInfo.priPhysAtk);
   ModifyEntityStat(&enemy->health, state->playerInfo.priMagAtk);
-  if (0 == enemy->health) {
-    enemy->dead = true;
-  }
 
   state->combatInfo.lastWriteCombatEventInfoID =
     DecMod(state->combatInfo.lastWriteCombatEventInfoID, CombatEventInfoCount);
@@ -141,15 +138,20 @@ bool PlayerPerformAttack(const struct GameInfo *restrict info, struct GameState 
   return true;
 }
 
-bool EnemyPerformAttack(struct GameState *restrict state, size_t enemyID) {
+bool EnemyPerformAttack(struct GameState *restrict state) {
   // TODO: Allow enemies to have multiple attacks?
   // TODO: Add crits/some randomness to damage done
-  if (!state || enemyID >= TestEnemyCount) {
+  if (!state) {
+    return false;
+  }
+
+  size_t enemyID = state->combatInfo.currentEnemyID;
+  if (enemyID >= TestEnemyCount) {
     return false;
   }
 
   const struct EnemyInfo *enemy = &TestEnemies[enemyID];
-  if (enemy->dead) {
+  if (0 == enemy->health) {
     return false;
   }
 
@@ -211,7 +213,7 @@ const char *CreateCombatString(struct GameState *state, size_t enemyCount, const
   // n + 1: Player event(s)
   // ...
   // If an enemy is dead, no event will exist for them
-  // Listed IDs are the i in (lastWriteCombatEventInfoID + i) % CombatEventInfoCount
+  // Listed IDs are the i in (lastReadCombatEventInfoID - i) % CombatEventInfoCount
   size_t eventID = DecMod(state->combatInfo.lastReadCombatEventInfoID, CombatEventInfoCount);
   // bool foundPlayerEventID = false;
   const struct CombatEventInfo *event = &state->combatInfo.combatEventInfo[eventID];
@@ -222,7 +224,7 @@ const char *CreateCombatString(struct GameState *state, size_t enemyCount, const
     // TODO: Mention magic attacks and other items, splash items?
     if (event->cause == PlayerCombatEventCause) {
       DStrPrintf(str, "You attacked enemy %i with your sword", event->enemyID + 1);
-      if (TestEnemies[event->enemyID].dead) {
+      if (0 == TestEnemies[event->enemyID].health) {
         DStrAppend(str, " and it died");
       }
       DStrAppend(str, LINE_ENDING);
@@ -328,9 +330,13 @@ const char *CreateCombatString(struct GameState *state, size_t enemyCount, const
   for (size_t i = 0; i < enemyCount; ++i) {
     int enemyHealthBarCount = (enemies[i].health + 9) / 10;
     // int enemyStaminaBarCount = (enemyIStamina + 9) / 10;
-    DStrPrintf(str, "Enemy %zu Health: %.*s%*s : %3i%%\n", i + 1,
+    DStrPrintf(str, "Enemy %zu Health: %.*s%*s : %3i%%", i + 1,
       enemyHealthBarCount * blockSize, bar, 10 - enemyHealthBarCount, "", enemies[i].health
     );
+    if (0 == TestEnemies[i].health) {
+      DStrAppend(str, ", dead");
+    }
+    DStrAppend(str, "\n");
     // DStrPrintf(str, "Enemy %zu Stamina: %.*s%*s : %3i%%\n\n",
     //   enemyStaminaBarCount * blockSize, bar, 10 - enemyStaminaBarCount, "", enemyIStamina
     // );
@@ -383,7 +389,7 @@ const char *CreateCombatString(struct GameState *state, size_t enemyCount, const
   }
 
   if (state->combatInfo.performingEnemyAttacks) {
-    DStrPrintf(str, "\nWaiting for enemy %zu to attack" LINE_ENDING, state->combatInfo.currentEnemyNumber + 1);
+    DStrPrintf(str, "\nWaiting for enemy %zu to attack" LINE_ENDING, state->combatInfo.currentEnemyID + 1);
   }
 
   return str->str;

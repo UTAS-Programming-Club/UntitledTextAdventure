@@ -261,7 +261,8 @@
       "buttons": [
         {
           "title": "Return to main menu",
-          "outcome": QuitGameOutcome
+          "outcome": GotoScreenOutcome,
+          "newScreenID": MainMenuScreen
         }
       ]
     }

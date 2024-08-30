@@ -43,6 +43,7 @@ JSON_ENUM_START(Screen)
   JSON_ENUM_ITEM(SaveScreen,            4)
   JSON_ENUM_ITEM(PlayerEquipmentScreen, 5)
   JSON_ENUM_ITEM(CombatScreen,          6)
+  JSON_ENUM_ITEM(PlayerDeathScreen,     7)
   JSON_ENUM_ITEM(InvalidScreen,     65535)
 JSON_ENUM_END
 

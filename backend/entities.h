@@ -42,8 +42,6 @@ struct EnemyAttackInfo {
 
 // Do not use outside of backend
 struct EnemyInfo {
-  // stats here
-  bool dead;
   EntityStat health;
   struct EnemyAttackInfo attackInfo;
 };
@@ -64,7 +62,7 @@ struct CombatInfo {
   size_t lastReadCombatEventInfoID;
   size_t lastWriteCombatEventInfoID;
   bool performingEnemyAttacks;
-  size_t currentEnemyNumber; // Only set if performingEnemyAttacks == true
+  size_t currentEnemyID; // Only set if performingEnemyAttacks == true
 };
 
 
@@ -73,7 +71,7 @@ bool ModifyEntityStat(EntityStat *restrict, EntityStatDiff);
 bool RefreshPlayerStats(const struct GameInfo *, struct GameState *);
 
 bool PlayerPerformAttack(const struct GameInfo *restrict, struct GameState *restrict, size_t);
-bool EnemyPerformAttack(struct GameState *restrict, size_t);
+bool EnemyPerformAttack(struct GameState *restrict);
 const char *CreateCombatString(struct GameState *, size_t, const struct EnemyInfo *);
 
 // TODO: Individual attacks enemies can use with status' and stuff idk
