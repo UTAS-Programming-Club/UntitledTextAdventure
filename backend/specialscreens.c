@@ -285,13 +285,13 @@ static bool CreatePlayerEquipmentScreen(const struct GameInfo* info, struct Game
     return false;
   }
 
-  struct EquipmentInfo *slot0 = GetEquippedItem(info, &state->playerInfo, HelmetEquipmentType);
-  struct EquipmentInfo *slot1 = GetEquippedItem(info, &state->playerInfo, ChestPieceEquipmentType);
-  struct EquipmentInfo *slot2 = GetEquippedItem(info, &state->playerInfo, GlovesEquipmentType);
-  struct EquipmentInfo *slot3 = GetEquippedItem(info, &state->playerInfo, PantsEquipmentType);
-  struct EquipmentInfo *slot4 = GetEquippedItem(info, &state->playerInfo, BootsEquipmentType);
-  struct EquipmentInfo *slot5 = GetEquippedItem(info, &state->playerInfo, PriWeapEquipmentType);
-  struct EquipmentInfo *slot6 = GetEquippedItem(info, &state->playerInfo, SecWeapEquipmentType);
+  const struct EquipmentInfo *slot0 = GetEquippedItem(info, &state->playerInfo, HelmetEquipmentType);
+  const struct EquipmentInfo *slot1 = GetEquippedItem(info, &state->playerInfo, ChestPieceEquipmentType);
+  const struct EquipmentInfo *slot2 = GetEquippedItem(info, &state->playerInfo, GlovesEquipmentType);
+  const struct EquipmentInfo *slot3 = GetEquippedItem(info, &state->playerInfo, PantsEquipmentType);
+  const struct EquipmentInfo *slot4 = GetEquippedItem(info, &state->playerInfo, BootsEquipmentType);
+  const struct EquipmentInfo *slot5 = GetEquippedItem(info, &state->playerInfo, PriWeapEquipmentType);
+  const struct EquipmentInfo *slot6 = GetEquippedItem(info, &state->playerInfo, SecWeapEquipmentType);
   if (!slot0 || !slot1 || !slot2 || !slot3 || !slot4 || !slot5 || !slot6) {
     return false;
   }

@@ -27,7 +27,7 @@ bool CheckItemUnlocked(const struct PlayerInfo *, EquipmentID, bool *);
 // Returns InvalidEquipmentID or a valid EquipmentID
 EquipmentID GetEquippedItemID(const struct PlayerInfo *, enum EquipmentType);
 // Returns NULL or a valid EquipmentInfo
-struct EquipmentInfo *GetEquippedItem(const struct GameInfo *, const struct PlayerInfo *, enum EquipmentType);
+const struct EquipmentInfo *GetEquippedItem(const struct GameInfo *, const struct PlayerInfo *, enum EquipmentType);
 bool SetEquippedItem(struct PlayerInfo *, enum EquipmentType, EquipmentID);
 
 #endif // PCGAME_EQUIPMENT_H

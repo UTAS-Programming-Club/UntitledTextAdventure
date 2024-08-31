@@ -23,14 +23,14 @@ struct GameInfo {
 
   // TODO: Change to size_t?
   uint_fast8_t floorSize;
-  struct RoomInfo *rooms;
+  const struct RoomInfo *rooms;
 
   // TODO: Require struct to be on heap and then make this an actual array?
-  struct EquipmentInfo *equipment; // Length is EquipmentCount
+  const struct EquipmentInfo *equipment; // Length is EquipmentCount
 
   // TODO: Use enemies per room rather than globally
   size_t enemyCount;
-  struct EnemyInfo *enemies;
+  const struct EnemyInfo *enemies;
 };
 
 // Never modify after creation
@@ -65,17 +65,21 @@ struct GameState {
   const char *body; // utf-8
 
   enum ScreenInputType inputType;
-  uint_fast8_t inputCount;      // Only set if inputType == ButtonScreenInputType
+
+  // Only set if inputType == ButtonScreenInputType
+  uint_fast8_t inputCount;
   // TODO: Make const
-  struct GameInput *inputs;     // Only set if inputType == ButtonScreenInputType
-  enum Screen previousScreenID; // Only set if inputType == TextScreenInputType
-  enum Screen nextScreenID;     // Only set if inputType == TextScreenInputType
+  struct GameInput *inputs;
+
+  // implementation, do not use outside of backend
+  // Only set if inputType == TextScreenInputType
+  enum Screen previousScreenID;
+  enum Screen nextScreenID;
 
   struct PlayerInfo playerInfo;
   struct CombatInfo combatInfo;
   const struct RoomInfo *roomInfo;
   bool startedGame;
-// implementation, do not use outside of backend
   Arena arena;
 
   static_assert(sizeof(unsigned char) == sizeof(uint8_t), "Need 8 bit bytes.");

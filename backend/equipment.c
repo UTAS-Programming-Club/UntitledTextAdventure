@@ -38,7 +38,7 @@ EquipmentID GetEquippedItemID(const struct PlayerInfo *player, enum EquipmentTyp
   return id;
 }
 
-struct EquipmentInfo *GetEquippedItem(const struct GameInfo *info, const struct PlayerInfo *player, enum EquipmentType equipmentType) {
+const struct EquipmentInfo *GetEquippedItem(const struct GameInfo *info, const struct PlayerInfo *player, enum EquipmentType equipmentType) {
   if (!info || !info->initialised || !player || EquipmentTypeCount <= equipmentType) {
     return NULL;
   }

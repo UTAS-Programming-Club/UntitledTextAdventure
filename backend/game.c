@@ -50,20 +50,26 @@ bool SetupBackend(struct GameInfo *info) {
     goto unload_data;
   }
 
-  if (!LoadGameRooms(&info->floorSize, &info->rooms)) {
+  struct RoomInfo *rooms = NULL;
+  if (!LoadGameRooms(&info->floorSize, &rooms)) {
     PrintError("Failed to load rooms from %s", dataFile);
     goto free_rooms;
   }
+  info->rooms = rooms;
 
-  if (!LoadGameEquipment(&info->equipment)) {
+  struct EquipmentInfo *equipment;
+  if (!LoadGameEquipment(&equipment)) {
     PrintError("Failed to load equipment from %s", dataFile);
     goto free_equipment;
   }
+  info->equipment = equipment;
 
-  if (!LoadGameEnemies(&info->enemyCount, &info->enemies)) {
+  struct EnemyInfo *enemies;
+  if (!LoadGameEnemies(&info->enemyCount, &enemies)) {
     PrintError("Failed to load enemies from %s", dataFile);
     goto free_enemies;
   }
+  info->enemies = enemies;
 
   unsigned int currentTimestamp = time(NULL);
   srand(currentTimestamp);
@@ -72,16 +78,16 @@ bool SetupBackend(struct GameInfo *info) {
   goto end;
 
 free_enemies:
-  free(info->enemies);
+  free(enemies);
   info->enemyCount = 0;
   info->enemies = NULL;
 
 free_equipment:
-  free(info->equipment);
+  free(equipment);
   info->equipment = NULL;
 
 free_rooms:
-  free(info->rooms);
+  free(rooms);
   info->floorSize = 0;
   info->rooms = NULL;
 
@@ -304,12 +310,12 @@ void CleanupBackend(struct GameInfo *info) {
   UnloadGameData();
   if (info && info->initialised) {
     info->initialised = false;
-    free(info->rooms);
+    free((void *)info->rooms);
     info->floorSize = 0;
     info->rooms = NULL;
-    free(info->equipment);
+    free((void *)info->equipment);
     info->equipment = NULL;
-    free(info->enemies);
+    free((void *)info->enemies);
     info->enemyCount = 0;
     info->enemies = NULL;
   }
