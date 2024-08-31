@@ -16,22 +16,6 @@
         "enemyID": X                        \
     }
 
-#define EnemyPhysicalAttack        \
-    {                              \
-      "type": PhysEnemyAttackType, \
-      "damage": -20,               \
-      "minDodgeAgility": 20,       \
-      "maxDodgeAgility": 35        \
-    }
-
-#define EnemyMagicAttack          \
-    {                             \
-      "type": MagEnemyAttackType, \
-      "damage": -10,              \
-      "minDodgeAgility":  5,      \
-      "maxDodgeAgility": 10       \
-    }
-
 #define CONCAT(A, B) A##B
 
 // Based on https://dev.to/sgf4/repeat-macro-in-c-2hh0
@@ -323,7 +307,9 @@
       {
         "type": CombatRoomType,
         "position": [1, 4],
-        "description": "You find yourself surrounded"
+        // TODO: Use or remove
+        "description": "You find yourself surrounded",
+        "enemies": [0, 0, 0]
       }
     ]
   },
@@ -488,7 +474,17 @@
     REPEAT(NoItem, 8)
   ],
   "enemyAttacks": [
-    EnemyPhysicalAttack,
-    EnemyMagicAttack
+    {
+      "type": PhysEnemyAttackType,
+      "damage": -20,
+      "minDodgeAgility": 20,
+      "maxDodgeAgility": 35
+    },
+    {
+      "type": MagEnemyAttackType,
+      "damage": -10,
+      "minDodgeAgility":  5,
+      "maxDodgeAgility": 10
+    }
   ]
 }

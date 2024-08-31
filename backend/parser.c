@@ -616,6 +616,25 @@ static bool GetGameRoomData(cJSON *jsonRoom, struct RoomInfo *room) {
     return false;
   }
 
+  if (CombatRoomType == room->type) {
+    cJSON *jsonEnemiesArray;
+    JSON_GETJSONARRAYERROR(jsonEnemiesArray, jsonRoom, "enemies", false);
+
+    room->enemyCount = cJSON_GetArraySize(jsonEnemiesArray);
+    if (0 == room->enemyCount || MaxEnemyCount < room->enemyCount) {
+      return false;
+    }
+
+    room->enemies = malloc(room->enemyCount * sizeof *room->enemies);
+    if (!room->enemies) {
+      return false;
+    }
+
+    for (size_t i = 0; i < room->enemyCount; ++i) {
+      JSON_GETJSONARRAYITEMNUMBERERROR(room->enemies[i], jsonEnemiesArray, i, false);
+    }
+  }
+
   return true;
 }
 

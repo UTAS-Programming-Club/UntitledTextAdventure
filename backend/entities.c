@@ -101,7 +101,7 @@ static size_t DecMod(size_t val, size_t mod) {
 }
 
 // TODO: Set inCombat to false when leaving combat
-bool StartCombat(const struct GameInfo *restrict info, struct GameState *restrict state) {
+bool StartCombat(const struct GameInfo *info, struct GameState *state) {
   if (!info || !state) {
     return false;
   }
@@ -115,12 +115,11 @@ bool StartCombat(const struct GameInfo *restrict info, struct GameState *restric
   state->combatInfo.lastWriteCombatEventInfoID = 0;
   state->combatInfo.performingEnemyAttacks = false;
 
-  // TODO: Allow picking enemy types in json per combat room
-  state->combatInfo.enemyCount = info->enemyAttackCount;
+  state->combatInfo.enemyCount = state->roomInfo->enemyCount;
   for (size_t i = 0; i < state->combatInfo.enemyCount; ++i) {
     struct EnemyInfo *enemy = &state->combatInfo.enemies[i];
     enemy->health = MaximumEntityStat;
-    enemy->attackID = i;
+    enemy->attackID = state->roomInfo->enemies[i];
   }
 
   return true;

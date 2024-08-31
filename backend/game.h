@@ -54,6 +54,11 @@ struct RoomInfo {
   const char *eventDescription; // utf-8
   uint_fast8_t eventPercentageChance;
   EntityStatDiff eventStatChange;
+
+  // Only set if type == CombatRoomType
+  // TODO: Add actual enemy info with defence and other fields
+  size_t enemyCount;
+  size_t *enemies; // IDs into GameInfo.enemyAttacks
 };
 
 // Always make this const when possible to avoid accidental modification
@@ -79,6 +84,8 @@ struct GameState {
   struct PlayerInfo playerInfo;
   struct CombatInfo combatInfo;
   // TODO: Rename to currentRoom?
+  // TODO: Change to size_t, this makes uses of restrict wrong.
+  // The only reason it doesn't cause issues is because the contents are never changed
   const struct RoomInfo *roomInfo;
   bool startedGame;
   Arena arena;

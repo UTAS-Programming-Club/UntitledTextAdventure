@@ -134,6 +134,7 @@ JSON_ENUM_START(EquipmentType)
   JSON_ENUM_ITEM(EquipmentTypeCount,      7)
 JSON_ENUM_END
 
+// TODO: Just use size_t and have a uint8_t for saving?
 // EquipmentID is a uint8_t with [0, 62]
 // With 7 types of items, this gives 9 items per type
 // Equipment types: helmets, chest pieces, gloves, pants, boots, primary weapon, secondary weapon
