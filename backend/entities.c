@@ -100,12 +100,38 @@ static size_t DecMod(size_t val, size_t mod) {
   return val - 1;
 }
 
-bool PlayerPerformAttack(const struct GameInfo *restrict info, struct GameState *restrict state, size_t enemyID) {
-  if (!info || !state || enemyID >= info->enemyCount) {
+// TODO: Set inCombat to false when leaving combat
+bool StartCombat(const struct GameInfo *restrict info, struct GameState *restrict state) {
+  if (!info || !state) {
     return false;
   }
 
-  struct EnemyInfo *enemy = &info->enemies[enemyID];
+  state->combatInfo.inCombat = true;
+
+  for (size_t i = 0; i < CombatEventInfoCount; ++i) {
+    state->combatInfo.combatEventInfo[i].cause = UnusedCombatEventCause;
+  }
+  state->combatInfo.lastReadCombatEventInfoID = 0;
+  state->combatInfo.lastWriteCombatEventInfoID = 0;
+  state->combatInfo.performingEnemyAttacks = false;
+
+  // TODO: Allow picking enemy types in json per combat room
+  state->combatInfo.enemyCount = info->enemyAttackCount;
+  for (size_t i = 0; i < state->combatInfo.enemyCount; ++i) {
+    struct EnemyInfo *enemy = &state->combatInfo.enemies[i];
+    enemy->health = MaximumEntityStat;
+    enemy->attackID = i;
+  }
+
+  return true;
+}
+
+bool PlayerPerformAttack(const struct GameInfo *restrict info, struct GameState *restrict state, size_t enemyID) {
+  if (!info || !state || enemyID >= state->combatInfo.enemyCount) {
+    return false;
+  }
+
+  struct EnemyInfo *enemy = &state->combatInfo.enemies[enemyID];
   if (0 == enemy->health) {
     return false;
   }
@@ -133,24 +159,21 @@ bool PlayerPerformAttack(const struct GameInfo *restrict info, struct GameState 
 bool EnemyPerformAttack(const struct GameInfo *restrict info, struct GameState *restrict state) {
   // TODO: Allow enemies to have multiple attacks?
   // TODO: Add crits/some randomness to damage done
-  if (!state) {
+  if (!info || !state) {
     return false;
   }
 
   size_t enemyID = state->combatInfo.currentEnemyID;
-  if (enemyID >= info->enemyCount) {
-    return false;
-  }
-
-  const struct EnemyInfo *enemy = &info->enemies[enemyID];
+  const struct EnemyInfo *enemy = &state->combatInfo.enemies[enemyID];
+  const struct EnemyAttackInfo *enemyAttack = &info->enemyAttacks[enemy->attackID];
   if (0 == enemy->health) {
     return false;
   }
 
-  EntityStatDiff dodgedDamage = ApplyPlayerAgility(&state->playerInfo, &enemy->attackInfo);
+  EntityStatDiff dodgedDamage = ApplyPlayerAgility(&state->playerInfo, enemyAttack);
   EntityStatDiff absorbedDamage = dodgedDamage;
 
-  switch (enemy->attackInfo.type) {
+  switch (enemyAttack->type) {
     case PhysEnemyAttackType:
       absorbedDamage += state->playerInfo.physDef;
       break;
@@ -216,7 +239,7 @@ const char *CreateCombatString(const struct GameInfo *restrict info, struct Game
     // TODO: Mention magic attacks and other items, splash items?
     if (event->cause == PlayerCombatEventCause) {
       DStrPrintf(str, "You attacked enemy %i with your sword", event->enemyID + 1);
-      if (0 == info->enemies[event->enemyID].health) {
+      if (0 == state->combatInfo.enemies[event->enemyID].health) {
         DStrAppend(str, " and it died");
       }
       DStrAppend(str, LINE_ENDING);
@@ -237,12 +260,13 @@ const char *CreateCombatString(const struct GameInfo *restrict info, struct Game
         break;
       }
 
-      const struct EnemyInfo *enemy = &info->enemies[event->enemyID];
-      bool playerPartiallyDodged = state->playerInfo.agility > enemy->attackInfo.minDodgeAgility;
-      bool playerFullyDodged = state->playerInfo.agility >= enemy->attackInfo.maxDodgeAgility;
+      const struct EnemyInfo *enemy = &state->combatInfo.enemies[event->enemyID];
+      const struct EnemyAttackInfo *enemyAttack = &info->enemyAttacks[enemy->attackID];
+      bool playerPartiallyDodged = state->playerInfo.agility > enemyAttack->minDodgeAgility;
+      bool playerFullyDodged = state->playerInfo.agility >= enemyAttack->maxDodgeAgility;
 
       DStrPrintf(str, "Enemy %zu ", event->enemyID + 1);
-      switch (enemy->attackInfo.type) {
+      switch (enemyAttack->type) {
         case PhysEnemyAttackType:
           // TODO: Allow enemies to have different kinds of physical attacks
           // full dodge, no/partial/full absorb
@@ -319,18 +343,18 @@ const char *CreateCombatString(const struct GameInfo *restrict info, struct Game
   );
 
   // TODO: Add enemy stamina
-  for (size_t i = 0; i < info->enemyCount; ++i) {
+  for (size_t i = 0; i < state->combatInfo.enemyCount; ++i) {
     DStrPrintf(str, "Enemy %zu ", i + 1);
-    if (0 == info->enemies[i].health) {
+    if (0 == state->combatInfo.enemies[i].health) {
       DStrAppend(str, "is dead");
     } else {
-      int enemyHealthBarCount = (info->enemies[i].health + 9) / 10;
-      // int enemyStaminaBarCount = (enemies[i].Stamina + 9) / 10;
+      int enemyHealthBarCount = (state->combatInfo.enemies[i].health + 9) / 10;
+      // int enemyStaminaBarCount = (state->combatInfo.enemies[i].stamina + 9) / 10;
       DStrPrintf(str, "Health: %.*s%*s : %3i%%", enemyHealthBarCount * blockSize,
-        bar, 10 - enemyHealthBarCount, "", info->enemies[i].health
+        bar, 10 - enemyHealthBarCount, "", state->combatInfo.enemies[i].health
       );
-      // DStrPrintf(str, "Enemy %zu Stamina: %.*s%*s : %3i%%\n\n", i + 1,
-      //   enemyStaminaBarCount * blockSize, bar, 10 - enemyStaminaBarCount, "", enemies[i].Stamina
+      // DStrPrintf(str, "Enemy %zu Stamina: %.*s%*s : %3i%%", i + 1,
+      //   bar, 10 - enemyStaminaBarCount, "", state->combatInfo.enemies[i].stamina
       // );
     }
     DStrAppend(str, "\n");
@@ -354,7 +378,8 @@ const char *CreateCombatString(const struct GameInfo *restrict info, struct Game
         case EnemyCombatEventCause: ;
           DStrPrintf(str, LOG_LINE_START "Enemy %zu did %" PRIEntityStatDiff " ",
                      event->enemyID + 1, -event->damage);
-          switch (info->enemies[event->enemyID].attackInfo.type) {
+          const struct EnemyInfo *enemy = &state->combatInfo.enemies[event->enemyID];
+          switch (info->enemyAttacks[enemy->attackID].type) {
             case PhysEnemyAttackType:
               DStrAppend(str, "physical");
               break;

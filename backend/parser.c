@@ -99,7 +99,7 @@ static inline double cJSON_GetOptNumberValue(const cJSON *const object, const ch
 
 static bool GetGameRoomData(cJSON *, struct RoomInfo *);
 static bool GetGameEquipmentItemData(cJSON *, struct EquipmentInfo *);
-static bool GetGameEnemyData(cJSON *, struct EnemyInfo *);
+static bool GetGameEnemyAttackData(cJSON *, struct EnemyAttackInfo *);
 
 // TODO: Use PrintError for each failure
 
@@ -295,7 +295,7 @@ bool LoadGameEquipment(struct EquipmentInfo **equipment) {
   cJSON *jsonItem;
   cJSON_ArrayForEach(jsonItem, jsonEquipment) {
     if (i >= EquipmentCount || !GetGameEquipmentItemData(jsonItem, currentItem)) {
-      free(equipment);
+      free(*equipment);
       return false;
     }
     currentItem->type = (enum EquipmentType)(i / EquipmentPerTypeCount);
@@ -305,38 +305,40 @@ bool LoadGameEquipment(struct EquipmentInfo **equipment) {
   }
 
   if (EquipmentCount != i) {
+    free(*equipment);
     return false;
   }
 
   return true;
 }
 
-bool LoadGameEnemies(size_t *restrict enemyCount, struct EnemyInfo **enemies) {
-  if (!enemyCount || !enemies) {
+bool LoadGameEnemyAttacks(size_t *restrict enemyAttackCount, struct EnemyAttackInfo **enemyAttacks) {
+  if (!enemyAttackCount || !enemyAttacks) {
     return false;
   }
 
-  cJSON *jsonEnemies;
-  JSON_GETJSONARRAYERROR(jsonEnemies, GameData, "enemies", false);
+  cJSON *jsonEnemyAttacks;
+  JSON_GETJSONARRAYERROR(jsonEnemyAttacks, GameData, "enemyAttacks", false);
 
-  *enemyCount = cJSON_GetArraySize(jsonEnemies);
-  if (0 == *enemyCount) {
+  *enemyAttackCount = cJSON_GetArraySize(jsonEnemyAttacks);
+  if (0 == *enemyAttackCount) {
     return false;
   }
 
-  *enemies = malloc(*enemyCount * sizeof **enemies);
-  if (!*enemies) {
+  *enemyAttacks = malloc(*enemyAttackCount * sizeof **enemyAttacks);
+  if (!*enemyAttacks) {
     return false;
   }
 
   // cJSON_ArrayForEach uses int for idx, likely fine as INT_MAX >= 2^15 - 1
-  struct EnemyInfo *currentEnemy = *enemies;
-  cJSON *jsonEnemy;
-  cJSON_ArrayForEach(jsonEnemy, jsonEnemies) {
-    if (!GetGameEnemyData(jsonEnemy, currentEnemy)) {
+  struct EnemyAttackInfo *currentEnemyAttack = *enemyAttacks;
+  cJSON *jsonEnemyAttack;
+  cJSON_ArrayForEach(jsonEnemyAttack, jsonEnemyAttacks) {
+    if (!GetGameEnemyAttackData(jsonEnemyAttack, currentEnemyAttack)) {
+      free(*enemyAttacks);
       return false;
     }
-    ++currentEnemy;
+    ++currentEnemyAttack;
   };
 
   return true;
@@ -632,16 +634,15 @@ static bool GetGameEquipmentItemData(cJSON *jsonItem, struct EquipmentInfo *item
   return true;
 }
 
-static bool GetGameEnemyData(cJSON *jsonEnemy, struct EnemyInfo *enemy) {
-  if (!jsonEnemy || !enemy) {
+static bool GetGameEnemyAttackData(cJSON *jsonEnemyAttack, struct EnemyAttackInfo *enemyAttack) {
+  if (!jsonEnemyAttack || !enemyAttack) {
     return false;
   }
 
-  enemy->health = MaximumEntityStat;
+  JSON_GETNUMBERVALUEERROR(enemyAttack->type, jsonEnemyAttack, "type", false);
+  JSON_GETNUMBERVALUEERROR(enemyAttack->damage, jsonEnemyAttack, "damage", false);
+  JSON_GETNUMBERVALUEERROR(enemyAttack->minDodgeAgility, jsonEnemyAttack, "minDodgeAgility", false);
+  JSON_GETNUMBERVALUEERROR(enemyAttack->maxDodgeAgility, jsonEnemyAttack, "maxDodgeAgility", false);
 
-  JSON_GETNUMBERVALUEERROR(enemy->attackInfo.type, jsonEnemy, "attackType", false);
-  JSON_GETNUMBERVALUEERROR(enemy->attackInfo.damage, jsonEnemy, "attackDamage", false);
-  JSON_GETNUMBERVALUEERROR(enemy->attackInfo.minDodgeAgility, jsonEnemy, "attackMinDodgeAgility", false);
-  JSON_GETNUMBERVALUEERROR(enemy->attackInfo.maxDodgeAgility, jsonEnemy, "attackMaxDodgeAgility", false);
   return true;
 }

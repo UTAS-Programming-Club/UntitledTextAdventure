@@ -27,7 +27,7 @@ bool SetupBackend(struct GameInfo *info) {
     goto end;
   }
 
-  if (info->rooms || info->equipment || info->enemies) {
+  if (info->rooms || info->equipment || info->enemyAttacks) {
     PrintError("Parts of the game info struct are already initialised");
     goto end;
   }
@@ -60,27 +60,22 @@ bool SetupBackend(struct GameInfo *info) {
   struct EquipmentInfo *equipment;
   if (!LoadGameEquipment(&equipment)) {
     PrintError("Failed to load equipment from %s", dataFile);
-    goto free_equipment;
+    goto free_rooms;
   }
   info->equipment = equipment;
 
-  struct EnemyInfo *enemies;
-  if (!LoadGameEnemies(&info->enemyCount, &enemies)) {
-    PrintError("Failed to load enemies from %s", dataFile);
-    goto free_enemies;
+  struct EnemyAttackInfo *enemyAttacks;
+  if (!LoadGameEnemyAttacks(&info->enemyAttackCount, &enemyAttacks)) {
+    PrintError("Failed to load enemy attacks from %s", dataFile);
+    goto free_equipment;
   }
-  info->enemies = enemies;
+  info->enemyAttacks = enemyAttacks;
 
   unsigned int currentTimestamp = time(NULL);
   srand(currentTimestamp);
 
   info->initialised = true;
   goto end;
-
-free_enemies:
-  free(enemies);
-  info->enemyCount = 0;
-  info->enemies = NULL;
 
 free_equipment:
   free(equipment);
@@ -159,15 +154,15 @@ static enum InputOutcome HandleGameCombat(const struct GameInfo *restrict info, 
 
   if (state->combatInfo.performingEnemyAttacks) {
     size_t *curEnemyID = &state->combatInfo.currentEnemyID;
-    while (0 == info->enemies[*curEnemyID].health && *curEnemyID < info->enemyCount) {
+    while (0 == state->combatInfo.enemies[*curEnemyID].health && *curEnemyID < state->combatInfo.enemyCount) {
       ++*curEnemyID;
     }
-    if (*curEnemyID < info->enemyCount && !EnemyPerformAttack(info, state)) {
+    if (*curEnemyID < state->combatInfo.enemyCount && !EnemyPerformAttack(info, state)) {
       return InvalidInputOutcome;
     }
     ++*curEnemyID;
 
-    if (*curEnemyID >= info->enemyCount) {
+    if (*curEnemyID >= state->combatInfo.enemyCount) {
       state->combatInfo.performingEnemyAttacks = false;
     }
 
@@ -315,8 +310,8 @@ void CleanupBackend(struct GameInfo *info) {
     info->rooms = NULL;
     free((void *)info->equipment);
     info->equipment = NULL;
-    free((void *)info->enemies);
-    info->enemyCount = 0;
-    info->enemies = NULL;
+    free((void *)info->enemyAttacks);
+    info->enemyAttackCount = 0;
+    info->enemyAttacks = NULL;
   }
 }

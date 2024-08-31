@@ -398,14 +398,6 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
   state->playerInfo.health = data->health;
   state->playerInfo.stamina = data->stamina;
 
-  // TODO: Move to combat setup to ensure it resets every time combat is started
-  state->combatInfo.lastReadCombatEventInfoID = 0;
-  state->combatInfo.lastWriteCombatEventInfoID = 0;
-  state->combatInfo.performingEnemyAttacks = false;
-  for (size_t i = 0; i < CombatEventInfoCount; ++i) {
-    state->combatInfo.combatEventInfo[i].cause = UnusedCombatEventCause;
-  }
-
   // TODO: Unroll to multiples of 8?
   for (EquipmentID i = 0; i < EquipmentCount; ++i) {
     uint_fast8_t arrIdx = i / 8;
@@ -447,14 +439,6 @@ bool CreateNewState(const struct GameInfo *info, struct GameState *state) {
   memcpy(&state->playerInfo, &info->defaultPlayerInfo, sizeof info->defaultPlayerInfo);
   if (!RefreshPlayerStats(info, state)) {
     return false;
-  }
-
-  // TODO: Move to combat setup to ensure it resets every time combat is started
-  state->combatInfo.lastReadCombatEventInfoID = 0;
-  state->combatInfo.lastWriteCombatEventInfoID = 0;
-  state->combatInfo.performingEnemyAttacks = false;
-  for (size_t i = 0; i < CombatEventInfoCount; ++i) {
-    state->combatInfo.combatEventInfo[i].cause = UnusedCombatEventCause;
   }
 
   // TODO: Reset state, requires removing main menu state

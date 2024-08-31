@@ -43,7 +43,7 @@ struct EnemyAttackInfo {
 // Do not use outside of backend
 struct EnemyInfo {
   EntityStat health;
-  struct EnemyAttackInfo attackInfo;
+  size_t attackID;
 };
 
 
@@ -58,11 +58,16 @@ struct CombatEventInfo {
 
 // Do not use outside of backend
 struct CombatInfo {
+  bool inCombat;
+
   struct CombatEventInfo combatEventInfo[CombatEventInfoCount];
   size_t lastReadCombatEventInfoID;
   size_t lastWriteCombatEventInfoID;
+
   bool performingEnemyAttacks;
   size_t currentEnemyID; // Only set if performingEnemyAttacks == true
+  size_t enemyCount; // enemyCount <= MaxEnemyCount
+  struct EnemyInfo enemies[MaxEnemyCount];
 };
 
 
@@ -70,6 +75,7 @@ struct CombatInfo {
 bool ModifyEntityStat(EntityStat *restrict, EntityStatDiff);
 bool RefreshPlayerStats(const struct GameInfo *, struct GameState *);
 
+bool StartCombat(const struct GameInfo *restrict, struct GameState *restrict);
 bool PlayerPerformAttack(const struct GameInfo *restrict, struct GameState *restrict, size_t);
 bool EnemyPerformAttack(const struct GameInfo *restrict, struct GameState *restrict);
 const char *CreateCombatString(const struct GameInfo *restrict, struct GameState *restrict);

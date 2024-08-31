@@ -16,20 +16,20 @@
         "enemyID": X                        \
     }
 
-#define EnemyPhysicalAttack              \
-    {                                    \
-      "attackType": PhysEnemyAttackType, \
-      "attackDamage": -20,               \
-      "attackMinDodgeAgility": 20,       \
-      "attackMaxDodgeAgility": 35        \
+#define EnemyPhysicalAttack        \
+    {                              \
+      "type": PhysEnemyAttackType, \
+      "damage": -20,               \
+      "minDodgeAgility": 20,       \
+      "maxDodgeAgility": 35        \
     }
 
-#define EnemyMagicAttack                \
-    {                                   \
-      "attackType": MagEnemyAttackType, \
-      "attackDamage": -10,              \
-      "attackMinDodgeAgility":  5,      \
-      "attackMaxDodgeAgility": 10       \
+#define EnemyMagicAttack          \
+    {                             \
+      "type": MagEnemyAttackType, \
+      "damage": -10,              \
+      "minDodgeAgility":  5,      \
+      "maxDodgeAgility": 10       \
     }
 
 #define CONCAT(A, B) A##B
@@ -487,7 +487,7 @@
     // IDS: 55 to 62
     REPEAT(NoItem, 8)
   ],
-  "enemies": [
+  "enemyAttacks": [
     EnemyPhysicalAttack,
     EnemyMagicAttack
   ]

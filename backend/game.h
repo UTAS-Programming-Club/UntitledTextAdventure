@@ -28,9 +28,8 @@ struct GameInfo {
   // TODO: Require struct to be on heap and then make this an actual array?
   const struct EquipmentInfo *equipment; // Length is EquipmentCount
 
-  // TODO: Use enemies per room rather than globally
-  size_t enemyCount;
-  const struct EnemyInfo *enemies;
+  size_t enemyAttackCount;
+  const struct EnemyAttackInfo *enemyAttacks;
 };
 
 // Never modify after creation
@@ -76,8 +75,10 @@ struct GameState {
   enum Screen previousScreenID;
   enum Screen nextScreenID;
 
+  // TODO: Rename to player and combat?
   struct PlayerInfo playerInfo;
   struct CombatInfo combatInfo;
+  // TODO: Rename to currentRoom?
   const struct RoomInfo *roomInfo;
   bool startedGame;
   Arena arena;
