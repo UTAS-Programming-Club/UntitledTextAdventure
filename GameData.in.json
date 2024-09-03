@@ -9,11 +9,11 @@
       "magDefMod": 0   \
     }
 
-#define AttackButton(X)                     \
-    {                                       \
-        "title": "Attack Enemy ",           \
-        "outcome": GameFightEnemiesOutcome, \
-        "enemyID": X                        \
+#define AttackButton(X)                    \
+    {                                      \
+        "title": "Attack Enemy ",          \
+        "outcome": GameCombatFightOutcome, \
+        "enemyID": X                       \
     }
 
 #define CONCAT(A, B) A##B
@@ -148,7 +148,6 @@
       // TODO: Make dependent on type == ButtonScreenType
       "buttons": [],
       // TODO: Make dependent on type == TextScreenType
-      "previousScreenID": MainMenuScreen,
       "nextScreenID": GameScreen
     },
     {
@@ -209,7 +208,7 @@
         },
         {
           "title": "Return to Game",
-          "outcome": GotoScreenOutcome,
+          "outcome": GotoPreviousScreenOutcome,
           "newScreenID": GameScreen
         }
       ]
@@ -229,7 +228,7 @@
         },
         {
           "title": "Flee",
-          "outcome": GotoScreenOutcome,
+          "outcome": GameCombatFleeOutcome,
           "newScreenID": GameScreen
         }
       ]

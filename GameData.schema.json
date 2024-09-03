@@ -162,11 +162,6 @@
               }
             }
           },
-          "previousScreenID": {
-            "type": "integer",
-            "minimum": 0,
-            "exclusiveMaximum": 65565
-          },
           "nextScreenID": {
             "type": "integer",
             "minimum": 0,

@@ -59,7 +59,7 @@ static void WriteRoomRow(FILE *fp, RoomCoord roomX, RoomCoord roomY, uint_fast8_
       fputs(rowChars[1], fp);
     }
 
-    if (0 == outputRow && GetGameRoom(info, roomX, roomY + 1)->type != InvalidRoomType) {
+    if (0 == outputRow && GetGameRoomID(info, roomX, roomY + 1) != SIZE_MAX) {
       fprintf(fp, HorLine "%*s" HorLine, RoomGridSizeHor - 4, "");
     } else {
       FPrintRep(HorLine, RoomGridSizeHor - 2, fp);
@@ -73,10 +73,10 @@ static void WriteRoomRow(FILE *fp, RoomCoord roomX, RoomCoord roomY, uint_fast8_
 
   // Middle Room Rows
   else {
-    enum RoomType roomExists = GetGameRoom(info, roomX, roomY)->type != InvalidRoomType;
+    enum RoomType roomExists = GetGameRoomID(info, roomX, roomY) != SIZE_MAX;
 
     char *wallChar;
-    if (!roomExists || GetGameRoom(info, roomX - 1, roomY)->type == InvalidRoomType) {
+    if (!roomExists || GetGameRoomID(info, roomX - 1, roomY) == SIZE_MAX) {
       wallChar = VerLine;
     } else if (1 == outputRow) {
       wallChar = UpperHalfVerLine;
@@ -160,8 +160,13 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
     return false;
   }
 
+  const struct RoomInfo *currentRoom = GetCurrentGameRoom(info, state);
+  if (currentRoom->type == InvalidRoomType) {
+    return InvalidInputOutcome;
+  }
+
 #ifdef _DEBUG
-  WriteMap(info, state->roomInfo);
+  WriteMap(info, currentRoom);
 #endif
 
   size_t openedChestVarOffset = GetGameStateOffset(state->screenID, 1);
@@ -171,13 +176,13 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
   uint8_t *pOpenedChest = (uint8_t *)(state->stateData + openedChestVarOffset);
 
   const char *roomInfoStr = "";
-  switch (state->roomInfo->type) {
+  switch (currentRoom->type) {
     case CombatRoomType:
     case EmptyRoomType:
       break;
     // TODO: Add other options w/ extra info such as failing etc
     case HealthChangeRoomType:
-      roomInfoStr = CreateString(&state->arena, "\n\n%s.", state->roomInfo->eventDescription);
+      roomInfoStr = CreateString(&state->arena, "\n\n%s.", currentRoom->eventDescription);
       if (!roomInfoStr) {
         return false;
       }
@@ -198,17 +203,19 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
   }
 
   state->body = CreateString(&state->arena, "%s%" PRIRoomCoord "%s%" PRIRoomCoord "%s%s",
-                             bodyBeginning, state->roomInfo->x + 1, bodyMiddle,
-                             state->roomInfo->y + 1, bodyEnding, roomInfoStr);
+                             bodyBeginning, currentRoom->x + 1, bodyMiddle,
+                             currentRoom->y + 1, bodyEnding, roomInfoStr);
   if (!state->body) {
     return false;
   }
 
   for (uint_fast8_t i = 0; i < state->inputCount; ++i) {
     switch (state->inputs[i].outcome) {
-      case GameFightEnemiesOutcome:
+      case GameCombatFightOutcome:
+      case GameCombatFleeOutcome:
       case GameSwapEquipmentOutcome:
       case GetNextOutputOutcome:
+      case GotoPreviousScreenOutcome:
       case QuitGameOutcome:
         break;
       case GotoScreenOutcome: ;
@@ -219,7 +226,7 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
 
         switch (button.newScreenID) {
           case CombatScreen:
-            state->inputs[i].visible = state->roomInfo->type == CombatRoomType;
+            state->inputs[i].visible = currentRoom->type == CombatRoomType;
             break;
           default:
             break;
@@ -227,25 +234,25 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
         break;
       case GameGoNorthOutcome:
         state->inputs[i].visible =
-          GetGameRoom(info, state->roomInfo->x, state->roomInfo->y + 1)->type != InvalidRoomType;
+          GetGameRoomID(info, currentRoom->x, currentRoom->y + 1) != SIZE_MAX;
         break;
       case GameGoEastOutcome:
         state->inputs[i].visible =
-          GetGameRoom(info, state->roomInfo->x + 1, state->roomInfo->y)->type != InvalidRoomType;
+          GetGameRoomID(info, currentRoom->x + 1, currentRoom   ->y) != SIZE_MAX;
         break;
       case GameGoSouthOutcome:
         state->inputs[i].visible =
-          GetGameRoom(info, state->roomInfo->x, state->roomInfo->y - 1)->type != InvalidRoomType;
+          GetGameRoomID(info, currentRoom->x, currentRoom->y - 1) != SIZE_MAX;
         break;
       case GameGoWestOutcome:
         state->inputs[i].visible =
-          GetGameRoom(info, state->roomInfo->x - 1, state->roomInfo->y)->type != InvalidRoomType;
+          GetGameRoomID(info, currentRoom->x - 1, currentRoom->y) != SIZE_MAX;
         break;
       case GameHealthChangeOutcome:
-        state->inputs[i].visible = state->roomInfo->type == HealthChangeRoomType;
+        state->inputs[i].visible = currentRoom->type == HealthChangeRoomType;
         break;
       case GameOpenChestOutcome:
-        state->inputs[i].visible = *pOpenedChest == 0 && state->roomInfo->type == CustomChestRoomType;
+        state->inputs[i].visible = *pOpenedChest == 0 && currentRoom->type == CustomChestRoomType;
         break;
       case InvalidInputOutcome:
         return false;
@@ -263,7 +270,7 @@ static bool CreateSaveScreen(const struct GameInfo *info, struct GameState *stat
     return false;
   }
 
-  const char *password = SaveState(state);
+  const char *password = SaveState(info, state);
   if (!password) {
     return false;
   }
@@ -350,7 +357,7 @@ static bool CreateCombatScreen(const struct GameInfo *info, struct GameState *st
   //       Change outcome to go to last screen instead of a specific one?
 
   for (uint_fast8_t i = 0; i < state->inputCount; ++i) {
-    if (state->inputs[i].outcome != GameFightEnemiesOutcome) {
+    if (state->inputs[i].outcome != GameCombatFightOutcome) {
       continue;
     }
 

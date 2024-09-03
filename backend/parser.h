@@ -14,7 +14,6 @@ struct GameScreen {
   char *extraText; // utf-8
   enum CustomScreenCode customScreenCodeID;
   enum ScreenInputType inputType;
-  enum Screen previousScreenID; // Only set if inputType == TextScreenInputType
   enum Screen nextScreenID;     // Only set if inputType == TextScreenInputType
 };
 

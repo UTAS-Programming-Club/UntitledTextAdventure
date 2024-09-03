@@ -57,19 +57,21 @@ JSON_ENUM_END
 // InputOutcome is a uint16_t with (0, 65535]
 JSON_ENUM_START(InputOutcome)
   // Can be given to frontend
-  JSON_ENUM_ITEM(InvalidInputOutcome,      0) // Do not use in json or screens.c
-  JSON_ENUM_ITEM(GetNextOutputOutcome,     1) // Do not use in json or screens.c
-  JSON_ENUM_ITEM(QuitGameOutcome,          2)
+  JSON_ENUM_ITEM(InvalidInputOutcome,       0) // Do not use in json or screens.c
+  JSON_ENUM_ITEM(GetNextOutputOutcome,      1) // Do not use in json or screens.c
+  JSON_ENUM_ITEM(QuitGameOutcome,           2)
   // Do not give to frontend
-  JSON_ENUM_ITEM(GotoScreenOutcome,        3) // -> GetNextOutput, Needs newScreen field in the same button's json entry
-  JSON_ENUM_ITEM(GameGoNorthOutcome,       4) // -> GetNextOutput, Needs next room to exist in json
-  JSON_ENUM_ITEM(GameGoEastOutcome,        5) // -> GetNextOutput, Needs next room to exist in json
-  JSON_ENUM_ITEM(GameGoSouthOutcome,       6) // -> GetNextOutput, Needs next room to exist in json
-  JSON_ENUM_ITEM(GameGoWestOutcome,        7) // -> GetNextOutput, Needs next room to exist in json
-  JSON_ENUM_ITEM(GameHealthChangeOutcome,  8) // -> GetNextOutput, Needs percentageChance and healthChange in current room's json entry
-  JSON_ENUM_ITEM(GameSwapEquipmentOutcome, 9) // -> GetNextOutput, Needs equipmentSlot field in the same button's json entry
-  JSON_ENUM_ITEM(GameOpenChestOutcome,    10) // -> GetNextOutput, Needs chestItemID field in current room's json entry
-  JSON_ENUM_ITEM(GameFightEnemiesOutcome, 11) // -> GetNextOutput, Needs enemyID field in same button's json entry
+  JSON_ENUM_ITEM(GotoScreenOutcome,         3) // -> GetNextOutput, Needs newScreen field in the same button's json entry
+  JSON_ENUM_ITEM(GotoPreviousScreenOutcome, 4) // -> GetNextOutput
+  JSON_ENUM_ITEM(GameGoNorthOutcome,        5) // -> GetNextOutput, Needs next room to exist in json
+  JSON_ENUM_ITEM(GameGoEastOutcome,         6) // -> GetNextOutput, Needs next room to exist in json
+  JSON_ENUM_ITEM(GameGoSouthOutcome,        7) // -> GetNextOutput, Needs next room to exist in json
+  JSON_ENUM_ITEM(GameGoWestOutcome,         8) // -> GetNextOutput, Needs next room to exist in json
+  JSON_ENUM_ITEM(GameHealthChangeOutcome,   9) // -> GetNextOutput, Needs percentageChance and healthChange in current room's json entry
+  JSON_ENUM_ITEM(GameSwapEquipmentOutcome, 10) // -> GetNextOutput, Needs equipmentSlot field in the same button's json entry
+  JSON_ENUM_ITEM(GameOpenChestOutcome,     11) // -> GetNextOutput, Needs chestItemID field in current room's json entry
+  JSON_ENUM_ITEM(GameCombatFightOutcome,   12) // -> GetNextOutput, Needs enemyID field in same button's json entry
+  JSON_ENUM_ITEM(GameCombatFleeOutcome,    13) // -> GetNextOutput, Needs matching GameState.previousRoomID call before it gets triggered
 JSON_ENUM_END
 
 // CustomScreenCode is a uint16_t with [0, 65535)

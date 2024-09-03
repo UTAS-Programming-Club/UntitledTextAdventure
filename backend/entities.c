@@ -60,7 +60,7 @@ static bool ModifyEntityStatDiff(EntityStatDiff *restrict base, EntityStatDiff d
 }
 
 bool RefreshPlayerStats(const struct GameInfo *info, struct GameState *state) {
-  if (!info || !state) {
+  if (!info || !info->initialised || !state) {
     return false;
   }
 
@@ -101,8 +101,8 @@ static size_t DecMod(size_t val, size_t mod) {
 }
 
 // TODO: Set inCombat to false when leaving combat
-bool StartCombat(const struct GameInfo *info, struct GameState *state) {
-  if (!info || !state) {
+bool StartCombat(const struct GameInfo *restrict info, struct GameState *restrict state) {
+  if (!info || !info->initialised || !state) {
     return false;
   }
 
@@ -115,18 +115,23 @@ bool StartCombat(const struct GameInfo *info, struct GameState *state) {
   state->combatInfo.lastWriteCombatEventInfoID = 0;
   state->combatInfo.performingEnemyAttacks = false;
 
-  state->combatInfo.enemyCount = state->roomInfo->enemyCount;
+  const struct RoomInfo *room = GetCurrentGameRoom(info, state);
+  if (room->type == InvalidRoomType) {
+    return false;
+  }
+
+  state->combatInfo.enemyCount = room->enemyCount;
   for (size_t i = 0; i < state->combatInfo.enemyCount; ++i) {
     struct EnemyInfo *enemy = &state->combatInfo.enemies[i];
     enemy->health = MaximumEntityStat;
-    enemy->attackID = state->roomInfo->enemies[i];
+    enemy->attackID = room->enemies[i];
   }
 
   return true;
 }
 
 bool PlayerPerformAttack(const struct GameInfo *restrict info, struct GameState *restrict state, size_t enemyID) {
-  if (!info || !state || enemyID >= state->combatInfo.enemyCount) {
+  if (!info || !info->initialised || !state || enemyID >= state->combatInfo.enemyCount) {
     return false;
   }
 
@@ -158,7 +163,7 @@ bool PlayerPerformAttack(const struct GameInfo *restrict info, struct GameState 
 bool EnemyPerformAttack(const struct GameInfo *restrict info, struct GameState *restrict state) {
   // TODO: Allow enemies to have multiple attacks?
   // TODO: Add crits/some randomness to damage done
-  if (!info || !state) {
+  if (!info || !info->initialised || !state) {
     return false;
   }
 
@@ -208,7 +213,7 @@ bool EnemyPerformAttack(const struct GameInfo *restrict info, struct GameState *
 #define LOG_LINE_START "⬤ " // Black Large Circle
 
 const char *CreateCombatString(const struct GameInfo *restrict info, struct GameState *restrict state) {
-  if (!info || !state) {
+  if (!info || !info->initialised || !state) {
     return NULL;
   }
 

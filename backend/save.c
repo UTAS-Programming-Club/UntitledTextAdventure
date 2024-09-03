@@ -234,7 +234,7 @@ static const void *CompressData(Arena *arena, const void *data, size_t dataSize,
 
 static bool DecompressData(Arena *arena, const void *data, size_t dataSize, void **decompressedData, unsigned long long *decompressedDataSize) {
 #ifdef _DEBUG
-  if (!arena || !data || !decompressedData) {
+  if (!arena || !data || !decompressedData || !decompressedDataSize) {
     return NULL;
   }
 #endif
@@ -306,7 +306,7 @@ static const char *CompressAndEncodeData(Arena *arena, const void *data, size_t 
 
 static const void *DecodeAndDecompressData(Arena *arena, const char *password, size_t expectedSize, unsigned long long *dataSize) {
 #ifdef _DEBUG
-  if (!arena || !password) {
+  if (!arena || !password || !dataSize) {
     return NULL;
   }
 #endif
@@ -335,9 +335,14 @@ static const void *DecodeAndDecompressData(Arena *arena, const char *password, s
 
 
 // TODO: Test zstd compression
-const char *SaveState(struct GameState *state) {
+const char *SaveState(const struct GameInfo *info, struct GameState *state) {
   if (!state || !state->startedGame) {
     return NULL;
+  }
+
+  const struct RoomInfo *currentRoom = GetCurrentGameRoom(info, state);
+  if (currentRoom->type == InvalidRoomType) {
+    return InvalidInputOutcome;
   }
 
   struct SaveData *data;
@@ -349,8 +354,9 @@ const char *SaveState(struct GameState *state) {
   unsigned char *pData = (unsigned char *)data;
 
   data->version = PasswordVersion;
-  data->x       = state->roomInfo->x;
-  data->y       = state->roomInfo->y;
+  // TODO: Switch to roomID
+  data->x       = currentRoom->x;
+  data->y       = currentRoom->y;
   data->health  = state->playerInfo.health;
   data->stamina = state->playerInfo.stamina;
 
@@ -379,7 +385,7 @@ const char *SaveState(struct GameState *state) {
 }
 
 bool LoadState(const struct GameInfo *info, struct GameState *state, const char *password) {
-  if (!state || state->startedGame || !password) {
+  if (!info || !info->initialised || !state || state->startedGame || !password) {
     return false;
   }
 
@@ -425,14 +431,16 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
 
   memcpy(state->stateData, (uint8_t *)data + sizeof *data, state->stateDataSize);
 
-  state->roomInfo = GetGameRoom(info, data->x, data->y);
+  state->previousScreenID = InvalidScreen;
+  state->previousRoomID = SIZE_MAX;
+  state->roomID = GetGameRoomID(info, data->x, data->y);
   state->startedGame = true;
 
   return true;
 }
 
 bool CreateNewState(const struct GameInfo *info, struct GameState *state) {
-  if (!info || !state) {
+  if (!info || !info->initialised || !state) {
     return false;
   }
 
@@ -443,7 +451,9 @@ bool CreateNewState(const struct GameInfo *info, struct GameState *state) {
 
   // TODO: Reset state, requires removing main menu state
 
-  state->roomInfo = GetGameRoom(info, DefaultRoomCoordX, DefaultRoomCoordY);
+  state->previousScreenID = InvalidScreen;
+  state->previousRoomID = SIZE_MAX;
+  state->roomID = GetGameRoomID(info, DefaultRoomCoordX, DefaultRoomCoordY);
   state->startedGame = true;
 
   return true;

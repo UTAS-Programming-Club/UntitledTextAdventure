@@ -189,21 +189,35 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
       return InvalidInputOutcome;
     }
 
+    const struct RoomInfo *currentRoom = GetCurrentGameRoom(info, state);
+    if (currentRoom->type == InvalidRoomType) {
+      return InvalidInputOutcome;
+    }
+
     switch (button.outcome) {
       case GotoScreenOutcome:
         state->screenID = button.newScreenID;
+        state->previousScreenID = state->screenID;
+        return GetNextOutputOutcome;
+      case GotoPreviousScreenOutcome:
+        state->screenID = state->previousScreenID;
+        state->previousScreenID = InvalidScreen; // GameScreen?
         return GetNextOutputOutcome;
       case GameGoNorthOutcome:
-        state->roomInfo = GetGameRoom(info, state->roomInfo->x, state->roomInfo->y + 1);
+        state->roomID = GetGameRoomID(info, currentRoom->x, currentRoom->y + 1);
+        state->previousRoomID = state->roomID;
         return GetNextOutputOutcome;
       case GameGoEastOutcome:
-        state->roomInfo = GetGameRoom(info, state->roomInfo->x + 1, state->roomInfo->y);
+        state->roomID = GetGameRoomID(info, currentRoom->x + 1, currentRoom->y);
+        state->previousRoomID = state->roomID;
         return GetNextOutputOutcome;
       case GameGoSouthOutcome:
-        state->roomInfo = GetGameRoom(info, state->roomInfo->x, state->roomInfo->y - 1);
+        state->roomID = GetGameRoomID(info, currentRoom->x, currentRoom->y - 1);
+        state->previousRoomID = state->roomID;
         return GetNextOutputOutcome;
       case GameGoWestOutcome:
-        state->roomInfo = GetGameRoom(info, state->roomInfo->x - 1, state->roomInfo->y);
+        state->roomID = GetGameRoomID(info, currentRoom->x - 1, currentRoom->y);
+        state->previousRoomID = state->roomID;
         return GetNextOutputOutcome;
       case GameHealthChangeOutcome: ;
         // chance to dodge the trap else take damage
@@ -211,8 +225,8 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
         // TODO: End game when health is 0
         // eventPercentageChance is (0, 100] so chance must be as well
         uint_fast8_t chance = rand() % MaximumEntityStat + 1;
-        if(state->roomInfo->eventPercentageChance > chance) {
-          ModifyEntityStat(&state->playerInfo.health, state->roomInfo->eventStatChange);
+        if (currentRoom->eventPercentageChance > chance) {
+          ModifyEntityStat(&state->playerInfo.health, currentRoom->eventStatChange);
         }
         return GetNextOutputOutcome;
       case GameOpenChestOutcome: ;
@@ -253,11 +267,19 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
           break;
         }
         return GetNextOutputOutcome;
-      case GameFightEnemiesOutcome:
+      case GameCombatFightOutcome:
         return HandleGameCombat(info, state, button.enemyID);
+         // TODO: Auto enter combat on entering combat rooms
+      case GameCombatFleeOutcome:
+        state->screenID = GameScreen;
+        state->combatInfo.inCombat = false;
+        state->roomID = state->previousRoomID;
+        state->previousRoomID = SIZE_MAX;
+        return GetNextOutputOutcome;
       case QuitGameOutcome:
         return QuitGameOutcome;
-      default:
+      case GetNextOutputOutcome:
+      case InvalidInputOutcome:
         return InvalidInputOutcome;
     }
   } else if (TextScreenInputType == state->inputType && textInput) {
@@ -272,7 +294,13 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
     switch (state->screenID) {
       case CombatScreen:
         return HandleGameCombat(info, state, SIZE_MAX);
-      default:
+      case GameScreen:
+      case InvalidScreen:
+      case LoadScreen:
+      case MainMenuScreen:
+      case PlayerDeathScreen:
+      case PlayerEquipmentScreen:
+      case SaveScreen:
         return InvalidInputOutcome;
     }
   }
@@ -280,15 +308,27 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
   return InvalidInputOutcome;
 }
 
-// Room may not exist, always check result->exists
-const struct RoomInfo *GetGameRoom(const struct GameInfo *info, RoomCoord x, RoomCoord y) {
+size_t GetGameRoomID(const struct GameInfo *restrict info, RoomCoord x, RoomCoord y) {
   if (!info || !info->initialised
       || x >= info->floorSize || y >= info->floorSize
       || x == InvalidRoomCoord || y == InvalidRoomCoord) {
+    return SIZE_MAX;
+  }
+
+  size_t roomID = y * info->floorSize + x;
+  if (info->rooms[roomID].type == InvalidRoomType) {
+    return SIZE_MAX;
+  }
+
+  return roomID;
+}
+
+const struct RoomInfo *GetCurrentGameRoom(const struct GameInfo *restrict info, const struct GameState *restrict state) {
+  if (!info || !info->initialised || !state) {
     return &DefaultRoom;
   }
 
-  return &(info->rooms[y * info->floorSize + x]);
+  return &info->rooms[state->roomID];
 }
 
 void CleanupGame(struct GameState *state) {

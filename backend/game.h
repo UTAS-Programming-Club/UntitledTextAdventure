@@ -83,10 +83,10 @@ struct GameState {
   // TODO: Rename to player and combat?
   struct PlayerInfo playerInfo;
   struct CombatInfo combatInfo;
-  // TODO: Rename to currentRoom?
-  // TODO: Change to size_t, this makes uses of restrict wrong.
-  // The only reason it doesn't cause issues is because the contents are never changed
-  const struct RoomInfo *roomInfo;
+
+  size_t previousRoomID;
+  size_t roomID;
+
   bool startedGame;
   Arena arena;
 
@@ -102,7 +102,10 @@ bool SetupBackend(struct GameInfo *);
 // GameState should be zero initialised before first call
 bool UpdateGameState(const struct GameInfo *, struct GameState *);
 enum InputOutcome HandleGameInput(const struct GameInfo *, struct GameState *, uint_fast8_t, const char *);
-const struct RoomInfo *GetGameRoom(const struct GameInfo *, RoomCoord, RoomCoord);
+// Returns SIZE_MAX if the room does not exist
+size_t GetGameRoomID(const struct GameInfo *restrict, RoomCoord, RoomCoord);
+// Room may not exist, always check result->type != InvalidRoomType
+const struct RoomInfo *GetCurrentGameRoom(const struct GameInfo *restrict, const struct GameState *restrict);
 void CleanupGame(struct GameState *);
 void CleanupBackend(struct GameInfo *);
 
