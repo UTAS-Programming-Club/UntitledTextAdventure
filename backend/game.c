@@ -36,7 +36,7 @@ bool SetupBackend(struct GameInfo *info) {
 
   if (!LoadGameData(dataFile)) {
     PrintError("Failed to load %s", dataFile);
-    goto unload_data;
+    goto end;
   }
 
   info->name = LoadGameName();
