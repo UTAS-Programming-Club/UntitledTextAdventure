@@ -230,6 +230,11 @@
           "title": "Flee",
           "outcome": GameCombatFleeOutcome,
           "newScreenID": GameScreen
+        },
+        {
+          "title": "Return to game",
+          "outcome": GotoScreenOutcome,
+          "newScreenID": GameScreen
         }
       ]
     },
@@ -308,7 +313,7 @@
         "position": [1, 4],
         // TODO: Use or remove
         "description": "You find yourself surrounded",
-        "enemies": [0, 0, 0]
+        "enemies": [0, 0, 1]
       }
     ]
   },

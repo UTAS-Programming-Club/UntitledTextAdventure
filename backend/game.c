@@ -269,7 +269,7 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
         return GetNextOutputOutcome;
       case GameCombatFightOutcome:
         return HandleGameCombat(info, state, button.enemyID);
-         // TODO: Auto enter combat on entering combat rooms
+      // TODO: Auto enter combat on entering combat rooms
       case GameCombatFleeOutcome:
         state->screenID = GameScreen;
         state->combatInfo.inCombat = false;

@@ -189,7 +189,7 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
       break;
     // TODO: Use data from json
     case CustomChestRoomType:
-      if(*pOpenedChest == 1) {
+      if (*pOpenedChest == 1) {
         roomInfoStr = CreateString(&state->arena, "\n\nYou open the chest and recieve a mythril vest.");
         if (!roomInfoStr) {
           return false;
@@ -346,7 +346,21 @@ static bool CreateCombatScreen(const struct GameInfo *info, struct GameState *st
     return false;
   }
 
-  state->body = CreateCombatString(info, state);
+  // TODO: Move to entities.c?
+  bool playerWon = true;
+  for (size_t i = 0; i < state->combatInfo.enemyCount; ++i) {
+    if (0 != state->combatInfo.enemies[i].health) {
+      playerWon = false;
+      break;
+    }
+  }
+
+  if (playerWon) {
+    // TODO: Move to json?
+    state->body = "You have won!";
+  } else {
+    state->body = CreateCombatString(info, state);
+  }
   if (!state->body) {
     return false;
   }
@@ -355,15 +369,27 @@ static bool CreateCombatScreen(const struct GameInfo *info, struct GameState *st
   // TODO: Add health, stamina potions
   // TODO: Fix player equipment screen going back to the room screen instead of the combat one.
   //       Change outcome to go to last screen instead of a specific one?
+  // TODO: Indicate enemy type
+  // TODO: Avoid pause after player attack on last enemy death
 
   for (uint_fast8_t i = 0; i < state->inputCount; ++i) {
-    if (state->inputs[i].outcome != GameCombatFightOutcome) {
-      continue;
-    }
-
     struct GameScreenButton button = {0};
     if (!GetGameScreenButton(state->screenID, i, &button)) {
       return false;
+    }
+
+    if (GameCombatFleeOutcome == button.outcome && GameScreen == button.newScreenID) {
+      state->inputs[i].visible = !playerWon;
+      continue;
+    }
+
+    if (GotoScreenOutcome == button.outcome && GameScreen == button.newScreenID) {
+      state->inputs[i].visible = playerWon;
+      continue;
+    }
+
+    if (state->inputs[i].outcome != GameCombatFightOutcome) {
+      continue;
     }
 
     if (button.enemyID >= state->combatInfo.enemyCount) {
