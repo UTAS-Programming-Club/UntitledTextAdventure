@@ -196,28 +196,28 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
 
     switch (button.outcome) {
       case GotoScreenOutcome:
-        state->screenID = button.newScreenID;
         state->previousScreenID = state->screenID;
+        state->screenID = button.newScreenID;
         return GetNextOutputOutcome;
       case GotoPreviousScreenOutcome:
         state->screenID = state->previousScreenID;
         state->previousScreenID = InvalidScreen; // GameScreen?
         return GetNextOutputOutcome;
       case GameGoNorthOutcome:
-        state->roomID = GetGameRoomID(info, currentRoom->x, currentRoom->y + 1);
         state->previousRoomID = state->roomID;
+        state->roomID = GetGameRoomID(info, currentRoom->x, currentRoom->y + 1);
         return GetNextOutputOutcome;
       case GameGoEastOutcome:
-        state->roomID = GetGameRoomID(info, currentRoom->x + 1, currentRoom->y);
         state->previousRoomID = state->roomID;
+        state->roomID = GetGameRoomID(info, currentRoom->x + 1, currentRoom->y);
         return GetNextOutputOutcome;
       case GameGoSouthOutcome:
-        state->roomID = GetGameRoomID(info, currentRoom->x, currentRoom->y - 1);
         state->previousRoomID = state->roomID;
+        state->roomID = GetGameRoomID(info, currentRoom->x, currentRoom->y - 1);
         return GetNextOutputOutcome;
       case GameGoWestOutcome:
-        state->roomID = GetGameRoomID(info, currentRoom->x - 1, currentRoom->y);
         state->previousRoomID = state->roomID;
+        state->roomID = GetGameRoomID(info, currentRoom->x - 1, currentRoom->y);
         return GetNextOutputOutcome;
       case GameHealthChangeOutcome: ;
         // chance to dodge the trap else take damage
