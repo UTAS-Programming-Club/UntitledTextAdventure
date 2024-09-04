@@ -44,8 +44,7 @@ struct CombatInfo {
 };
 
 bool StartCombat(const struct GameInfo *restrict, struct GameState *restrict);
-bool PlayerPerformAttack(const struct GameInfo *restrict, struct GameState *restrict, size_t);
-bool EnemyPerformAttack(const struct GameInfo *restrict, struct GameState *restrict);
+enum InputOutcome HandleGameCombat(const struct GameInfo *restrict, struct GameState *restrict, size_t);
 const char *CreateCombatString(const struct GameInfo *restrict, struct GameState *restrict);
 
 // TODO: Individual attacks enemies can use with status' and stuff idk

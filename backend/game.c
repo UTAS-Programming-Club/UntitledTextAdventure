@@ -140,38 +140,6 @@ static uint_fast8_t MapInputIndex(const struct GameState *state, uint_fast8_t in
   return UINT_FAST8_MAX;
 }
 
-// TODO: Move to entities.c?
-static enum InputOutcome HandleGameCombat(const struct GameInfo *restrict info, struct GameState *restrict state, size_t attackedEnemyID) {
-  if (!state->combatInfo.performingEnemyAttacks) {
-    if (!PlayerPerformAttack(info, state, attackedEnemyID)) {
-      return InvalidInputOutcome;
-    }
-
-    state->combatInfo.performingEnemyAttacks = true;
-    state->combatInfo.currentEnemyID = 0;
-    return GetNextOutputOutcome;
-  }
-
-  if (state->combatInfo.performingEnemyAttacks) {
-    size_t *curEnemyID = &state->combatInfo.currentEnemyID;
-    while (0 == state->combatInfo.enemies[*curEnemyID].health && *curEnemyID < state->combatInfo.enemyCount) {
-      ++*curEnemyID;
-    }
-    if (*curEnemyID < state->combatInfo.enemyCount && !EnemyPerformAttack(info, state)) {
-      return InvalidInputOutcome;
-    }
-    ++*curEnemyID;
-
-    if (*curEnemyID >= state->combatInfo.enemyCount) {
-      state->combatInfo.performingEnemyAttacks = false;
-    }
-
-    return GetNextOutputOutcome;
-  }
-
-  return InvalidInputOutcome;
-}
-
 enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState *state,
                                   uint_fast8_t buttonInputIndex, const char *textInput) {
   if (!info || !info->initialised || !state) {
