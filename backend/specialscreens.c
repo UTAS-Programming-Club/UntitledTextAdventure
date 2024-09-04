@@ -213,6 +213,7 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
     switch (state->inputs[i].outcome) {
       case GameCombatFightOutcome:
       case GameCombatFleeOutcome:
+      case GameCombatLeaveOutcome:
       case GameSwapEquipmentOutcome:
       case GetNextOutputOutcome:
       case GotoPreviousScreenOutcome:

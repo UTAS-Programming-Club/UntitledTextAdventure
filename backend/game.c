@@ -195,6 +195,9 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
     }
 
     switch (button.outcome) {
+      case GameCombatLeaveOutcome:
+        state->combatInfo.inCombat = false;
+        /* fallthrough */
       case GotoScreenOutcome:
         state->previousScreenID = state->screenID;
         state->screenID = button.newScreenID;

@@ -233,7 +233,7 @@
         },
         {
           "title": "Return to game",
-          "outcome": GotoScreenOutcome,
+          "outcome": GameCombatLeaveOutcome,
           "newScreenID": GameScreen
         }
       ]
