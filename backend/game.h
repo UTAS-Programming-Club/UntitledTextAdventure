@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <types.h>
 
+#include "combat.h"
 #include "entities.h"
 
 // Always make this const when possible to avoid accidental modification
