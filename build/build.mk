@@ -33,9 +33,10 @@ GameData.json: GameData.in.json $(INCDIR)/types.json.h
 # I had an issue with save.c not being rebuilt if types.in.h
 # changed because it did not depend on types.h directly,
 # despite depending on game.h which does depend on types.h.
+backend/combat.h: backend/entities.h $(INCDIR)/types.h
 backend/entities.h: $(INCDIR)/types.h
 backend/equipment.h: backend/entities.h backend/game.h
-backend/game.h: backend/entities.h $(INCDIR)/arena.h $(INCDIR)/types.h
+backend/game.h: backend/combat.h backend/entities.h $(INCDIR)/arena.h $(INCDIR)/types.h
 backend/parser.h: backend/game.h $(INCDIR)/types.h
 backend/save.h: backend/game.h
 backend/screens.h: backend/game.h
@@ -44,6 +45,9 @@ backend/stringhelpers.h: $(INCDIR)/arena.h
 
 
 # Objects
+$(LIBDIR)/combat.o: backend/combat.c backend/combat.h backend/entities.h backend/game.h backend/stringhelpers.h frontends/frontend.h $(INCDIR)/types.h | $(LIBDIR)
+	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
+
 $(LIBDIR)/entities.o: backend/entities.c backend/entities.h backend/equipment.h backend/game.h backend/stringhelpers.h frontends/frontend.h $(INCDIR)/types.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
@@ -122,7 +126,7 @@ $(BINDIR)/mapwatch$(EXECSUFFIX): $(LIBDIR)/mapwatch.o
 	$(CC) -o $(basename $@) $^ $(CFLAGS)
 	$(call MAKEEXEC,$@,$(basename $@))
 
-$(BINDIR)/printgamedata$(EXECSUFFIX): $(LIBDIR)/cJSON.o $(LIBDIR)/entities.o $(LIBDIR)/equipment.o $(LIBDIR)/fileloading_printgamedata.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/printgamedata.o $(LIBDIR)/save.o $(LIBDIR)/screens.o $(LIBDIR)/specialscreens.o $(LIBDIR)/stringhelpers.o $(LIBDIR)/libzstd.a | $(BINDIR)
+$(BINDIR)/printgamedata$(EXECSUFFIX): $(LIBDIR)/cJSON.o $(LIBDIR)/combat.o $(LIBDIR)/entities.o $(LIBDIR)/equipment.o $(LIBDIR)/fileloading_printgamedata.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/printgamedata.o $(LIBDIR)/save.o $(LIBDIR)/screens.o $(LIBDIR)/specialscreens.o $(LIBDIR)/stringhelpers.o $(LIBDIR)/libzstd.a | $(BINDIR)
 	$(CC) -o $(basename $@) $^ $(CFLAGS) -lm
 	$(call MAKEEXEC,$@,$(basename $@))
 
