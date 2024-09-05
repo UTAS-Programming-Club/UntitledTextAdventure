@@ -384,7 +384,7 @@ static bool CreateCombatScreen(const struct GameInfo *info, struct GameState *st
       continue;
     }
 
-    if (GotoScreenOutcome == button.outcome && GameScreen == button.newScreenID) {
+    if (GameCombatLeaveOutcome == button.outcome && GameScreen == button.newScreenID) {
       state->inputs[i].visible = playerWon;
       continue;
     }

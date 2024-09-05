@@ -211,6 +211,7 @@
     {
       // ID: 5
       "body": "Combat",
+      // TODO: Use or remove
       "extraText": "A creature has appeared",
       "customScreenCode": CombatCustomScreenCode,
       "inputType": ButtonScreenInputType,
