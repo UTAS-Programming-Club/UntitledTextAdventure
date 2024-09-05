@@ -17,6 +17,9 @@
 
 static const struct RoomInfo DefaultRoom = {.type = InvalidRoomType};
 
+static enum InputOutcome ChangeGameRoom(const struct GameInfo *restrict, struct GameState *restrict,
+                                        RoomCoord, RoomCoord);
+
 bool SetupBackend(struct GameInfo *info) {
   if (!info) {
     PrintError("Required game info struct is inaccessable");
@@ -176,20 +179,16 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
         return GetNextOutputOutcome;
       case GameGoNorthOutcome:
         state->previousRoomID = state->roomID;
-        state->roomID = GetGameRoomID(info, currentRoom->x, currentRoom->y + 1);
-        return GetNextOutputOutcome;
+        return ChangeGameRoom(info, state, currentRoom->x, currentRoom->y + 1);
       case GameGoEastOutcome:
         state->previousRoomID = state->roomID;
-        state->roomID = GetGameRoomID(info, currentRoom->x + 1, currentRoom->y);
-        return GetNextOutputOutcome;
+        return ChangeGameRoom(info, state, currentRoom->x + 1, currentRoom->y);
       case GameGoSouthOutcome:
         state->previousRoomID = state->roomID;
-        state->roomID = GetGameRoomID(info, currentRoom->x, currentRoom->y - 1);
-        return GetNextOutputOutcome;
+        return ChangeGameRoom(info, state, currentRoom->x, currentRoom->y - 1);
       case GameGoWestOutcome:
         state->previousRoomID = state->roomID;
-        state->roomID = GetGameRoomID(info, currentRoom->x - 1, currentRoom->y);
-        return GetNextOutputOutcome;
+        return ChangeGameRoom(info, state, currentRoom->x - 1, currentRoom->y);
       case GameHealthChangeOutcome: ;
         // chance to dodge the trap else take damage
         // TODO: Ensure this only trigger once, track room completion?
@@ -240,7 +239,6 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
         return GetNextOutputOutcome;
       case GameCombatFightOutcome:
         return HandleGameCombat(info, state, button.enemyID);
-      // TODO: Auto enter combat on entering combat rooms
       case GameCombatFleeOutcome:
         state->screenID = GameScreen;
         state->combatInfo.inCombat = false;
@@ -300,6 +298,22 @@ const struct RoomInfo *GetCurrentGameRoom(const struct GameInfo *restrict info, 
   }
 
   return &info->rooms[state->roomID];
+}
+
+static enum InputOutcome ChangeGameRoom(const struct GameInfo *restrict info, struct GameState *restrict state,
+                                        RoomCoord x, RoomCoord y) {
+  size_t roomID = GetGameRoomID(info, x, y);
+  if (SIZE_MAX == roomID) {
+    return InvalidInputOutcome;
+  }
+  state->roomID = roomID;
+
+  if (CombatRoomType == info->rooms[roomID].type) {
+    state->previousScreenID = state->screenID;
+    state->screenID = CombatScreen;
+  }
+
+  return GetNextOutputOutcome;
 }
 
 void CleanupGame(struct GameState *state) {

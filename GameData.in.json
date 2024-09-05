@@ -117,11 +117,6 @@
           "title": "Open Chest",
           "outcome": GameOpenChestOutcome
         },
-        {
-          "title": "Fight",
-          "outcome": GotoScreenOutcome,
-          "newScreenID": CombatScreen
-        },
         // Non-room outcomes
         {
           "title": "Change Equipment",
