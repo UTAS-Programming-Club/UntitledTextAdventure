@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <threads.h>
 #include <types.h>
 
 #include "combat.h"
@@ -75,6 +76,9 @@ struct GameState {
   uint_fast8_t inputCount;
   // TODO: Make const
   struct GameInput *inputs;
+
+  // Only set if inputType == NoneScreenInputType
+  struct timespec sleepTime;
 
   // implementation, do not use outside of backend
   // Only set if inputType == TextScreenInputType

@@ -254,7 +254,7 @@ static bool HandleOutput(const struct GameInfo *info, struct GameState *state) {
       PrintTextInput();
       return true;
     case NoneScreenInputType:
-      thrd_sleep(&(struct timespec){.tv_sec=1}, NULL);
+      thrd_sleep(&state->sleepTime, NULL);
       return true;
     default:
       PrintError("Unexpected input type with id %i received while handling output", state->inputType);
