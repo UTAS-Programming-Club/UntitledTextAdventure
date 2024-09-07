@@ -356,7 +356,7 @@ static bool CreateCombatScreen(const struct GameInfo *info, struct GameState *st
     }
   }
 
-  if (playerWon) {
+  if (!state->combatInfo.performingEnemyAttacks && playerWon) {
     // TODO: Move to json?
     state->body = "You have won!";
   } else {
@@ -368,10 +368,7 @@ static bool CreateCombatScreen(const struct GameInfo *info, struct GameState *st
 
   // TODO: Allow changing weapons during combat
   // TODO: Add health, stamina potions
-  // TODO: Fix player equipment screen going back to the room screen instead of the combat one.
-  //       Change outcome to go to last screen instead of a specific one?
   // TODO: Indicate enemy type
-  // TODO: Avoid pause after player attack on last enemy death
 
   for (uint_fast8_t i = 0; i < state->inputCount; ++i) {
     struct GameScreenButton button = {0};
