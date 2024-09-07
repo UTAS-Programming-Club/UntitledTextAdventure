@@ -174,6 +174,9 @@ enum InputOutcome HandleGameCombat(const struct GameInfo *restrict info, struct 
 #define LINE_ENDING ".\n"
 #define LOG_LINE_START "⬤ " // Black Large Circle
 
+// TODO: Move to json
+const char *const AttackNames[] = {"Physical", "Magical"};
+
 const char *CreateCombatString(const struct GameInfo *restrict info, struct GameState *restrict state) {
   if (!info || !info->initialised || !state) {
     return NULL;
@@ -308,19 +311,41 @@ const char *CreateCombatString(const struct GameInfo *restrict info, struct Game
     playerStaminaBarCount * blockSize, bar, 10 - playerStaminaBarCount, "", state->playerInfo.stamina
   );
 
+  size_t longestUsedAttackName = 0;
+  for (size_t i = 0; i < state->combatInfo.enemyCount; ++i) {
+    const struct EnemyInfo *enemy = &state->combatInfo.enemies[i];
+    if (info->enemyAttackCount <= enemy->attackID) {
+      return false;
+    }
+
+    // TODO: Check if this is worth checking, does parser.c already do it?
+    enum EnemyAttackType attackType = info->enemyAttacks[enemy->attackID].type;
+    if (InvalidEnemyAttackType == attackType || MaxEnemyAttackType <= attackType) {
+      // return false;
+    }
+
+    size_t attackNameLen = strlen(AttackNames[attackType - 1]);
+    longestUsedAttackName = attackNameLen > longestUsedAttackName ? attackNameLen : longestUsedAttackName;
+  }
+
   // TODO: Add enemy stamina
   for (size_t i = 0; i < state->combatInfo.enemyCount; ++i) {
-    DStrPrintf(str, "Enemy %zu ", i + 1);
-    if (0 == state->combatInfo.enemies[i].health) {
+    const struct EnemyInfo *enemy = &state->combatInfo.enemies[i];
+    enum EnemyAttackType attackType = info->enemyAttacks[enemy->attackID].type;
+    const char *attackName = AttackNames[attackType - 1];
+    size_t attackNameLen = strlen(attackName);
+
+    DStrPrintf(str, "%*s%s enemy %zu ", longestUsedAttackName - attackNameLen, "", attackName, i + 1);
+    if (0 == enemy->health) {
       DStrAppend(str, "is dead");
     } else {
-      int enemyHealthBarCount = (state->combatInfo.enemies[i].health + 9) / 10;
-      // int enemyStaminaBarCount = (state->combatInfo.enemies[i].stamina + 9) / 10;
-      DStrPrintf(str, "Health: %.*s%*s : %3i%%", enemyHealthBarCount * blockSize,
-        bar, 10 - enemyHealthBarCount, "", state->combatInfo.enemies[i].health
+      int enemyHealthBarCount = (enemy->health + 9) / 10;
+      // int enemyStaminaBarCount = (enemy->stamina + 9) / 10;
+      DStrPrintf(str, "health: %.*s%*s : %3i%%", enemyHealthBarCount * blockSize,
+        bar, 10 - enemyHealthBarCount, "", enemy->health
       );
-      // DStrPrintf(str, "Enemy %zu Stamina: %.*s%*s : %3i%%", i + 1,
-      //   bar, 10 - enemyStaminaBarCount, "", state->combatInfo.enemies[i].stamina
+      // DStrPrintf(str, "%*sstamina: %.*s%*s : %3i%%", longestUsedAttackName + 9, "",
+      //   enemyStaminaBarCount * blockSize, bar, 10 - enemyStaminaBarCount, "", 59
       // );
     }
     DStrAppend(str, "\n");

@@ -153,6 +153,7 @@ JSON_ENUM_START(EnemyAttackType)
   JSON_ENUM_ITEM(InvalidEnemyAttackType, 0)
   JSON_ENUM_ITEM(PhysEnemyAttackType,    1)
   JSON_ENUM_ITEM(MagEnemyAttackType,     2)
+  JSON_ENUM_ITEM(MaxEnemyAttackType,     2)
 JSON_ENUM_END
 
 // CombatEventInfoCount must be at least max enemy count + 1, ideally a few more than that
