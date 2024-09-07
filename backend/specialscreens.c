@@ -356,10 +356,10 @@ static bool CreateCombatScreen(const struct GameInfo *info, struct GameState *st
     }
   }
 
-  if (playerWon) {
+  if (!state->combatInfo.performingEnemyAttacks && playerWon) {
     // TODO: Move to json?
     state->body = "You have won!";
-    state->combatInfo.performingEnemyAttacks = false;
+    // state->combatInfo.performingEnemyAttacks = false;
   } else {
     state->body = CreateCombatString(info, state);
   }
@@ -409,10 +409,7 @@ static bool CreateCombatScreen(const struct GameInfo *info, struct GameState *st
 
   if (state->combatInfo.performingEnemyAttacks) {
     state->inputType = NoneScreenInputType;
-    state->sleepTime.tv_sec = 1;
-  } else if (playerWon) {
-    state->inputType = NoneScreenInputType;
-    state->sleepTime.tv_sec = 0;
+    state->sleepTime.tv_sec = 1; // (time_t)(int)!playerWon;
   }
 
   return true;

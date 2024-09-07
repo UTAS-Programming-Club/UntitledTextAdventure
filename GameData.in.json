@@ -309,7 +309,7 @@
         "position": [1, 4],
         // TODO: Use or remove
         "description": "You find yourself surrounded",
-        "enemies": [0, 0, 1]
+        "enemies": [0]
       }
     ]
   },
