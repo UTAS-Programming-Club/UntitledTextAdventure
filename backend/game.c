@@ -208,7 +208,8 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
         *pOpenedChest = 1;
         return GetNextOutputOutcome;
       case GameSwapEquipmentOutcome: ;
-        EquipmentID curID = GetEquippedItemID(&state->playerInfo, button.equipmentType);
+        EquipmentID origID = GetEquippedItemID(&state->playerInfo, button.equipmentType);
+        EquipmentID curID = origID;
         if (InvalidEquipmentID == curID) {
           return InvalidInputOutcome;
         }
@@ -234,8 +235,11 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
               || !RefreshPlayerStats(info, state)) {
             return InvalidInputOutcome;
           }
+
+          state->combatInfo.changedEquipment = state->combatInfo.inCombat && origID != curID;
           break;
         }
+
         return GetNextOutputOutcome;
       case GameCombatFightOutcome:
         return HandleGameCombat(info, state, button.enemyID);

@@ -160,12 +160,19 @@ JSON_ENUM_END
 // More than 3 or 4 enemies would likely be difficult to deal with so want at least 5 here
 EMIT(#define MaxEnemyCount 3)
 C_EMIT(#define CombatEventInfoCount (size_t)8)
-// CombatEventCauser is a uint8_t with [1, 3]
+// CombatEventCause is a uint8_t with [1, 3]
 JSON_ENUM_START(CombatEventCause)
   JSON_ENUM_ITEM(InvalidCombatEventCause, 0)
   JSON_ENUM_ITEM(UnusedCombatEventCause,  1)
   JSON_ENUM_ITEM(PlayerCombatEventCause,  2)
   JSON_ENUM_ITEM(EnemyCombatEventCause,   3)
+JSON_ENUM_END
+
+// CombatEventAction is a uint8_t with [1, 2]
+JSON_ENUM_START(CombatEventAction)
+  JSON_ENUM_ITEM(InvalidCombatEventAction,       0)
+  JSON_ENUM_ITEM(AttackCombatEventAction,        1)
+  JSON_ENUM_ITEM(EquipmentSwapCombatEventAction, 2) // Only use for player caused events
 JSON_ENUM_END
 
 // TODO: Add enum for state vars
