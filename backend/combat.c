@@ -170,8 +170,6 @@ enum InputOutcome HandleGameCombat(const struct GameInfo *restrict info, struct 
   return InvalidInputOutcome;
 }
 
-#define LINE_ENDING ".\n"
-#define LOG_LINE_START "⬤ " // Black Large Circle
 
 bool UpdateCombat(struct GameState *restrict state) {
   if (!state) {
@@ -199,6 +197,9 @@ bool UpdateCombat(struct GameState *restrict state) {
 
   return true;
 }
+
+#define LINE_ENDING ".\n"
+#define LOG_LINE_START "⬤ " // Black Large Circle
 
 // TODO: Move to json
 const char *const AttackNames[] = {"Physical", "Magical"};
@@ -341,10 +342,10 @@ const char *CreateCombatString(const struct GameInfo *restrict info, struct Game
 
   uint_fast8_t playerHealthBarCount = (state->playerInfo.health + 9) / 10;
   uint_fast8_t playerStaminaBarCount = (state->playerInfo.stamina + 9) / 10;
-  DStrPrintf(str, "\nYour Health:  %.*s%*s : %3i%%\n",
+  DStrPrintf(str, "\nYour Health:  %.*s%*s : %3" PRIEntityStat "%%\n",
     playerHealthBarCount * blockSize, bar, 10 - playerHealthBarCount, "", state->playerInfo.health
   );
-  DStrPrintf(str, "Your Stamina: %.*s%*s : %3i%%\n\n",
+  DStrPrintf(str, "Your Stamina: %.*s%*s : %3" PRIEntityStat "%%\n\n",
     playerStaminaBarCount * blockSize, bar, 10 - playerStaminaBarCount, "", state->playerInfo.stamina
   );
 
@@ -378,11 +379,11 @@ const char *CreateCombatString(const struct GameInfo *restrict info, struct Game
     } else {
       int enemyHealthBarCount = (enemy->health + 9) / 10;
       // int enemyStaminaBarCount = (enemy->stamina + 9) / 10;
-      DStrPrintf(str, "health: %.*s%*s : %3i%%", enemyHealthBarCount * blockSize,
+      DStrPrintf(str, "health: %.*s%*s : %3" PRIEntityStat "%%", enemyHealthBarCount * blockSize,
         bar, 10 - enemyHealthBarCount, "", enemy->health
       );
-      // DStrPrintf(str, "%*sstamina: %.*s%*s : %3i%%", longestUsedAttackName + 9, "",
-      //   enemyStaminaBarCount * blockSize, bar, 10 - enemyStaminaBarCount, "", 59
+      // DStrPrintf(str, "%*sstamina: %.*s%*s : %3" PRIEntityStat "%%", longestUsedAttackName + 9, "",
+      //   enemyStaminaBarCount * blockSize, bar, 10 - enemyStaminaBarCount, "", enemy->stamina
       // );
     }
     DStrAppend(str, "\n");

@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h> // strlen
 #include <types.h>
 
 #include "entities.h"  // CreateCombatString
@@ -284,7 +285,6 @@ static bool CreateSaveScreen(const struct GameInfo *info, struct GameState *stat
   return true;
 }
 
-// TODO: Use bars for PlayerStats and PlayerStatDiffs
 // TODO: Show agility
 static bool CreatePlayerEquipmentScreen(const struct GameInfo* info, struct GameState* state) {
   struct GameScreen screen = { 0 };
@@ -303,15 +303,29 @@ static bool CreatePlayerEquipmentScreen(const struct GameInfo* info, struct Game
     return false;
   }
 
+  // TODO: Merge with combat.c copy
+  char bar[] = "██████████";
+  size_t blockSize = strlen("█");
+
+  uint_fast8_t playerHealthBarCount = (state->playerInfo.health + 9) / 10;
+  uint_fast8_t playerStaminaBarCount = (state->playerInfo.stamina + 9) / 10;
+  uint_fast8_t playerPriPhysAtkBarCount = (-state->playerInfo.priPhysAtk + 9) / 10;
+  uint_fast8_t playerPriMagAtkBarCount = (-state->playerInfo.priMagAtk + 9) / 10;
+  uint_fast8_t playerSecPhysAtkBarCount = (-state->playerInfo.secPhysAtk + 9) / 10;
+  uint_fast8_t playerSecMajAtkBarCount = (-state->playerInfo.secMagAtk + 9) / 10;
+  uint_fast8_t playerPhysDefBarCount = (state->playerInfo.physDef + 9) / 10;
+  uint_fast8_t playerMagDefBarCount = (state->playerInfo.magDef + 9) / 10;
+
+  // TODO: Switch to half width bars for 5% accuracy
   state->body = CreateString(&state->arena, "%s\n\n"
-    "Health: %" PRIEntityStat "\n"
-    "Stamina: %" PRIEntityStat "\n"
-    "Primary Physical Attack: %" PRIEntityStatDiff "\n"
-    "Primary Magic Attack: %" PRIEntityStatDiff "\n"
-    "Secondary Physical Attack: %" PRIEntityStatDiff "\n"
-    "Secondary Magic Attack: %" PRIEntityStatDiff "\n"
-    "Physical Defence: %" PRIEntityStat "\n"
-    "Magic Defence: %" PRIEntityStat "\n\n"
+    "Health:                    %.*s%*s : %3" PRIEntityStat "\n"
+    "Stamina:                   %.*s%*s : %3" PRIEntityStat "\n"
+    "Primary Physical Attack:   %.*s%*s : %3" PRIEntityStatDiff "\n"
+    "Primary Magic Attack:      %.*s%*s : %3" PRIEntityStatDiff "\n"
+    "Secondary Physical Attack: %.*s%*s : %3" PRIEntityStatDiff "\n"
+    "Secondary Magic Attack:    %.*s%*s : %3" PRIEntityStatDiff "\n"
+    "Physical Defence:          %.*s%*s : %3" PRIEntityStat "\n"
+    "Magic Defence:             %.*s%*s : %3" PRIEntityStat "\n\n"
     "Helmet: %s\n"
     "Chest: %s\n"
     "Gloves: %s\n"
@@ -320,10 +334,14 @@ static bool CreatePlayerEquipmentScreen(const struct GameInfo* info, struct Game
     "Primary Weapon: %s\n"
     "Secondary Weapon: %s\n",
     screen.body,
-    state->playerInfo.health, state->playerInfo.stamina,
-    -state->playerInfo.priPhysAtk, -state->playerInfo.priMagAtk,
-    -state->playerInfo.secPhysAtk, -state->playerInfo.secMagAtk,
-    state->playerInfo.physDef, state->playerInfo.magDef,
+    playerHealthBarCount * blockSize, bar, 10 - playerHealthBarCount, "", state->playerInfo.health,
+    playerStaminaBarCount * blockSize, bar, 10 - playerStaminaBarCount, "", state->playerInfo.stamina,
+    playerPriPhysAtkBarCount * blockSize, bar, 10 - playerPriPhysAtkBarCount, "", -state->playerInfo.priPhysAtk,
+    playerPriMagAtkBarCount * blockSize, bar, 10 - playerPriMagAtkBarCount, "", -state->playerInfo.priMagAtk,
+    playerSecPhysAtkBarCount * blockSize, bar, 10 - playerSecPhysAtkBarCount, "", -state->playerInfo.secPhysAtk,
+    playerSecMajAtkBarCount * blockSize, bar, 10 - playerSecMajAtkBarCount, "", -state->playerInfo.secMagAtk,
+    playerPhysDefBarCount * blockSize, bar, 10 - playerPhysDefBarCount, "", state->playerInfo.physDef,
+    playerMagDefBarCount * blockSize, bar, 10 - playerMagDefBarCount, "", state->playerInfo.magDef,
     slot0->name, slot1->name, slot2->name, slot3->name,
     slot4->name, slot5->name, slot6->name
   );
