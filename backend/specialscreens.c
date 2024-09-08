@@ -368,7 +368,6 @@ static bool CreateCombatScreen(const struct GameInfo *info, struct GameState *st
 
   // TODO: Allow changing weapons during combat
   // TODO: Add health, stamina potions
-  // TODO: Indicate enemy type
 
   for (uint_fast8_t i = 0; i < state->inputCount; ++i) {
     struct GameScreenButton button = {0};
