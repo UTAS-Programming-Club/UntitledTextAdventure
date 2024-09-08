@@ -284,7 +284,6 @@ static bool CreateSaveScreen(const struct GameInfo *info, struct GameState *stat
   return true;
 }
 
-// TODO: Hide some options or take a turn if in combat
 // TODO: Use bars for PlayerStats and PlayerStatDiffs
 // TODO: Show agility
 static bool CreatePlayerEquipmentScreen(const struct GameInfo* info, struct GameState* state) {
@@ -347,16 +346,11 @@ static bool CreateCombatScreen(const struct GameInfo *info, struct GameState *st
     return false;
   }
 
-  // TODO: Move to entities.c?
-  bool playerWon = true;
-  for (size_t i = 0; i < state->combatInfo.enemyCount; ++i) {
-    if (0 != state->combatInfo.enemies[i].health) {
-      playerWon = false;
-      break;
-    }
+  if (!UpdateCombat(state)) {
+    return false;
   }
 
-  if (!state->combatInfo.performingEnemyAttacks && playerWon) {
+  if (!state->combatInfo.performingEnemyAttacks && state->combatInfo.playerWon) {
     // TODO: Move to json?
     state->body = "You have won!";
   } else {
@@ -376,12 +370,12 @@ static bool CreateCombatScreen(const struct GameInfo *info, struct GameState *st
     }
 
     if (GameCombatFleeOutcome == button.outcome && GameScreen == button.newScreenID) {
-      state->inputs[i].visible = !playerWon;
+      state->inputs[i].visible = !state->combatInfo.playerWon;
       continue;
     }
 
     if (GameCombatLeaveOutcome == button.outcome && GameScreen == button.newScreenID) {
-      state->inputs[i].visible = playerWon;
+      state->inputs[i].visible = state->combatInfo.playerWon;
       continue;
     }
 

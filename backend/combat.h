@@ -21,17 +21,19 @@ struct EnemyAttackInfo {
 };
 
 // Do not use outside of backend
-// TODO: Track events other than attacks
 struct CombatEventInfo {
   enum CombatEventCause cause;
-  EntityStatDiff damage;
-  size_t enemyID;
-  bool playerAbsorbed; // Only set if cause == EnemyCombatEventCause
+  enum CombatEventAction action;
+  EntityStatDiff damage; // Only set if action == AttackCombatEventAction
+  size_t enemyID;        // Only set if action == AttackCombatEventAction
+  bool playerAbsorbed;   // Only set if cause == EnemyCombatEventCause and action == AttackCombatEventAction
 };
 
 // Do not use outside of backend
 struct CombatInfo {
   bool inCombat;
+  bool changedEquipment;
+  bool playerWon;
 
   struct CombatEventInfo combatEventInfo[CombatEventInfoCount];
   size_t lastReadCombatEventInfoID;
@@ -45,6 +47,7 @@ struct CombatInfo {
 
 bool StartCombat(const struct GameInfo *restrict, struct GameState *restrict);
 enum InputOutcome HandleGameCombat(const struct GameInfo *restrict, struct GameState *restrict, size_t);
+bool UpdateCombat(struct GameState *restrict);
 const char *CreateCombatString(const struct GameInfo *restrict, struct GameState *restrict);
 
 // TODO: Individual attacks enemies can use with status' and stuff idk

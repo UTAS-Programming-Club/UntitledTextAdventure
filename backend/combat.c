@@ -61,6 +61,13 @@ bool StartCombat(const struct GameInfo *restrict info, struct GameState *restric
   return true;
 }
 
+static struct CombatEventInfo *GetNextEventInfo(struct GameState *restrict state) {
+  state->combatInfo.lastWriteCombatEventInfoID =
+    DecMod(state->combatInfo.lastWriteCombatEventInfoID, CombatEventInfoCount);
+
+  return &state->combatInfo.combatEventInfo[state->combatInfo.lastWriteCombatEventInfoID];
+}
+
 static bool PlayerPerformAttack(const struct GameInfo *restrict info, struct GameState *restrict state, size_t enemyID) {
   if (!info || !info->initialised || !state || enemyID >= state->combatInfo.enemyCount) {
     return false;
@@ -78,13 +85,9 @@ static bool PlayerPerformAttack(const struct GameInfo *restrict info, struct Gam
   ModifyEntityStat(&enemy->health, state->playerInfo.priPhysAtk);
   ModifyEntityStat(&enemy->health, state->playerInfo.priMagAtk);
 
-  state->combatInfo.lastWriteCombatEventInfoID =
-    DecMod(state->combatInfo.lastWriteCombatEventInfoID, CombatEventInfoCount);
-
-  struct CombatEventInfo *eventInfo = &state->combatInfo.combatEventInfo[
-    state->combatInfo.lastWriteCombatEventInfoID
-  ];
+  struct CombatEventInfo *eventInfo = GetNextEventInfo(state);
   eventInfo->cause = PlayerCombatEventCause;
+  eventInfo->action = AttackCombatEventAction;
   eventInfo->damage = enemy->health - originalHealth;
   eventInfo->enemyID = enemyID;
 
@@ -126,13 +129,9 @@ static bool EnemyPerformAttack(const struct GameInfo *restrict info, struct Game
 
   ModifyEntityStat(&state->playerInfo.health, absorbedDamage);
 
-  state->combatInfo.lastWriteCombatEventInfoID =
-    DecMod(state->combatInfo.lastWriteCombatEventInfoID, CombatEventInfoCount);
-
-  struct CombatEventInfo *eventInfo = &state->combatInfo.combatEventInfo[
-    state->combatInfo.lastWriteCombatEventInfoID
-  ];
+  struct CombatEventInfo *eventInfo = GetNextEventInfo(state);
   eventInfo->cause = EnemyCombatEventCause;
+  eventInfo->action = AttackCombatEventAction;
   eventInfo->damage = absorbedDamage;
   eventInfo->enemyID = enemyID;
   eventInfo->playerAbsorbed = dodgedDamage < absorbedDamage;
@@ -174,6 +173,33 @@ enum InputOutcome HandleGameCombat(const struct GameInfo *restrict info, struct 
 #define LINE_ENDING ".\n"
 #define LOG_LINE_START "⬤ " // Black Large Circle
 
+bool UpdateCombat(struct GameState *restrict state) {
+  if (!state) {
+    return false;
+  }
+
+  if (state->combatInfo.changedEquipment) {
+    state->combatInfo.performingEnemyAttacks = true;
+    state->combatInfo.currentEnemyID = 0;
+
+    state->combatInfo.changedEquipment = false;
+
+    struct CombatEventInfo *eventInfo = GetNextEventInfo(state);
+    eventInfo->cause = PlayerCombatEventCause;
+    eventInfo->action = EquipmentSwapCombatEventAction;
+  }
+
+  state->combatInfo.playerWon = true;
+  for (size_t i = 0; i < state->combatInfo.enemyCount; ++i) {
+    if (0 != state->combatInfo.enemies[i].health) {
+      state->combatInfo.playerWon = false;
+      break;
+    }
+  }
+
+  return true;
+}
+
 // TODO: Move to json
 const char *const AttackNames[] = {"Physical", "Magical"};
 
@@ -206,7 +232,7 @@ const char *CreateCombatString(const struct GameInfo *restrict info, struct Game
   if (!state->combatInfo.performingEnemyAttacks) {
     // TODO: Add rest turns for stamina recovery
     // TODO: Mention magic attacks and other items, splash items?
-    if (event->cause == PlayerCombatEventCause) {
+    if (event->cause == PlayerCombatEventCause && event->action == AttackCombatEventAction) {
       DStrPrintf(str, "You attacked enemy %i with your sword", event->enemyID + 1);
       if (0 == state->combatInfo.enemies[event->enemyID].health) {
         DStrAppend(str, " and it died");
@@ -220,6 +246,12 @@ const char *CreateCombatString(const struct GameInfo *restrict info, struct Game
       //    DStrAppend(str, "and managed to hit them" LINE_ENDING);
       //  }
       eventID = DecMod(eventID, CombatEventInfoCount);
+    } else if (event->cause == PlayerCombatEventCause && event->action == EquipmentSwapCombatEventAction) {
+      DStrAppend(str, "You changed your equipment" LINE_ENDING);
+      eventID = DecMod(eventID, CombatEventInfoCount);
+    } else if (event->cause == PlayerCombatEventCause) {
+      PrintError("Invalid player event action detected");
+      return NULL;
     }
 
     for (size_t i = 0; i < CombatEventInfoCount; ++i) {
@@ -227,6 +259,11 @@ const char *CreateCombatString(const struct GameInfo *restrict info, struct Game
       if (eventID < state->combatInfo.lastWriteCombatEventInfoID
           || EnemyCombatEventCause != event->cause) {
         break;
+      }
+
+      if (event->action != AttackCombatEventAction) {
+        PrintError("Invalid enemy event action detected");
+        return NULL;
       }
 
       const struct EnemyInfo *enemy = &state->combatInfo.enemies[event->enemyID];
@@ -315,13 +352,13 @@ const char *CreateCombatString(const struct GameInfo *restrict info, struct Game
   for (size_t i = 0; i < state->combatInfo.enemyCount; ++i) {
     const struct EnemyInfo *enemy = &state->combatInfo.enemies[i];
     if (info->enemyAttackCount <= enemy->attackID) {
-      return false;
+      return NULL;
     }
 
     // TODO: Check if this is worth checking, does parser.c already do it?
     enum EnemyAttackType attackType = info->enemyAttacks[enemy->attackID].type;
-    if (InvalidEnemyAttackType == attackType || MaxEnemyAttackType <= attackType) {
-      // return false;
+    if (InvalidEnemyAttackType == attackType || MaxEnemyAttackType < attackType) {
+      return NULL;
     }
 
     size_t attackNameLen = strlen(AttackNames[attackType - 1]);
@@ -361,9 +398,20 @@ const char *CreateCombatString(const struct GameInfo *restrict info, struct Game
       switch (event->cause) {
         case PlayerCombatEventCause:
           // TODO: Record attack type for player
-          DStrPrintf(str, LOG_LINE_START "You did %" PRIEntityStatDiff
-                                         " physical damage to enemy %zu\n",
-                     -event->damage, event->enemyID + 1);
+          switch (event->action) {
+            case AttackCombatEventAction:
+              DStrPrintf(str, LOG_LINE_START "You did %" PRIEntityStatDiff
+                                             " physical damage to enemy %zu\n",
+                         -event->damage, event->enemyID + 1);
+              break;
+            case EquipmentSwapCombatEventAction:
+              DStrAppend(str, LOG_LINE_START "You changed your equipment\n");
+              break;
+            case InvalidCombatEventAction:
+              PrintError("Invalid player event action detected");
+              return NULL;
+          }
+
           break;
         case EnemyCombatEventCause: ;
           DStrPrintf(str, LOG_LINE_START "Enemy %zu did %" PRIEntityStatDiff " ",
