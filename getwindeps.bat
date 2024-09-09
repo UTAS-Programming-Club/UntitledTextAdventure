@@ -45,6 +45,7 @@ if not exist %COSMOS%\x86_64-unknown-cosmo-cc (
 if not exist %COSMOS%\apelink.exe copy %COSMOS%\apelink %COSMOS%\apelink.exe
 if not exist %COSMOS%\cp copy %COSMOS%\cp.ape %COSMOS%\cp
 if not exist %COSMOS%\echo copy %COSMOS%\echo.ape %COSMOS%\echo
+if not exist %COSMOS%\ar.com copy %COSMOS%\ar.ape %COSMOS%\ar.com
 if not exist %COSMOS%\mkdir copy %COSMOS%\mkdir.ape %COSMOS%\mkdir
 if not exist %COSMOS%\rm copy %COSMOS%\rm.ape %COSMOS%\rm
 if not exist %~dp0\build\bootstrap\sh.exe copy %~dp0\build\bootstrap\sh %~dp0\build\bootstrap\sh.exe

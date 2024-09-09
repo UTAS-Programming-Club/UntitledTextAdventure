@@ -46,4 +46,4 @@ clean:
 	rm -r $(OUTPUT) GameData.json 2> /dev/null || true
 
 distclean: clean
-	$(MAKE) -C third_party/zstd/lib clean
+	rm -r third_party/zstd/lib/obj 2> /dev/null || true
