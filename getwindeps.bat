@@ -14,9 +14,7 @@ if not exist %COSMOS%\cut curl -o %COSMOS%\cut %COSMOS_URL%/cut
 if not exist %COSMOS%\grep curl -o %COSMOS%\grep %COSMOS_URL%/grep
 if not exist %COSMOS%\ls curl -o %COSMOS%\ls %COSMOS_URL%/ls
 if not exist %COSMOS%\md5sum curl -o %COSMOS%\md5sum %COSMOS_URL%/md5sum
-if not exist %COSMOS%\mv curl -o %COSMOS%\mv %COSMOS_URL%/mv.ape
 if not exist %COSMOS%\sed curl -o %COSMOS%\sed %COSMOS_URL%/sed
-if not exist %COSMOS%\tr curl -o %COSMOS%\tr %COSMOS_URL%/tr
 if not exist %COSMOS%\uname curl -o %COSMOS%\uname %COSMOS_URL%/uname.ape
 
 if not exist %COSMOS%\x86_64-unknown-cosmo-cc (
@@ -25,10 +23,7 @@ if not exist %COSMOS%\x86_64-unknown-cosmo-cc (
   del %COSMOS%\cosmocc.zip
 )
 
-if not exist %COSMOS%\apelink.exe copy %COSMOS%\apelink %COSMOS%\apelink.exe
 if not exist %COSMOS%\cp copy %COSMOS%\cp.ape %COSMOS%\cp
-if not exist %COSMOS%\echo copy %COSMOS%\echo.ape %COSMOS%\echo
-if not exist %COSMOS%\ar.com copy %COSMOS%\ar.ape %COSMOS%\ar.com
 if not exist %COSMOS%\mkdir copy %COSMOS%\mkdir.ape %COSMOS%\mkdir
 if not exist %COSMOS%\rm copy %COSMOS%\rm.ape %COSMOS%\rm
 if not exist %~dp0\build\bootstrap\sh.exe copy %~dp0\build\bootstrap\sh %~dp0\build\bootstrap\sh.exe
