@@ -50,6 +50,7 @@ $(LIBDIR)/%.o :| $(LIBDIR)
 $(LIBDIR)/fileloading_frontend.o: CFLAGS += -D FRONTEND
 $(LIBDIR)/gdifrontend.o: CFLAGS += $(GDICFLAGS)
 
+
 $(LIBDIR)/crossprint.o: backend/crossprint.c backend/crossprint.h
 $(LIBDIR)/enemies.o: backend/enemies.c backend/enemies.h backend/equipment.h backend/game.h
 $(LIBDIR)/equipment.o: backend/equipment.c backend/equipment.h backend/game.h $(INCDIR)/types.h
@@ -93,31 +94,31 @@ $(LIBDIR)/game.so: $(filter-out $(LIBDIR)/libzstd.a,$(COMMONOBJS)) $(LIBDIR)/dis
 
 
 # Executables
+$(BINDIR)/%$(EXECSUFFIX) :| $(BINDIR)
+	$(CC) -o $(basename $@) $^ $(CFLAGS)
+	$(call MAKEEXEC,$@,$(basename $@))
+
+$(BINDIR)/printgamedata$(EXECSUFFIX): CFLAGS += -lm
+$(BINDIR)/cmdgame$(EXECSUFFIX): CFLAGS += -lm
+
+
 $(BINDIR)/jsonvalidator$(EXECSUFFIX): $(LIBDIR)/jsonvalidator.o | $(BINDIR)
 	$(CXX) -o $(basename $@) $^ $(CXXFLAGS)
 	$(call MAKEEXEC,$@,$(basename $@))
 
 $(BINDIR)/mapwatch$(EXECSUFFIX): $(LIBDIR)/mapwatch.o
-	$(CC) -o $(basename $@) $^ $(CFLAGS)
-	$(call MAKEEXEC,$@,$(basename $@))
 
+$(BINDIR)/printgamedata$(EXECSUFFIX): $(LIBDIR)/cJSON.o $(LIBDIR)/enemies.o $(LIBDIR)/equipment.o $(LIBDIR)/fileloading_printgamedata.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/printgamedata.o $(LIBDIR)/save.o $(LIBDIR)/screens.o $(LIBDIR)/specialscreens.o $(LIBDIR)/libzstd.a
 ifdef ISWINDOWS
-$(BINDIR)/printgamedata$(EXECSUFFIX): $(LIBDIR)/cJSON.o $(LIBDIR)/crossprint.o $(LIBDIR)/enemies.o $(LIBDIR)/equipment.o $(LIBDIR)/fileloading_printgamedata.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/printgamedata.o $(LIBDIR)/save.o $(LIBDIR)/screens.o $(LIBDIR)/specialscreens.o $(LIBDIR)/libzstd.a | $(BINDIR)
-else # !ISWINDOWS
-$(BINDIR)/printgamedata$(EXECSUFFIX): $(LIBDIR)/cJSON.o $(LIBDIR)/enemies.o $(LIBDIR)/equipment.o $(LIBDIR)/fileloading_printgamedata.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/printgamedata.o $(LIBDIR)/save.o $(LIBDIR)/screens.o $(LIBDIR)/specialscreens.o $(LIBDIR)/libzstd.a | $(BINDIR)
-endif # ISWINDOWS/!ISWINDOWS
-	$(CC) -o $(basename $@) $^ $(CFLAGS) -lm
-	$(call MAKEEXEC,$@,$(basename $@))
+$(BINDIR)/printgamedata$(EXECSUFFIX): $(LIBDIR)/crossprint.o
+endif # ISWINDOWS
 
 
-$(BINDIR)/cmdgame$(EXECSUFFIX): $(LIBDIR)/cmdfrontend.o $(COMMONOBJS) $(WINRESOURCES) | $(BINDIR)
-	$(CC) -o $(basename $@) $^ $(CFLAGS) -lm
-	$(call MAKEEXEC,$@,$(basename $@))
+$(BINDIR)/cmdgame$(EXECSUFFIX): $(LIBDIR)/cmdfrontend.o $(COMMONOBJS) $(WINRESOURCES)
 
 ifdef 0 # ISWINDOWS
-$(BINDIR)/gdigame$(EXECSUFFIX): $(LIBDIR)/gdifrontend.o $(COMMONOBJS) $(WINRESOURCES) | $(BINDIR)
-	$(CC) -o $(basename $@) $^ $(CFLAGS) $(GDICFLAGS)
-	$(call MAKEEXEC,$@,$(basename $@))
+$(BINDIR)/gdigame$(EXECSUFFIX): $(LIBDIR)/gdifrontend.o $(COMMONOBJS) $(WINRESOURCES)
 else # !ISWINDOWS
 $(BINDIR)/gdigame$(EXECSUFFIX):
+	@true
 endif # ISWINDOWS/!ISWINDOWS
