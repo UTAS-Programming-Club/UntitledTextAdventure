@@ -22,6 +22,7 @@ if not exist %COSMOS%\uname curl -o %COSMOS%\uname %COSMOS_URL%/uname.ape
 if not exist %COSMOS%\x86_64-unknown-cosmo-cc (
   curl -o %COSMOS%\cosmocc.zip https://cosmo.zip/pub/cosmocc/cosmocc-3.7.1.zip
   tar -xvf %COSMOS%\cosmocc.zip -C %COSMOS%\..\
+  del %COSMOS%\cosmocc.zip
 )
 
 if not exist %COSMOS%\apelink.exe copy %COSMOS%\apelink %COSMOS%\apelink.exe
