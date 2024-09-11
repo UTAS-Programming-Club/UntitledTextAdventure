@@ -236,7 +236,7 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
             return InvalidInputOutcome;
           }
 
-          state->combatInfo.changedEquipment = state->combatInfo.inCombat && origID != curID;
+          state->combatInfo.changedEquipment |= state->combatInfo.inCombat && origID != curID;
           break;
         }
 

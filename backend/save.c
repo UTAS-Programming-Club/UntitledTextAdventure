@@ -435,6 +435,7 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
   state->previousRoomID = SIZE_MAX;
   state->roomID = GetGameRoomID(info, data->x, data->y);
   state->startedGame = true;
+  state->combatInfo.inCombat = false;
 
   return true;
 }
@@ -455,6 +456,6 @@ bool CreateNewState(const struct GameInfo *info, struct GameState *state) {
   state->previousRoomID = SIZE_MAX;
   state->roomID = GetGameRoomID(info, DefaultRoomCoordX, DefaultRoomCoordY);
   state->startedGame = true;
-
+  state->combatInfo.inCombat = false;
   return true;
 }
