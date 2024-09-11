@@ -99,6 +99,7 @@ static inline double cJSON_GetOptNumberValue(const cJSON *const object, const ch
 
 static bool GetGameRoomData(cJSON *, struct RoomInfo *);
 static bool GetGameEquipmentItemData(cJSON *, struct EquipmentInfo *);
+static bool GetGameEnemyAttackData(cJSON *, struct EnemyAttackInfo *);
 
 // TODO: Use PrintError for each failure
 
@@ -152,20 +153,23 @@ char *LoadGameName(void) {
   return name;
 }
 
-bool LoadDefaultPlayerInfo(struct PlayerInfo *playerInfo) {
-  if (!GameData || !playerInfo) {
+bool LoadDefaultPlayerInfo(struct PlayerInfo *player) {
+  if (!GameData || !player) {
     return false;
   }
 
   cJSON *jsonDefaultPlayerInfo;
   JSON_GETJSONOBJECTERROR(jsonDefaultPlayerInfo, GameData, "defaultPlayerInfo", false);
 
-  JSON_GETNUMBERVALUEERROR(playerInfo->health, jsonDefaultPlayerInfo, "health", false);
-  JSON_GETNUMBERVALUEERROR(playerInfo->stamina, jsonDefaultPlayerInfo, "stamina", false);
-  JSON_GETNUMBERVALUEERROR(playerInfo->physAtk, jsonDefaultPlayerInfo, "physAtk", false);
-  JSON_GETNUMBERVALUEERROR(playerInfo->magAtk, jsonDefaultPlayerInfo, "magAtk", false);
-  JSON_GETNUMBERVALUEERROR(playerInfo->physDef, jsonDefaultPlayerInfo, "physDef", false);
-  JSON_GETNUMBERVALUEERROR(playerInfo->magDef, jsonDefaultPlayerInfo, "magDef", false);
+  JSON_GETNUMBERVALUEERROR(player->health, jsonDefaultPlayerInfo, "health", false);
+  JSON_GETNUMBERVALUEERROR(player->stamina, jsonDefaultPlayerInfo, "stamina", false);
+  JSON_GETNUMBERVALUEERROR(player->agility, jsonDefaultPlayerInfo, "agility", false);
+  JSON_GETNUMBERVALUEERROR(player->priPhysAtk, jsonDefaultPlayerInfo, "priPhysAtk", false);
+  JSON_GETNUMBERVALUEERROR(player->priMagAtk, jsonDefaultPlayerInfo, "priMagAtk", false);
+  JSON_GETNUMBERVALUEERROR(player->secPhysAtk, jsonDefaultPlayerInfo, "secPhysAtk", false);
+  JSON_GETNUMBERVALUEERROR(player->secMagAtk, jsonDefaultPlayerInfo, "secMagAtk", false);
+  JSON_GETNUMBERVALUEERROR(player->physDef, jsonDefaultPlayerInfo, "physDef", false);
+  JSON_GETNUMBERVALUEERROR(player->magDef, jsonDefaultPlayerInfo, "magDef", false);
 
   cJSON *jsonUnlockedEquipmentArray;
   JSON_GETJSONARRAYERROR(jsonUnlockedEquipmentArray, jsonDefaultPlayerInfo, "unlockedEquipment", false);
@@ -184,7 +188,7 @@ bool LoadDefaultPlayerInfo(struct PlayerInfo *playerInfo) {
     }
     EquipmentID id = cJSON_GetNumberValue(jsonUnlockedEquipment);
 
-    if (!UnlockItem(playerInfo, id)) {
+    if (!UnlockItem(player, id)) {
       return false;
     }
 
@@ -199,7 +203,7 @@ bool LoadDefaultPlayerInfo(struct PlayerInfo *playerInfo) {
   JSON_GETJSONARRAYERROR(jsonEquippedEquipmentArray, jsonDefaultPlayerInfo, "equippedEquipment", false);
 
   // cJSON_ArrayForEach uses int for idx, likely fine as INT_MAX >= 2^15 - 1
-  EquipmentType equipmentType = 0;
+  enum EquipmentType equipmentType = 0;
   cJSON *jsonEquippedEquipment;
   cJSON_ArrayForEach(jsonEquippedEquipment, jsonEquippedEquipmentArray) {
     if (EquipmentTypeCount <= equipmentType) {
@@ -212,7 +216,7 @@ bool LoadDefaultPlayerInfo(struct PlayerInfo *playerInfo) {
     }
     EquipmentID id = cJSON_GetNumberValue(jsonEquippedEquipment);
 
-    if (!SetEquippedItem(playerInfo, equipmentType, id)) {
+    if (!SetEquippedItem(player, equipmentType, id)) {
       return false;
     }
 
@@ -226,7 +230,7 @@ bool LoadDefaultPlayerInfo(struct PlayerInfo *playerInfo) {
   return true;
 }
 
-bool LoadGameRooms(uint_fast8_t *floorSize, struct RoomInfo **rooms) {
+bool LoadGameRooms(uint_fast8_t *restrict floorSize, struct RoomInfo **rooms) {
   if (!GameData || !floorSize || !rooms) {
     return false;
   }
@@ -291,17 +295,51 @@ bool LoadGameEquipment(struct EquipmentInfo **equipment) {
   cJSON *jsonItem;
   cJSON_ArrayForEach(jsonItem, jsonEquipment) {
     if (i >= EquipmentCount || !GetGameEquipmentItemData(jsonItem, currentItem)) {
-      free(equipment);
+      free(*equipment);
       return false;
     }
+    currentItem->type = (enum EquipmentType)(i / EquipmentPerTypeCount);
 
     ++i;
     ++currentItem;
   }
 
   if (EquipmentCount != i) {
+    free(*equipment);
     return false;
   }
+
+  return true;
+}
+
+bool LoadGameEnemyAttacks(size_t *restrict enemyAttackCount, struct EnemyAttackInfo **enemyAttacks) {
+  if (!enemyAttackCount || !enemyAttacks) {
+    return false;
+  }
+
+  cJSON *jsonEnemyAttacks;
+  JSON_GETJSONARRAYERROR(jsonEnemyAttacks, GameData, "enemyAttacks", false);
+
+  *enemyAttackCount = cJSON_GetArraySize(jsonEnemyAttacks);
+  if (0 == *enemyAttackCount) {
+    return false;
+  }
+
+  *enemyAttacks = malloc(*enemyAttackCount * sizeof **enemyAttacks);
+  if (!*enemyAttacks) {
+    return false;
+  }
+
+  // cJSON_ArrayForEach uses int for idx, likely fine as INT_MAX >= 2^15 - 1
+  struct EnemyAttackInfo *currentEnemyAttack = *enemyAttacks;
+  cJSON *jsonEnemyAttack;
+  cJSON_ArrayForEach(jsonEnemyAttack, jsonEnemyAttacks) {
+    if (!GetGameEnemyAttackData(jsonEnemyAttack, currentEnemyAttack)) {
+      free(*enemyAttacks);
+      return false;
+    }
+    ++currentEnemyAttack;
+  };
 
   return true;
 }
@@ -439,14 +477,13 @@ loop:
 }
 
 
-// TODO: Change error value to 0? Would require making 0 screens not allowed which is reasonable
 uint_fast16_t GetGameScreenCount(void) {
   if (!GameData) {
-    return UINT_FAST16_MAX;
+    return 0;
   }
 
   cJSON *jsonScreens;
-  JSON_GETJSONARRAYERROR(jsonScreens, GameData, "screens", UINT_FAST16_MAX);
+  JSON_GETJSONARRAYERROR(jsonScreens, GameData, "screens", 0);
 
   return cJSON_GetArraySize(jsonScreens);
 }
@@ -489,9 +526,8 @@ bool GetGameScreen(enum Screen screenID, struct GameScreen *screen) {
 
   JSON_GETNUMBERVALUEERROR(screen->inputType, jsonScreen, "inputType", false);
   if (TextScreenInputType == screen->inputType) {
-    JSON_GETNUMBERVALUEERROR(screen->previousScreenID, jsonScreen, "previousScreenID", false);
     JSON_GETNUMBERVALUEERROR(screen->nextScreenID, jsonScreen, "nextScreenID", false);
-    if (InvalidScreen == screen->previousScreenID || InvalidScreen == screen->previousScreenID) {
+    if (InvalidScreen == screen->nextScreenID) {
       return false;
     }
   }
@@ -500,15 +536,14 @@ bool GetGameScreen(enum Screen screenID, struct GameScreen *screen) {
 }
 
 
-// TODO: Change error value to 0? Would require making 0 buttons not allowed which is reasonable
 uint_fast8_t GetGameScreenButtonCount(enum Screen screenID) {
   cJSON *jsonScreen = GetGameScreenJson(screenID);
   if (!jsonScreen) {
-    return UINT_FAST8_MAX;
+    return 0;
   }
 
   cJSON *jsonButtons;
-  JSON_GETJSONARRAYERROR(jsonButtons, jsonScreen, "buttons", UINT_FAST8_MAX);
+  JSON_GETJSONARRAYERROR(jsonButtons, jsonScreen, "buttons", 0);
 
   return cJSON_GetArraySize(jsonButtons);
 }
@@ -538,9 +573,17 @@ bool GetGameScreenButton(enum Screen screenID, uint_fast8_t buttonID, struct Gam
     return false;
   }
 
-  button->equipmentType = cJSON_GetOptNumberValue(jsonButton, "equipmentSlot", InvalidScreen, invalidOptNumberVal);
+  button->equipmentType = cJSON_GetOptNumberValue(jsonButton, "equipmentSlot", EquipmentTypeCount, invalidOptNumberVal);
   if (invalidOptNumberVal == button->equipmentType) {
-      return false;
+    return false;
+  }
+
+  button->enemyID = cJSON_GetOptNumberValue(jsonButton, "enemyID", SIZE_MAX, invalidOptNumberVal);
+  if (invalidOptNumberVal == button->enemyID) {
+    return false;
+  }
+  else if (button->enemyID != SIZE_MAX) {
+    --button->enemyID; // enemyIDs are 1 indexed in the json to be able to generate using the preprocessor
   }
 
   return true;
@@ -565,11 +608,30 @@ static bool GetGameRoomData(cJSON *jsonRoom, struct RoomInfo *room) {
 
   room->eventDescription = cJSON_GetOptStringValue(jsonRoom, "description", "", NULL);
   room->eventPercentageChance = cJSON_GetOptNumberValue(jsonRoom, "percentageChance", UINT_FAST8_MAX, invalidOptNumberVal);
-  room->eventStatChange = cJSON_GetOptNumberValue(jsonRoom, "healthChange", InvalidPlayerStatDiff, invalidOptNumberVal);
+  room->eventStatChange = cJSON_GetOptNumberValue(jsonRoom, "healthChange", InvalidEntityStatDiff, invalidOptNumberVal);
   if (!room->eventDescription
       || invalidOptNumberVal == room->eventPercentageChance
       || invalidOptNumberVal == room->eventStatChange) {
     return false;
+  }
+
+  if (CombatRoomType == room->type) {
+    cJSON *jsonEnemiesArray;
+    JSON_GETJSONARRAYERROR(jsonEnemiesArray, jsonRoom, "enemies", false);
+
+    room->enemyCount = cJSON_GetArraySize(jsonEnemiesArray);
+    if (0 == room->enemyCount || MaxEnemyCount < room->enemyCount) {
+      return false;
+    }
+
+    room->enemies = malloc(room->enemyCount * sizeof *room->enemies);
+    if (!room->enemies) {
+      return false;
+    }
+
+    for (size_t i = 0; i < room->enemyCount; ++i) {
+      JSON_GETJSONARRAYITEMNUMBERERROR(room->enemies[i], jsonEnemiesArray, i, false);
+    }
   }
 
   return true;
@@ -586,6 +648,19 @@ static bool GetGameEquipmentItemData(cJSON *jsonItem, struct EquipmentInfo *item
   JSON_GETNUMBERVALUEERROR(item->physDefMod, jsonItem, "physDefMod", false);
   JSON_GETNUMBERVALUEERROR(item->magAtkMod, jsonItem, "magAtkMod", false);
   JSON_GETNUMBERVALUEERROR(item->magDefMod, jsonItem, "magDefMod", false);
+
+  return true;
+}
+
+static bool GetGameEnemyAttackData(cJSON *jsonEnemyAttack, struct EnemyAttackInfo *enemyAttack) {
+  if (!jsonEnemyAttack || !enemyAttack) {
+    return false;
+  }
+
+  JSON_GETNUMBERVALUEERROR(enemyAttack->type, jsonEnemyAttack, "type", false);
+  JSON_GETNUMBERVALUEERROR(enemyAttack->damage, jsonEnemyAttack, "damage", false);
+  JSON_GETNUMBERVALUEERROR(enemyAttack->minDodgeAgility, jsonEnemyAttack, "minDodgeAgility", false);
+  JSON_GETNUMBERVALUEERROR(enemyAttack->maxDodgeAgility, jsonEnemyAttack, "maxDodgeAgility", false);
 
   return true;
 }

@@ -38,11 +38,11 @@ C_EMIT(#include <stdint.h>)
 JSON_ENUM_START(Screen)
   JSON_ENUM_ITEM(MainMenuScreen,        0)
   JSON_ENUM_ITEM(GameScreen,            1)
-  JSON_ENUM_ITEM(PlayerStatsScreen,     2)
-  JSON_ENUM_ITEM(LoadScreen,            3)
-  JSON_ENUM_ITEM(SaveScreen,            4)
-  JSON_ENUM_ITEM(PlayerEquipmentScreen, 5)
-  JSON_ENUM_ITEM(CombatScreen,          6)
+  JSON_ENUM_ITEM(LoadScreen,            2)
+  JSON_ENUM_ITEM(SaveScreen,            3)
+  JSON_ENUM_ITEM(PlayerEquipmentScreen, 4)
+  JSON_ENUM_ITEM(CombatScreen,          5)
+  JSON_ENUM_ITEM(PlayerDeathScreen,     6)
   JSON_ENUM_ITEM(InvalidScreen,     65535)
 JSON_ENUM_END
 
@@ -51,24 +51,28 @@ JSON_ENUM_START(ScreenInputType)
   JSON_ENUM_ITEM(InvalidScreenInputType, 0)
   JSON_ENUM_ITEM(ButtonScreenInputType,  1)
   JSON_ENUM_ITEM(TextScreenInputType,    2)
+  JSON_ENUM_ITEM(NoneScreenInputType,    3)
 JSON_ENUM_END
 
 // InputOutcome is a uint16_t with (0, 65535]
 JSON_ENUM_START(InputOutcome)
   // Can be given to frontend
-  JSON_ENUM_ITEM(InvalidInputOutcome,      0) // Do not use in json or use in screens.c
-  JSON_ENUM_ITEM(GetNextOutputOutcome,     1) // Do not use in json or use in screens.c
-  JSON_ENUM_ITEM(QuitGameOutcome,          2)
+  JSON_ENUM_ITEM(InvalidInputOutcome,       0) // Do not use in json or screens.c
+  JSON_ENUM_ITEM(GetNextOutputOutcome,      1) // Do not use in json or screens.c
+  JSON_ENUM_ITEM(QuitGameOutcome,           2)
   // Do not give to frontend
-  JSON_ENUM_ITEM(GotoScreenOutcome,        3) // -> GetNextOutput, Needs newScreen field in the same button's json entry
-  JSON_ENUM_ITEM(GameGoNorthOutcome,       4) // -> GetNextOutput, Needs next room to exist in json
-  JSON_ENUM_ITEM(GameGoEastOutcome,        5) // -> GetNextOutput, Needs next room to exist in json
-  JSON_ENUM_ITEM(GameGoSouthOutcome,       6) // -> GetNextOutput, Needs next room to exist in json
-  JSON_ENUM_ITEM(GameGoWestOutcome,        7) // -> GetNextOutput, Needs next room to exist in json
-  JSON_ENUM_ITEM(GameHealthChangeOutcome,  8) // -> GetNextOutput, Needs percentageChance and healthChange in current room's json entry
-  JSON_ENUM_ITEM(GameSwapEquipmentOutcome, 9) // -> GetNextOutput, Needs equipmentSlot field in the same button's json entry
-  JSON_ENUM_ITEM(GameOpenChestOutcome,    10) // -> GetNextOutput, Needs ID of item contained in current room's json entry
-  JSON_ENUM_ITEM(GameFightEnemiesOutcome, 11) // -> GetNextOutput
+  JSON_ENUM_ITEM(GotoScreenOutcome,         3) // -> GetNextOutput, Needs newScreen field in the same button's json entry
+  JSON_ENUM_ITEM(GotoPreviousScreenOutcome, 4) // -> GetNextOutput, Needs matching GameState.previousScreenID assignment before use
+  JSON_ENUM_ITEM(GameGoNorthOutcome,        5) // -> GetNextOutput, Needs next room to exist in json
+  JSON_ENUM_ITEM(GameGoEastOutcome,         6) // -> GetNextOutput, Needs next room to exist in json
+  JSON_ENUM_ITEM(GameGoSouthOutcome,        7) // -> GetNextOutput, Needs next room to exist in json
+  JSON_ENUM_ITEM(GameGoWestOutcome,         8) // -> GetNextOutput, Needs next room to exist in json
+  JSON_ENUM_ITEM(GameHealthChangeOutcome,   9) // -> GetNextOutput, Needs percentageChance and healthChange in current room's json entry
+  JSON_ENUM_ITEM(GameSwapEquipmentOutcome, 10) // -> GetNextOutput, Needs equipmentSlot field in the same button's json entry
+  JSON_ENUM_ITEM(GameOpenChestOutcome,     11) // -> GetNextOutput, Needs chestItemID field in current room's json entry
+  JSON_ENUM_ITEM(GameCombatFightOutcome,   12) // -> GetNextOutput, Needs enemyID field in same button's json entry
+  JSON_ENUM_ITEM(GameCombatFleeOutcome,    13) // -> GetNextOutput, Needs matching GameState.previousRoomID assignment before use
+  JSON_ENUM_ITEM(GameCombatLeaveOutcome,   14) // -> GetNextOutput
 JSON_ENUM_END
 
 // CustomScreenCode is a uint16_t with [0, 65535)
@@ -76,10 +80,9 @@ JSON_ENUM_END
 JSON_ENUM_START(CustomScreenCode)
   JSON_ENUM_ITEM(MainMenuCustomScreenCode,        0)
   JSON_ENUM_ITEM(GameCustomScreenCode,            1)
-  JSON_ENUM_ITEM(PlayerStatsCustomScreenCode,     2)
-  JSON_ENUM_ITEM(SaveCustomScreenCode,            3)
-  JSON_ENUM_ITEM(PlayerEquipmentCustomScreenCode, 4)
-  JSON_ENUM_ITEM(CombatCustomScreenCode,          5)
+  JSON_ENUM_ITEM(SaveCustomScreenCode,            2)
+  JSON_ENUM_ITEM(PlayerEquipmentCustomScreenCode, 3)
+  JSON_ENUM_ITEM(CombatCustomScreenCode,          4)
   JSON_ENUM_ITEM(InvalidCustomScreenCode,     65535)
 JSON_ENUM_END
 
@@ -89,7 +92,7 @@ JSON_ENUM_START(RoomType)
   // TODO: Change to general stat change room type, support more than one stat?
   JSON_ENUM_ITEM(HealthChangeRoomType,   1)
   // TODO: Readd stat check room type
-  JSON_ENUM_ITEM(CustomChestRoomType,    2)
+  JSON_ENUM_ITEM(CustomChestRoomType,    2) // Needs chestItemID field in same room's json entry
   JSON_ENUM_ITEM(CombatRoomType,         3)
   JSON_ENUM_ITEM(InvalidRoomType,      255)
 JSON_ENUM_END
@@ -107,24 +110,34 @@ VALUE_EMIT(RoomCoord, InvalidRoomCoord, 255)
 SAVED_INTEGRAL_TYPE_EMIT(uint, 8, RoomCoord)
 
 
-// PlayerStat is a uint8_t with [0, 100]
-C_EMIT(#define PRIPlayerStat PRIuFAST8)
+// EntityStat is a uint8_t with [0, 100]
+C_EMIT(#define PRIEntityStat PRIuFAST8)
 // TODO: Use json loaded default stats when possible instead of these?
-VALUE_EMIT(PlayerStat, MinimumPlayerStat,   0)
-VALUE_EMIT(PlayerStat, MaximumPlayerStat, 100)
-SAVED_INTEGRAL_TYPE_EMIT(uint, 8, PlayerStat)
+VALUE_EMIT(EntityStat, MinimumEntityStat,   0)
+VALUE_EMIT(EntityStat, MaximumEntityStat, 100)
+SAVED_INTEGRAL_TYPE_EMIT(uint, 8, EntityStat)
 
-// PlayerStatDiff is a int8_t with [-100, 100]
-VALUE_EMIT(PlayerStatDiff, MinimumPlayerStatDiff, -100)
-VALUE_EMIT(PlayerStatDiff, MaximumPlayerStatDiff,  100)
-VALUE_EMIT(PlayerStatDiff, InvalidPlayerStatDiff, INT_FAST8_MAX)
-C_EMIT(typedef int_fast8_t PlayerStatDiff;)
+// EntityStatDiff is a int8_t with [-100, 100]
+C_EMIT(#define PRIEntityStatDiff PRIdFAST8)
+VALUE_EMIT(EntityStatDiff, MinimumEntityStatDiff, -100)
+VALUE_EMIT(EntityStatDiff, MaximumEntityStatDiff,  100)
+VALUE_EMIT(EntityStatDiff, InvalidEntityStatDiff, INT_FAST8_MAX)
+C_EMIT(typedef int_fast8_t EntityStatDiff;)
 
 // TODO: Change json to use equipmentType once the sword slots are merged
 // EquipmentType is a uint8_t with [0, EquipmentTypeCount)
-C_EMIT(#define EquipmentTypeCount (EquipmentType)7)
-C_EMIT(typedef uint_fast8_t EquipmentType;)
+JSON_ENUM_START(EquipmentType)
+  JSON_ENUM_ITEM(HelmetEquipmentType,     0)
+  JSON_ENUM_ITEM(ChestPieceEquipmentType, 1)
+  JSON_ENUM_ITEM(GlovesEquipmentType,     2)
+  JSON_ENUM_ITEM(PantsEquipmentType,      3)
+  JSON_ENUM_ITEM(BootsEquipmentType,      4)
+  JSON_ENUM_ITEM(PriWeapEquipmentType,    5)
+  JSON_ENUM_ITEM(SecWeapEquipmentType,    6)
+  JSON_ENUM_ITEM(EquipmentTypeCount,      7)
+JSON_ENUM_END
 
+// TODO: Just use size_t and have a uint8_t for saving?
 // EquipmentID is a uint8_t with [0, 62]
 // With 7 types of items, this gives 9 items per type
 // Equipment types: helmets, chest pieces, gloves, pants, boots, primary weapon, secondary weapon
@@ -133,6 +146,34 @@ C_EMIT(#define EquipmentCount EquipmentTypeCount * EquipmentPerTypeCount)
 VALUE_EMIT(EquipmentID, InvalidEquipmentID, UINT_FAST8_MAX)
 VALUE_EMIT(EquipmentIDSave, InvalidEquipmentIDSave, 0)
 SAVED_INTEGRAL_TYPE_EMIT(uint, 8, EquipmentID)
+
+
+// EnemyAttackType is a uint8_t with [1, 2]
+JSON_ENUM_START(EnemyAttackType)
+  JSON_ENUM_ITEM(InvalidEnemyAttackType, 0)
+  JSON_ENUM_ITEM(PhysEnemyAttackType,    1)
+  JSON_ENUM_ITEM(MagEnemyAttackType,     2)
+  JSON_ENUM_ITEM(MaxEnemyAttackType,     2)
+JSON_ENUM_END
+
+// CombatEventInfoCount must be at least max enemy count + 1, ideally a few more than that
+// More than 3 or 4 enemies would likely be difficult to deal with so want at least 5 here
+EMIT(#define MaxEnemyCount 3)
+C_EMIT(#define CombatEventInfoCount (size_t)8)
+// CombatEventCause is a uint8_t with [1, 3]
+JSON_ENUM_START(CombatEventCause)
+  JSON_ENUM_ITEM(InvalidCombatEventCause, 0)
+  JSON_ENUM_ITEM(UnusedCombatEventCause,  1)
+  JSON_ENUM_ITEM(PlayerCombatEventCause,  2)
+  JSON_ENUM_ITEM(EnemyCombatEventCause,   3)
+JSON_ENUM_END
+
+// CombatEventAction is a uint8_t with [1, 2]
+JSON_ENUM_START(CombatEventAction)
+  JSON_ENUM_ITEM(InvalidCombatEventAction,       0)
+  JSON_ENUM_ITEM(AttackCombatEventAction,        1)
+  JSON_ENUM_ITEM(EquipmentSwapCombatEventAction, 2) // Only use for player caused events
+JSON_ENUM_END
 
 // TODO: Add enum for state vars
 

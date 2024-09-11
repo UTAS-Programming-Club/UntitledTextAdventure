@@ -7,8 +7,9 @@
 #include <types.h>   // EquipmentIDSave, EquipmentID, PlayerStatSave, RoomCoordSave
 #include <zstd.h>    // ZSTD_compress, ZSTD_compressBound, ZSTD_CONTENTSIZE_ERROR, ZSTD_CONTENTSIZE_UNKNOWN, ZSTD_decompress, ZSTD_findFrameCompressedSize, ZSTD_getFrameContentSize, ZSTD_isError
 
+#include "entities.h"  // RefreshStats
 #include "equipment.h" // GetEquippedItemID, SetEquippedItem
-#include "game.h" // EquippedItemsSlots
+#include "game.h"      // EquippedItemsSlots, struct GameInfo, struct GameState
 #include "save.h"
 
 #define BASE 85
@@ -25,8 +26,8 @@ struct __attribute__((packed, scalar_storage_order("little-endian"))) SaveData {
   uint16_t version;
   RoomCoordSave x;
   RoomCoordSave y;
-  PlayerStatSave health;
-  PlayerStatSave stamina;
+  EntityStatSave health;
+  EntityStatSave stamina;
   uint8_t unlockedItems[(EquipmentCount + 7) / 8];
   // TODO: EquipmentIDSave is [0, 63], switch to 6 bits items? ceil(6 * 7 / 8.) == 6, might not be worth it
   EquipmentIDSave equippedItems[EquipmentTypeCount];
@@ -233,7 +234,7 @@ static const void *CompressData(Arena *arena, const void *data, size_t dataSize,
 
 static bool DecompressData(Arena *arena, const void *data, size_t dataSize, void **decompressedData, unsigned long long *decompressedDataSize) {
 #ifdef _DEBUG
-  if (!arena || !data || !decompressedData) {
+  if (!arena || !data || !decompressedData || !decompressedDataSize) {
     return NULL;
   }
 #endif
@@ -305,7 +306,7 @@ static const char *CompressAndEncodeData(Arena *arena, const void *data, size_t 
 
 static const void *DecodeAndDecompressData(Arena *arena, const char *password, size_t expectedSize, unsigned long long *dataSize) {
 #ifdef _DEBUG
-  if (!arena || !password) {
+  if (!arena || !password || !dataSize) {
     return NULL;
   }
 #endif
@@ -334,9 +335,14 @@ static const void *DecodeAndDecompressData(Arena *arena, const char *password, s
 
 
 // TODO: Test zstd compression
-const char *SaveState(struct GameState *state) {
+const char *SaveState(const struct GameInfo *info, struct GameState *state) {
   if (!state || !state->startedGame) {
     return NULL;
+  }
+
+  const struct RoomInfo *currentRoom = GetCurrentGameRoom(info, state);
+  if (currentRoom->type == InvalidRoomType) {
+    return InvalidInputOutcome;
   }
 
   struct SaveData *data;
@@ -348,8 +354,9 @@ const char *SaveState(struct GameState *state) {
   unsigned char *pData = (unsigned char *)data;
 
   data->version = PasswordVersion;
-  data->x       = state->roomInfo->x;
-  data->y       = state->roomInfo->y;
+  // TODO: Switch to roomID
+  data->x       = currentRoom->x;
+  data->y       = currentRoom->y;
   data->health  = state->playerInfo.health;
   data->stamina = state->playerInfo.stamina;
 
@@ -366,7 +373,7 @@ const char *SaveState(struct GameState *state) {
     data->unlockedItems[arrIdx] |= unlocked << arrOff;
   }
 
-  for (EquipmentType i = 0; i < EquipmentTypeCount; ++i) {
+  for (enum EquipmentType i = 0; i < EquipmentTypeCount; ++i) {
     // Maps [0, 7*9) = [0, 62] to [1, 63] so 0 can be the invalid value
     EquipmentID id = GetEquippedItemID(&state->playerInfo, i);
     data->equippedItems[i] = InvalidEquipmentID != id ? id + 1 : InvalidEquipmentIDSave;
@@ -378,7 +385,7 @@ const char *SaveState(struct GameState *state) {
 }
 
 bool LoadState(const struct GameInfo *info, struct GameState *state, const char *password) {
-  if (!state || state->startedGame || !password) {
+  if (!info || !info->initialised || !state || state->startedGame || !password) {
     return false;
   }
 
@@ -410,7 +417,7 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
     }
   }
 
-  for (EquipmentType i = 0; i < EquipmentTypeCount; ++i) {
+  for (enum EquipmentType i = 0; i < EquipmentTypeCount; ++i) {
     EquipmentIDSave idSave = data->equippedItems[i];
     EquipmentID id = idSave != InvalidEquipmentIDSave ? idSave - 1 : InvalidEquipmentID;
 
@@ -418,32 +425,37 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
       return false;
     }
   }
-  if (!UpdateStats(info, state)) {
+  if (!RefreshPlayerStats(info, state)) {
     return false;
   }
 
   memcpy(state->stateData, (uint8_t *)data + sizeof *data, state->stateDataSize);
 
-  state->roomInfo = GetGameRoom(info, data->x, data->y);
+  state->previousScreenID = InvalidScreen;
+  state->previousRoomID = SIZE_MAX;
+  state->roomID = GetGameRoomID(info, data->x, data->y);
   state->startedGame = true;
+  state->combatInfo.inCombat = false;
 
   return true;
 }
 
 bool CreateNewState(const struct GameInfo *info, struct GameState *state) {
-  if (!info || !state) {
+  if (!info || !info->initialised || !state) {
     return false;
   }
 
   memcpy(&state->playerInfo, &info->defaultPlayerInfo, sizeof info->defaultPlayerInfo);
-  if (!UpdateStats(info, state)) {
+  if (!RefreshPlayerStats(info, state)) {
     return false;
   }
 
   // TODO: Reset state, requires removing main menu state
 
-  state->roomInfo = GetGameRoom(info, DefaultRoomCoordX, DefaultRoomCoordY);
+  state->previousScreenID = InvalidScreen;
+  state->previousRoomID = SIZE_MAX;
+  state->roomID = GetGameRoomID(info, DefaultRoomCoordX, DefaultRoomCoordY);
   state->startedGame = true;
-
+  state->combatInfo.inCombat = false;
   return true;
 }

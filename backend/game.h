@@ -10,21 +10,8 @@
 #include <stdint.h>
 #include <types.h>
 
-// Do not use outside of backend
-struct PlayerInfo {
-  // TODO: Add other stats such as agility that can be impacted by equipment
-  PlayerStat health;
-  PlayerStat stamina;
-  PlayerStat physAtk;
-  PlayerStat magAtk;
-  PlayerStat physDef;
-  PlayerStat magDef;
-
-  // Do not access directly, use functions in equipment.h
-  // Equipment types: helmets, chest pieces, gloves, pants, boots, primary weapon, secondary weapon
-  bool unlockedItems[EquipmentCount];
-  EquipmentID equippedItems[EquipmentTypeCount];
-};
+#include "combat.h"
+#include "entities.h"
 
 // Always make this const when possible to avoid accidental modification
 struct GameInfo {
@@ -35,11 +22,15 @@ struct GameInfo {
 
   struct PlayerInfo defaultPlayerInfo;
 
+  // TODO: Change to size_t?
   uint_fast8_t floorSize;
-  struct RoomInfo *rooms;
+  const struct RoomInfo *rooms;
 
   // TODO: Require struct to be on heap and then make this an actual array?
-  struct EquipmentInfo *equipment; // Length is EquipmentCount
+  const struct EquipmentInfo *equipment; // Length is EquipmentCount
+
+  size_t enemyAttackCount;
+  const struct EnemyAttackInfo *enemyAttacks;
 };
 
 // Never modify after creation
@@ -63,7 +54,12 @@ struct RoomInfo {
   // Only set if type == HealthChangeRoomType
   const char *eventDescription; // utf-8
   uint_fast8_t eventPercentageChance;
-  PlayerStatDiff eventStatChange;
+  EntityStatDiff eventStatChange;
+
+  // Only set if type == CombatRoomType
+  // TODO: Add actual enemy info with defence and other fields
+  size_t enemyCount;
+  size_t *enemies; // IDs into GameInfo.enemyAttacks
 };
 
 // Always make this const when possible to avoid accidental modification
@@ -74,16 +70,25 @@ struct GameState {
   const char *body; // utf-8
 
   enum ScreenInputType inputType;
-  uint_fast8_t inputCount;      // Only set if inputType == ButtonScreenInputType
-  // TODO: Make const
-  struct GameInput *inputs;     // Only set if inputType == ButtonScreenInputType
-  enum Screen previousScreenID; // Only set if inputType == TextScreenInputType
-  enum Screen nextScreenID;     // Only set if inputType == TextScreenInputType
 
+  // Only set if inputType == ButtonScreenInputType
+  uint_fast8_t inputCount;
+  // TODO: Make const
+  struct GameInput *inputs;
+
+  // implementation, do not use outside of backend
+  // Only set if inputType == TextScreenInputType
+  enum Screen previousScreenID;
+  enum Screen nextScreenID;
+
+  // TODO: Rename to player and combat?
   struct PlayerInfo playerInfo;
-  const struct RoomInfo *roomInfo;
+  struct CombatInfo combatInfo;
+
+  size_t previousRoomID;
+  size_t roomID;
+
   bool startedGame;
-// implementation, do not use outside of backend
   Arena arena;
 
   static_assert(sizeof(unsigned char) == sizeof(uint8_t), "Need 8 bit bytes.");
@@ -98,11 +103,11 @@ bool SetupBackend(struct GameInfo *);
 // GameState should be zero initialised before first call
 bool UpdateGameState(const struct GameInfo *, struct GameState *);
 enum InputOutcome HandleGameInput(const struct GameInfo *, struct GameState *, uint_fast8_t, const char *);
-const struct RoomInfo *GetGameRoom(const struct GameInfo *, RoomCoord, RoomCoord);
+// Returns SIZE_MAX if the room does not exist
+size_t GetGameRoomID(const struct GameInfo *restrict, RoomCoord, RoomCoord);
+// Room may not exist, always check result->type != InvalidRoomType
+const struct RoomInfo *GetCurrentGameRoom(const struct GameInfo *restrict, const struct GameState *restrict);
 void CleanupGame(struct GameState *);
 void CleanupBackend(struct GameInfo *);
-
-// This header depends on structs in this header
-#include "equipment.h"
 
 #endif // PCGAME_GAME_H

@@ -6,8 +6,8 @@
 #include <stdlib.h>
 #include <wchar.h>
 
-#include "../backend/crossprint.h"
 #include "../backend/parser.h"
+#include "../backend/stringhelpers.h"
 #include "../frontends/frontend.h"
 
 #define INDENT "  "
@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
 
   LoadGameData(argv[1]);
   uint_fast16_t screenCount = GetGameScreenCount();
-  if (screenCount == UINT_FAST16_MAX) {
+  if (0 == screenCount) {
     goto cleanup;
   }
 
@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
     puts("\"");
 
     uint_fast8_t screenButtonCount = GetGameScreenButtonCount(i);
-    if (screenButtonCount == UINT_FAST8_MAX) {
+    if (0 == screenButtonCount) {
       continue;
     }
 

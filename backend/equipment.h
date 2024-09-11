@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <types.h>
 
+#include "entities.h"
 #include "game.h"
 
 // Do not use outside of backend
@@ -11,29 +12,22 @@
 // Never modify after creation
 struct EquipmentInfo {
   char *name;
-  // TODO: Add enum for type (helmet, boots, etc). Is this actually needed?
-
-  // stats
-  PlayerStatDiff physAtkMod;
-  PlayerStatDiff physDefMod;
-  PlayerStatDiff magAtkMod;
-  PlayerStatDiff magDefMod;
+  enum EquipmentType type;
+  EntityStatDiff physAtkMod;
+  EntityStatDiff physDefMod;
+  EntityStatDiff magAtkMod;
+  EntityStatDiff magDefMod;
 
   // TODO: Add other stats such as dex, int, etc
 };
-
-// Only call for health or stamina, other uses of UpdatePlayerStat are reserved for UpdateStats
-bool PlayerTakeDamage(struct PlayerInfo *, PlayerStatDiff);
-bool UpdatePlayerStat(PlayerStat *, PlayerStatDiff);
-bool UpdateStats(const struct GameInfo *, struct GameState *);
 
 bool UnlockItem(struct PlayerInfo *, EquipmentID);
 bool CheckItemUnlocked(const struct PlayerInfo *, EquipmentID, bool *);
 
 // Returns InvalidEquipmentID or a valid EquipmentID
-EquipmentID GetEquippedItemID(const struct PlayerInfo *, EquipmentType);
+EquipmentID GetEquippedItemID(const struct PlayerInfo *, enum EquipmentType);
 // Returns NULL or a valid EquipmentInfo
-struct EquipmentInfo *GetEquippedItem(const struct GameInfo *, const struct PlayerInfo *, EquipmentType);
-bool SetEquippedItem(struct PlayerInfo *, EquipmentType, EquipmentID);
+const struct EquipmentInfo *GetEquippedItem(const struct GameInfo *, const struct PlayerInfo *, enum EquipmentType);
+bool SetEquippedItem(struct PlayerInfo *, enum EquipmentType, EquipmentID);
 
 #endif // PCGAME_EQUIPMENT_H

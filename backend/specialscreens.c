@@ -1,15 +1,17 @@
-#include <arena.h>
 #include <inttypes.h>
-#include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <string.h> // strlen
+#include <types.h>
 
+#include "entities.h"  // CreateCombatString
+#include "equipment.h" // struct EquipmentInfo, GetEquippedItem, UnlockItem
 #include "game.h"
 #include "parser.h"
 #include "save.h"
+#include "specialscreens.h"
+#include "stringhelpers.h"
 
 // Each room take 6x4 but the 6 required calls to WriteRoomRow per room only
 // handle the top left most 5x3 unless it is the right and/or bottom most room
@@ -58,7 +60,7 @@ static void WriteRoomRow(FILE *fp, RoomCoord roomX, RoomCoord roomY, uint_fast8_
       fputs(rowChars[1], fp);
     }
 
-    if (0 == outputRow && GetGameRoom(info, roomX, roomY + 1)->type != InvalidRoomType) {
+    if (0 == outputRow && GetGameRoomID(info, roomX, roomY + 1) != SIZE_MAX) {
       fprintf(fp, HorLine "%*s" HorLine, RoomGridSizeHor - 4, "");
     } else {
       FPrintRep(HorLine, RoomGridSizeHor - 2, fp);
@@ -72,10 +74,10 @@ static void WriteRoomRow(FILE *fp, RoomCoord roomX, RoomCoord roomY, uint_fast8_
 
   // Middle Room Rows
   else {
-    enum RoomType roomExists = GetGameRoom(info, roomX, roomY)->type != InvalidRoomType;
+    enum RoomType roomExists = GetGameRoomID(info, roomX, roomY) != SIZE_MAX;
 
     char *wallChar;
-    if (!roomExists || GetGameRoom(info, roomX - 1, roomY)->type == InvalidRoomType) {
+    if (!roomExists || GetGameRoomID(info, roomX - 1, roomY) == SIZE_MAX) {
       wallChar = VerLine;
     } else if (1 == outputRow) {
       wallChar = UpperHalfVerLine;
@@ -121,37 +123,6 @@ static void WriteMap(const struct GameInfo *info, const struct RoomInfo *current
 #endif
 
 
-// TODO: Use arena's arena_sprintf?
-static char *CreateString(Arena *arena, const char *restrict format, ...) {
-  va_list args1, args2;
-  va_start(args1, format);
-  va_copy(args2, args1);
-
-  char *res = NULL;
-
-  int allocatedCharCount = vsnprintf(NULL, 0, format, args1);
-  va_end(args1);
-  if (allocatedCharCount <= 0) {
-    goto cleanup;
-  }
-  ++allocatedCharCount;
-
-  res = arena_alloc(arena, allocatedCharCount);
-  if (!res) {
-    goto cleanup;
-  }
-
-  if (vsnprintf(res, allocatedCharCount, format, args2) <= 0) {
-    free(res);
-    res = NULL;
-  }
-
-cleanup:
-  va_end(args2);
-  return res;
-}
-
-
 static bool CreateMainMenuScreen(const struct GameInfo *info, struct GameState *state) {
   (void)info;
 
@@ -190,8 +161,13 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
     return false;
   }
 
+  const struct RoomInfo *currentRoom = GetCurrentGameRoom(info, state);
+  if (currentRoom->type == InvalidRoomType) {
+    return InvalidInputOutcome;
+  }
+
 #ifdef _DEBUG
-  WriteMap(info, state->roomInfo);
+  WriteMap(info, currentRoom);
 #endif
 
   size_t openedChestVarOffset = GetGameStateOffset(state->screenID, 1);
@@ -200,18 +176,21 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
   }
   uint8_t *pOpenedChest = (uint8_t *)(state->stateData + openedChestVarOffset);
 
-  char *roomInfoStr = "";
-  switch (state->roomInfo->type) {
+  const char *roomInfoStr = "";
+  switch (currentRoom->type) {
+    case CombatRoomType:
+    case EmptyRoomType:
+      break;
     // TODO: Add other options w/ extra info such as failing etc
     case HealthChangeRoomType:
-      roomInfoStr = CreateString(&state->arena, "\n\n%s.", state->roomInfo->eventDescription);
+      roomInfoStr = CreateString(&state->arena, "\n\n%s.", currentRoom->eventDescription);
       if (!roomInfoStr) {
         return false;
       }
       break;
     // TODO: Use data from json
     case CustomChestRoomType:
-      if(*pOpenedChest == 1) {
+      if (*pOpenedChest == 1) {
         roomInfoStr = CreateString(&state->arena, "\n\nYou open the chest and recieve a mythril vest.");
         if (!roomInfoStr) {
           return false;
@@ -220,84 +199,66 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
         *pOpenedChest = 2;
       }
       break;
-    default:
-      break;
+    case InvalidRoomType:
+      return false;
   }
 
-
   state->body = CreateString(&state->arena, "%s%" PRIRoomCoord "%s%" PRIRoomCoord "%s%s",
-                             bodyBeginning, state->roomInfo->x + 1, bodyMiddle,
-                             state->roomInfo->y + 1, bodyEnding, roomInfoStr);
+                             bodyBeginning, currentRoom->x + 1, bodyMiddle,
+                             currentRoom->y + 1, bodyEnding, roomInfoStr);
   if (!state->body) {
     return false;
   }
 
   for (uint_fast8_t i = 0; i < state->inputCount; ++i) {
     switch (state->inputs[i].outcome) {
-      case GotoScreenOutcome:
+      case GameCombatFightOutcome:
+      case GameCombatFleeOutcome:
+      case GameCombatLeaveOutcome:
+      case GameSwapEquipmentOutcome:
+      case GetNextOutputOutcome:
+      case GotoPreviousScreenOutcome:
+      case QuitGameOutcome:
+        break;
+      case GotoScreenOutcome: ;
         struct GameScreenButton button = {0};
         if (!GetGameScreenButton(state->screenID, i, &button)) {
           return false;
         }
-        
+
         switch (button.newScreenID) {
           case CombatScreen:
-            state->inputs[i].visible = state->roomInfo->type == CombatRoomType;
+            state->inputs[i].visible = currentRoom->type == CombatRoomType;
+            break;
+          default:
             break;
         }
         break;
       case GameGoNorthOutcome:
         state->inputs[i].visible =
-          GetGameRoom(info, state->roomInfo->x, state->roomInfo->y + 1)->type != InvalidRoomType;
+          GetGameRoomID(info, currentRoom->x, currentRoom->y + 1) != SIZE_MAX;
         break;
       case GameGoEastOutcome:
         state->inputs[i].visible =
-          GetGameRoom(info, state->roomInfo->x + 1, state->roomInfo->y)->type != InvalidRoomType;
+          GetGameRoomID(info, currentRoom->x + 1, currentRoom   ->y) != SIZE_MAX;
         break;
       case GameGoSouthOutcome:
         state->inputs[i].visible =
-          GetGameRoom(info, state->roomInfo->x, state->roomInfo->y - 1)->type != InvalidRoomType;
+          GetGameRoomID(info, currentRoom->x, currentRoom->y - 1) != SIZE_MAX;
         break;
       case GameGoWestOutcome:
         state->inputs[i].visible =
-          GetGameRoom(info, state->roomInfo->x - 1, state->roomInfo->y)->type != InvalidRoomType;
+          GetGameRoomID(info, currentRoom->x - 1, currentRoom->y) != SIZE_MAX;
         break;
       case GameHealthChangeOutcome:
-        state->inputs[i].visible = state->roomInfo->type == HealthChangeRoomType;
+        state->inputs[i].visible = currentRoom->type == HealthChangeRoomType;
         break;
       case GameOpenChestOutcome:
-        state->inputs[i].visible = *pOpenedChest == 0 && state->roomInfo->type == CustomChestRoomType;
+        state->inputs[i].visible = *pOpenedChest == 0 && currentRoom->type == CustomChestRoomType;
         break;
-      default:
-        break;
+      case InvalidInputOutcome:
+        return false;
     }
-  }
-
-  return true;
-}
-
-static bool CreatePlayerStatsScreen(const struct GameInfo *info, struct GameState *state) {
-  (void)info;
-
-  struct GameScreen screen = {0};
-  if (!GetGameScreen(state->screenID, &screen)) {
-    return false;
-  }
-
-  state->body = CreateString(&state->arena, "%s\n\n"
-                                    "Health: %" PRIPlayerStat "\n"
-                                    "Stamina: %" PRIPlayerStat "\n"
-                                    "Physical Attack: %" PRIPlayerStat "\n"
-                                    "Magic Attack: %" PRIPlayerStat "\n"
-                                    "Physical Defence: %" PRIPlayerStat "\n"
-                                    "Magic Defence: %" PRIPlayerStat,
-                             screen.body,
-                             state->playerInfo.health, state->playerInfo.stamina,
-                             state->playerInfo.physAtk, state->playerInfo.magAtk,
-                             state->playerInfo.physDef, state->playerInfo.magDef
-  );
-  if (!state->body) {
-    return false;
   }
 
   return true;
@@ -311,7 +272,7 @@ static bool CreateSaveScreen(const struct GameInfo *info, struct GameState *stat
     return false;
   }
 
-  const char *password = SaveState(state);
+  const char *password = SaveState(info, state);
   if (!password) {
     return false;
   }
@@ -324,30 +285,47 @@ static bool CreateSaveScreen(const struct GameInfo *info, struct GameState *stat
   return true;
 }
 
+// TODO: Show agility
 static bool CreatePlayerEquipmentScreen(const struct GameInfo* info, struct GameState* state) {
   struct GameScreen screen = { 0 };
   if (!GetGameScreen(state->screenID, &screen)) {
     return false;
   }
 
-  struct EquipmentInfo *slot0 = GetEquippedItem(info, &state->playerInfo, 0);
-  struct EquipmentInfo *slot1 = GetEquippedItem(info, &state->playerInfo, 1);
-  struct EquipmentInfo *slot2 = GetEquippedItem(info, &state->playerInfo, 2);
-  struct EquipmentInfo *slot3 = GetEquippedItem(info, &state->playerInfo, 3);
-  struct EquipmentInfo *slot4 = GetEquippedItem(info, &state->playerInfo, 4);
-  struct EquipmentInfo *slot5 = GetEquippedItem(info, &state->playerInfo, 5);
-  struct EquipmentInfo *slot6 = GetEquippedItem(info, &state->playerInfo, 6);
+  const struct EquipmentInfo *slot0 = GetEquippedItem(info, &state->playerInfo, HelmetEquipmentType);
+  const struct EquipmentInfo *slot1 = GetEquippedItem(info, &state->playerInfo, ChestPieceEquipmentType);
+  const struct EquipmentInfo *slot2 = GetEquippedItem(info, &state->playerInfo, GlovesEquipmentType);
+  const struct EquipmentInfo *slot3 = GetEquippedItem(info, &state->playerInfo, PantsEquipmentType);
+  const struct EquipmentInfo *slot4 = GetEquippedItem(info, &state->playerInfo, BootsEquipmentType);
+  const struct EquipmentInfo *slot5 = GetEquippedItem(info, &state->playerInfo, PriWeapEquipmentType);
+  const struct EquipmentInfo *slot6 = GetEquippedItem(info, &state->playerInfo, SecWeapEquipmentType);
   if (!slot0 || !slot1 || !slot2 || !slot3 || !slot4 || !slot5 || !slot6) {
     return false;
   }
 
+  // TODO: Merge with combat.c copy
+  char bar[] = "██████████";
+  size_t blockSize = strlen("█");
+
+  uint_fast8_t playerHealthBarCount = (state->playerInfo.health + 9) / 10;
+  uint_fast8_t playerStaminaBarCount = (state->playerInfo.stamina + 9) / 10;
+  uint_fast8_t playerPriPhysAtkBarCount = (-state->playerInfo.priPhysAtk + 9) / 10;
+  uint_fast8_t playerPriMagAtkBarCount = (-state->playerInfo.priMagAtk + 9) / 10;
+  uint_fast8_t playerSecPhysAtkBarCount = (-state->playerInfo.secPhysAtk + 9) / 10;
+  uint_fast8_t playerSecMajAtkBarCount = (-state->playerInfo.secMagAtk + 9) / 10;
+  uint_fast8_t playerPhysDefBarCount = (state->playerInfo.physDef + 9) / 10;
+  uint_fast8_t playerMagDefBarCount = (state->playerInfo.magDef + 9) / 10;
+
+  // TODO: Switch to half width bars for 5% accuracy
   state->body = CreateString(&state->arena, "%s\n\n"
-    "Health: %" PRIPlayerStat "\n"
-    "Stamina: %" PRIPlayerStat "\n"
-    "Physical Attack: %" PRIPlayerStat "\n"
-    "Magic Attack: %" PRIPlayerStat "\n"
-    "Physical Defence: %" PRIPlayerStat "\n"
-    "Magic Defence: %" PRIPlayerStat "\n\n"
+    "Health:                    %.*s%*s : %3" PRIEntityStat "\n"
+    "Stamina:                   %.*s%*s : %3" PRIEntityStat "\n"
+    "Primary Physical Attack:   %.*s%*s : %3" PRIEntityStatDiff "\n"
+    "Primary Magic Attack:      %.*s%*s : %3" PRIEntityStatDiff "\n"
+    "Secondary Physical Attack: %.*s%*s : %3" PRIEntityStatDiff "\n"
+    "Secondary Magic Attack:    %.*s%*s : %3" PRIEntityStatDiff "\n"
+    "Physical Defence:          %.*s%*s : %3" PRIEntityStat "\n"
+    "Magic Defence:             %.*s%*s : %3" PRIEntityStat "\n\n"
     "Helmet: %s\n"
     "Chest: %s\n"
     "Gloves: %s\n"
@@ -356,9 +334,14 @@ static bool CreatePlayerEquipmentScreen(const struct GameInfo* info, struct Game
     "Primary Weapon: %s\n"
     "Secondary Weapon: %s\n",
     screen.body,
-    state->playerInfo.health, state->playerInfo.stamina,
-    state->playerInfo.physAtk, state->playerInfo.magAtk,
-    state->playerInfo.physDef, state->playerInfo.magDef,
+    playerHealthBarCount * blockSize, bar, 10 - playerHealthBarCount, "", state->playerInfo.health,
+    playerStaminaBarCount * blockSize, bar, 10 - playerStaminaBarCount, "", state->playerInfo.stamina,
+    playerPriPhysAtkBarCount * blockSize, bar, 10 - playerPriPhysAtkBarCount, "", -state->playerInfo.priPhysAtk,
+    playerPriMagAtkBarCount * blockSize, bar, 10 - playerPriMagAtkBarCount, "", -state->playerInfo.priMagAtk,
+    playerSecPhysAtkBarCount * blockSize, bar, 10 - playerSecPhysAtkBarCount, "", -state->playerInfo.secPhysAtk,
+    playerSecMajAtkBarCount * blockSize, bar, 10 - playerSecMajAtkBarCount, "", -state->playerInfo.secMagAtk,
+    playerPhysDefBarCount * blockSize, bar, 10 - playerPhysDefBarCount, "", state->playerInfo.physDef,
+    playerMagDefBarCount * blockSize, bar, 10 - playerMagDefBarCount, "", state->playerInfo.magDef,
     slot0->name, slot1->name, slot2->name, slot3->name,
     slot4->name, slot5->name, slot6->name
   );
@@ -377,14 +360,64 @@ static bool CreateCombatScreen(const struct GameInfo *info, struct GameState *st
     return false;
   }
 
-  state->body = CreateString(&state->arena, "%s\n\n"
-    "Health: %" PRIPlayerStat "\n"
-    "Stamina: %" PRIPlayerStat "\n",
-    screen.body,
-    state->playerInfo.health, state->playerInfo.stamina
-  );
+  if (!state->combatInfo.inCombat && !StartCombat(info, state)) {
+    return false;
+  }
+
+  if (!UpdateCombat(state)) {
+    return false;
+  }
+
+  if (!state->combatInfo.performingEnemyAttacks && state->combatInfo.playerWon) {
+    // TODO: Move to json?
+    state->body = "You have won!";
+  } else {
+    state->body = CreateCombatString(info, state);
+  }
   if (!state->body) {
     return false;
+  }
+
+  // TODO: Allow changing weapons during combat
+  // TODO: Add health, stamina potions
+
+  for (uint_fast8_t i = 0; i < state->inputCount; ++i) {
+    struct GameScreenButton button = {0};
+    if (!GetGameScreenButton(state->screenID, i, &button)) {
+      return false;
+    }
+
+    if (GameCombatFleeOutcome == button.outcome && GameScreen == button.newScreenID) {
+      state->inputs[i].visible = !state->combatInfo.playerWon;
+      continue;
+    }
+
+    if (GameCombatLeaveOutcome == button.outcome && GameScreen == button.newScreenID) {
+      state->inputs[i].visible = state->combatInfo.playerWon;
+      continue;
+    }
+
+    if (state->inputs[i].outcome != GameCombatFightOutcome) {
+      continue;
+    }
+
+    if (button.enemyID >= state->combatInfo.enemyCount) {
+      state->inputs[i].visible = false;
+      continue;
+    }
+
+    // TODO: Disable rather than hide to allow preplaning moves?
+    // Currently if you press multiple buttons at once, the cmd frontend runs them all in order but
+    // if an enemy dies it screws up the button ordering from then on and so causes undesired moves
+    state->inputs[i].visible = 0 != state->combatInfo.enemies[button.enemyID].health;
+    state->inputs[i].title = CreateString(&state->arena, "%s%zu", button.title, button.enemyID + 1);
+    if (!state->inputs[i].title) {
+      return false;
+    }
+  }
+
+  if (state->combatInfo.performingEnemyAttacks) {
+    state->inputType = NoneScreenInputType;
   }
 
   return true;
@@ -397,7 +430,6 @@ static bool CreateCombatScreen(const struct GameInfo *info, struct GameState *st
 bool (*CustomScreenCode[])(const struct GameInfo *, struct GameState *) = {
   CreateMainMenuScreen,
   CreateGameScreen,
-  CreatePlayerStatsScreen,
   CreateSaveScreen,
   CreatePlayerEquipmentScreen,
   CreateCombatScreen

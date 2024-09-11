@@ -3,8 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../backend/crossprint.h"
 #include "../backend/game.h"
+#include "../backend/stringhelpers.h"
 #include "frontend.h"
 
 #if defined(_WIN32)

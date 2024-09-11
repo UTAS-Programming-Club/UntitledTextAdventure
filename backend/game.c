@@ -7,17 +7,18 @@
 #include <types.h>
 
 #include "../frontends/frontend.h"
+#include "entities.h"
 #include "equipment.h"
 #include "game.h"
 #include "parser.h"
 #include "save.h"
 #include "screens.h"
 #include "specialscreens.h"
-#include "enemies.h"
 
 static const struct RoomInfo DefaultRoom = {.type = InvalidRoomType};
 
-struct Enemy testEnemy = {0, 100, 100, 0, -20};
+static enum InputOutcome ChangeGameRoom(const struct GameInfo *restrict, struct GameState *restrict,
+                                        RoomCoord, RoomCoord);
 
 bool SetupBackend(struct GameInfo *info) {
   if (!info) {
@@ -29,7 +30,7 @@ bool SetupBackend(struct GameInfo *info) {
     goto end;
   }
 
-  if (info->rooms || info->equipment) {
+  if (info->rooms || info->equipment || info->enemyAttacks) {
     PrintError("Parts of the game info struct are already initialised");
     goto end;
   }
@@ -44,25 +45,34 @@ bool SetupBackend(struct GameInfo *info) {
   info->name = LoadGameName();
   if (!info->name) {
     PrintError("Failed to load game name from %s", dataFile);
-    goto end;
+    goto unload_data;
   }
 
   if (!LoadDefaultPlayerInfo(&info->defaultPlayerInfo)) {
     PrintError("Failed to load default player info from %s", dataFile);
-    goto end;
+    goto unload_data;
   }
 
-  if (!LoadGameRooms(&info->floorSize, &info->rooms)) {
+  struct RoomInfo *rooms = NULL;
+  if (!LoadGameRooms(&info->floorSize, &rooms)) {
     PrintError("Failed to load rooms from %s", dataFile);
     goto free_rooms;
   }
+  info->rooms = rooms;
 
-  if (!LoadGameEquipment(&info->equipment)) {
+  struct EquipmentInfo *equipment;
+  if (!LoadGameEquipment(&equipment)) {
     PrintError("Failed to load equipment from %s", dataFile);
     goto free_rooms;
   }
-  
-  // TODO: set up loading enemies from json
+  info->equipment = equipment;
+
+  struct EnemyAttackInfo *enemyAttacks;
+  if (!LoadGameEnemyAttacks(&info->enemyAttackCount, &enemyAttacks)) {
+    PrintError("Failed to load enemy attacks from %s", dataFile);
+    goto free_equipment;
+  }
+  info->enemyAttacks = enemyAttacks;
 
   unsigned int currentTimestamp = time(NULL);
   srand(currentTimestamp);
@@ -70,9 +80,17 @@ bool SetupBackend(struct GameInfo *info) {
   info->initialised = true;
   goto end;
 
+free_equipment:
+  free(equipment);
+  info->equipment = NULL;
+
 free_rooms:
-  free(info->rooms);
+  free(rooms);
+  info->floorSize = 0;
   info->rooms = NULL;
+
+unload_data:
+  UnloadGameData();
 
 end:
   return info->initialised;
@@ -88,6 +106,12 @@ bool UpdateGameState(const struct GameInfo *info, struct GameState *state) {
   }
 
   arena_reset(&state->arena);
+
+  // TODO: Move to input handling
+  if (state->startedGame && 0 == state->playerInfo.health) {
+    state->screenID = PlayerDeathScreen;
+    state->startedGame = false;
+  }
 
   if (!CreateScreen(state)) {
     return false;
@@ -136,30 +160,43 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
       return InvalidInputOutcome;
     }
 
+    const struct RoomInfo *currentRoom = GetCurrentGameRoom(info, state);
+    if (currentRoom->type == InvalidRoomType) {
+      return InvalidInputOutcome;
+    }
+
     switch (button.outcome) {
+      case GameCombatLeaveOutcome:
+        state->combatInfo.inCombat = false;
+        /* fallthrough */
       case GotoScreenOutcome:
+        state->previousScreenID = state->screenID;
         state->screenID = button.newScreenID;
         return GetNextOutputOutcome;
+      case GotoPreviousScreenOutcome:
+        state->screenID = state->previousScreenID;
+        state->previousScreenID = InvalidScreen; // GameScreen?
+        return GetNextOutputOutcome;
       case GameGoNorthOutcome:
-        state->roomInfo = GetGameRoom(info, state->roomInfo->x, state->roomInfo->y + 1);
-        return GetNextOutputOutcome;
+        state->previousRoomID = state->roomID;
+        return ChangeGameRoom(info, state, currentRoom->x, currentRoom->y + 1);
       case GameGoEastOutcome:
-        state->roomInfo = GetGameRoom(info, state->roomInfo->x + 1, state->roomInfo->y);
-        return GetNextOutputOutcome;
+        state->previousRoomID = state->roomID;
+        return ChangeGameRoom(info, state, currentRoom->x + 1, currentRoom->y);
       case GameGoSouthOutcome:
-        state->roomInfo = GetGameRoom(info, state->roomInfo->x, state->roomInfo->y - 1);
-        return GetNextOutputOutcome;
+        state->previousRoomID = state->roomID;
+        return ChangeGameRoom(info, state, currentRoom->x, currentRoom->y - 1);
       case GameGoWestOutcome:
-        state->roomInfo = GetGameRoom(info, state->roomInfo->x - 1, state->roomInfo->y);
-        return GetNextOutputOutcome;
+        state->previousRoomID = state->roomID;
+        return ChangeGameRoom(info, state, currentRoom->x - 1, currentRoom->y);
       case GameHealthChangeOutcome: ;
         // chance to dodge the trap else take damage
         // TODO: Ensure this only trigger once, track room completion?
         // TODO: End game when health is 0
         // eventPercentageChance is (0, 100] so chance must be as well
-        uint_fast8_t chance = rand() % MaximumPlayerStat + 1;
-        if(state->roomInfo->eventPercentageChance > chance) {
-          UpdatePlayerStat(&state->playerInfo.health, state->roomInfo->eventStatChange);
+        uint_fast8_t chance = rand() % MaximumEntityStat + 1;
+        if (currentRoom->eventPercentageChance > chance) {
+          ModifyEntityStat(&state->playerInfo.health, currentRoom->eventStatChange);
         }
         return GetNextOutputOutcome;
       case GameOpenChestOutcome: ;
@@ -171,7 +208,8 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
         *pOpenedChest = 1;
         return GetNextOutputOutcome;
       case GameSwapEquipmentOutcome: ;
-        EquipmentID curID = GetEquippedItemID(&state->playerInfo, button.equipmentType);
+        EquipmentID origID = GetEquippedItemID(&state->playerInfo, button.equipmentType);
+        EquipmentID curID = origID;
         if (InvalidEquipmentID == curID) {
           return InvalidInputOutcome;
         }
@@ -194,42 +232,92 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
           }
 
           if (!SetEquippedItem(&state->playerInfo, button.equipmentType, curID)
-              || !UpdateStats(info, state)) {
+              || !RefreshPlayerStats(info, state)) {
             return InvalidInputOutcome;
           }
+
+          state->combatInfo.changedEquipment |= state->combatInfo.inCombat && origID != curID;
           break;
         }
+
         return GetNextOutputOutcome;
-      case GameFightEnemiesOutcome:
-        EnemyAttackSequ(state, &testEnemy);
+      case GameCombatFightOutcome:
+        return HandleGameCombat(info, state, button.enemyID);
+      case GameCombatFleeOutcome:
+        state->screenID = GameScreen;
+        state->combatInfo.inCombat = false;
+        state->roomID = state->previousRoomID;
+        state->previousRoomID = SIZE_MAX;
         return GetNextOutputOutcome;
       case QuitGameOutcome:
-        return button.outcome;
-      default:
+        return QuitGameOutcome;
+      case GetNextOutputOutcome:
+      case InvalidInputOutcome:
         return InvalidInputOutcome;
     }
   } else if (TextScreenInputType == state->inputType && textInput) {
-      if ('\x1B' /* ESC */ == textInput[0] && '\0' == textInput[1]) {
-        state->screenID = state->previousScreenID;
-        return GetNextOutputOutcome;
-      } else if (LoadState(info, state, textInput)) {
-        state->screenID = state->nextScreenID;
-        return GetNextOutputOutcome;
-      }
+    if ('\x1B' /* ESC */ == textInput[0] && '\0' == textInput[1]) {
+      state->screenID = state->previousScreenID;
+      return GetNextOutputOutcome;
+    } else if (LoadState(info, state, textInput)) {
+      state->screenID = state->nextScreenID;
+      return GetNextOutputOutcome;
+    }
+  } else if (NoneScreenInputType == state->inputType) {
+    switch (state->screenID) {
+      case CombatScreen:
+        return HandleGameCombat(info, state, SIZE_MAX);
+      case GameScreen:
+      case InvalidScreen:
+      case LoadScreen:
+      case MainMenuScreen:
+      case PlayerDeathScreen:
+      case PlayerEquipmentScreen:
+      case SaveScreen:
+        return InvalidInputOutcome;
+    }
   }
 
   return InvalidInputOutcome;
 }
 
-// Room may not exist, always check result->exists
-const struct RoomInfo *GetGameRoom(const struct GameInfo *info, RoomCoord x, RoomCoord y) {
+size_t GetGameRoomID(const struct GameInfo *restrict info, RoomCoord x, RoomCoord y) {
   if (!info || !info->initialised
       || x >= info->floorSize || y >= info->floorSize
       || x == InvalidRoomCoord || y == InvalidRoomCoord) {
+    return SIZE_MAX;
+  }
+
+  size_t roomID = y * info->floorSize + x;
+  if (info->rooms[roomID].type == InvalidRoomType) {
+    return SIZE_MAX;
+  }
+
+  return roomID;
+}
+
+const struct RoomInfo *GetCurrentGameRoom(const struct GameInfo *restrict info, const struct GameState *restrict state) {
+  if (!info || !info->initialised || !state) {
     return &DefaultRoom;
   }
 
-  return &(info->rooms[y * info->floorSize + x]);
+  return &info->rooms[state->roomID];
+}
+
+static enum InputOutcome ChangeGameRoom(const struct GameInfo *restrict info, struct GameState *restrict state,
+                                        RoomCoord x, RoomCoord y) {
+  size_t roomID = GetGameRoomID(info, x, y);
+  if (SIZE_MAX == roomID) {
+    return InvalidInputOutcome;
+  }
+  state->roomID = roomID;
+
+  if (CombatRoomType == info->rooms[roomID].type) {
+    state->previousScreenID = state->screenID;
+    state->screenID = CombatScreen;
+  }
+
+  return GetNextOutputOutcome;
 }
 
 void CleanupGame(struct GameState *state) {
@@ -246,9 +334,13 @@ void CleanupBackend(struct GameInfo *info) {
   UnloadGameData();
   if (info && info->initialised) {
     info->initialised = false;
-    free(info->rooms);
+    free((void *)info->rooms);
+    info->floorSize = 0;
     info->rooms = NULL;
-    free(info->equipment);
+    free((void *)info->equipment);
     info->equipment = NULL;
+    free((void *)info->enemyAttacks);
+    info->enemyAttackCount = 0;
+    info->enemyAttacks = NULL;
   }
 }

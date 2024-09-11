@@ -19,10 +19,10 @@ $(INCDIR)/zstd.h: third_party/zstd/lib/zstd.h | $(INCDIR)
 	cp -r $< $@
 
 
-$(INCDIR)/types.h: backend/types.in.h
+$(INCDIR)/types.h: backend/types.in.h | $(INCDIR)
 	$(CPP) -P -C -nostdinc -o $@ $<
 
-$(INCDIR)/types.json.h: backend/types.in.h
+$(INCDIR)/types.json.h: backend/types.in.h | $(INCDIR)
 	$(CPP) -P -o $@ $< -D JSON
 
 GameData.json: GameData.in.json $(INCDIR)/types.json.h
@@ -33,23 +33,25 @@ GameData.json: GameData.in.json $(INCDIR)/types.json.h
 # I had an issue with save.c not being rebuilt if types.in.h
 # changed because it did not depend on types.h directly,
 # despite depending on game.h which does depend on types.h.
-backend/enemies.h: backend/game.h
-backend/equipment.h: backend/game.h
-backend/game.h: $(INCDIR)/arena.h $(INCDIR)/types.h # backend/equipment.h
+backend/combat.h: backend/entities.h $(INCDIR)/types.h
+backend/entities.h: $(INCDIR)/types.h
+backend/equipment.h: backend/entities.h backend/game.h
+backend/game.h: backend/combat.h backend/entities.h $(INCDIR)/arena.h $(INCDIR)/types.h
 backend/parser.h: backend/game.h $(INCDIR)/types.h
 backend/save.h: backend/game.h
 backend/screens.h: backend/game.h
 backend/specialscreens.h: backend/game.h
+backend/stringhelpers.h: $(INCDIR)/arena.h
 
 
 # Objects
-$(LIBDIR)/crossprint.o: backend/crossprint.c backend/crossprint.h | $(LIBDIR)
+$(LIBDIR)/combat.o: backend/combat.c backend/combat.h backend/entities.h backend/game.h backend/stringhelpers.h frontends/frontend.h $(INCDIR)/types.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
-$(LIBDIR)/enemies.o: backend/enemies.c backend/enemies.h backend/equipment.h backend/game.h | $(LIBDIR)
+$(LIBDIR)/entities.o: backend/entities.c backend/entities.h backend/equipment.h backend/game.h backend/stringhelpers.h frontends/frontend.h $(INCDIR)/types.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
-$(LIBDIR)/equipment.o: backend/equipment.c backend/equipment.h backend/game.h $(INCDIR)/types.h | $(LIBDIR)
+$(LIBDIR)/equipment.o: backend/equipment.c backend/entities.h backend/equipment.h backend/game.h $(INCDIR)/types.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 $(LIBDIR)/fileloading_frontend.o: backend/fileloading.c backend/fileloading.h frontends/frontend.h | $(LIBDIR)
@@ -58,19 +60,22 @@ $(LIBDIR)/fileloading_frontend.o: backend/fileloading.c backend/fileloading.h fr
 $(LIBDIR)/fileloading_printgamedata.o: backend/fileloading.c backend/fileloading.h frontends/frontend.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
-$(LIBDIR)/game.o: backend/game.c backend/equipment.h backend/game.h backend/parser.h backend/screens.h backend/save.h backend/specialscreens.h frontends/frontend.h $(INCDIR)/arena.h $(INCDIR)/types.h | $(LIBDIR)
+$(LIBDIR)/game.o: backend/game.c backend/entities.h backend/equipment.h backend/game.h backend/parser.h backend/screens.h backend/save.h backend/specialscreens.h frontends/frontend.h $(INCDIR)/arena.h $(INCDIR)/types.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 $(LIBDIR)/parser.o: backend/parser.c backend/equipment.h backend/fileloading.h backend/game.h backend/parser.h backend/specialscreens.h backend/winresources.h frontends/frontend.h $(INCDIR)/cJSON.h $(INCDIR)/types.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
-$(LIBDIR)/save.o: backend/save.c backend/equipment.h backend/game.h backend/save.h $(INCDIR)/arena.h $(INCDIR)/types.h $(INCDIR)/zstd.h | $(LIBDIR)
+$(LIBDIR)/save.o: backend/save.c backend/entities.h backend/equipment.h backend/game.h backend/save.h $(INCDIR)/arena.h $(INCDIR)/types.h $(INCDIR)/zstd.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 $(LIBDIR)/screens.o: backend/screens.c backend/game.h backend/parser.h backend/screens.h $(INCDIR)/arena.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
-$(LIBDIR)/specialscreens.o: backend/specialscreens.c backend/game.h backend/parser.h backend/save.h backend/specialscreens.h $(INCDIR)/arena.h | $(LIBDIR)
+$(LIBDIR)/specialscreens.o: backend/specialscreens.c backend/entities.h backend/equipment.h backend/game.h backend/parser.h backend/save.h backend/specialscreens.h backend/stringhelpers.h $(INCDIR)/arena.h $(INCDIR)/types.h | $(LIBDIR)
+	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
+
+$(LIBDIR)/stringhelpers.o: backend/stringhelpers.c backend/stringhelpers.h $(INCDIR)/arena.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 
@@ -92,17 +97,17 @@ $(LIBDIR)/jsonvalidator.o: tools/jsonvalidator.cpp $(INCDIR)/jsoncons $(INCDIR)/
 $(LIBDIR)/mapwatch.o: tools/mapwatch.c | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
-$(LIBDIR)/printgamedata.o: tools/printgamedata.c backend/crossprint.h backend/parser.h frontends/frontend.h | $(LIBDIR)
+$(LIBDIR)/printgamedata.o: tools/printgamedata.c backend/parser.h backend/stringhelpers.h frontends/frontend.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 
-$(LIBDIR)/cmdfrontend.o: frontends/cmdfrontend.c backend/crossprint.h backend/game.h frontends/frontend.h | $(LIBDIR)
+$(LIBDIR)/cmdfrontend.o: frontends/cmdfrontend.c backend/game.h backend/stringhelpers.h frontends/frontend.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
 $(LIBDIR)/discordfrontend.o: frontends/discordfrontend.c frontends/frontend.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
-$(LIBDIR)/gdifrontend.o: frontends/gdifrontend.c backend/crossprint.h backend/game.h frontends/frontend.h | $(LIBDIR)
+$(LIBDIR)/gdifrontend.o: frontends/gdifrontend.c backend/game.h backend/stringhelpers.h frontends/frontend.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS) $(GDICFLAGS)
 
 $(LIBDIR)/winresources.o: frontends/winresources.rc backend/winresources.h GameData.json | $(LIBDIR)
@@ -121,11 +126,7 @@ $(BINDIR)/mapwatch$(EXECSUFFIX): $(LIBDIR)/mapwatch.o
 	$(CC) -o $(basename $@) $^ $(CFLAGS)
 	$(call MAKEEXEC,$@,$(basename $@))
 
-ifdef ISWINDOWS
-$(BINDIR)/printgamedata$(EXECSUFFIX): $(LIBDIR)/cJSON.o $(LIBDIR)/crossprint.o $(LIBDIR)/equipment.o $(LIBDIR)/fileloading_printgamedata.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/printgamedata.o $(LIBDIR)/save.o $(LIBDIR)/screens.o $(LIBDIR)/specialscreens.o $(LIBDIR)/libzstd.a | $(BINDIR)
-else # !ISWINDOWS
-$(BINDIR)/printgamedata$(EXECSUFFIX): $(LIBDIR)/cJSON.o $(LIBDIR)/equipment.o $(LIBDIR)/fileloading_printgamedata.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/printgamedata.o $(LIBDIR)/save.o $(LIBDIR)/screens.o $(LIBDIR)/specialscreens.o $(LIBDIR)/libzstd.a | $(BINDIR)
-endif # ISWINDOWS/!ISWINDOWS
+$(BINDIR)/printgamedata$(EXECSUFFIX): $(LIBDIR)/cJSON.o $(LIBDIR)/combat.o $(LIBDIR)/entities.o $(LIBDIR)/equipment.o $(LIBDIR)/fileloading_printgamedata.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/printgamedata.o $(LIBDIR)/save.o $(LIBDIR)/screens.o $(LIBDIR)/specialscreens.o $(LIBDIR)/stringhelpers.o $(LIBDIR)/libzstd.a | $(BINDIR)
 	$(CC) -o $(basename $@) $^ $(CFLAGS) -lm
 	$(call MAKEEXEC,$@,$(basename $@))
 

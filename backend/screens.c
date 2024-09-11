@@ -25,9 +25,10 @@ bool CreateScreen(struct GameState *state) {
   state->customScreenCodeID = screen.customScreenCodeID;
   state->inputType = screen.inputType;
 
+  // TODO: Use a switch
   if (state->inputType == ButtonScreenInputType) {
     uint_fast8_t buttonCount = GetGameScreenButtonCount(state->screenID);
-    if (buttonCount == UINT_FAST8_MAX) {
+    if (0 == buttonCount) {
       return false;
     }
     state->inputCount = buttonCount;
@@ -47,7 +48,6 @@ bool CreateScreen(struct GameState *state) {
       state->inputs[i].outcome = button.outcome;
     }
   } else if (state->inputType == TextScreenInputType) {
-    state->previousScreenID = screen.previousScreenID;
     state->nextScreenID = screen.nextScreenID;
   } else {
     return false;
