@@ -170,16 +170,12 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
   WriteMap(info, currentRoom);
 #endif
 
-  size_t openedChestVarOffset = GetGameStateOffset(state->screenID, 1);
-  if (openedChestVarOffset == SIZE_MAX) {
-    return InvalidInputOutcome;
-  }
-  uint8_t *pOpenedChest = (uint8_t *)(state->stateData + openedChestVarOffset);
-
   const char *roomInfoStr = "";
   switch (currentRoom->type) {
-    case CombatRoomType:
     case EmptyRoomType:
+      state->roomData[currentRoom->y * info->floorSize * currentRoom->x] = true;
+      break;
+    case CombatRoomType:
       break;
     // TODO: Add other options w/ extra info such as failing etc
     case HealthChangeRoomType:
@@ -190,14 +186,15 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
       break;
     // TODO: Use data from json
     case CustomChestRoomType:
-      if (*pOpenedChest == 1) {
-        roomInfoStr = CreateString(&state->arena, "\n\nYou open the chest and recieve a mythril vest.");
-        if (!roomInfoStr) {
-          return false;
-        }
-        UnlockItem(&state->playerInfo, 11);
-        *pOpenedChest = 2;
-      }
+      // TODO: Use room visited and item not given instead of *pOpenedChest == 1
+      // if (*pOpenedChest == 1) {
+      //   roomInfoStr = CreateString(&state->arena, "\n\nYou open the chest and recieve a mythril vest.");
+      //   if (!roomInfoStr) {
+      //     return false;
+      //   }
+      //   UnlockItem(&state->playerInfo, 11);
+      //   *pOpenedChest = 2;
+      // }
       break;
     case InvalidRoomType:
       return false;
@@ -254,7 +251,9 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
         state->inputs[i].visible = currentRoom->type == HealthChangeRoomType;
         break;
       case GameOpenChestOutcome:
-        state->inputs[i].visible = *pOpenedChest == 0 && currentRoom->type == CustomChestRoomType;
+        state->inputs[i].visible =
+          !state->roomData[currentRoom->y * info->floorSize * currentRoom->x]
+          && currentRoom->type == CustomChestRoomType;
         break;
       case InvalidInputOutcome:
         return false;

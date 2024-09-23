@@ -256,14 +256,6 @@
       // type: uint32_t
       "size": 4,
       "default": 0
-    },
-    {
-      "screenID": GameScreen,
-      // name: scuffed (picked up item)
-      "stateID": 1,
-      // type: uint8_t
-      "size": 1,
-      "default": 0
     }
   ],
   // TODO: Support multiple floors

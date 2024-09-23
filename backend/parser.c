@@ -230,7 +230,7 @@ bool LoadDefaultPlayerInfo(struct PlayerInfo *player) {
   return true;
 }
 
-bool LoadGameRooms(uint_fast8_t *restrict floorSize, struct RoomInfo **rooms) {
+bool LoadGameRooms(size_t *restrict floorSize, struct RoomInfo **rooms) {
   if (!GameData || !floorSize || !rooms) {
     return false;
   }
@@ -263,7 +263,7 @@ bool LoadGameRooms(uint_fast8_t *restrict floorSize, struct RoomInfo **rooms) {
     JSON_GETJSONARRAYITEMNUMBERERROR(x, jsonPosition, 0, false);
     JSON_GETJSONARRAYITEMNUMBERERROR(y, jsonPosition, 1, false);
 
-    uint_fast16_t idx = *floorSize * y + x;
+    size_t idx = *floorSize * y + x;
     struct RoomInfo *room = &(*rooms)[idx];
     room->x = x;
     room->y = y;
@@ -347,7 +347,7 @@ bool LoadGameEnemyAttacks(size_t *restrict enemyAttackCount, struct EnemyAttackI
 
 // Currently only integers are supported
 // TODO: Support floating point
-bool InitGameState(size_t *gameStateSize, unsigned char **gameState) {
+bool InitGameState(size_t *gameStateSize, uint8_t **gameState) {
   if (!gameStateSize || !gameState) {
     return false;
   }

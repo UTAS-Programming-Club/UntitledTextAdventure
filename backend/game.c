@@ -105,6 +105,14 @@ bool UpdateGameState(const struct GameInfo *info, struct GameState *state) {
     return false;
   }
 
+  if (!state->roomData) {
+    state->roomDataSize = info->floorSize * info->floorSize;
+    state->roomData = calloc(sizeof *state->roomData, state->roomDataSize);
+  }
+  if (!state->roomData) {
+    return false;
+  }
+
   arena_reset(&state->arena);
 
   // TODO: Move to input handling
@@ -168,6 +176,7 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
     switch (button.outcome) {
       case GameCombatLeaveOutcome:
         state->combatInfo.inCombat = false;
+        state->roomData[currentRoom->y * info->floorSize * currentRoom->x] = true;
         /* fallthrough */
       case GotoScreenOutcome:
         state->previousScreenID = state->screenID;
@@ -199,13 +208,8 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
           ModifyEntityStat(&state->playerInfo.health, currentRoom->eventStatChange);
         }
         return GetNextOutputOutcome;
-      case GameOpenChestOutcome: ;
-        size_t openedChestVarOffset = GetGameStateOffset(state->screenID, 1);
-        if (openedChestVarOffset == SIZE_MAX) {
-          return InvalidInputOutcome;
-        }
-        uint8_t *pOpenedChest = (uint8_t *)(state->stateData + openedChestVarOffset);
-        *pOpenedChest = 1;
+      case GameOpenChestOutcome:
+        state->roomData[currentRoom->y * info->floorSize * currentRoom->x] = true;
         return GetNextOutputOutcome;
       case GameSwapEquipmentOutcome: ;
         EquipmentID origID = GetEquippedItemID(&state->playerInfo, button.equipmentType);
@@ -312,7 +316,7 @@ static enum InputOutcome ChangeGameRoom(const struct GameInfo *restrict info, st
   }
   state->roomID = roomID;
 
-  if (CombatRoomType == info->rooms[roomID].type) {
+  if (CombatRoomType == info->rooms[roomID].type && !state->roomData[roomID]) {
     state->previousScreenID = state->screenID;
     state->screenID = CombatScreen;
   }
@@ -326,21 +330,27 @@ void CleanupGame(struct GameState *state) {
   }
 
   arena_free(&state->arena);
+  free(state->roomData);
+  state->roomDataSize = 0;
+  state->roomData = NULL;
   free(state->stateData);
+  state->stateDataSize = 0;
   state->stateData = NULL;
 }
 
 void CleanupBackend(struct GameInfo *info) {
   UnloadGameData();
-  if (info && info->initialised) {
-    info->initialised = false;
-    free((void *)info->rooms);
-    info->floorSize = 0;
-    info->rooms = NULL;
-    free((void *)info->equipment);
-    info->equipment = NULL;
-    free((void *)info->enemyAttacks);
-    info->enemyAttackCount = 0;
-    info->enemyAttacks = NULL;
+  if (!info || !info->initialised) {
+    return;
   }
+
+  info->initialised = false;
+  free((void *)info->rooms);
+  info->floorSize = 0;
+  info->rooms = NULL;
+  free((void *)info->equipment);
+  info->equipment = NULL;
+  free((void *)info->enemyAttacks);
+  info->enemyAttackCount = 0;
+  info->enemyAttacks = NULL;
 }

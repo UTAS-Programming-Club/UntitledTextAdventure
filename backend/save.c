@@ -59,7 +59,7 @@ static inline uint_fast8_t GetVal(char c) {
 
 
 // Encode state to ascii string using base 85 with 4 bytes to 5 chars
-static const char *EncodeData(Arena *arena, const unsigned char *data, size_t dataSize, size_t *passwordSize) {
+static const char *EncodeData(Arena *arena, const uint8_t *data, size_t dataSize, size_t *passwordSize) {
 #ifdef _DEBUG
   if (!arena || !data || !passwordSize) {
     return NULL;
@@ -346,12 +346,12 @@ const char *SaveState(const struct GameInfo *info, struct GameState *state) {
   }
 
   struct SaveData *data;
-  size_t dataSize = sizeof *data + state->stateDataSize;
+  size_t dataSize = sizeof *data + state->roomDataSize + state->stateDataSize;
   data = arena_alloc(&state->arena, dataSize);
   if (!data) {
     return NULL;
   }
-  unsigned char *pData = (unsigned char *)data;
+  uint8_t *pData = (uint8_t *)data;
 
   data->version = PasswordVersion;
   // TODO: Switch to roomID
@@ -379,9 +379,14 @@ const char *SaveState(const struct GameInfo *info, struct GameState *state) {
     data->equippedItems[i] = InvalidEquipmentID != id ? id + 1 : InvalidEquipmentIDSave;
   }
 
-  memcpy(pData + sizeof *data, state->stateData, state->stateDataSize);
+  pData += sizeof *data;
 
-  return CompressAndEncodeData(&state->arena, pData, dataSize);
+  memcpy(pData, state->roomData, state->roomDataSize);
+  pData += state->roomDataSize;
+
+  memcpy(pData, state->stateData, state->stateDataSize);
+
+  return CompressAndEncodeData(&state->arena, (uint8_t *)data, dataSize);
 }
 
 bool LoadState(const struct GameInfo *info, struct GameState *state, const char *password) {
@@ -389,13 +394,16 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
     return false;
   }
 
+  const uint8_t *pData;
   struct SaveData *data;
-  size_t expectedSize = sizeof *data + state->stateDataSize;
+  size_t expectedSize = sizeof *data + state->roomDataSize + state->stateDataSize;
   unsigned long long dataSize;
-  data = (struct SaveData *)DecodeAndDecompressData(&state->arena, password, expectedSize, &dataSize);
-  if (!data || expectedSize != dataSize) {
+  pData = DecodeAndDecompressData(&state->arena, password, expectedSize, &dataSize);
+  if (!pData || expectedSize != dataSize) {
     return false;
   }
+
+  data = (struct SaveData *)pData;
 
   if (PasswordVersion != data->version) {
     return false;
@@ -429,7 +437,12 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
     return false;
   }
 
-  memcpy(state->stateData, (uint8_t *)data + sizeof *data, state->stateDataSize);
+  pData += sizeof *data;
+
+  memcpy(state->roomData, pData, state->roomDataSize);
+  pData += state->roomDataSize;
+
+  memcpy(state->stateData, pData, state->stateDataSize);
 
   state->previousScreenID = InvalidScreen;
   state->previousRoomID = SIZE_MAX;
@@ -449,6 +462,8 @@ bool CreateNewState(const struct GameInfo *info, struct GameState *state) {
   if (!RefreshPlayerStats(info, state)) {
     return false;
   }
+
+  memset(state->roomData, 0, state->roomDataSize);
 
   // TODO: Reset state, requires removing main menu state
 
