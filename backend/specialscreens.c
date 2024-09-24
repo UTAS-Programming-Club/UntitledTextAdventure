@@ -186,15 +186,13 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
       break;
     // TODO: Use data from json
     case CustomChestRoomType:
-      // TODO: Use room visited and item not given instead of *pOpenedChest == 1
-      // if (*pOpenedChest == 1) {
-      //   roomInfoStr = CreateString(&state->arena, "\n\nYou open the chest and recieve a mythril vest.");
-      //   if (!roomInfoStr) {
-      //     return false;
-      //   }
-      //   UnlockItem(&state->playerInfo, 11);
-      //   *pOpenedChest = 2;
-      // }
+      if (state->eventOccurred) {
+        roomInfoStr = CreateString(&state->arena, "\n\nYou open the chest and recieve a mythril vest.");
+        if (!roomInfoStr) {
+          return false;
+        }
+        state->eventOccurred = false;
+      }
       break;
     case InvalidRoomType:
       return false;

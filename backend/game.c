@@ -210,6 +210,9 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
         return GetNextOutputOutcome;
       case GameOpenChestOutcome:
         state->roomData[currentRoom->y * info->floorSize * currentRoom->x] = true;
+        state->eventOccurred = true;
+        // TODO: Support changing unlocked items
+        UnlockItem(&state->playerInfo, 11);
         return GetNextOutputOutcome;
       case GameSwapEquipmentOutcome: ;
         EquipmentID origID = GetEquippedItemID(&state->playerInfo, button.equipmentType);

@@ -86,6 +86,7 @@ struct GameState {
 
   size_t previousRoomID;
   size_t roomID;
+  bool eventOccurred;
 
   bool startedGame;
   Arena arena;
