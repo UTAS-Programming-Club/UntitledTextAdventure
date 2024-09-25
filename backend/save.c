@@ -361,7 +361,7 @@ const char *SaveState(const struct GameInfo *info, struct GameState *state) {
     return NULL;
   }
 
-  size_t statefulRooms = CountStatefulRooms(info);
+  size_t statefulRoomsByteCount = (CountStatefulRooms(info) + 7) / 8;
 
   const struct RoomInfo *currentRoom = GetCurrentGameRoom(info, state);
   if (currentRoom->type == InvalidRoomType) {
@@ -369,7 +369,7 @@ const char *SaveState(const struct GameInfo *info, struct GameState *state) {
   }
 
   struct SaveData *data;
-  size_t dataSize = sizeof *data + statefulRooms + state->stateDataSize;
+  size_t dataSize = sizeof *data + statefulRoomsByteCount + state->stateDataSize;
   data = arena_alloc(&state->arena, dataSize);
   if (!data) {
     return NULL;
@@ -391,8 +391,9 @@ const char *SaveState(const struct GameInfo *info, struct GameState *state) {
       return NULL;
     }
 
-    uint_fast8_t arrIdx = i / 8;
+    size_t arrIdx = i / 8;
     uint_fast8_t arrOff = i % 8;
+
     data->unlockedItems[arrIdx] |= unlocked << arrOff;
   }
 
@@ -404,14 +405,19 @@ const char *SaveState(const struct GameInfo *info, struct GameState *state) {
 
   pData += sizeof *data;
 
-  for (size_t i = 0; i < state->roomDataSize; ++i) {
+  memset(pData, 0, statefulRoomsByteCount);
+  for (size_t i = 0, j = 0; i < state->roomDataSize; ++i) {
     if (info->rooms[i].type == InvalidRoomType || info->rooms[i].type == EmptyRoomType) {
       continue;
     }
 
-    *pData = state->roomData[i];
-    ++pData;
+    size_t arrIdx = j / 8;
+    uint_fast8_t arrOff = j % 8;
+
+    pData[arrIdx] |= state->roomData[i] << arrOff;
+    ++j;
   }
+  pData += statefulRoomsByteCount;
 
   memcpy(pData, state->stateData, state->stateDataSize);
 
@@ -423,11 +429,11 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
     return false;
   }
 
-  size_t statefulRooms = CountStatefulRooms(info);
+  size_t statefulRoomsByteCount = (CountStatefulRooms(info) + 7) / 8;
 
   const uint8_t *pData;
   struct SaveData *data;
-  size_t expectedSize = sizeof *data + statefulRooms + state->stateDataSize;
+  size_t expectedSize = sizeof *data + statefulRoomsByteCount + state->stateDataSize;
   unsigned long long dataSize;
   pData = DecodeAndDecompressData(&state->arena, password, expectedSize, &dataSize);
   if (!pData || expectedSize != dataSize) {
@@ -445,7 +451,7 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
 
   // TODO: Unroll to multiples of 8?
   for (EquipmentID i = 0; i < EquipmentCount; ++i) {
-    uint_fast8_t arrIdx = i / 8;
+    size_t arrIdx = i / 8;
     uint_fast8_t arrOff = i % 8;
 
     if (!(data->unlockedItems[arrIdx] & 1 << arrOff)) {
@@ -471,14 +477,18 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
   pData += sizeof *data;
 
   memset(state->roomData, 0, state->roomDataSize);
-  for (size_t i = 0; i < state->roomDataSize; ++i) {
+  for (size_t i = 0, j = 0; i < state->roomDataSize; ++i) {
     if (info->rooms[i].type == InvalidRoomType || info->rooms[i].type == EmptyRoomType) {
       continue;
     }
 
-    state->roomData[i] = *pData;
-    ++pData;
+    size_t arrIdx = j / 8;
+    uint_fast8_t arrOff = j % 8;
+
+    state->roomData[i] = pData[arrIdx] & 1 << arrOff;
+    ++j;
   }
+  pData += statefulRoomsByteCount;
 
   memcpy(state->stateData, pData, state->stateDataSize);
 

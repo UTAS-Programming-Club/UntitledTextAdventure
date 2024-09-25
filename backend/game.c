@@ -200,8 +200,8 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
         return ChangeGameRoom(info, state, currentRoom->x - 1, currentRoom->y);
       case GameHealthChangeOutcome: ;
         // chance to dodge the trap else take damage
-        // TODO: Ensure this only trigger once, track room completion?
-        // TODO: End game when health is 0
+        // TODO: Mention outcome via state->eventOccurred and specialscreens.c
+        // TODO: Ensure this only triggers once via state->roomData[state->roomID]
         // eventPercentageChance is (0, 100] so chance must be as well
         uint_fast8_t chance = rand() % MaximumEntityStat + 1;
         if (currentRoom->eventPercentageChance > chance) {
