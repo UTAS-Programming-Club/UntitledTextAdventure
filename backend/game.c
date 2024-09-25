@@ -176,7 +176,7 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
     switch (button.outcome) {
       case GameCombatLeaveOutcome:
         state->combatInfo.inCombat = false;
-        state->roomData[currentRoom->y * info->floorSize * currentRoom->x] = true;
+        state->roomData[state->roomID] = true;
         /* fallthrough */
       case GotoScreenOutcome:
         state->previousScreenID = state->screenID;
@@ -209,7 +209,7 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
         }
         return GetNextOutputOutcome;
       case GameOpenChestOutcome:
-        state->roomData[currentRoom->y * info->floorSize * currentRoom->x] = true;
+        state->roomData[state->roomID] = true;
         state->eventOccurred = true;
         // TODO: Support changing unlocked items
         UnlockItem(&state->playerInfo, 11);
@@ -319,6 +319,7 @@ static enum InputOutcome ChangeGameRoom(const struct GameInfo *restrict info, st
   }
   state->roomID = roomID;
 
+  // If the new room is a combat room, it should go directly into combat rather than showing the room
   if (CombatRoomType == info->rooms[roomID].type && !state->roomData[roomID]) {
     state->previousScreenID = state->screenID;
     state->screenID = CombatScreen;

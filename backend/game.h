@@ -93,7 +93,6 @@ struct GameState {
 
   static_assert(sizeof(unsigned char) == sizeof(uint8_t), "Need 8 bit bytes.");
   size_t roomDataSize;
-  // TODO Make sure all accesses to roomData use GetGameRoomID
   bool *roomData;
 
   size_t stateDataSize;

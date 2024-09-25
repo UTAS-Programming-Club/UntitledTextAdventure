@@ -173,7 +173,7 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
   const char *roomInfoStr = "";
   switch (currentRoom->type) {
     case EmptyRoomType:
-      state->roomData[currentRoom->y * info->floorSize * currentRoom->x] = true;
+      state->roomData[state->roomID] = true;
       break;
     case CombatRoomType:
       break;
@@ -184,9 +184,9 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
         return false;
       }
       break;
-    // TODO: Use data from json
     case CustomChestRoomType:
       if (state->eventOccurred) {
+        // TODO: Get actual item name
         roomInfoStr = CreateString(&state->arena, "\n\nYou open the chest and recieve a mythril vest.");
         if (!roomInfoStr) {
           return false;
@@ -250,8 +250,7 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
         break;
       case GameOpenChestOutcome:
         state->inputs[i].visible =
-          !state->roomData[currentRoom->y * info->floorSize * currentRoom->x]
-          && currentRoom->type == CustomChestRoomType;
+          !state->roomData[state->roomID] && currentRoom->type == CustomChestRoomType;
         break;
       case InvalidInputOutcome:
         return false;
