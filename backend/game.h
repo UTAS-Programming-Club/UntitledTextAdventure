@@ -22,6 +22,7 @@ struct GameInfo {
 
   struct PlayerInfo defaultPlayerInfo;
 
+  // TODO: Replace floorSize with actual length of rooms array
   size_t floorSize;
   const struct RoomInfo *rooms;
 
@@ -88,6 +89,7 @@ struct GameState {
   size_t roomID;
   bool eventOccurred;
 
+  // TODO: Check startedGame before using struct
   bool startedGame;
   Arena arena;
 

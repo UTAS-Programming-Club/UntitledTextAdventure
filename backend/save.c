@@ -334,11 +334,34 @@ static const void *DecodeAndDecompressData(Arena *arena, const char *password, s
 }
 
 
+static size_t CountStatefulRooms(const struct GameInfo *info) {
+#ifdef _DEBUG
+  if (!info || !info->initialised) {
+    return 0;
+  }
+#endif
+
+  size_t roomCount = 0;
+
+  for (size_t i = 0; i < info->floorSize * info->floorSize; ++i) {
+    if (info->rooms[i].type == InvalidRoomType || info->rooms[i].type == EmptyRoomType) {
+      continue;
+    }
+
+    ++roomCount;
+  }
+
+  return roomCount;
+}
+
+
 // TODO: Test zstd compression
 const char *SaveState(const struct GameInfo *info, struct GameState *state) {
-  if (!state || !state->startedGame) {
+  if (!info || !info->initialised || !state || !state->startedGame) {
     return NULL;
   }
+
+  size_t statefulRooms = CountStatefulRooms(info);
 
   const struct RoomInfo *currentRoom = GetCurrentGameRoom(info, state);
   if (currentRoom->type == InvalidRoomType) {
@@ -346,7 +369,7 @@ const char *SaveState(const struct GameInfo *info, struct GameState *state) {
   }
 
   struct SaveData *data;
-  size_t dataSize = sizeof *data + state->roomDataSize + state->stateDataSize;
+  size_t dataSize = sizeof *data + statefulRooms + state->stateDataSize;
   data = arena_alloc(&state->arena, dataSize);
   if (!data) {
     return NULL;
@@ -381,8 +404,14 @@ const char *SaveState(const struct GameInfo *info, struct GameState *state) {
 
   pData += sizeof *data;
 
-  memcpy(pData, state->roomData, state->roomDataSize);
-  pData += state->roomDataSize;
+  for (size_t i = 0; i < state->roomDataSize; ++i) {
+    if (info->rooms[i].type == InvalidRoomType || info->rooms[i].type == EmptyRoomType) {
+      continue;
+    }
+
+    *pData = state->roomData[i];
+    ++pData;
+  }
 
   memcpy(pData, state->stateData, state->stateDataSize);
 
@@ -394,9 +423,11 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
     return false;
   }
 
+  size_t statefulRooms = CountStatefulRooms(info);
+
   const uint8_t *pData;
   struct SaveData *data;
-  size_t expectedSize = sizeof *data + state->roomDataSize + state->stateDataSize;
+  size_t expectedSize = sizeof *data + statefulRooms + state->stateDataSize;
   unsigned long long dataSize;
   pData = DecodeAndDecompressData(&state->arena, password, expectedSize, &dataSize);
   if (!pData || expectedSize != dataSize) {
@@ -439,8 +470,15 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
 
   pData += sizeof *data;
 
-  memcpy(state->roomData, pData, state->roomDataSize);
-  pData += state->roomDataSize;
+  memset(state->roomData, 0, state->roomDataSize);
+  for (size_t i = 0; i < state->roomDataSize; ++i) {
+    if (info->rooms[i].type == InvalidRoomType || info->rooms[i].type == EmptyRoomType) {
+      continue;
+    }
+
+    state->roomData[i] = *pData;
+    ++pData;
+  }
 
   memcpy(state->stateData, pData, state->stateDataSize);
 
