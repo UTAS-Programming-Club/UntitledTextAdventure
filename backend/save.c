@@ -340,8 +340,8 @@ const char *SaveState(const struct GameInfo *info, struct GameState *state) {
     return NULL;
   }
 
-  const struct RoomInfo *currentRoom = GetCurrentGameRoom(info, state);
-  if (currentRoom->type == InvalidRoomType) {
+  const struct CRoomInfo *currentRoom = GetCurrentGameRoom(info, state);
+  if (!currentRoom) {
     return InvalidInputOutcome;
   }
 
@@ -433,7 +433,7 @@ bool LoadState(const struct GameInfo *info, struct GameState *state, const char 
 
   state->previousScreenID = InvalidScreen;
   state->previousRoomID = SIZE_MAX;
-  state->roomID = GetGameRoomID(info, data->x, data->y);
+  state->roomID = GetGameRoomID(info, state, data->x, data->y);
   state->startedGame = true;
   state->combatInfo.inCombat = false;
 
@@ -454,7 +454,7 @@ bool CreateNewState(const struct GameInfo *info, struct GameState *state) {
 
   state->previousScreenID = InvalidScreen;
   state->previousRoomID = SIZE_MAX;
-  state->roomID = GetGameRoomID(info, DefaultRoomCoordX, DefaultRoomCoordY);
+  state->roomID = GetGameRoomID(info, state, DefaultRoomCoordX, DefaultRoomCoordY);
   state->startedGame = true;
   state->combatInfo.inCombat = false;
   return true;

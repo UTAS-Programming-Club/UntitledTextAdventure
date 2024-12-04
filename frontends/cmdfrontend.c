@@ -18,6 +18,8 @@
 #include "../backend/stringhelpers.h"
 #include "frontend.h"
 
+#include "hllib.h"
+
 #define ESC "\x1B"
 #define CSI ESC "["
 
@@ -329,8 +331,12 @@ void PrintError(const char *error, ...) {
   fputs(".\n", stderr);
 }
 
-int main(void) {
+int main(int argc, char **argv) {
   int res = 1;
+
+  if (!hl_lib_setup(argc, argv)) {
+    return res;
+  }
 
   struct GameInfo info = {0};
   if (!SetupConsole() || !SetupBackend(&info)) {
@@ -349,5 +355,6 @@ int main(void) {
   CleanupBackend(&info);
 reset_console:
   ResetConsole();
+  hl_lib_cleanup();
   return res;
 }

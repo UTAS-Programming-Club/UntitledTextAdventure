@@ -42,7 +42,7 @@ backend/save.h: backend/game.h
 backend/screens.h: backend/game.h
 backend/specialscreens.h: backend/game.h
 backend/stringhelpers.h: $(INCDIR)/arena.h
-
+frontends/cmdfrontend-haxe.c: backend/game.h $(INCDIR)/arena.h
 
 # Objects
 $(LIBDIR)/combat.o: backend/combat.c backend/combat.h backend/entities.h backend/game.h backend/stringhelpers.h frontends/frontend.h $(INCDIR)/types.h | $(LIBDIR)
@@ -104,6 +104,10 @@ $(LIBDIR)/printgamedata.o: tools/printgamedata.c backend/parser.h backend/string
 $(LIBDIR)/cmdfrontend.o: frontends/cmdfrontend.c backend/game.h backend/stringhelpers.h frontends/frontend.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
+# TODO Setup build/haxe/, haxe/ and .haxelib/ stuff here
+$(LIBDIR)/cmdfrontend-haxe.o: frontends/cmdfrontend-haxe.c backend/GlobalData-haxe.c build/haxe/ | $(LIBDIR)
+	$(CC) $(CSTD) -c -o $@ $< $(CFLAGS)
+
 $(LIBDIR)/discordfrontend.o: frontends/discordfrontend.c frontends/frontend.h | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -c -o $@ $< $(CFLAGS)
 
@@ -131,8 +135,8 @@ $(BINDIR)/printgamedata$(EXECSUFFIX): $(LIBDIR)/cJSON.o $(LIBDIR)/combat.o $(LIB
 	$(call MAKEEXEC,$@,$(basename $@))
 
 
-$(BINDIR)/cmdgame$(EXECSUFFIX): $(LIBDIR)/cmdfrontend.o $(COMMONOBJS) $(WINRESOURCES) | $(BINDIR)
-	$(CC) -o $(basename $@) $^ $(CFLAGS) -lm
+$(BINDIR)/cmdgame$(EXECSUFFIX): $(LIBDIR)/cmdfrontend.o $(LIBDIR)/cmdfrontend-haxe.o $(COMMONOBJS) $(WINRESOURCES) | $(BINDIR)
+	$(CC) -o $(basename $@) $^ $(CFLAGS) -lm -L .haxelib/hashlink/git -lhl
 	$(call MAKEEXEC,$@,$(basename $@))
 
 ifdef 0 # ISWINDOWS

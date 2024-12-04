@@ -46,8 +46,8 @@ bool StartCombat(const struct GameInfo *restrict info, struct GameState *restric
   state->combatInfo.lastWriteCombatEventInfoID = 0;
   state->combatInfo.performingEnemyAttacks = false;
 
-  const struct RoomInfo *room = GetCurrentGameRoom(info, state);
-  if (room->type == InvalidRoomType) {
+  const struct CRoomInfo *room = GetCurrentGameRoom(info, state);
+  if (!room) {
     return false;
   }
 

@@ -1,6 +1,6 @@
 COMMONOBJS := $(LIBDIR)/cJSON.o $(LIBDIR)/combat.o $(LIBDIR)/entities.o $(LIBDIR)/equipment.o $(LIBDIR)/fileloading_frontend.o $(LIBDIR)/game.o $(LIBDIR)/parser.o $(LIBDIR)/save.o $(LIBDIR)/screens.o $(LIBDIR)/specialscreens.o $(LIBDIR)/stringhelpers.o $(LIBDIR)/libzstd.a
 
-CFLAGS += -I $(INCDIR)
+CFLAGS += -I $(INCDIR) -I .haxelib/hashlink/git/src/ -I $(OUTPUT)/haxe/
 CXXFLAGS += -I $(INCDIR)
 
 ifdef ISCOSMO

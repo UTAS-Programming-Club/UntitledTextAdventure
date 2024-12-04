@@ -23,7 +23,7 @@
 #define UpperHalfVerLine "╵"
 #define LowerHalfVerLine "╷"
 
-#ifdef _DEBUG
+#ifdef _DEBUG_DISABLED
 static const char *TopGridRowChars[] =    {"┌", "┬", "┐"};
 static const char *MiddleGridRowChars[] = {"├", "┼", "┤"};
 static const char *BottomGridRowChars[] = {"└", "┴", "┘"};
@@ -38,7 +38,8 @@ static void FPrintRep(char *sym, uint_fast8_t count, FILE *fp) {
 // TODO: Indicate room type
 // TODO: Fix room openings for other sizes or remove resizing support
 static void WriteRoomRow(FILE *fp, RoomCoord roomX, RoomCoord roomY, uint_fast8_t outputRow,
-                         const struct GameInfo *info, const struct RoomInfo *playerRoom) {
+                         const struct GameInfo *info, struct GameState *state,
+                         const struct CRoomInfo *playerRoom) {
   if (RoomGridSizeVer - 1 == outputRow && 0 != roomY) {
     return;
   }
@@ -60,7 +61,7 @@ static void WriteRoomRow(FILE *fp, RoomCoord roomX, RoomCoord roomY, uint_fast8_
       fputs(rowChars[1], fp);
     }
 
-    if (0 == outputRow && GetGameRoomID(info, roomX, roomY + 1) != SIZE_MAX) {
+    if (0 == outputRow && GetGameRoomID(info, state, roomX, roomY + 1) != SIZE_MAX) {
       fprintf(fp, HorLine "%*s" HorLine, RoomGridSizeHor - 4, "");
     } else {
       FPrintRep(HorLine, RoomGridSizeHor - 2, fp);
@@ -74,10 +75,10 @@ static void WriteRoomRow(FILE *fp, RoomCoord roomX, RoomCoord roomY, uint_fast8_
 
   // Middle Room Rows
   else {
-    enum RoomType roomExists = GetGameRoomID(info, roomX, roomY) != SIZE_MAX;
+    enum RoomType roomExists = GetGameRoomID(info, state, roomX, roomY) != SIZE_MAX;
 
     char *wallChar;
-    if (!roomExists || GetGameRoomID(info, roomX - 1, roomY) == SIZE_MAX) {
+    if (!roomExists || GetGameRoomID(info, state, roomX - 1, roomY) == SIZE_MAX) {
       wallChar = VerLine;
     } else if (1 == outputRow) {
       wallChar = UpperHalfVerLine;
@@ -104,7 +105,8 @@ static void WriteRoomRow(FILE *fp, RoomCoord roomX, RoomCoord roomY, uint_fast8_
   }
 }
 
-static void WriteMap(const struct GameInfo *info, const struct RoomInfo *currentRoom) {
+static void WriteMap(const struct GameInfo *info, struct GameState *state, 
+                     const struct CRoomInfo *currentRoom) {
   FILE *fp = fopen("Map.txt", "w");
   if (!fp) {
     return;
@@ -113,7 +115,7 @@ static void WriteMap(const struct GameInfo *info, const struct RoomInfo *current
   for (RoomCoord roomY = info->floorSize - 1; roomY != InvalidRoomCoord; --roomY) {
     for (uint_fast8_t outputRow = 0; outputRow < RoomGridSizeVer; ++outputRow) {
       for (RoomCoord roomX = 0; roomX < info->floorSize; ++roomX) {
-        WriteRoomRow(fp, roomX, roomY, outputRow, info, currentRoom);
+        WriteRoomRow(fp, roomX, roomY, outputRow, info, state, currentRoom);
       }
     }
   }
@@ -161,13 +163,13 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
     return false;
   }
 
-  const struct RoomInfo *currentRoom = GetCurrentGameRoom(info, state);
-  if (currentRoom->type == InvalidRoomType) {
+  const struct CRoomInfo *currentRoom = GetCurrentGameRoom(info, state);
+  if (!currentRoom) {
     return InvalidInputOutcome;
   }
 
-#ifdef _DEBUG
-  WriteMap(info, currentRoom);
+#ifdef _DEBUG_DISABLED
+  WriteMap(info, state, currentRoom);
 #endif
 
   size_t openedChestVarOffset = GetGameStateOffset(state->screenID, 1);
@@ -210,6 +212,9 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
     return false;
   }
 
+  puts("Test");
+  getchar();
+  
   for (uint_fast8_t i = 0; i < state->inputCount; ++i) {
     switch (state->inputs[i].outcome) {
       case GameCombatFightOutcome:
@@ -236,19 +241,19 @@ static bool CreateGameScreen(const struct GameInfo *info, struct GameState *stat
         break;
       case GameGoNorthOutcome:
         state->inputs[i].visible =
-          GetGameRoomID(info, currentRoom->x, currentRoom->y + 1) != SIZE_MAX;
+          GetGameRoomID(info, state, currentRoom->x, currentRoom->y + 1) != SIZE_MAX;
         break;
       case GameGoEastOutcome:
         state->inputs[i].visible =
-          GetGameRoomID(info, currentRoom->x + 1, currentRoom   ->y) != SIZE_MAX;
+          GetGameRoomID(info, state, currentRoom->x + 1, currentRoom   ->y) != SIZE_MAX;
         break;
       case GameGoSouthOutcome:
         state->inputs[i].visible =
-          GetGameRoomID(info, currentRoom->x, currentRoom->y - 1) != SIZE_MAX;
+          GetGameRoomID(info, state, currentRoom->x, currentRoom->y - 1) != SIZE_MAX;
         break;
       case GameGoWestOutcome:
         state->inputs[i].visible =
-          GetGameRoomID(info, currentRoom->x - 1, currentRoom->y) != SIZE_MAX;
+          GetGameRoomID(info, state, currentRoom->x - 1, currentRoom->y) != SIZE_MAX;
         break;
       case GameHealthChangeOutcome:
         state->inputs[i].visible = currentRoom->type == HealthChangeRoomType;

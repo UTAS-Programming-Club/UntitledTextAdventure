@@ -97,7 +97,7 @@ static inline double cJSON_GetOptNumberValue(const cJSON *const object, const ch
 }
 
 
-static bool GetGameRoomData(cJSON *, struct RoomInfo *);
+static bool GetGameRoomData(cJSON *, struct CRoomInfo *);
 static bool GetGameEquipmentItemData(cJSON *, struct EquipmentInfo *);
 static bool GetGameEnemyAttackData(cJSON *, struct EnemyAttackInfo *);
 
@@ -230,7 +230,7 @@ bool LoadDefaultPlayerInfo(struct PlayerInfo *player) {
   return true;
 }
 
-bool LoadGameRooms(uint_fast8_t *restrict floorSize, struct RoomInfo **rooms) {
+bool LoadGameRooms(uint_fast8_t *restrict floorSize, struct CRoomInfo **rooms) {
   if (!GameData || !floorSize || !rooms) {
     return false;
   }
@@ -264,7 +264,7 @@ bool LoadGameRooms(uint_fast8_t *restrict floorSize, struct RoomInfo **rooms) {
     JSON_GETJSONARRAYITEMNUMBERERROR(y, jsonPosition, 1, false);
 
     uint_fast16_t idx = *floorSize * y + x;
-    struct RoomInfo *room = &(*rooms)[idx];
+    struct CRoomInfo *room = &(*rooms)[idx];
     room->x = x;
     room->y = y;
     if (!GetGameRoomData(jsonRoom, room)) {
@@ -590,7 +590,7 @@ bool GetGameScreenButton(enum Screen screenID, uint_fast8_t buttonID, struct Gam
 }
 
 
-static bool GetGameRoomData(cJSON *jsonRoom, struct RoomInfo *room) {
+static bool GetGameRoomData(cJSON *jsonRoom, struct CRoomInfo *room) {
   if (!jsonRoom || !room) {
     return false;
   }

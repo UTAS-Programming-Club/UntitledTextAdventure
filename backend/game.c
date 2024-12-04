@@ -15,8 +15,6 @@
 #include "screens.h"
 #include "specialscreens.h"
 
-static const struct RoomInfo DefaultRoom = {.type = InvalidRoomType};
-
 static enum InputOutcome ChangeGameRoom(const struct GameInfo *restrict, struct GameState *restrict,
                                         RoomCoord, RoomCoord);
 
@@ -30,7 +28,7 @@ bool SetupBackend(struct GameInfo *info) {
     goto end;
   }
 
-  if (info->rooms || info->equipment || info->enemyAttacks) {
+  if (/*info->rooms ||*/ info->equipment || info->enemyAttacks) {
     PrintError("Parts of the game info struct are already initialised");
     goto end;
   }
@@ -53,12 +51,14 @@ bool SetupBackend(struct GameInfo *info) {
     goto unload_data;
   }
 
-  struct RoomInfo *rooms = NULL;
+  struct CRoomInfo *rooms = NULL;
   if (!LoadGameRooms(&info->floorSize, &rooms)) {
     PrintError("Failed to load rooms from %s", dataFile);
     goto free_rooms;
   }
-  info->rooms = rooms;
+  printf("Test1, floorSize: %i\n", info->floorSize * info->floorSize);
+  HLInitGameRooms(info->floorSize * info->floorSize, rooms);
+  puts("Test2");
 
   struct EquipmentInfo *equipment;
   if (!LoadGameEquipment(&equipment)) {
@@ -87,7 +87,6 @@ free_equipment:
 free_rooms:
   free(rooms);
   info->floorSize = 0;
-  info->rooms = NULL;
 
 unload_data:
   UnloadGameData();
@@ -160,8 +159,8 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
       return InvalidInputOutcome;
     }
 
-    const struct RoomInfo *currentRoom = GetCurrentGameRoom(info, state);
-    if (currentRoom->type == InvalidRoomType) {
+    const struct CRoomInfo *currentRoom = GetCurrentGameRoom(info, state);
+    if (!currentRoom) {
       return InvalidInputOutcome;
     }
 
@@ -281,7 +280,7 @@ enum InputOutcome HandleGameInput(const struct GameInfo *info, struct GameState 
   return InvalidInputOutcome;
 }
 
-size_t GetGameRoomID(const struct GameInfo *restrict info, RoomCoord x, RoomCoord y) {
+size_t GetGameRoomID(const struct GameInfo *restrict info, struct GameState *restrict state, RoomCoord x, RoomCoord y) {
   if (!info || !info->initialised
       || x >= info->floorSize || y >= info->floorSize
       || x == InvalidRoomCoord || y == InvalidRoomCoord) {
@@ -289,30 +288,33 @@ size_t GetGameRoomID(const struct GameInfo *restrict info, RoomCoord x, RoomCoor
   }
 
   size_t roomID = y * info->floorSize + x;
-  if (info->rooms[roomID].type == InvalidRoomType) {
+  struct CRoomInfo *room = HLGetGameRoom(state, roomID);
+
+  if (!room || room->type == InvalidRoomType) {
     return SIZE_MAX;
   }
 
   return roomID;
 }
 
-const struct RoomInfo *GetCurrentGameRoom(const struct GameInfo *restrict info, const struct GameState *restrict state) {
+const struct CRoomInfo *GetCurrentGameRoom(const struct GameInfo *restrict info, struct GameState *restrict state) {
   if (!info || !info->initialised || !state) {
-    return &DefaultRoom;
+    return NULL;
   }
 
-  return &info->rooms[state->roomID];
+  return HLGetGameRoom(state, state->roomID);
 }
 
 static enum InputOutcome ChangeGameRoom(const struct GameInfo *restrict info, struct GameState *restrict state,
                                         RoomCoord x, RoomCoord y) {
-  size_t roomID = GetGameRoomID(info, x, y);
+  size_t roomID = GetGameRoomID(info, state, x, y);
   if (SIZE_MAX == roomID) {
     return InvalidInputOutcome;
   }
   state->roomID = roomID;
 
-  if (CombatRoomType == info->rooms[roomID].type) {
+  const struct CRoomInfo *room = GetCurrentGameRoom(info, state);
+  if (CombatRoomType == room->type) {
     state->previousScreenID = state->screenID;
     state->screenID = CombatScreen;
   }
@@ -334,9 +336,7 @@ void CleanupBackend(struct GameInfo *info) {
   UnloadGameData();
   if (info && info->initialised) {
     info->initialised = false;
-    free((void *)info->rooms);
     info->floorSize = 0;
-    info->rooms = NULL;
     free((void *)info->equipment);
     info->equipment = NULL;
     free((void *)info->enemyAttacks);

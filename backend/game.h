@@ -5,6 +5,13 @@
 #include <arena.h>
 #endif
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-prototypes"
+#include <hl.h>
+#pragma GCC diagnostic pop
+#include <backend/Room.h>
+#include <hl/types/ArrayObj.h>
+
 #include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -24,7 +31,6 @@ struct GameInfo {
 
   // TODO: Change to size_t?
   uint_fast8_t floorSize;
-  const struct RoomInfo *rooms;
 
   // TODO: Require struct to be on heap and then make this an actual array?
   const struct EquipmentInfo *equipment; // Length is EquipmentCount
@@ -44,18 +50,20 @@ struct GameInput {
 
 // Do not use outside of backend
 // Never modify after creation
-struct RoomInfo {
+struct CRoomInfo {
   enum RoomType type;
 
   // Only set if type != InvalidRoomType
   RoomCoord x;
   RoomCoord y;
 
+  // Warning: Not set currently, do not attempt health change!
   // Only set if type == HealthChangeRoomType
   const char *eventDescription; // utf-8
   uint_fast8_t eventPercentageChance;
   EntityStatDiff eventStatChange;
 
+  // Warning: Not set currently, do not attempt combat!
   // Only set if type == CombatRoomType
   // TODO: Add actual enemy info with defence and other fields
   size_t enemyCount;
@@ -104,10 +112,13 @@ bool SetupBackend(struct GameInfo *);
 bool UpdateGameState(const struct GameInfo *, struct GameState *);
 enum InputOutcome HandleGameInput(const struct GameInfo *, struct GameState *, uint_fast8_t, const char *);
 // Returns SIZE_MAX if the room does not exist
-size_t GetGameRoomID(const struct GameInfo *restrict, RoomCoord, RoomCoord);
-// Room may not exist, always check result->type != InvalidRoomType
-const struct RoomInfo *GetCurrentGameRoom(const struct GameInfo *restrict, const struct GameState *restrict);
+size_t GetGameRoomID(const struct GameInfo *restrict, struct GameState *restrict, RoomCoord, RoomCoord);
+// Room may not exist, always check if result != NULL
+const struct CRoomInfo *GetCurrentGameRoom(const struct GameInfo *restrict, struct GameState *restrict);
 void CleanupGame(struct GameState *);
 void CleanupBackend(struct GameInfo *);
+
+bool HLInitGameRooms(size_t, struct CRoomInfo *);
+struct CRoomInfo *HLGetGameRoom(struct GameState *, size_t);
 
 #endif // PCGAME_GAME_H

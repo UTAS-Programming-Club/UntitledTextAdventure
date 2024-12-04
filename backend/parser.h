@@ -33,7 +33,7 @@ char *LoadGameName(void);
 bool LoadDefaultPlayerInfo(struct PlayerInfo *);
 // These arrays must be eventually freed if the functions return true
 // The RoomInfo array must be freed even if LoadGameRooms returns false
-bool LoadGameRooms(uint_fast8_t *restrict, struct RoomInfo **);
+bool LoadGameRooms(uint_fast8_t *restrict, struct CRoomInfo **);
 bool LoadGameEquipment(struct EquipmentInfo **);
 bool LoadGameEnemyAttacks(size_t *restrict, struct EnemyAttackInfo **);
 
