@@ -1,6 +1,7 @@
 package frontends;
 
 import backend.GameState;
+import backend.Screen;
 import haxe.io.Bytes;
 
 class CmdFrontend {
@@ -34,7 +35,14 @@ class CmdFrontend {
     }
   }
 
-  // static function PrintButtonInputs(state: GameState): Void
+  static function PrintButtonInputs(state: GameState, screen: ActionScreen): Void {
+    Sys.println("\n\nUse the numbers below to make a selection.");
+
+    final actions: Array<ScreenAction> = screen.GetActions(state);
+    for (i in 0...actions.length) {
+      Sys.println((i + 1) + ". " + actions[i].title);
+    }
+  }
 
 
   // Returns input text as a utf-8 string if enter is pressed, "\x1B" on esc
@@ -85,6 +93,11 @@ class CmdFrontend {
 
   static function HandleOutput(state: GameState): Bool {
     PrintOutputBody(state.currentScreen.body);
+
+    if (state.currentScreen is ActionScreen) {
+      PrintButtonInputs(state, cast(state.currentScreen, ActionScreen));
+    }
+
     return true;
   }
 
