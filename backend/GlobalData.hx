@@ -1,21 +1,17 @@
 package backend;
 
+import backend.Entity;
+import backend.Screen;
+
 class GlobalData {
-  static var initialised: Bool;
-  public static var rooms(default, null): Array<Room>;
-  
-  public static function Init(newRooms: Array<Room>): Void {
-    if (initialised) {
-      return;
-    }
+  // public static final rooms: Array<Array<Room>> = [
+  //   [
+  //   ]
+  // ];
 
-    rooms = newRooms;
-  }
+  public static final mainMenu = new Screen("This is a test");
 
-  public static function Log(): Void {
-    // Sys.print("Room {}");
-    for (room in rooms) {
-      Sys.print(room.type + ", " + room.x + ", " + room.y + "\n");
-    }
-  }
+  public static final enemyStats: Map<UnicodeString, EntityStats> = [
+    "Demon" => new EntityStats(100, 100, 10, 10, 10, 10, 10)
+  ];
 }

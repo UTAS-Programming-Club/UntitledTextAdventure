@@ -1,5 +1,7 @@
 package backend;
 
+import backend.Entity;
+
 enum abstract RoomType(Int) from Int {
   final Empty;
   final Invalid;
