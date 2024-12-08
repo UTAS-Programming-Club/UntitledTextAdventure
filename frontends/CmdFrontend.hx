@@ -1,6 +1,7 @@
 package frontends;
 
 import backend.GameState;
+import backend.GlobalData;
 import backend.Screen;
 import haxe.io.Bytes;
 
@@ -26,9 +27,9 @@ class CmdFrontend {
   }
 
 
-  static function GetButtonInput(): Int {
+  static function GetButtonInput(): UInt {
     while (true) {
-      final input = Sys.getChar(false);
+      final input: Int = Sys.getChar(false);
       if ("1".code <= input && input <= "9".code) {
         return input - "1".code;
       }
@@ -96,14 +97,28 @@ class CmdFrontend {
 
     if (state.currentScreen is ActionScreen) {
       PrintButtonInputs(state, cast(state.currentScreen, ActionScreen));
+    } else {
+      return false;
     }
 
-    return true;
+    // TODO: Remove
+    return state.currentScreen == GlobalData.mainMenu;
   }
 
   static function HandleInput(state: GameState): Bool {
-    Sys.getChar(false);
-    return false;
+    if (!(state.currentScreen is ActionScreen)) {
+      return false;
+    }
+
+    final screen = cast(state.currentScreen, ActionScreen);
+    final idx: UInt = GetButtonInput();
+    final actions: Array<ScreenAction> = screen.GetActions(state);
+    if (idx >= actions.length) {
+      // This is a recoverable error so just ignore it
+      return true;
+    }
+
+    return state.HandleGameInput(actions[idx].type);
   }
 
 
@@ -116,6 +131,9 @@ class CmdFrontend {
         break;
       }
     } while(HandleInput(state));
+
+    // TODO: Remove
+    Sys.getChar(false);
 
     ResetConsole();
   }
