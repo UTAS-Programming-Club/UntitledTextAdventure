@@ -12,6 +12,12 @@ abstract class Screen {
 
 enum ScreenActionType {
   GotoScreen(screen: Screen);
+  QuitGame;
+}
+
+enum ScreenActionOutcome {
+  GetNextOutput;
+  QuitGame;
 }
 
 class ScreenAction {
@@ -23,6 +29,10 @@ class ScreenAction {
     this.title = title;
     this.type = type;
     this.isVisible = isVisible;
+  }
+
+  public static function AlwaysVisible(state: GameState): Bool {
+    return true;
   }
 }
 

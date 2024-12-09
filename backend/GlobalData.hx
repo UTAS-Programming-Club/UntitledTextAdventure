@@ -9,11 +9,15 @@ class GlobalData {
   //   ]
   // ];
 
-  static final test = new ActionScreen(
-    "This is a test", []
+  static final gameScreen = new ActionScreen(
+    "Game rooms are not currently supported", []
   );
 
-  public static final mainMenu = new ActionScreen(
+  static final loadScreen = new ActionScreen(
+    "Game loading is not currently supported", []
+  );
+
+  public static final mainMenuScreen = new ActionScreen(
     "Untitled text adventure game\n" +
     "----------------------------\n" +
     "By the UTAS Programming Club\n\n" +
@@ -21,8 +25,18 @@ class GlobalData {
     [
       new ScreenAction(
         "Start Game",
-        ScreenActionType.GotoScreen(test),
-        function(state) return true
+        ScreenActionType.GotoScreen(gameScreen),
+        ScreenAction.AlwaysVisible
+      ),
+      new ScreenAction(
+        "Load Game",
+        ScreenActionType.GotoScreen(loadScreen),
+        ScreenAction.AlwaysVisible
+      ),
+      new ScreenAction(
+        "Quit Game",
+        ScreenActionType.QuitGame,
+        ScreenAction.AlwaysVisible
       )
     ]
   );

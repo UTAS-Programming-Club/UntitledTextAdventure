@@ -102,7 +102,10 @@ class CmdFrontend {
     }
 
     // TODO: Remove
-    return state.currentScreen == GlobalData.mainMenu;
+    if (state.currentScreen != GlobalData.mainMenuScreen) {
+      Sys.getChar(false);
+    }
+    return state.currentScreen == GlobalData.mainMenuScreen;
   }
 
   static function HandleInput(state: GameState): Bool {
@@ -111,14 +114,22 @@ class CmdFrontend {
     }
 
     final screen = cast(state.currentScreen, ActionScreen);
-    final idx: UInt = GetButtonInput();
+    final index: UInt = GetButtonInput();
     final actions: Array<ScreenAction> = screen.GetActions(state);
-    if (idx >= actions.length) {
+    if (index >= actions.length) {
       // This is a recoverable error so just ignore it
       return true;
     }
 
-    return state.HandleGameInput(actions[idx].type);
+    final outcome: ScreenActionOutcome = state.HandleGameInput(actions[index].type);
+    switch (outcome) {
+      case GetNextOutput:
+        return true;
+      case QuitGame:
+        return false;
+      default:
+        throw new haxe.Exception("Unknown screen action outcome " + outcome + " received");
+    }
   }
 
 
@@ -131,9 +142,6 @@ class CmdFrontend {
         break;
       }
     } while(HandleInput(state));
-
-    // TODO: Remove
-    Sys.getChar(false);
 
     ResetConsole();
   }
