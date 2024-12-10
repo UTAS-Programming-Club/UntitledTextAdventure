@@ -101,11 +101,7 @@ class CmdFrontend {
       return false;
     }
 
-    // TODO: Remove
-    if (state.currentScreen != GlobalData.mainMenuScreen) {
-      Sys.getChar(false);
-    }
-    return state.currentScreen == GlobalData.mainMenuScreen;
+    return true;
   }
 
   static function HandleInput(state: GameState): Bool {
@@ -135,6 +131,7 @@ class CmdFrontend {
 
   public static function main(): Void {
     SetupConsole();
+    GlobalData.Init();
 
     var state = new GameState();
     do {

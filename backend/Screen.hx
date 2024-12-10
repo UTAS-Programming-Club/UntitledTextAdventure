@@ -25,10 +25,10 @@ class ScreenAction {
   public final type: ScreenActionType;
   public final isVisible: GameState -> Bool;
 
-  public function new(title: String, type: ScreenActionType, isVisible: GameState -> Bool) {
+  public function new(title: String, type: ScreenActionType, ?isVisible: GameState -> Bool) {
     this.title = title;
     this.type = type;
-    this.isVisible = isVisible;
+    this.isVisible = isVisible ?? AlwaysVisible;
   }
 
   public static function AlwaysVisible(state: GameState): Bool {
@@ -37,11 +37,17 @@ class ScreenAction {
 }
 
 class ActionScreen extends Screen {
-  final actions: Array<ScreenAction>;
+  private var actions(default, null): Null<Array<ScreenAction>>;
 
-  public function new(body: UnicodeString, actions: Array<ScreenAction>) {
+  public function new(body: UnicodeString, ?actions: Array<ScreenAction>) {
     super(body);
-    this.actions = actions;
+    if (actions != null) {
+      this.actions = actions;
+    }
+  }
+
+  public function Init(actions: Array<ScreenAction>): Void {
+    this.actions ??= actions;
   }
 
   public function GetActions(state: GameState): Array<ScreenAction> {
