@@ -23,6 +23,10 @@ abstract class Screen {
 
 enum ScreenActionType {
   GotoScreen(screen: Screen);
+  GoNorth;
+  GoEast;
+  GoSouth;
+  GoWest;
   QuitGame;
 }
 
