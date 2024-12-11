@@ -6,6 +6,8 @@ import backend.Screen;
 import haxe.ds.Vector;
 
 class GlobalData {
+  // TODO: Support multiple floors
+  // TODO: Support removing doors between adjacent rooms
   public static final floorSize: Int = 5;
   public static final rooms = new Vector<Vector<Null<Room>>>(floorSize);
 
@@ -122,5 +124,8 @@ class GlobalData {
 
     rooms[0][0] = Room.Empty;
     rooms[1][0] = Room.Empty;
+    rooms[0][1] = Room.Empty;
+    rooms[1][1] = Room.Empty;
+    rooms[2][1] = Room.
   }
 }
