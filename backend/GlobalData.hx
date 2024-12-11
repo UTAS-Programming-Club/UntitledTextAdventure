@@ -9,11 +9,23 @@ class GlobalData {
   //   ]
   // ];
 
+  // TODO: Remove, visit count is only used for testing
+  private static var mainMenuVisitCount: Int = 0;
   public static final mainMenuScreen = new ActionScreen(
-    "Untitled text adventure game\n" +
-    "----------------------------\n" +
-    "By the UTAS Programming Club\n\n" +
-    "Currently unimplemented :("
+    function (state: GameState) {
+      var body: UnicodeString =
+        "Untitled text adventure game\n" +
+        "----------------------------\n" +
+        "By the UTAS Programming Club\n\n" +
+        "Currently unimplemented :(";
+
+      if (mainMenuVisitCount > 0) {
+        body += "\n\nReload count: " + mainMenuVisitCount;
+      }
+      mainMenuVisitCount++;
+
+      return body;
+    }
   );
 
   static final gameScreen = new ActionScreen(

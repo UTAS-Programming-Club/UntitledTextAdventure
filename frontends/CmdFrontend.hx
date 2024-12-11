@@ -18,7 +18,7 @@ class CmdFrontend {
   }
 
 
-  static function PrintOutputBody(body: String): Void {
+  static function PrintOutputBody(body: UnicodeString): Void {
     Sys.print(CSI + "?25l"); // Hide cursor
     Sys.print(CSI + "0;0H"); // Move cursor to 0, 0
     Sys.print(CSI + "0J");   // Erase entire screen
@@ -93,7 +93,7 @@ class CmdFrontend {
 
 
   static function HandleOutput(state: GameState): Bool {
-    PrintOutputBody(state.currentScreen.body);
+    PrintOutputBody(state.currentScreen.GetBody(state));
 
     if (state.currentScreen is ActionScreen) {
       PrintButtonInputs(state, cast(state.currentScreen, ActionScreen));
