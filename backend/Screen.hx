@@ -5,19 +5,19 @@ import backend.Helpers;
 import haxe.ds.Either;
 
 abstract class Screen {
-  private final body: GameState -> UnicodeString;
+  private final updateState: GameState -> UnicodeString;
 
-  public function new(body: OneOf<UnicodeString, GameState -> UnicodeString>) {
-    this.body = switch(body) {
+  public function new(updateState: OneOf<UnicodeString, GameState -> UnicodeString>) {
+    this.updateState = switch(updateState) {
       case Left(bodyStr):
         function (_: GameState) return bodyStr;
-      case Right(bodyFunc):
-        bodyFunc;
+      case Right(updateStateFunc):
+        updateStateFunc;
     }
   }
 
   public function GetBody(state: GameState): UnicodeString {
-    return this.body(state);
+    return this.updateState(state);
   }
 }
 
@@ -54,8 +54,8 @@ class ScreenAction {
 class ActionScreen extends Screen {
   private var actions(default, null): Null<Array<ScreenAction>>;
 
-  public function new(body: OneOf<UnicodeString, GameState -> UnicodeString>, ?actions: Array<ScreenAction>) {
-    super(body);
+  public function new(updateState: OneOf<UnicodeString, GameState -> UnicodeString>, ?actions: Array<ScreenAction>) {
+    super(updateState);
     if (actions != null) {
       this.actions = actions;
     }

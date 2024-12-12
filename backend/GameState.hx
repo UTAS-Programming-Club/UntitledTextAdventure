@@ -9,11 +9,16 @@ class GameState {
   public var roomState = new Vector<Vector<Null<Bool>>>(GlobalData.floorSize);
 
   public var currentScreen(default, null): Screen = GlobalData.mainMenuScreen;
-  public final player = new Player();
+  public var player(default, null): Player;
+  public var inGame(default, null): Bool = false;
 
   public function new(): Void {
-    // TODO: Move to a function that runs on first visiting the game screen after initial load or quit
-    // Currently state is kept when returning to the main menu and starting a new game
+  }
+
+  public function SetupGame(): Void {
+    player = new Player();
+    state.inGame = true;
+
     for (i in 0...roomState.length) {
       roomState[i] = new haxe.ds.Vector(GlobalData.floorSize);
     }

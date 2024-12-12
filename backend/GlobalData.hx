@@ -15,6 +15,8 @@ class GlobalData {
   private static var mainMenuVisitCount: Int = 0;
   public static final mainMenuScreen = new ActionScreen(
     function (state: GameState) {
+      state.inGame = false;
+
       var body: UnicodeString =
           "Untitled text adventure game\n"
         + "----------------------------\n"
@@ -32,6 +34,10 @@ class GlobalData {
 
   static final gameScreen = new ActionScreen(
     function (state: GameState) {
+      if (!state.inGame) {
+        state.SetupGame();
+      }
+
       var body: UnicodeString =
         "This is the game, you are in room ["
         + (state.player.X + 1) + ", " + (state.player.Y + 1)
