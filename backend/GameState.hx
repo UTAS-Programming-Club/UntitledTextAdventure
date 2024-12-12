@@ -2,29 +2,36 @@ package backend;
 
 import backend.GlobalData;
 import backend.Player;
+import backend.Room;
 import backend.Screen;
 import haxe.ds.Vector;
 
+@:nullSafety(Strict)
 class GameState {
-  public var roomState = new Vector<Vector<Null<Bool>>>(GlobalData.floorSize);
-
+  public var roomState(default, null) = new Vector<Vector<Bool>>(GlobalData.floorSize);
   public var currentScreen(default, null): Screen = GlobalData.mainMenuScreen;
+  public var inGame: Bool = false;
+
+  // TODO: Fix
+  @:nullSafety(Off)
   public var player(default, null): Player;
-  public var inGame(default, null): Bool = false;
 
   public function new(): Void {
   }
 
   public function SetupGame(): Void {
     player = new Player();
-    state.inGame = true;
+    inGame = true;
 
-    for (i in 0...roomState.length) {
-      roomState[i] = new haxe.ds.Vector(GlobalData.floorSize);
+    for (y in 0...roomState.length) {
+      roomState[y] = new haxe.ds.Vector(GlobalData.floorSize);
+      for (x in 0...roomState[y].length) {
+        final room: Null<Room> = GlobalData.rooms[y][x];
+        if (room != null && IsRoomStateful(room)) {
+          roomState[y][x] = false;
+        }
+      }
     }
-
-    // TODO: Add init for each room to couple this to room creation per state
-    roomState[2][1] = false;
   }
 
   public function HandleGameInput(action: ScreenActionType): ScreenActionOutcome {

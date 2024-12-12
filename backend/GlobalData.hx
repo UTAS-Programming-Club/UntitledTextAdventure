@@ -5,31 +5,22 @@ import backend.Room;
 import backend.Screen;
 import haxe.ds.Vector;
 
+@:nullSafety(Strict)
 class GlobalData {
   // TODO: Support multiple floors
   // TODO: Support removing doors between adjacent rooms
-  public static final floorSize: Int = 5;
+  public static final floorSize: UInt = 5;
   public static final rooms = new Vector<Vector<Null<Room>>>(floorSize);
 
-  // TODO: Remove, visit count is only used for testing
-  private static var mainMenuVisitCount: Int = 0;
   public static final mainMenuScreen = new ActionScreen(
     function (state: GameState) {
       state.inGame = false;
 
-      var body: UnicodeString =
-          "Untitled text adventure game\n"
-        + "----------------------------\n"
-        + "By the UTAS Programming Club\n\n"
-        + "Currently unimplemented :(";
-
-      if (mainMenuVisitCount > 0) {
-        body += "\n\nReload count: " + mainMenuVisitCount;
+      return "Untitled text adventure game\n"
+           + "----------------------------\n"
+           + "By the UTAS Programming Club\n\n"
+           + "Currently unimplemented :(";
       }
-      mainMenuVisitCount++;
-
-      return body;
-    }
   );
 
   static final gameScreen = new ActionScreen(
@@ -54,6 +45,8 @@ class GlobalData {
             body += "\n\nNot triggered";
             state.roomState[state.player.Y][state.player.X] = true;
           }
+        case null:
+          throw new haxe.Exception("Unknown room " + room + " recevied");
         default:
           throw new haxe.Exception("Unknown room " + room + " recevied");
       }
@@ -68,7 +61,7 @@ class GlobalData {
           if (state.player.Y == floorSize - 1) {
             return false;
           }
-          final room: Room = rooms[state.player.Y + 1][state.player.X];
+          final room: Null<Room> = rooms[state.player.Y + 1][state.player.X];
           return room != null;
         }
       ),
@@ -79,7 +72,7 @@ class GlobalData {
           if (state.player.X == floorSize - 1) {
             return false;
           }
-          final room: Room = rooms[state.player.Y][state.player.X + 1];
+          final room: Null<Room> = rooms[state.player.Y][state.player.X + 1];
           return room != null;
         }
       ),
@@ -90,7 +83,7 @@ class GlobalData {
           if (state.player.Y == 0) {
             return false;
           }
-          final room: Room = rooms[state.player.Y - 1][state.player.X];
+          final room: Null<Room> = rooms[state.player.Y - 1][state.player.X];
           return room != null;
         }
       ),
@@ -101,7 +94,7 @@ class GlobalData {
           if (state.player.X == 0) {
             return false;
           }
-          final room: Room = rooms[state.player.Y][state.player.X - 1];
+          final room: Null<Room> = rooms[state.player.Y][state.player.X - 1];
           return room != null;
         }
       ),

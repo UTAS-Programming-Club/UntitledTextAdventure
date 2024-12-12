@@ -15,8 +15,8 @@ class Player {
   public var health:  UInt = 100;
   public var agility: UInt = 20;
 
-  public var X: Int = 0;
-  public var Y: Int = 0;
+  public var X: UInt = 0;
+  public var Y: UInt = 0;
 
   public function new() {
   }

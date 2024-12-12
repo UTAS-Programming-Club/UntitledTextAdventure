@@ -9,3 +9,14 @@ enum Room {
   // CustomChest(...);
   // Combat(enemies: Array<Enemy>);
 }
+
+function IsRoomStateful(room: Room): Bool {
+  return switch(room) {
+    case Empty:
+      false;
+    case Trap(_, _):
+      true;
+    default:
+      throw new haxe.Exception("Invalid room " + room + " detected");
+  }
+}

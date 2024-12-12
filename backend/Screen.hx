@@ -4,6 +4,7 @@ import backend.GameState;
 import backend.Helpers;
 import haxe.ds.Either;
 
+@:nullSafety(Strict)
 abstract class Screen {
   private final updateState: GameState -> UnicodeString;
 
@@ -54,7 +55,8 @@ class ScreenAction {
 class ActionScreen extends Screen {
   private var actions(default, null): Null<Array<ScreenAction>>;
 
-  public function new(updateState: OneOf<UnicodeString, GameState -> UnicodeString>, ?actions: Array<ScreenAction>) {
+  public function new(updateState: OneOf<UnicodeString, GameState -> UnicodeString>,
+                      ?actions: Array<ScreenAction>) {
     super(updateState);
     if (actions != null) {
       this.actions = actions;

@@ -3,6 +3,7 @@ package backend;
 import haxe.ds.Either;
 
 // From https://code.haxe.org/category/other/passing-different-types-to-a-function-parameter.html
+@:nullSafety(Strict)
 abstract OneOf<A, B>(Either<A, B>) from Either<A, B> to Either<A, B> {
   @:from inline static function fromA<A, B>(a: A): OneOf<A, B> {
     return Left(a);
