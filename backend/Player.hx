@@ -12,14 +12,12 @@ class Player {
   // public function SwapEquipment(): Void{
   // }
 
-  public var health: UInt;
-  public var agility: UInt;
+  public var health:  UInt = 100;
+  public var agility: UInt = 20;
 
   public var X: Int = 0;
   public var Y: Int = 0;
 
-  public function new(health: UInt, agility: UInt) {
-    this.health = health;
-    this.agility = agility;
+  public function new() {
   }
 }

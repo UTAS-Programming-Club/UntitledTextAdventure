@@ -4,7 +4,7 @@ import backend.Player;
 
 enum Room {
   Empty;
-  Trap(checkStat: Stat, healthChange: );
+  Trap(lowerAgility: UInt, upperAgility: UInt, damage: UInt);
   // HealthChange(diff: Int);
   // CustomChest(...);
   // Combat(enemies: Array<Enemy>);

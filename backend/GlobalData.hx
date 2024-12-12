@@ -32,9 +32,27 @@ class GlobalData {
 
   static final gameScreen = new ActionScreen(
     function (state: GameState) {
-      return "This is the game, you are in room ["
-           + (state.player.X + 1) + ", " + (state.player.Y + 1)
-           + "].";
+      var body: UnicodeString =
+        "This is the game, you are in room ["
+        + (state.player.X + 1) + ", " + (state.player.Y + 1)
+        + "].";
+
+      final room = rooms[state.player.Y][state.player.X];
+      switch (room) {
+        case Empty:
+          // Ignore
+        case Trap(_, _):
+          if (state.roomState[state.player.Y][state.player.X]) {
+            body += "\n\nTriggered";
+          } else {
+            body += "\n\nNot triggered";
+            state.roomState[state.player.Y][state.player.X] = true;
+          }
+        default:
+          throw new haxe.Exception("Unknown room " + room + " recevied");
+      }
+
+      return body;
     },
     [
       new ScreenAction(
@@ -126,6 +144,6 @@ class GlobalData {
     rooms[1][0] = Room.Empty;
     rooms[0][1] = Room.Empty;
     rooms[1][1] = Room.Empty;
-    rooms[2][1] = Room.
+    rooms[2][1] = Room.Trap(20, 40, 10);
   }
 }
