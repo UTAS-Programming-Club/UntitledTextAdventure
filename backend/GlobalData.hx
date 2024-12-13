@@ -10,6 +10,10 @@ class GlobalData {
   // TODO: Support multiple floors
   // TODO: Support removing doors between adjacent rooms
   public static final floorSize: UInt = 5;
+  // TODO: Fix
+  // See comment above GameState.roomState for info about null issue
+  // Also causes "Null safety: Cannot unify Array<Null<backend.Room>> with haxe.extern.Rest<Dynamic>"
+  // with Null<Room> but not Room if a default value is provided like in the roomState case
   @:nullSafety(Off)
   public static final rooms = new Vector<Vector<Null<Room>>>(floorSize);
 
@@ -35,7 +39,7 @@ class GlobalData {
         + (state.player.X + 1) + ", " + (state.player.Y + 1)
         + "].";
 
-      final room = rooms[state.player.Y][state.player.X];
+      final room: Null<Room> = rooms[state.player.Y][state.player.X];
       switch (room) {
         case Empty:
           // Ignore
@@ -143,8 +147,10 @@ class GlobalData {
     ]);
 
     for (i in 0...rooms.length) {
+      // TODO: Fix
+      // See comment above GameState.roomState for info about null issue
       @:nullSafety(Off)
-      rooms[i] = new haxe.ds.Vector(floorSize);
+      rooms[i] = new Vector<Null<Room>>(floorSize);
     }
 
     rooms[0][0] = Room.Empty;

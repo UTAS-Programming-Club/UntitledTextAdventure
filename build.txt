@@ -1,5 +1,5 @@
 (cd haxe && ./setup.sh)
 cd ..
-cp -r haxe/.haxelib .haxelib
-(cd .haxelib/hashlink/git && make), disable failing libs and retry until it finishes, those libs are not used so not worth installing deps
-clear && make clean && haxe --main frontends.TestFrontend --hl out/haxe/pcgame.c && make && LD_LIBRARY_PATH=/home/joshua/src/src/programmingclub/UntitledTextAdventure/.haxelib/hashlink/git ./out/x86_64-pc-linux-gnu/debug/bin/cmdgame
+Not needed?: cp -r haxe/.haxelib .haxelib
+haxe --main frontends.CmdFrontend --interp
+haxe --main frontends.PythonFrontend --python PCGame.py
