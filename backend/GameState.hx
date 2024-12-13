@@ -8,6 +8,7 @@ import haxe.ds.Vector;
 
 @:nullSafety(Strict)
 class GameState {
+  @:nullSafety(Off)
   public var roomState(default, null) = new Vector<Vector<Bool>>(GlobalData.floorSize);
   public var currentScreen(default, null): Screen = GlobalData.mainMenuScreen;
   public var inGame: Bool = false;
@@ -22,6 +23,7 @@ class GameState {
     inGame = true;
 
     for (y in 0...roomState.length) {
+      @:nullSafety(Off)
       roomState[y] = new haxe.ds.Vector(GlobalData.floorSize);
     }
   }

@@ -10,6 +10,7 @@ class GlobalData {
   // TODO: Support multiple floors
   // TODO: Support removing doors between adjacent rooms
   public static final floorSize: UInt = 5;
+  @:nullSafety(Off)
   public static final rooms = new Vector<Vector<Null<Room>>>(floorSize);
 
   public static final mainMenuScreen = new ActionScreen(
@@ -142,6 +143,7 @@ class GlobalData {
     ]);
 
     for (i in 0...rooms.length) {
+      @:nullSafety(Off)
       rooms[i] = new haxe.ds.Vector(floorSize);
     }
 
