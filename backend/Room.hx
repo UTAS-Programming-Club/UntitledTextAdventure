@@ -2,14 +2,15 @@ package backend;
 
 import backend.Player;
 
+@:nullSafety(Strict)
 enum Room {
   Empty;
   Trap(lowerAgility: UInt, upperAgility: UInt, damage: UInt);
-  // HealthChange(diff: Int);
   // CustomChest(...);
   // Combat(enemies: Array<Enemy>);
 }
 
+@:nullSafety(Strict)
 function IsRoomStateful(room: Room): Bool {
   return switch(room) {
     case Empty:

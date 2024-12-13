@@ -3,6 +3,7 @@ package backend;
 import backend.GameState;
 import backend.Helpers;
 import haxe.ds.Either;
+import haxe.ds.Vector;
 
 @:nullSafety(Strict)
 abstract class Screen {
@@ -28,6 +29,7 @@ enum ScreenActionType {
   GoEast;
   GoSouth;
   GoWest;
+  DodgeTrap;
   QuitGame;
 }
 
@@ -36,22 +38,26 @@ enum ScreenActionOutcome {
   QuitGame;
 }
 
+@:nullSafety(Strict)
 class ScreenAction {
   public final title: UnicodeString;
   public final type: ScreenActionType;
-  public final isVisible: GameState -> Bool;
+  public final isVisible: (GameState, Room, Bool) -> Bool;
 
-  public function new(title: UnicodeString, type: ScreenActionType, ?isVisible: GameState -> Bool) {
+  public function new(title: UnicodeString, type: ScreenActionType,
+                      ?isVisible: (GameState, Room, Bool) -> Bool) {
     this.title = title;
     this.type = type;
     this.isVisible = isVisible ?? AlwaysVisible;
   }
 
-  public static function AlwaysVisible(state: GameState): Bool {
+  public static function AlwaysVisible(state: GameState, room: Room, roomState: Bool): Bool {
     return true;
   }
 }
 
+// TODO: Fix
+@:nullSafety(Off)
 class ActionScreen extends Screen {
   private var actions(default, null): Null<Array<ScreenAction>>;
 
@@ -68,6 +74,13 @@ class ActionScreen extends Screen {
   }
 
   public function GetActions(state: GameState): Array<ScreenAction> {
-    return [for (action in actions) if (action.isVisible(state)) action];
+    final room: Null<Room> = GlobalData.rooms[state.player.Y][state.player.X];
+    if (room == null) {
+      throw new haxe.Exception("Room (" + state.player.X + ", " + state.player.Y + ") does not exist");
+    }
+    final roomStateColumn: Vector<Bool> = state.roomState[state.player.Y];
+    final roomState: Bool = roomStateColumn != null && roomStateColumn[state.player.X];
+
+    return [for (action in actions) if (action.isVisible(state, room, roomState)) action];
   }
 }

@@ -45,6 +45,9 @@ class GameState {
       case GoWest:
         player.X = Std.int(Math.max(player.X - 1, 0));
         return ScreenActionOutcome.GetNextOutput;
+      case DodgeTrap:
+        roomState[player.Y][player.X] = true;
+        return ScreenActionOutcome.GetNextOutput;
       default:
         throw new haxe.Exception("Unknown screen action " + action + " recevied");
     }

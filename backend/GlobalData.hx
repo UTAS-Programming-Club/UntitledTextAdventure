@@ -43,7 +43,6 @@ class GlobalData {
             body += "\n\nTriggered";
           } else {
             body += "\n\nNot triggered";
-            state.roomState[state.player.Y][state.player.X] = true;
           }
         case null:
           throw new haxe.Exception("Unknown room " + room + " recevied");
@@ -57,7 +56,7 @@ class GlobalData {
       new ScreenAction(
         "Go North",
         ScreenActionType.GoNorth,
-        function (state: GameState) {
+        function (state: GameState, _, _) {
           if (state.player.Y == floorSize - 1) {
             return false;
           }
@@ -68,7 +67,7 @@ class GlobalData {
       new ScreenAction(
         "Go East",
         ScreenActionType.GoEast,
-        function (state: GameState) {
+        function (state: GameState, _, _) {
           if (state.player.X == floorSize - 1) {
             return false;
           }
@@ -79,7 +78,7 @@ class GlobalData {
       new ScreenAction(
         "Go South",
         ScreenActionType.GoSouth,
-        function (state: GameState) {
+        function (state: GameState, _, _) {
           if (state.player.Y == 0) {
             return false;
           }
@@ -90,12 +89,19 @@ class GlobalData {
       new ScreenAction(
         "Go West",
         ScreenActionType.GoWest,
-        function (state: GameState) {
+        function (state: GameState, _, _) {
           if (state.player.X == 0) {
             return false;
           }
           final room: Null<Room> = rooms[state.player.Y][state.player.X - 1];
           return room != null;
+        }
+      ),
+      new ScreenAction(
+        "Attempt to dodge trap",
+        ScreenActionType.DodgeTrap,
+        function (state: GameState, room: Room, roomState: Bool) {
+          return room.match(Trap(_, _)) && !roomState;
         }
       ),
       new ScreenAction(

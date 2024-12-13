@@ -1,5 +1,6 @@
 package backend;
 
+@:nullSafety(Strict)
 class Player {
   // private var helmets = haxe.ds.List<Equipment>();
   // private var chest = haxe.ds.List<Equipment>();
