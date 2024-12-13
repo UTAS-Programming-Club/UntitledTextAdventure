@@ -12,9 +12,7 @@ class GameState {
   public var currentScreen(default, null): Screen = GlobalData.mainMenuScreen;
   public var inGame: Bool = false;
 
-  // TODO: Fix
-  @:nullSafety(Off)
-  public var player(default, null): Player;
+  public var player(default, null): Player = new Player();
 
   public function new(): Void {
   }
@@ -25,12 +23,6 @@ class GameState {
 
     for (y in 0...roomState.length) {
       roomState[y] = new haxe.ds.Vector(GlobalData.floorSize);
-      for (x in 0...roomState[y].length) {
-        final room: Null<Room> = GlobalData.rooms[y][x];
-        if (room != null && IsRoomStateful(room)) {
-          roomState[y][x] = false;
-        }
-      }
     }
   }
 
