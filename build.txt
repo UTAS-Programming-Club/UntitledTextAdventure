@@ -3,3 +3,4 @@ cd ..
 Not needed?: cp -r haxe/.haxelib .haxelib
 haxe --main frontends.CmdFrontend --interp
 haxe --main frontends.PythonFrontend --python PCGame.py
+haxe --main frontends.PythonFrontend --python PCGame-temp.py -D picovision && grep -v "^Math." PCGame-temp.py > PCGame.py && rm PCGame-temp.py

@@ -50,7 +50,9 @@ class GlobalData {
             body += "\n\nNot triggered";
           }
         case null:
-          throw new haxe.Exception("Unknown room " + room + " recevied");
+          #if !picovision
+          throw new haxe.Exception("Room (" + state.player.X + ", " + state.player.Y + ") does not exist");
+          #end
         default:
           throw new haxe.Exception("Unknown room " + room + " recevied");
       }

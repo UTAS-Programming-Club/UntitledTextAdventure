@@ -76,10 +76,14 @@ class ActionScreen extends Screen {
   public function GetActions(state: GameState): Array<ScreenAction> {
     final room: Null<Room> = GlobalData.rooms[state.player.Y][state.player.X];
     if (room == null) {
+      #if picovision
+        return [];
+      #else
       throw new haxe.Exception("Room (" + state.player.X + ", " + state.player.Y + ") does not exist");
+      #end
     }
-    final roomStateColumn: Vector<Bool> = state.roomState[state.player.Y];
-    final roomState: Bool = roomStateColumn != null && roomStateColumn[state.player.X];
+    final roomStateRow: Vector<Bool> = state.roomState[state.player.Y];
+    final roomState: Bool = roomStateRow.length != 0 && roomStateRow[state.player.X];
 
     return [for (action in actions) if (action.isVisible(state, room, roomState)) action];
   }
