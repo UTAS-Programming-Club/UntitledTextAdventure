@@ -1,7 +1,5 @@
 package backend;
 
-import backend.Player;
-
 @:nullSafety(Strict)
 enum Room {
   Empty;

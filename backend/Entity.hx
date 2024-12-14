@@ -6,6 +6,7 @@ enum HealthChangeType {
   Heal;
 }
 
+@:nullSafety(Strict)
 abstract class Entity {
   private static final MaximumStat: UInt = 100;
 
@@ -64,6 +65,7 @@ abstract class Entity {
   //   }
 }
 
+@:nullSafety(Strict)
 class EntityStats {
   public final health: UInt;
   public final stamina: UInt;

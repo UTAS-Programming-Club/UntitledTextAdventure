@@ -15,7 +15,7 @@ class GlobalData {
   // Also causes "Null safety: Cannot unify Array<Null<backend.Room>> with haxe.extern.Rest<Dynamic>"
   // with Null<Room> but not Room if a default value is provided like in the roomState case
   @:nullSafety(Off)
-  public static final rooms = new Vector<Vector<Null<Room>>>(floorSize);
+  public static final rooms = new Vector<Vector<Null<Room>>>(floorSize, new Vector<Null<Room>>(0));
 
   public static final mainMenuScreen = new ActionScreen(
     function (state: GameState) {
@@ -50,6 +50,7 @@ class GlobalData {
             body += "\n\nNot triggered";
           }
         case null:
+          // TODO: Improve picovision errors
           #if !picovision
           throw new haxe.Exception("Room (" + state.player.X + ", " + state.player.Y + ") does not exist");
           #end

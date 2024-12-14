@@ -56,8 +56,7 @@ class ScreenAction {
   }
 }
 
-// TODO: Fix
-@:nullSafety(Off)
+@:nullSafety(Strict)
 class ActionScreen extends Screen {
   private var actions(default, null): Null<Array<ScreenAction>>;
 
@@ -77,14 +76,18 @@ class ActionScreen extends Screen {
     final room: Null<Room> = GlobalData.rooms[state.player.Y][state.player.X];
     if (room == null) {
       #if picovision
-        return [];
+      return [];
       #else
       throw new haxe.Exception("Room (" + state.player.X + ", " + state.player.Y + ") does not exist");
       #end
     }
+
     final roomStateRow: Vector<Bool> = state.roomState[state.player.Y];
     final roomState: Bool = roomStateRow.length != 0 && roomStateRow[state.player.X];
 
+    if (actions == null) {
+      return [];
+    }
     return [for (action in actions) if (action.isVisible(state, room, roomState)) action];
   }
 }
