@@ -11,6 +11,8 @@ class GameState {
   // Python implementation of Vector.new(Int) passes null to python.Syntax.code
   // which is not allowed, so pass an alternative representation
   // "Null safety: Cannot pass nullable value to not-nullable argument "args" of function "code""
+  // Only access roomState after calling GameState.SetupGame which is run by GlobalData.gameScreen
+  // except via ActionScreen.GetActions which handles partially setup roomState
   public var roomState(default, null) = new Vector<Vector<Bool>>(GlobalData.floorSize, new Vector(0, false));
   public var currentScreen(default, null): Screen = GlobalData.mainMenuScreen;
   public var inGame: Bool = false;

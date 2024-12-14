@@ -14,8 +14,9 @@ class GlobalData {
   // See comment above GameState.roomState for info about null issue
   // Also causes "Null safety: Cannot unify Array<Null<backend.Room>> with haxe.extern.Rest<Dynamic>"
   // with Null<Room> but not Room if a default value is provided like in the roomState case
+  // Frontends must call init before any using any functions that access rooms
   @:nullSafety(Off)
-  public static final rooms = new Vector<Vector<Null<Room>>>(floorSize, new Vector<Null<Room>>(0));
+  public static final rooms = new Vector<Vector<Null<Room>>>(floorSize, new Vector(0));
 
   public static final mainMenuScreen = new ActionScreen(
     function (state: GameState) {
