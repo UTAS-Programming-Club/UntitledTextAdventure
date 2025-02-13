@@ -25,3 +25,25 @@ abstract OneOf<A, B>(Either<A, B>) from Either<A, B> to Either<A, B> {
     }
   }
 }
+
+class Helpers {
+  public static function ThrowStr(exception: String): Void {
+    #if picovision
+    // TODO: Move to frontend
+    Sys.print("Error: " + exception);
+    while (true) {
+    }
+    #else
+    throw new haxe.Exception(exception);
+    #end
+  }
+
+  @:generic
+  public static function NullCheck<T>(?value: T, exception: String): T {
+    if (value == null) {
+      ThrowStr(exception);
+    }
+
+    return value;
+  }
+}

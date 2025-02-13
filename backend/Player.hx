@@ -2,13 +2,13 @@ package backend;
 
 @:nullSafety(Strict)
 class Player {
-  // private var helmets = haxe.ds.List<Equipment>();
-  // private var chest = haxe.ds.List<Equipment>();
-  // private var gloves = haxe.ds.List<Equipment>();
-  // private var pants = haxe.ds.List<Equipment>();
-  // private var boots = haxe.ds.List<Equipment>();
-  // private var primary = haxe.ds.List<Equipment>();
-  // private var secondary = haxe.ds.List<Equipment>();
+  // private var helmets = List<Equipment>();
+  // private var chest = List<Equipment>();
+  // private var gloves = List<Equipment>();
+  // private var pants = List<Equipment>();
+  // private var boots = List<Equipment>();
+  // private var primary = List<Equipment>();
+  // private var secondary = List<Equipment>();
 
   // public function SwapEquipment(): Void{
   // }

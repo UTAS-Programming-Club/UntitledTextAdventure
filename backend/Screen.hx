@@ -1,7 +1,8 @@
 package backend;
 
-import backend.GameState;
 import backend.Helpers;
+import backend.GameState;
+import backend.Room;
 import haxe.ds.Either;
 import haxe.ds.Vector;
 
@@ -73,21 +74,18 @@ class ActionScreen extends Screen {
   }
 
   public function GetActions(state: GameState): Array<ScreenAction> {
-    final room: Null<Room> = GlobalData.rooms[state.player.Y][state.player.X];
-    if (room == null) {
-      #if picovision
-      return [];
-      #else
-      throw new haxe.Exception("Room (" + state.player.X + ", " + state.player.Y + ") does not exist");
-      #end
-    }
+    final room: Room = GlobalData.GetRoom(state.player.X, state.player.Y);
 
-    final roomStateRow: Vector<Bool> = state.roomState[state.player.Y];
-    final roomState: Bool = roomStateRow.length != 0 && roomStateRow[state.player.X];
+    final roomStateRow: Vector<Null<BasicRoomState>> = state.roomState[state.player.Y];
+    var roomCompleted: Bool = false;
+    if (roomStateRow.length != 0) {
+      final roomState: Null<BasicRoomState> = roomStateRow[state.player.X];
+      roomCompleted = roomState != null && roomState.completed;
+    }
 
     if (actions == null) {
       return [];
     }
-    return [for (action in actions) if (action.isVisible(state, room, roomState)) action];
+    return [for (action in actions) if (action.isVisible(state, room, roomCompleted)) action];
   }
 }
