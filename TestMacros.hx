@@ -43,27 +43,27 @@ class GameGeneration {
         continue;
       }
 
-      var moduleClass: ClassType;
+      var gameFieldExpr: Null<TypedExprDef>;
       for (type in moduleTypes) {
+        var moduleClass: ClassType;
         final moduleType: ModuleType = type.toModuleType();
         switch (moduleType) {
           case TClassDecl(c):
             moduleClass = c.get();
+          default:
+            continue;
+        }
+
+        switch (moduleClass?.kind) {
+          case KModuleFields(_):
+            final gameField: Null<ClassField> = moduleClass.findField(
+              extensionInfo.fieldName, true
+            );
+            gameFieldExpr = gameField?.expr().expr;
             break;
           default:
             continue;
         }
-      }
-
-      var gameFieldExpr: Null<TypedExprDef>;
-      switch (moduleClass?.kind) {
-        case KModuleFields(_):
-          final gameField: Null<ClassField> = moduleClass.findField(
-            extensionInfo.fieldName, true
-          );
-          gameFieldExpr = gameField?.expr().expr;
-        default:
-          continue;
       }
 
       var enumInfo;
