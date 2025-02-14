@@ -8,9 +8,4 @@ enum TrapRooms {
   Test3;
 }
 
-// TODO: Use or remove
-// final TrapsExtension = new Extension(TrapRooms);
-
-class TrapsExtension implements Extension {
-  final rooms = TrapRooms;
-}
+private final TrapsExtension = new Extension(TrapRooms);

@@ -8,6 +8,4 @@ enum Rooms {
   TestB(test: Int);
 }
 
-class Game implements Extension {
-  final rooms = Rooms;
-}
+private final Game = new Extension(Rooms);

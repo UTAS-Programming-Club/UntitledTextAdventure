@@ -7,6 +7,4 @@ enum ChestRooms {
   Chest2;
 }
 
-class ChestsExtension implements Extension {
-  final rooms = ChestRooms;
-}
+private final ChestsExtension = new Extension(ChestRooms);

@@ -6,7 +6,10 @@ using haxe.io.Path;
 using sys.FileSystem;
 
 class GameGeneration {
-  static final extensionPaths: Array<String> = ["game.Game"];
+  static final extensionInfos: Array<{path: String, fieldName: String}> = [{
+    path: "game.Game",
+    fieldName: "Game"
+  }];
   static final extensionsDir: String = "extensions";
 
   static public function generateRoomsEnum(): Void {
@@ -20,7 +23,10 @@ class GameGeneration {
       final extensionName: String = extensionPath.withoutDirectory().withoutExtension();
       var extensionModule: String = extensionPath.withoutExtension();
       extensionModule = ~/[\\\/]/g.replace(extensionModule, ".");
-      extensionPaths.push(extensionModule + "." + extensionName + "Extension");
+      extensionInfos.push({
+        path: extensionModule,
+        fieldName: extensionName + "Extension"
+      });
     }
 
     Context.onAfterInitMacros(generateRoomsEnumInternal);
@@ -29,21 +35,53 @@ class GameGeneration {
   static function generateRoomsEnumInternal(): Void {
     final roomFields: Array<Field> = [];
 
-    for (extensionPath in extensionPaths) {
+    for (extensionInfo in extensionInfos) {
+      var moduleTypes: Array<Type>;
+      try {
+        moduleTypes = Context.getModule(extensionInfo.path);
+      } catch (e: haxe.macro.Error) {
+        continue;
+      }
+
+      var moduleClass: ClassType;
+      for (type in moduleTypes) {
+        final moduleType: ModuleType = type.toModuleType();
+        switch (moduleType) {
+          case TClassDecl(c):
+            moduleClass = c.get();
+            break;
+          default:
+            continue;
+        }
+      }
+
+      var gameFieldExpr: Null<TypedExprDef>;
+      switch (moduleClass?.kind) {
+        case KModuleFields(_):
+          final gameField: Null<ClassField> = moduleClass.findField(
+            extensionInfo.fieldName, true
+          );
+          gameFieldExpr = gameField?.expr().expr;
+        default:
+          continue;
+      }
+
       var enumInfo;
-      final extensionClass: ClassType = Context.getType(extensionPath).getClass();
-      final roomsField: Null<ClassField> = extensionClass.findField("rooms");
-      final roomsExpr: Null<TypedExprDef> = roomsField?.expr().expr;
-      switch (roomsExpr) {
-        case TTypeExpr(m):
-          switch (m) {
-            case TEnumDecl(e):
-              enumInfo = e.get();
+      switch (gameFieldExpr) {
+        case TNew(_, _, [e]):
+          switch (e.expr) {
+            case TTypeExpr(m):
+              switch (m) {
+                case TEnumDecl(e):
+                  enumInfo = e.get();
+                default:
+                  continue;
+              }
             default:
               continue;
           }
         default:
-         continue;
+          continue;
       }
 
       for (construct in enumInfo.constructs) {
