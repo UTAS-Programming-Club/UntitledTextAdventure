@@ -31,23 +31,19 @@ class GameGeneration {
 
     for (extensionPath in extensionPaths) {
       var enumInfo;
-      try {
-        final extensionClass: ClassType = Context.getType(extensionPath).getClass();
-        final roomsField: ClassField = extensionClass.findField("rooms", true);
-        final roomsExpr: TypedExprDef = roomsField.expr().expr;
-        switch (roomsExpr) {
-          case TTypeExpr(m):
-            switch (m) {
-              case TEnumDecl(e):
-                enumInfo = e.get();
-              default:
-                continue;
-            }
-          default:
-           continue;
-        }
-      } catch(e) {
-        continue;
+      final extensionClass: ClassType = Context.getType(extensionPath).getClass();
+      final roomsField: Null<ClassField> = extensionClass.findField("rooms");
+      final roomsExpr: Null<TypedExprDef> = roomsField?.expr().expr;
+      switch (roomsExpr) {
+        case TTypeExpr(m):
+          switch (m) {
+            case TEnumDecl(e):
+              enumInfo = e.get();
+            default:
+              continue;
+          }
+        default:
+         continue;
       }
 
       for (construct in enumInfo.constructs) {

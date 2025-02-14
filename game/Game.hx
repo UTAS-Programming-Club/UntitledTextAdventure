@@ -1,11 +1,13 @@
 package game;
 
+import game.Extensions;
+
 enum Rooms {
   Empty;
   TestA;
   TestB(test: Int);
 }
 
-class Game {
-  static final rooms = Rooms;
+class Game implements Extension {
+  final rooms = Rooms;
 }

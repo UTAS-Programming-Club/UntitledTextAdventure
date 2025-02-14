@@ -1,6 +1,6 @@
 package extensions;
 
-// import game.Extensions;
+import game.Extensions;
 
 enum TrapRooms {
   Trap;
@@ -11,6 +11,6 @@ enum TrapRooms {
 // TODO: Use or remove
 // final TrapsExtension = new Extension(TrapRooms);
 
-class TrapsExtension {
-  static final rooms = TrapRooms;
+class TrapsExtension implements Extension {
+  final rooms = TrapRooms;
 }
