@@ -1,25 +1,26 @@
 import haxe.macro.Context;
 import haxe.macro.Expr;
+import haxe.macro.Type;
 using haxe.macro.Tools;
 using haxe.io.Path;
 using sys.FileSystem;
 
 class GameGeneration {
-  static final extensionEnumPaths: Array<String> = ["game.Rooms"];
-  static final extensionRoomsDir: String = "extensions";
+  static final extensionPaths: Array<String> = ["game.Game"];
+  static final extensionsDir: String = "extensions";
 
   static public function generateRoomsEnum(): Void {
-    final extensionFiles: Array<String> = extensionRoomsDir.readDirectory();
+    final extensionFiles: Array<String> = extensionsDir.readDirectory();
     for (extensionFile in extensionFiles) {
       if (Path.extension(extensionFile) != "hx") {
         continue;
       }
 
-      final extensionPath: String = Path.join([extensionRoomsDir, extensionFile]);
+      final extensionPath: String = Path.join([extensionsDir, extensionFile]);
       final extensionName: String = extensionPath.withoutDirectory().withoutExtension();
       var extensionModule: String = extensionPath.withoutExtension();
       extensionModule = ~/[\\\/]/g.replace(extensionModule, ".");
-      extensionEnumPaths.push(extensionModule + "." + extensionName + "Rooms");
+      extensionPaths.push(extensionModule + "." + extensionName + "Extension");
     }
 
     Context.onAfterInitMacros(generateRoomsEnumInternal);
@@ -28,9 +29,26 @@ class GameGeneration {
   static function generateRoomsEnumInternal(): Void {
     final roomFields: Array<Field> = [];
 
-    for (extensionEnumPath in extensionEnumPaths) {
-      final enumType: haxe.macro.Type = Context.getType(extensionEnumPath);
-      final enumInfo = enumType.getEnum();
+    for (extensionPath in extensionPaths) {
+      var enumInfo;
+      try {
+        final extensionClass: ClassType = Context.getType(extensionPath).getClass();
+        final roomsField: ClassField = extensionClass.findField("rooms", true);
+        final roomsExpr: TypedExprDef = roomsField.expr().expr;
+        switch (roomsExpr) {
+          case TTypeExpr(m):
+            switch (m) {
+              case TEnumDecl(e):
+                enumInfo = e.get();
+              default:
+                continue;
+            }
+          default:
+           continue;
+        }
+      } catch(e) {
+        continue;
+      }
 
       for (construct in enumInfo.constructs) {
         switch (construct.type) {

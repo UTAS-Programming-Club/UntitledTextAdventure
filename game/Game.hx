@@ -5,3 +5,7 @@ enum Rooms {
   TestA;
   TestB(test: Int);
 }
+
+class Game {
+  static final rooms = Rooms;
+}
