@@ -61,6 +61,7 @@ class GlobalData {
           if (nextRoom == null) {
             return false;
           }
+
           final allowedDirections: Array<RoomDirection> = room.GetAllowedDirections(state);
           return allowedDirections.contains(RoomDirection.North);
         }
@@ -77,6 +78,7 @@ class GlobalData {
           if (nextRoom == null) {
             return false;
           }
+
           final allowedDirections: Array<RoomDirection> = room.GetAllowedDirections(state);
           return allowedDirections.contains(RoomDirection.East);
         }
@@ -93,6 +95,7 @@ class GlobalData {
           if (nextRoom == null) {
             return false;
           }
+
           final allowedDirections: Array<RoomDirection> = room.GetAllowedDirections(state);
           return allowedDirections.contains(RoomDirection.South);
         }
@@ -109,6 +112,7 @@ class GlobalData {
           if (nextRoom == null) {
             return false;
           }
+
           final allowedDirections: Array<RoomDirection> = room.GetAllowedDirections(state);
           return allowedDirections.contains(RoomDirection.North);
         }
