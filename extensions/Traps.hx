@@ -8,4 +8,7 @@ enum TrapRooms {
   Test3;
 }
 
-private final TrapsExtension = new Extension(TrapRooms);
+enum TrapActions {
+}
+
+private final TrapsExtension = new Extension(TrapRooms, TrapActions);

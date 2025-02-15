@@ -7,4 +7,8 @@ enum ChestRooms {
   Chest2;
 }
 
-private final ChestsExtension = new Extension(ChestRooms);
+enum ChestActions {
+  OpenChest(test: String);
+}
+
+private final ChestsExtension = new Extension(ChestRooms, ChestActions);

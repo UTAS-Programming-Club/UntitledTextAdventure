@@ -1,18 +1,14 @@
 import game.generated.Generated;
 
-// haxe --macro "TestMacros.GameGeneration.generateRoomsEnum()" --main Test --interp
-// haxe --macro "TestMacros.GameGeneration.generateRoomsEnum()" --main Test --python test.py && python test.py
+// haxe --macro "TestMacros.GameGeneration.generateEnums()" --main Test --interp
+// haxe --macro "TestMacros.GameGeneration.generateEnums()" --main Test --python test.py && python test.py
 
-// With interp, this should give:
-// Test.hx:11: characters 13-24 : Unmatched patterns: Chest1 | Chest2 | Test3 | TestA | TestB | Trap | Trap2
+// This should give:
+// [TestB,TestA,Empty,Chest2,Chest1,Trap2,Trap,Test3]
+// [GoWest,GoSouth,GoNorth,GoEast,OpenChest]
 class Test {
   public static function main(): Void {
-    #if interp
-    switch (Rooms.Empty) {
-      case Empty:
-    }
-    #else
-    trace(Rooms);
-    #end
+    Sys.println(Type.getEnumConstructs(Rooms));
+    Sys.println(Type.getEnumConstructs(Actions));
   }
 }

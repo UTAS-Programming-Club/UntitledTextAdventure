@@ -11,8 +11,9 @@ class GameGeneration {
     fieldName: "Game"
   }];
   static final extensionsDir: String = "extensions";
+  static final generatedModule: String = "game.generated.Generated";
 
-  static public function generateRoomsEnum(): Void {
+  static public function generateEnums(): Void {
     final extensionFiles: Array<String> = extensionsDir.readDirectory();
     for (extensionFile in extensionFiles) {
       if (Path.extension(extensionFile) != "hx") {
@@ -29,11 +30,20 @@ class GameGeneration {
       });
     }
 
-    Context.onAfterInitMacros(generateRoomsEnumInternal);
+    Context.onAfterInitMacros(generateEnumsInternal);
   }
 
-  static function generateRoomsEnumInternal(): Void {
-    final roomFields: Array<Field> = [];
+  static function generateEnumsInternal(): Void {
+    final generatedEnums: Array<TypeDefinition> = [
+      generateEnum("Rooms", 0),
+      generateEnum("Actions", 1)
+    ];
+
+    Context.defineModule(generatedModule, generatedEnums);
+  }
+
+  static function generateEnum(name: String, idx: Int): TypeDefinition {
+    final enumFields: Array<Field> = [];
 
     for (extensionInfo in extensionInfos) {
       var moduleTypes: Array<Type>;
@@ -68,8 +78,8 @@ class GameGeneration {
 
       var enumInfo;
       switch (gameFieldExpr) {
-        case TNew(_, _, [e]):
-          switch (e.expr) {
+        case TNew(_, _, e):
+          switch (e[idx].expr) {
             case TTypeExpr(m):
               switch (m) {
                 case TEnumDecl(e):
@@ -87,7 +97,7 @@ class GameGeneration {
       for (construct in enumInfo.constructs) {
         switch (construct.type) {
           case haxe.macro.Type.TEnum(_, _):
-            roomFields.push(makeEnumField(construct.name, FVar(null)));
+            enumFields.push(makeEnumField(construct.name, FVar(null)));
           case haxe.macro.Type.TFun(args, _):
             final func: Function = {
               args: args.map(
@@ -98,23 +108,20 @@ class GameGeneration {
               )
             };
 
-            roomFields.push(makeEnumField(construct.name, FFun(func)));
+            enumFields.push(makeEnumField(construct.name, FFun(func)));
           default:
             trace("Unexpected enum constructor type: " + construct.type);
         }
       }
     }
 
-    final generatedModule: String = "game.generated.Generated";
-    final roomsEnum: TypeDefinition = {
-      fields: roomFields,
+    return {
+      fields: enumFields,
       kind: TypeDefKind.TDEnum,
-      name: "Rooms",
+      name: name,
       pack: generatedModule.split("."),
       pos: Context.currentPos()
     };
-
-    Context.defineModule(generatedModule, [roomsEnum]);
   }
 
   static function makeEnumField(name: String, kind: FieldType): Field return {

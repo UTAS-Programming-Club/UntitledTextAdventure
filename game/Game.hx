@@ -8,4 +8,11 @@ enum Rooms {
   TestB(test: Int);
 }
 
-private final Game = new Extension(Rooms);
+enum Actions {
+  GoNorth;
+  GoEast;
+  GoSouth;
+  GoWest;
+}
+
+private final Game = new Extension(Rooms, Actions);
