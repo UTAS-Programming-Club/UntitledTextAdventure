@@ -2,13 +2,12 @@ package extensions;
 
 import game.Extensions;
 
-enum ChestRooms {
-  Chest1(test: Int);
-  Chest2;
-}
-
 enum ChestActions {
-  OpenChest(test: String);
+  OpenChest;
 }
 
-private final ChestsExtension = new Extension(ChestRooms, ChestActions);
+enum ChestRooms {
+  Chest;
+}
+
+private final ChestsExtension = new Extension(ChestActions, [], ChestRooms);

@@ -1,11 +1,15 @@
 package game;
 
-class Extension {
-  private final rooms: Enum<Any>;
-  private final actions: Enum<Any>;
+import game.Equipment;
 
-  public function new(rooms: Enum<Any>, actions: Enum<Any>) {
-    this.rooms = rooms;
+class Extension {
+  private final actions: Enum<Any>;
+  private final equipment: Array<EquipmentInfo>;
+  private final rooms: Enum<Any>;
+
+  public function new(actions: Enum<Any>, equipment: Array<EquipmentInfo>, rooms: Enum<Any>) {
     this.actions = actions;
+    this.equipment = equipment;
+    this.rooms = rooms;
   }
 }

@@ -1,12 +1,7 @@
 package game;
 
+import game.Equipment;
 import game.Extensions;
-
-enum Rooms {
-  Empty;
-  TestA;
-  TestB(test: Int);
-}
 
 enum Actions {
   GoNorth;
@@ -15,4 +10,15 @@ enum Actions {
   GoWest;
 }
 
-private final Game = new Extension(Rooms, Actions);
+final ChestRags: EquipmentInfo = {name: "Rags", type: Chest};
+final LegRags: EquipmentInfo = {name: "Rags", type: Legs};
+final Equipment: Array<EquipmentInfo> = [
+  ChestRags,
+  LegRags
+];
+
+enum Rooms {
+  Empty;
+}
+
+private final Game = new Extension(Actions, Equipment, Rooms);
