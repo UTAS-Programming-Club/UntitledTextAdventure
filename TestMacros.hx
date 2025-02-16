@@ -34,14 +34,13 @@ class GameGeneration {
   }
 
   static function generateTypesInternal(): Void {
-    final generatedEnums: Array<TypeDefinition> = [
+    final generatedTypes: Array<TypeDefinition> = [
       generateEnum("Actions", 0),
       generateArray("Equipment", 1),
       generateEnum("Rooms", 2)
     ];
 
-
-    Context.defineModule(generatedModule, generatedEnums);
+    Context.defineModule(generatedModule, generatedTypes);
   }
 
   static function generateArray(name: String, idx: Int): TypeDefinition {
@@ -87,6 +86,7 @@ class GameGeneration {
               switch (fa) {
                 case FStatic(_, cf):
                   final arrayClass: ClassField = cf.get();
+                  // TODO: Figure out why (macro : Array<game.EquipmentInfo>) causes "Type not found : game.EquipmentInfo" during Context.defineModule
                   arrayType ??= arrayClass.type.toComplexType();
                   arrayInfo = arrayClass.expr().expr;
                 default:
@@ -139,14 +139,11 @@ class GameGeneration {
       }
     }
 
-    final arrayExpr: Expr = {
-      expr: EArrayDecl(arrayExprs),
-      pos: Context.currentPos()
-    };
+    final arrayExpr: Expr = macro $a{arrayExprs};
 
     return {
       fields: [],
-      kind: TypeDefKind.TDField(FVar(arrayType, arrayExpr)),
+      kind: TDField(FVar(arrayType, arrayExpr)),
       name: name,
       pack: generatedModule.split("."),
       pos: Context.currentPos()
@@ -228,7 +225,7 @@ class GameGeneration {
 
     return {
       fields: enumFields,
-      kind: TypeDefKind.TDEnum,
+      kind: TDEnum,
       name: name,
       pack: generatedModule.split("."),
       pos: Context.currentPos()
