@@ -10,4 +10,8 @@ enum ChestRooms {
   Chest;
 }
 
-private final ChestsExtension = new Extension(ChestActions, [], ChestRooms);
+private final ChestsExtension: Extension = {
+  actions: ChestActions,
+  equipment: [],
+  rooms: ChestRooms
+};

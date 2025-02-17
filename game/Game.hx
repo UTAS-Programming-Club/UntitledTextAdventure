@@ -12,7 +12,7 @@ enum Actions {
 
 final ChestRags: EquipmentInfo = {name: "Rags", type: Chest};
 final LegRags: EquipmentInfo = {name: "Rags", type: Legs};
-final Equipment: Array<EquipmentInfo> = [
+private final Equipment: Array<EquipmentInfo> = [
   ChestRags,
   LegRags
 ];
@@ -21,4 +21,8 @@ enum Rooms {
   Empty;
 }
 
-private final Game = new Extension(Actions, Equipment, Rooms);
+private final Game: Extension = {
+  actions: Actions,
+  equipment: Equipment,
+  rooms: Rooms
+};
