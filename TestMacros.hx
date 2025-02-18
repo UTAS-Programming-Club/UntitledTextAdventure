@@ -44,37 +44,38 @@ class GameGeneration {
   }
 
   static function generateArray(name: String, idx: Int): TypeDefinition {
-    var arrayType: Null<ComplexType> = null;
     final arrayItemExprs: Array<Expr> = [];
 
     for (extensionInfo in extensionInfos) {
       final objectExpr: Null<TypedExprDef> = getExtensionObject(extensionInfo, idx);
 
+      var arrayItems: Null<Array<TypedExpr>> = null;
       var objectFieldExpr: FieldAccess;
       switch (objectExpr) {
+        case TArrayDecl(el):
+          arrayItems = el;
         case TField(_, fa):
           objectFieldExpr = fa;
         default:
           continue;
       }
 
-      var arrayExpr: TypedExprDef;
-      switch (objectFieldExpr) {
-        case FStatic(_, cf):
-          final arrayClass: ClassField = cf.get();
-          // TODO: Figure out why (macro : Array<game.EquipmentInfo>) causes "Type not found : game.EquipmentInfo" during Context.defineModule
-          arrayType ??= arrayClass.type.toComplexType();
-          arrayExpr = arrayClass.expr().expr;
-        default:
-          continue;
-      }
+      if (arrayItems == null) {
+        var arrayExpr: TypedExprDef;
+        switch (objectFieldExpr) {
+          case FStatic(_, cf):
+            final arrayClass: ClassField = cf.get();
+            arrayExpr = arrayClass.expr().expr;
+          default:
+            continue;
+        }
 
-      var arrayItems: Array<TypedExpr>;
-      switch(arrayExpr) {
-        case TArrayDecl(el):
-          arrayItems = el;
-        default:
-          continue;
+        switch(arrayExpr) {
+          case TArrayDecl(el):
+            arrayItems = el;
+          default:
+            continue;
+        }
       }
 
       for (arrayItem in arrayItems) {
@@ -107,7 +108,7 @@ class GameGeneration {
 
     return {
       fields: [],
-      kind: TDField(FVar(arrayType, arrayExpr)),
+      kind: TDField(FVar(null, arrayExpr)),
       name: name,
       pack: generatedModule.split("."),
       pos: Context.currentPos()
@@ -180,8 +181,12 @@ class GameGeneration {
     var moduleTypes: Array<Type>;
     try {
       moduleTypes = Context.getModule(extensionInfo.path);
-    } catch (e: Error) {
-      return null;
+    } catch (e: haxe.macro.Error) {
+      if (e.message == "Type not found : " + extensionInfo.path) {
+        return null;
+      }
+
+      throw e;
     }
 
     var fieldExpr: Null<TypedExprDef> = null;
