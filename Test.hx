@@ -5,12 +5,12 @@ import game.generated.Generated;
 
 // This should give:
 // [GoWest,GoSouth,GoNorth,GoEast,OpenChest,DodgeTrap]
-// [{ name : Rags, type : Chest },{ name : Rags, type : Chest },{ name : Rags, type : Legs },{ name : Rags, type : Legs }]
+// haxe.iterators.ArrayIterator( array : [ChestRags,LegRags], current : 0, hasNext : function, next : function )
 // [Empty,Chest,Trap]
 class Test {
   public static function main(): Void {
     Sys.println(Type.getEnumConstructs(Actions));
-    Sys.println(Equipment);
+    Sys.println(Equipment.keys());
     Sys.println(Type.getEnumConstructs(Rooms));
   }
 }

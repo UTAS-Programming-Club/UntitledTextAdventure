@@ -10,11 +10,14 @@ enum Actions {
   GoWest;
 }
 
-final ChestRags: EquipmentInfo = {name: "Rags", type: Chest};
-final LegRags: EquipmentInfo = {name: "Rags", type: Legs};
-private final Equipment: Array<EquipmentInfo> = [
-  ChestRags,
-  LegRags
+enum Equipment {
+  ChestRags;
+  LegRags;
+}
+
+private final Equipment: Map<Equipment, EquipmentInfo> = [
+  ChestRags => {name: "Rags", type: Chest},
+  LegRags => {name: "Rags", type: Legs}
 ];
 
 enum Rooms {

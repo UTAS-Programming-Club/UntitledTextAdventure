@@ -36,7 +36,7 @@ class GameGeneration {
   static function generateTypesInternal(): Void {
     final generatedTypes: Array<TypeDefinition> = [
       generateEnum("Actions", 0),
-      generateArray("Equipment", 1),
+      generateMap("Equipment", 1),
       generateEnum("Rooms", 2)
     ];
 
@@ -80,26 +80,7 @@ class GameGeneration {
 
       for (arrayItem in arrayItems) {
         final arrayItemExpr: Expr = Context.getTypedExpr(arrayItem);
-
-        switch (arrayItemExpr.expr) {
-          case EField(e1, field1, kind1):
-            switch (e1.expr) {
-              case EField(e2, field2, _):
-                switch (e2.expr) {
-                  case EField(_, field3, _):
-                    final moduleStaticsClassName: String = field3 + "_Fields_";
-                    if (moduleStaticsClassName != field2) {
-                      continue;
-                    }
-
-                    arrayItemExpr.expr = EField(e2, field1, kind1);
-                  default:
-                }
-              default:
-            }
-          default:
-        }
-
+        arrayItemExpr.expr = fixModuleStatic(arrayItemExpr.expr);
         arrayItemExprs.push(arrayItemExpr);
       }
     }
@@ -175,6 +156,84 @@ class GameGeneration {
     };
   }
 
+  static function generateMap(name: String, idx: Int): TypeDefinition {
+    final mapItemExprs: Array<Expr> = [];
+
+    for (extensionInfo in extensionInfos) {
+      final objectExpr: Null<TypedExprDef> = getExtensionObject(extensionInfo, idx);
+
+      var objectCastExpr: TypedExprDef;
+      switch (objectExpr) {
+        case TCast(e, _):
+          objectCastExpr = e.expr;
+        default:
+          continue;
+      }
+
+      var objectFieldExpr: FieldAccess;
+      switch (objectCastExpr) {
+        case TField(_, fa):
+          objectFieldExpr = fa;
+        default:
+          continue;
+      }
+
+      var mapExpr: TypedExprDef;
+      switch (objectFieldExpr) {
+        case FStatic(_, cf):
+          final mapClass: ClassField = cf.get();
+          mapExpr = mapClass.expr().expr;
+        default:
+          continue;
+      }
+
+      var mapItems: Array<TypedExpr>;
+      switch (mapExpr) {
+        case TBlock(el):
+          mapItems = el;
+        default:
+          continue;
+      }
+
+      for (i in 1...(mapItems.length - 1)) {
+        var mapItem: TypedExprDef;
+        switch (mapItems[i].expr) {
+          case TBlock(el):
+            mapItem = el[0].expr;
+          default:
+            continue;
+        }
+
+        var mappingLHSExpr: Expr;
+        var mappingRHSExpr: Expr;
+        switch (mapItem) {
+          case TCall(_, el):
+            mappingLHSExpr = Context.getTypedExpr(el[0]);
+            mappingRHSExpr = Context.getTypedExpr(el[1]);
+          default:
+            continue;
+        }
+
+        mappingRHSExpr.expr = fixModuleStatic(mappingRHSExpr.expr);
+
+        mapItemExprs.push({
+          expr: EBinop(OpArrow, mappingLHSExpr, mappingRHSExpr),
+          pos: Context.currentPos()
+        });
+      }
+    }
+
+    final mapExpr: Expr = macro $a{mapItemExprs};
+
+    return {
+      fields: [],
+      kind: TDField(FVar(null, mapExpr)),
+      name: name,
+      pack: generatedModule.split("."),
+      pos: Context.currentPos()
+    };
+  }
+
   static function getExtensionObject(
     extensionInfo: {path: String, fieldName: String}, idx: Int
   ): Null<TypedExprDef> {
@@ -233,5 +292,26 @@ class GameGeneration {
     kind: kind,
     name: name,
     pos: Context.currentPos()
+  }
+
+  static function fixModuleStatic(expr: ExprDef): ExprDef {
+    switch (expr) {
+      case EField(e1, field1, kind1):
+        switch (e1.expr) {
+          case EField(e2, field2, _):
+            switch (e2.expr) {
+              case EField(_, field3, _):
+                final moduleStaticsClassName: String = field3 + "_Fields_";
+                if (moduleStaticsClassName == field2) {
+                  return EField(e2, field1, kind1);
+                }
+              default:
+            }
+          default:
+        }
+      default:
+    }
+
+    return expr;
   }
 }

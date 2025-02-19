@@ -4,6 +4,6 @@ import game.Equipment;
 
 typedef Extension = {
   final actions: Enum<Any>;
-  final equipment: Array<EquipmentInfo>;
+  final equipment: Map<Any, EquipmentInfo>;
   final rooms: Enum<Any>;
 }
