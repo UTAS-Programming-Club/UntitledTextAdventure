@@ -10,12 +10,12 @@ enum Actions {
   GoWest;
 }
 
-enum Equipment {
+enum EquipmentNames {
   ChestRags;
   LegRags;
 }
 
-private final Equipment: Map<Equipment, EquipmentInfo> = [
+private final Equipment: Map<EquipmentNames, EquipmentInfo> = [
   ChestRags => {name: "Rags", type: Chest},
   LegRags => {name: "Rags", type: Legs}
 ];
