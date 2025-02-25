@@ -87,7 +87,7 @@ $(LIBDIR)/libzstd.a: third_party/zstd/lib | $(LIBDIR)
 	cp $</libzstd.a $@
 
 $(LIBDIR)/libzstd.so: third_party/zstd/lib | $(LIBDIR)
-	$(MAKE) -C $< libzstd.so ZSTD_NO_ASM=1
+	$(MAKE) -C $< libzstd ZSTD_NO_ASM=1
 	cp $</libzstd.so $@
 
 
@@ -113,7 +113,7 @@ $(LIBDIR)/gdifrontend.o: frontends/gdifrontend.c backend/game.h backend/stringhe
 $(LIBDIR)/winresources.o: frontends/winresources.rc backend/winresources.h GameData.json | $(LIBDIR)
 	$(WINDRES) $< -o $@
 
-$(LIBDIR)/game.so: $(filter-out $(LIBDIR)/libzstd.a,$(COMMONOBJS)) $(LIBDIR)/discordfrontend.o $(LIBDIR)/libzstd.so | $(LIBDIR)
+$(LIBDIR)/game.dll: $(filter-out $(LIBDIR)/libzstd.a,$(COMMONOBJS)) $(LIBDIR)/discordfrontend.o $(LIBDIR)/libzstd.so | $(LIBDIR)
 	$(CC) $(CSTD) $(CWARNINGS) -o $@ $^ $(CFLAGS) -shared
 
 

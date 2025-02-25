@@ -37,7 +37,7 @@ debug debug-tools: CFLAGS += -D _DEBUG -g
 debug debug-tools: CXXFLAGS += -D _DEBUG -g
 debug release: $(BINDIR)/cmdgame$(EXECSUFFIX) $(BINDIR)/gdigame$(EXECSUFFIX) GameData.json
 discord: CFLAGS += -fPIC
-discord: $(LIBDIR)/game.so GameData.json
+discord: $(LIBDIR)/game.dll GameData.json
 tools debug-tools: $(BINDIR)/jsonvalidator$(EXECSUFFIX) $(BINDIR)/mapwatch$(EXECSUFFIX) $(BINDIR)/printgamedata$(EXECSUFFIX) GameData.json
 
 clean:

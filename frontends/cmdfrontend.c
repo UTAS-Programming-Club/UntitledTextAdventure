@@ -6,12 +6,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <threads.h>
 #include <unistd.h>
 #include <wchar.h>
 #ifdef _WIN32
 #include <windows.h>
 #else
+#include <threads.h>
 #include <termios.h>
 #endif
 
@@ -255,12 +255,16 @@ static bool HandleOutput(const struct GameInfo *info, struct GameState *state) {
       PrintTextInput();
       return true;
     case NoneScreenInputType:
+#ifdef _WIN32
+      Sleep(1000);
+#else
 #ifdef __COSMOPOLITAN__
       nanosleep(
 #else
       thrd_sleep(
 #endif
         &(struct timespec){.tv_sec=1}, NULL);
+#endif
       return true;
     default:
       PrintError("Unexpected input type with id %i received while handling output", state->inputType);
