@@ -107,7 +107,7 @@ bool UpdateGameState(const struct GameInfo *info, struct GameState *state) {
 
   if (!state->roomData) {
     state->roomDataSize = info->floorSize * info->floorSize;
-    state->roomData = calloc(sizeof *state->roomData, state->roomDataSize);
+    state->roomData = calloc(state->roomDataSize, sizeof *state->roomData);
   }
   if (!state->roomData) {
     return false;

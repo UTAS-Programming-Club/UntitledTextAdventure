@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <threads.h>
 #include <unistd.h>
 #include <wchar.h>
@@ -254,7 +255,12 @@ static bool HandleOutput(const struct GameInfo *info, struct GameState *state) {
       PrintTextInput();
       return true;
     case NoneScreenInputType:
-      thrd_sleep(&(struct timespec){.tv_sec=1}, NULL);
+#ifdef __COSMOPOLITAN__
+      nanosleep(
+#else
+      thrd_sleep(
+#endif
+        &(struct timespec){.tv_sec=1}, NULL);
       return true;
     default:
       PrintError("Unexpected input type with id %i received while handling output", state->inputType);
