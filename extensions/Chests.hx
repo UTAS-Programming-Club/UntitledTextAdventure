@@ -1,6 +1,6 @@
 package extensions;
 
-import game.Extensions;
+import backend.Extension;
 
 enum ChestActions {
   OpenChest;
@@ -13,5 +13,6 @@ enum ChestRooms {
 private final ChestsExtension: Extension = {
   actions: ChestActions,
   equipment: [],
-  rooms: ChestRooms
+  rooms: ChestRooms,
+  screens: []
 };

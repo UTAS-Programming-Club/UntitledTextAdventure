@@ -7,8 +7,8 @@ using sys.FileSystem;
 
 class GameGeneration {
   static final extensionInfos: Array<{path: String, fieldName: String}> = [{
-    path: "game.Game",
-    fieldName: "Game"
+    path: "backend.coregame.Actions",
+    fieldName: "CoreActions"
   }];
   static final extensionsDir: String = "extensions";
   static final generatedModule: String = "game.generated.Generated";
@@ -37,12 +37,14 @@ class GameGeneration {
     final generatedTypes: Array<TypeDefinition> = [
       generateEnum("Actions", 0),
       generateMap("Equipment", 1),
-      generateEnum("Rooms", 2)
+      generateEnum("Rooms", 2),
+      generateMap("Screen", 3)
     ];
 
     Context.defineModule(generatedModule, generatedTypes);
   }
 
+  // TODO: Remove?
   static function generateArray(name: String, idx: Int): TypeDefinition {
     final arrayItemExprs: Array<Expr> = [];
 
@@ -196,22 +198,40 @@ class GameGeneration {
       }
 
       for (i in 1...(mapItems.length - 1)) {
-        var mapItem: TypedExprDef;
+        var mapItemElems: Array<TypedExpr>;
         switch (mapItems[i].expr) {
           case TBlock(el):
-            mapItem = el[0].expr;
+            mapItemElems = el;
           default:
             continue;
         }
 
         var mappingLHSExpr: Expr;
         var mappingRHSExpr: Expr;
-        switch (mapItem) {
-          case TCall(_, el):
-            mappingLHSExpr = Context.getTypedExpr(el[0]);
-            mappingRHSExpr = Context.getTypedExpr(el[1]);
-          default:
-            continue;
+        if (mapItemElems.length > 2) {
+          continue;
+        } else if (mapItemElems.length == 2) {
+          switch (mapItemElems[0].expr) {
+            case TVar(v, expr):
+              mappingRHSExpr = Context.getTypedExpr(expr);
+            default:
+              continue;
+          }
+
+          switch (mapItemElems[1].expr) {
+            case TCall(_, el):
+              mappingLHSExpr = Context.getTypedExpr(el[0]);
+            default:
+              continue;
+          }
+        } else {
+          switch (mapItemElems[0].expr) {
+            case TCall(_, el):
+              mappingLHSExpr = Context.getTypedExpr(el[0]);
+              mappingRHSExpr = Context.getTypedExpr(el[1]);
+            default:
+              continue;
+          }
         }
 
         mappingRHSExpr.expr = fixModuleStatic(mappingRHSExpr.expr);

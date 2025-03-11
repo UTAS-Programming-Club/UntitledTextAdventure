@@ -1,8 +1,8 @@
 package frontends;
 
 import backend.GameState;
-import backend.GlobalData;
 import backend.Screen;
+import extensions.UntitledTextAdventure;
 import haxe.io.Bytes;
 
 class CmdFrontend {
@@ -117,23 +117,23 @@ class CmdFrontend {
       return true;
     }
 
-    final outcome: ScreenActionOutcome = state.HandleGameInput(actions[index].type);
-    switch (outcome) {
-      case GetNextOutput:
-        return true;
-      case QuitGame:
-        return false;
-      default:
-        throw new haxe.Exception("Unknown screen action outcome " + outcome + " received");
-    }
+    // final outcome: ScreenActionOutcome = state.HandleGameInput(actions[index].type);
+    // switch (outcome) {
+    //   case GetNextOutput:
+    //     return true;
+    //   case QuitGame:
+    //     return false;
+    //   default:
+    //     throw new haxe.Exception("Unknown screen action outcome " + outcome + " received");
+    // }
+    return false;
   }
 
 
   public static function main(): Void {
     SetupConsole();
-    GlobalData.Init();
 
-    var state = new GameState();
+    final state = new GameState(UntitledTextAdventure);
     do {
       if (!HandleOutput(state)) {
         break;

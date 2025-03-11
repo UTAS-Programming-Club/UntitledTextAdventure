@@ -1,6 +1,6 @@
 package extensions;
 
-import game.Extensions;
+import backend.Extension;
 
 enum TrapActions {
   DodgeTrap;
@@ -13,5 +13,6 @@ enum TrapRooms {
 private final TrapsExtension: Extension = {
   actions: TrapActions,
   equipment: [],
-  rooms: TrapRooms
+  rooms: TrapRooms,
+  screens: []
 };

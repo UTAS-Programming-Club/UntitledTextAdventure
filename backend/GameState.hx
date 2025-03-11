@@ -1,14 +1,19 @@
 package backend;
 
-import backend.GlobalData;
+import backend.Campaign;
+// import backend.CoreGame;
 import backend.Helpers;
 import backend.Player;
 import backend.Room;
 import backend.Screen;
 import haxe.ds.Vector;
 
+
+
 @:nullSafety(Strict)
 class GameState {
+  final campaign: Campaign;
+
   // TODO: Fix
   // Python implementation of Vector.new(Int) passes null to python.Syntax.code
   // which is not allowed, so pass an alternative representation
@@ -16,34 +21,39 @@ class GameState {
   // Only access roomState after calling GameState.SetupGame which is run by GlobalData.gameScreen
   // except via ActionScreen.GetActions which handles partially setup roomState
   @:nullSafety(Off)
-  public var roomState(default, null) = new Vector<Vector<Null<BasicRoomState>>>(GlobalData.floorSize, new Vector(0, null));
-  public var currentScreen(default, null): Screen = GlobalData.mainMenuScreen;
+  public var roomState(default, null): Vector<Vector<Null<BasicRoomState>>> = null;
+  public var currentScreen(default, null): Null<Screen> = null; //CoreScreens[CoreScreen.MainMenu];
   public var inGame: Bool = false;
 
   public var player(default, null): Player = new Player();
 
-  public function new(): Void {
-  }
+  public function new(campaign: Campaign) {
+    this.campaign = campaign;
+    // trace(this.campaign.extensions[0]);
+    // Sys.stdin().readLine();
 
-  public function SetupGame(): Void {
     player = new Player();
     inGame = true;
 
+    // TODO: Fix
+    // See comment above GameState.roomState for info about null issue
+    @:nullSafety(Off)
+    roomState = new Vector<Vector<Null<BasicRoomState>>>(campaign.floorSize, new Vector(0, null));
     for (y in 0...roomState.length) {
       // TODO: Fix
       // See comment above GameState.roomState for info about null issue
       @:nullSafety(Off)
-      roomState[y] = new Vector<Null<BasicRoomState>>(GlobalData.floorSize, null);
+      roomState[y] = new Vector<Null<BasicRoomState>>(campaign.floorSize, null);
 
       for (x in 0...roomState.length) {
         try {
-          final room: Null<Room> = GlobalData.rooms[y][x];
-          if (room == null) {
-            continue;
-          }
-
-          final statefulRoom = cast(room, StatefulRoom<BasicRoomState>);
-          roomState[y][x] = statefulRoom.CreateState();
+      //     final room: Null<Room> = GlobalData.rooms[y][x];
+      //     if (room == null) {
+      //       continue;
+      //     }
+      // 
+      //     final statefulRoom = cast(room, StatefulRoom<BasicRoomState>);
+      //     roomState[y][x] = statefulRoom.CreateState();
         } catch(e) {
         }
       }
@@ -73,25 +83,6 @@ class GameState {
         return ScreenActionOutcome.GetNextOutput;
       case QuitGame:
         return ScreenActionOutcome.QuitGame;
-      case GoNorth:
-        player.Y = Std.int(Math.min(player.Y + 1, GlobalData.floorSize));
-        return ScreenActionOutcome.GetNextOutput;
-      case GoEast:
-        player.X = Std.int(Math.min(player.X + 1, GlobalData.floorSize));
-        return ScreenActionOutcome.GetNextOutput;
-      case GoSouth:
-        player.Y = Std.int(Math.max(player.Y - 1, 0));
-        return ScreenActionOutcome.GetNextOutput;
-      case GoWest:
-        player.X = Std.int(Math.max(player.X - 1, 0));
-        return ScreenActionOutcome.GetNextOutput;
-      // TODO: Move to TrapRoom class
-      case DodgeTrap:
-        final state: Null<BasicRoomState> = roomState[player.Y][player.X];
-        if (state != null) {
-          state.completed = true;
-        }
-        return ScreenActionOutcome.GetNextOutput;
       default:
         throw new haxe.Exception("Unknown screen action " + action + " recevied");
     }

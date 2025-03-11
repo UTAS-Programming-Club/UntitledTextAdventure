@@ -50,7 +50,7 @@ class EmptyRoom extends Room {
   }
 }
 
-@:nullSafety(Strict)
+/*@:nullSafety(Strict)
 class TrapRoom extends StatefulRoom<BasicRoomState> {
   public final lowerAgility: UInt;
   public final upperAgility: UInt;
@@ -85,7 +85,7 @@ class TrapRoom extends StatefulRoom<BasicRoomState> {
 
     return possibleDirections;
   }
-}
+}*/
 
 // CustomChest(...);
 // Combat(enemies: Array<Enemy>);
