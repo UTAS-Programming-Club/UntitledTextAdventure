@@ -1,0 +1,9 @@
+-D dump=pretty
+-dce no
+-m TextAdventure
+# --macro backend.Macros.findEnums("backend/coregame")
+# --macro backend.Macros.findEnums("extensions")
+# --macro backend.Macros1.createGameEnums1()
+# --macro backend.Macros2.createGameEnums2()
+# --macro haxe.macro.Compiler.registerDefinesDescriptionFile('define.json', 'testadventure')
+--python test.py
