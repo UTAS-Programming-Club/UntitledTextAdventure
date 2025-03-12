@@ -1,6 +1,6 @@
 -D dump=pretty
 -dce no
--m TextAdventure
+-m frontends.CmdFrontend
 # --macro backend.Macros.findEnums("backend/coregame")
 # --macro backend.Macros.findEnums("extensions")
 # --macro backend.Macros1.createGameEnums1()

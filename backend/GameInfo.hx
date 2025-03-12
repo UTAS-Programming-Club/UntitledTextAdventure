@@ -2,19 +2,14 @@ package backend;
 
 import backend.Screen;
 
-@:build(backend.Macros.buildGameEnum("Actions"))
-enum GameActions {
+@:build(backend.macros.TypeGeneration.buildGameEnum("Action"))
+enum GameAction {
 }
 
-@:build(backend.Macros.buildGameEnum("Screens"))
-enum GameScreens {
+@:build(backend.macros.TypeGeneration.buildGameEnum("Screen"))
+enum GameScreen {
 }
 
-@:build(backend.Macros.buildGameMap("ScreenInfo"))
+@:build(backend.macros.TypeGeneration.buildGameMap("ScreenInfo"))
 class GameInfo {
 }
-
-// @:build(backend.Macros.buildGameMap("ScreenInfo"))
-// final GameScreenInfo: Map<GameScreens, Screen> = [
-//   MainMenu => new Screen("This is a test", [])
-// ];

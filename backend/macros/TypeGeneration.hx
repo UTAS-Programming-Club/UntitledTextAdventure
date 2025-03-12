@@ -1,4 +1,4 @@
-package backend;
+package backend.macros;
 
 import haxe.macro.Expr;
 import haxe.macro.Type;
@@ -9,11 +9,11 @@ using haxe.macro.Tools;
 using StringTools;
 using sys.FileSystem;
 
-class Macros {
+class TypeGeneration {
   static var foundExtPaths: Bool = false;
   static var extPaths: Null<Map<String, Array<String>>> = [
-    "Actions" => [],
-    "Screens" => [],
+    "Action" => [],
+    "Screen" => [],
     "ScreenInfo" => []
   ];
 
@@ -35,9 +35,9 @@ class Macros {
       var type: String;
       switch (file) {
         case "Actions.hx":
-          type = "Actions";
+          type = "Action";
         case "Screens.hx":
-          type = "Screens";
+          type = "Screen";
         case "ScreenInfo.hx":
           type = "ScreenInfo";
         default:
@@ -179,7 +179,7 @@ class Macros {
       access: [AStatic, APublic],
       name: type,
       kind: FVar(
-        macro: Map<GameScreens, Screen>, macro $a{mapExprs}
+        macro: Map<GameScreen, Screen>, macro $a{mapExprs}
       ),
       pos: Context.currentPos()
     });

@@ -1,6 +1,6 @@
 package backend.coregame;
 
-enum CoreGameActions {
+enum CoreGameAction {
   StartGame;
   LoadGame;
   QuitGame;

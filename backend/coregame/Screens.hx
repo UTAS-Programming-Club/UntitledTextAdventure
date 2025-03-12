@@ -1,5 +1,5 @@
 package backend.coregame;
 
-enum CoreScreens {
+enum CoreScreen {
   MainMenu;
 }

@@ -1,25 +1,74 @@
 package backend;
 
 import backend.GameInfo;
+import backend.macros.Helpers;
+import haxe.ds.Either;
 
 @:nullSafety(Strict)
-class ScreenAction {
-  public final action: GameActions;
-  public final title: UnicodeString;
+abstract class Screen {
+  private final updateState: GameState -> UnicodeString;
 
-  public function new(action: GameActions, title: UnicodeString) {
-    this.action = action; 
-    this.title = title;
+  public function new(updateState: OneOf<UnicodeString, GameState -> UnicodeString>) {
+    this.updateState = switch(updateState) {
+      case Left(bodyStr):
+        function (_: GameState) return bodyStr;
+      case Right(updateStateFunc):
+        updateStateFunc;
+    }
+  }
+
+  public function GetBody(state: GameState): UnicodeString {
+    return this.updateState(state);
   }
 }
 
 @:nullSafety(Strict)
-class Screen {
-  public final body: UnicodeString;
-  public final actions: Array<ScreenAction>;
+class ScreenAction {
+  public final action: GameAction;
+  public final title: UnicodeString;
+  // public final isVisible: (GameState, Room, Bool) -> Bool;
 
-  public function new(body: UnicodeString, actions: Array<ScreenAction>) {
-    this.body = body;
-    this.actions = actions;
+  public function new(action: GameAction, title: UnicodeString,
+                      /*?isVisible: (GameState, Room, Bool) -> Bool*/) {
+    this.action = action;
+    this.title = title;
+    // this.isVisible = isVisible ?? AlwaysVisible;
+  }
+
+  // static function AlwaysVisible(state: GameState, room: Room, roomState: Bool): Bool {
+  //   return true;
+  // }
+}
+
+@:nullSafety(Strict)
+class ActionScreen extends Screen {
+  private var actions(default, null): Null<Array<ScreenAction>>;
+
+  public function new(updateState: OneOf<UnicodeString, GameState -> UnicodeString>,
+                      ?actions: Array<ScreenAction>) {
+    super(updateState);
+    if (actions != null) {
+      this.actions = actions;
+    }
+  }
+
+  public function Init(actions: Array<ScreenAction>): Void {
+    this.actions ??= actions;
+  }
+
+  public function GetActions(state: GameState): Array<ScreenAction> {
+    // final room: Null<Room> = GlobalData.rooms[state.player.Y][state.player.X];
+    // if (room == null) {
+    //   throw new haxe.Exception("Room (" + state.player.X + ", " + state.player.Y + ") does not exist");
+    // }
+
+    // final roomStateRow: Vector<Bool> = state.roomState[state.player.Y];
+    // final roomState: Bool = roomStateRow.length != 0 && roomStateRow[state.player.X];
+
+    if (actions == null) {
+      return [];
+    }
+    // return [for (action in actions) if (action.isVisible(state, room, roomState)) action];
+    return actions;
   }
 }
