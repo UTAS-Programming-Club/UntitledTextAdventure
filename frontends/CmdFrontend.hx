@@ -29,7 +29,7 @@ class CmdFrontend {
     while (true) {
       final input: Int = Sys.getChar(false);
       if ("1".code <= input && input <= "9".code) {
-        return input - "1".code;
+        return cast(input - "1".code, UInt);
       }
     }
   }

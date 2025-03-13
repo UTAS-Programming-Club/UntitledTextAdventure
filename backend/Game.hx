@@ -3,7 +3,7 @@ package backend;
 import backend.GameInfo;
 
 @:nullSafety(Strict)
-class GameState {
+class Game {
   public var currentScreen(default, null): Null<Screen>;
 
   public function new() {
