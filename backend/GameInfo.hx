@@ -10,6 +10,6 @@ enum GameAction {
 enum GameScreen {
 }
 
-@:build(backend.macros.TypeGeneration.buildGameMap("ScreenInfo"))
+@:build(backend.macros.TypeGeneration.buildGameMap("Screens"))
 class GameInfo {
 }

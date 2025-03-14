@@ -1,7 +1,8 @@
 package frontends;
 
-import backend.GameState;
+import backend.Game;
 import backend.Screen;
+import extensions.UntitledTextAdventure;
 
 class CmdFrontend {
   static final ESC = "\x1B";
@@ -34,7 +35,7 @@ class CmdFrontend {
     }
   }
 
-  static function PrintButtonInputs(state: GameState, screen: ActionScreen): Void {
+  static function PrintButtonInputs(state: Game, screen: ActionScreen): Void {
     Sys.println("\n\nUse the numbers below to make a selection.");
 
     final actions: Array<ScreenAction> = screen.GetActions(state);
@@ -90,7 +91,7 @@ class CmdFrontend {
   }
 
 
-  static function HandleOutput(state: GameState): Bool {
+  static function HandleOutput(state: Game): Bool {
     PrintOutputBody(state.currentScreen.GetBody(state));
 
     if (state.currentScreen is ActionScreen) {
@@ -102,7 +103,7 @@ class CmdFrontend {
     return true;
   }
 
-  static function HandleInput(state: GameState): Bool {
+  static function HandleInput(state: Game): Bool {
     if (!(state.currentScreen is ActionScreen)) {
       return false;
     }
@@ -132,7 +133,7 @@ class CmdFrontend {
   public static function main(): Void {
     SetupConsole();
 
-    final state = new GameState();
+    final state = new Game(UntitledTextAdventure);
     do {
       if (!HandleOutput(state)) {
         break;

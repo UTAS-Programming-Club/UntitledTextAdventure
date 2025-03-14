@@ -1,4 +1,7 @@
 package backend;
 
-class Campaign {
+import backend.Screen;
+
+typedef Campaign = {
+  final initialScreen: Screen;
 }

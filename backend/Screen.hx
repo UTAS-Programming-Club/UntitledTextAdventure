@@ -1,23 +1,24 @@
 package backend;
 
+import backend.Game;
 import backend.GameInfo;
 import backend.macros.Helpers;
 import haxe.ds.Either;
 
 @:nullSafety(Strict)
 abstract class Screen {
-  private final updateState: GameState -> UnicodeString;
+  private final updateState: Game -> UnicodeString;
 
-  public function new(updateState: OneOf<UnicodeString, GameState -> UnicodeString>) {
+  public function new(updateState: OneOf<UnicodeString, Game -> UnicodeString>) {
     this.updateState = switch(updateState) {
       case Left(bodyStr):
-        function (_: GameState) return bodyStr;
+        function (_: Game) return bodyStr;
       case Right(updateStateFunc):
         updateStateFunc;
     }
   }
 
-  public function GetBody(state: GameState): UnicodeString {
+  public function GetBody(state: Game): UnicodeString {
     return this.updateState(state);
   }
 }
@@ -44,7 +45,7 @@ class ScreenAction {
 class ActionScreen extends Screen {
   private var actions(default, null): Null<Array<ScreenAction>>;
 
-  public function new(updateState: OneOf<UnicodeString, GameState -> UnicodeString>,
+  public function new(updateState: OneOf<UnicodeString, Game -> UnicodeString>,
                       ?actions: Array<ScreenAction>) {
     super(updateState);
     if (actions != null) {
@@ -56,7 +57,7 @@ class ActionScreen extends Screen {
     this.actions ??= actions;
   }
 
-  public function GetActions(state: GameState): Array<ScreenAction> {
+  public function GetActions(state: Game): Array<ScreenAction> {
     // final room: Null<Room> = GlobalData.rooms[state.player.Y][state.player.X];
     // if (room == null) {
     //   throw new haxe.Exception("Room (" + state.player.X + ", " + state.player.Y + ") does not exist");

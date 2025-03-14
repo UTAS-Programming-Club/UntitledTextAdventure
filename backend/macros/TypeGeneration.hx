@@ -14,7 +14,7 @@ class TypeGeneration {
   static var extPaths: Null<Map<String, Array<String>>> = [
     "Action" => [],
     "Screen" => [],
-    "ScreenInfo" => []
+    "Screens" => []
   ];
 
   static function findExtPaths(directory: String = "."): Void {
@@ -39,7 +39,7 @@ class TypeGeneration {
         case "Screens.hx":
           type = "Screen";
         case "ScreenInfo.hx":
-          type = "ScreenInfo";
+          type = "Screens";
         default:
           continue;
       }
