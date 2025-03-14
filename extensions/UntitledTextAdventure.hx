@@ -4,8 +4,12 @@ import backend.Campaign;
 import backend.GameInfo;
 
 final UntitledTextAdventure: Campaign = {
-  name: "Untitled Text Adventure game",
-  author: "the UTAS Programming Club",
+  mainMenu:   "Untitled text adventure game\n"
+            + "----------------------------\n"
+            + "By the UTAS Programming Club\n"
+            + "\n"
+            + "Currently unimplemented :(",
 
-  initialScreen: MainMenu
+  initialScreen: MainMenu,
+  gameScreen: GameRooms
 };

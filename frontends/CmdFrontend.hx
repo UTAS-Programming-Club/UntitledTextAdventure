@@ -4,6 +4,7 @@ import backend.Game;
 import backend.GameInfo;
 import backend.Screen;
 import extensions.UntitledTextAdventure;
+import extensions.TestCampaign;
 
 class CmdFrontend {
   static final ESC = "\x1B";
@@ -138,6 +139,7 @@ class CmdFrontend {
     SetupConsole();
 
     final state = new Game(UntitledTextAdventure);
+    // final state = new Game(TestCampaign);
     do {
       if (!HandleOutput(state)) {
         break;
