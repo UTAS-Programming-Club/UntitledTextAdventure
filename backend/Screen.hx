@@ -28,20 +28,35 @@ class ScreenAction {
   public final action: GameAction;
   public final title: UnicodeString;
   // public final isVisible: (GameState, Room, Bool) -> Bool;
-  public final getOutcome: (Game) -> GameOutcome;
+  private final outcome: (state: Game) -> GameOutcome;
 
   public function new(action: GameAction, title: UnicodeString,
                       /*?isVisible: (GameState, Room, Bool) -> Bool,*/
-                      getOutcome: (Game) -> GameOutcome) {
+                      ?outcome: (Game) -> GameOutcome) {
     this.action = action;
     this.title = title;
     // this.isVisible = isVisible ?? AlwaysVisible;
-    this.getOutcome = getOutcome;
+    this.outcome = outcome ?? AlwaysInvalidOutcome;
   }
 
   // static function AlwaysVisible(state: GameState, room: Room, roomState: Bool): Bool {
   //   return true;
   // }
+
+  static function AlwaysInvalidOutcome(state: Game): GameOutcome {
+    return Invalid;
+  }
+
+  public function handleAction(state: Game): GameOutcome {
+    for (ext in state.campaign.extensions) {
+      final outcome: GameOutcome = ext.actionHandler(state, action);
+      if (outcome != Invalid) {
+        return outcome;
+      }
+    }
+
+    return outcome(state);
+  }
 }
 
 @:nullSafety(Strict)

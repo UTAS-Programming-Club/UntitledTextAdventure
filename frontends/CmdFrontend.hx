@@ -3,8 +3,8 @@ package frontends;
 import backend.Game;
 import backend.GameInfo;
 import backend.Screen;
-import extensions.UntitledTextAdventure;
-import extensions.TestCampaign;
+import campaigns.UntitledTextAdventure;
+import campaigns.TestCampaign;
 
 class CmdFrontend {
   static final ESC = "\x1B";
@@ -123,14 +123,14 @@ class CmdFrontend {
     }
 
     // TODO: Deal with hidden inputs
-    final outcome: GameOutcome = actions[index].getOutcome(state);
+    final outcome: GameOutcome = actions[index].handleAction(state);
      switch (outcome) {
        case GetNextOutput:
          return true;
        case QuitGame:
          return false;
        default:
-         throw new haxe.Exception("Unknown screen action outcome " + outcome + " received");
+         throw new haxe.Exception("Unknown screen action outcome \"" + outcome + "\" received");
      }
   }
 
@@ -138,6 +138,7 @@ class CmdFrontend {
   public static function main(): Void {
     SetupConsole();
 
+    // TODO: Change to cmd parameter
     final state = new Game(UntitledTextAdventure);
     // final state = new Game(TestCampaign);
     do {
