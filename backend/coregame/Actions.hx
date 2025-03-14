@@ -1,7 +1,9 @@
 package backend.coregame;
 
+import backend.GameInfo;
+
 enum CoreGameAction {
   StartGame;
-  LoadGame;
+  GotoScreen(screen: GameScreen);
   QuitGame;
 }
