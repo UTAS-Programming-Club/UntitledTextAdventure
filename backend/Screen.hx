@@ -28,12 +28,15 @@ class ScreenAction {
   public final action: GameAction;
   public final title: UnicodeString;
   // public final isVisible: (GameState, Room, Bool) -> Bool;
+  public final getOutcome: (Game) -> GameOutcome;
 
   public function new(action: GameAction, title: UnicodeString,
-                      /*?isVisible: (GameState, Room, Bool) -> Bool*/) {
+                      /*?isVisible: (GameState, Room, Bool) -> Bool,*/
+                      getOutcome: (Game) -> GameOutcome) {
     this.action = action;
     this.title = title;
     // this.isVisible = isVisible ?? AlwaysVisible;
+    this.getOutcome = getOutcome;
   }
 
   // static function AlwaysVisible(state: GameState, room: Room, roomState: Bool): Bool {

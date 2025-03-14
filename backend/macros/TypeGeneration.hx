@@ -14,7 +14,8 @@ class TypeGeneration {
   static var extPaths: Null<Map<String, Array<String>>> = [
     "Action" => [],
     "Screen" => [],
-    "Screens" => []
+    "Screens" => [],
+    "Outcome" => []
   ];
 
   static function findExtPaths(directory: String = "."): Void {
@@ -40,6 +41,8 @@ class TypeGeneration {
           type = "Screen";
         case "ScreenInfo.hx":
           type = "Screens";
+        case "Outcomes.hx":
+          type = "Outcome";
         default:
           continue;
       }
@@ -176,7 +179,7 @@ class TypeGeneration {
     }
 
     fields.push({
-      access: [AStatic, APublic],
+      access: [AFinal, APublic, AStatic],
       name: type,
       kind: FVar(
         macro: Map<GameScreen, Screen>, macro $a{mapExprs}

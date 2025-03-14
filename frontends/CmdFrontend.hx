@@ -1,6 +1,7 @@
 package frontends;
 
 import backend.Game;
+import backend.GameInfo;
 import backend.Screen;
 import extensions.UntitledTextAdventure;
 
@@ -38,6 +39,7 @@ class CmdFrontend {
   static function PrintButtonInputs(state: Game, screen: ActionScreen): Void {
     Sys.println("\n\nUse the numbers below to make a selection.");
 
+    // TODO: Deal with hidden inputs
     final actions: Array<ScreenAction> = screen.GetActions(state);
     for (i in 0...actions.length) {
       Sys.println((i + 1) + ". " + actions[i].title);
@@ -92,10 +94,11 @@ class CmdFrontend {
 
 
   static function HandleOutput(state: Game): Bool {
-    PrintOutputBody(state.currentScreen.GetBody(state));
+    final screen: Screen = state.getScreen();
+    PrintOutputBody(screen.GetBody(state));
 
-    if (state.currentScreen is ActionScreen) {
-      PrintButtonInputs(state, cast(state.currentScreen, ActionScreen));
+    if (screen is ActionScreen) {
+      PrintButtonInputs(state, cast(screen, ActionScreen));
     } else {
       return false;
     }
@@ -104,29 +107,30 @@ class CmdFrontend {
   }
 
   static function HandleInput(state: Game): Bool {
-    if (!(state.currentScreen is ActionScreen)) {
+    final screen: Screen = state.getScreen();
+    if (!(screen is ActionScreen)) {
       return false;
     }
 
-    final screen = cast(state.currentScreen, ActionScreen);
+    final screen = cast(screen, ActionScreen);
     final index: UInt = GetButtonInput();
     final actions: Array<ScreenAction> = screen.GetActions(state);
     if (index >= actions.length) {
+      // TODO: Is this still the case?
       // This is a recoverable error so just ignore it
       return true;
     }
 
-    // final outcome: ScreenActionOutcome = state.HandleGameInput(actions[index].type);
-    // switch (outcome) {
-    //   case GetNextOutput:
-    //     return true;
-    //   case QuitGame:
-    //     return false;
-    //   default:
-    //     throw new haxe.Exception("Unknown screen action outcome " + outcome + " received");
-    // }
-    // TODO: Remove
-    return false;
+    // TODO: Deal with hidden inputs
+    final outcome: GameOutcome = actions[index].getOutcome(state);
+     switch (outcome) {
+       case GetNextOutput:
+         return true;
+       case QuitGame:
+         return false;
+       default:
+         throw new haxe.Exception("Unknown screen action outcome " + outcome + " received");
+     }
   }
 
 

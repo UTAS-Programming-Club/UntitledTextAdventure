@@ -1,9 +1,10 @@
 package backend;
 
-import backend.Screen;
+import backend.GameInfo;
 
 typedef Campaign = {
   final name: UnicodeString;
   final author: UnicodeString;
-  final initialScreen: Screen;
+
+  final initialScreen: GameScreen;
 }

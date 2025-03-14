@@ -13,3 +13,7 @@ enum GameScreen {
 @:build(backend.macros.TypeGeneration.buildGameMap("Screens"))
 class GameInfo {
 }
+
+@:build(backend.macros.TypeGeneration.buildGameEnum("Outcome"))
+enum GameOutcome {
+}

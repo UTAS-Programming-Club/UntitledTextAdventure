@@ -1,6 +1,12 @@
 # Joshua has notepad++ backups enabled and has no need to commit them
 nppBackup/
 
+# Haxe files
+dump/
+haxe/.haxelib/
+haxe/haxe/
+haxe/neko/
+
 # Output files
 out/
 third_party/cosmos/

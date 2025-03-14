@@ -7,5 +7,5 @@ final UntitledTextAdventure: Campaign = {
   name: "Untitled Text Adventure game",
   author: "the UTAS Programming Club",
 
-  initialScreen: GameInfo.Screens[MainMenu]
+  initialScreen: MainMenu
 };
