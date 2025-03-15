@@ -7,19 +7,19 @@ import haxe.ds.Either;
 
 @:nullSafety(Strict)
 abstract class Screen {
-  private final updateState: Game -> UnicodeString;
+  private final updateState: (Game, Screen) -> UnicodeString;
 
-  public function new(updateState: OneOf<UnicodeString, Game -> UnicodeString>) {
+  public function new(updateState: OneOf<UnicodeString, (Game, Screen) -> UnicodeString>) {
     this.updateState = switch(updateState) {
       case Left(bodyStr):
-        function (_: Game) return bodyStr;
+        function (Game, Screen) return bodyStr;
       case Right(updateStateFunc):
         updateStateFunc;
     }
   }
 
   public function GetBody(state: Game): UnicodeString {
-    return this.updateState(state);
+    return this.updateState(state, this);
   }
 }
 
@@ -28,11 +28,11 @@ class ScreenAction {
   public final action: GameAction;
   public final title: UnicodeString;
   // public final isVisible: (GameState, Room, Bool) -> Bool;
-  private final outcome: (state: Game) -> GameOutcome;
+  private final outcome: Game -> GameOutcome;
 
   public function new(action: GameAction, title: UnicodeString,
                       /*?isVisible: (GameState, Room, Bool) -> Bool,*/
-                      ?outcome: (Game) -> GameOutcome) {
+                      ?outcome: Game -> GameOutcome) {
     this.action = action;
     this.title = title;
     // this.isVisible = isVisible ?? AlwaysVisible;
@@ -63,7 +63,7 @@ class ScreenAction {
 class ActionScreen extends Screen {
   private var actions(default, null): Null<Array<ScreenAction>>;
 
-  public function new(updateState: OneOf<UnicodeString, Game -> UnicodeString>,
+  public function new(updateState: OneOf<UnicodeString, (Game, Screen) -> UnicodeString>,
                       ?actions: Array<ScreenAction>) {
     super(updateState);
     if (actions != null) {

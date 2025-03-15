@@ -64,17 +64,14 @@ class TypeGeneration {
     for (enumPath in extPaths[type]) {
       final types: Array<Type> = enumPath.getModule();
 
-      if (types.length != 1) {
-        continue;
-      }
-      final moduleType: ModuleType = types[0].toModuleType();
-
       var enumType: EnumType;
-      switch (moduleType) {
-        case TEnumDecl(e):
-          enumType = e.get();
-        default:
-          continue;
+      for (type in types) {
+        switch (type) {
+          case TEnum(e, _):
+            enumType = e.get();
+          default:
+            continue;
+        }
       }
 
       for (construct in enumType.constructs) {
@@ -112,17 +109,14 @@ class TypeGeneration {
     for (mapPath in extPaths[type]) {
       final types: Array<Type> = mapPath.getModule();
 
-      if (types.length != 1) {
-        continue;
-      }
-      final moduleType: ModuleType = types[0].toModuleType();
-
       var classType: ClassType;
-      switch (moduleType) {
-        case TClassDecl(c):
-          classType = c.get();
-        default:
-          continue;
+      for (type in types) {
+        switch (type) {
+          case TInst(t, _):
+            classType = t.get();
+          default:
+            continue;
+        }
       }
 
       // Previously, we assumed there was only one static field per extension
