@@ -5,7 +5,6 @@ import backend.GameInfo;
 import backend.macros.Helpers;
 import haxe.ds.Either;
 
-@:nullSafety(Strict)
 abstract class Screen {
   private final updateState: (Game, Screen) -> UnicodeString;
 
@@ -23,7 +22,6 @@ abstract class Screen {
   }
 }
 
-@:nullSafety(Strict)
 class ScreenAction {
   public final action: GameAction;
   public final title: UnicodeString;
@@ -59,7 +57,6 @@ class ScreenAction {
   }
 }
 
-@:nullSafety(Strict)
 class ActionScreen extends Screen {
   private var actions(default, null): Null<Array<ScreenAction>>;
 

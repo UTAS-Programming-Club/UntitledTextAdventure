@@ -4,7 +4,6 @@ import backend.Campaign;
 import backend.GameInfo;
 import haxe.Exception;
 
-@:nullSafety(Strict)
 class Game {
   public final campaign: Campaign;
   public var currentScreen(null, default): GameScreen;
