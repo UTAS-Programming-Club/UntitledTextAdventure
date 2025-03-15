@@ -125,12 +125,18 @@ class TypeGeneration {
           continue;
       }
 
-      final statics: Array<ClassField> = classType.statics.get();
-      if (statics.length != 1) {
-        continue;
+      // Previously, we assumed there was only one static field per extension
+      // module but module scoped functions count as statics so now we assume
+      // only one static field's name ends with the type of map being created.
+      final fields: Array<ClassField> = classType.statics.get();
+      var mapExpr: Null<TypedExpr> = null;
+      for (field in fields) {
+        if (field.name.endsWith(type)) {
+          mapExpr = field.expr();
+          break;
+        }
       }
 
-      final mapExpr: Null<TypedExpr> = statics[0].expr();
       if (mapExpr == null) {
         continue;
       }
@@ -155,13 +161,49 @@ class TypeGeneration {
         if (mapItemElems.length != 2) {
           continue;
         }
-        
+
         var mappingRHSExpr: Expr;
         switch (mapItemElems[0].expr) {
           case TVar(_, expr):
             mappingRHSExpr = expr.getTypedExpr();
           default:
             continue;
+        }
+
+        // Everything through to mappingLHSExpr is specific to the Screens map
+        // TODO: Generalise
+        // new ActionScreen((cast OneOf<str, (_) -> str>), ...) to (cast OneOf<str, (_) -> str>)
+        var actionBodyParam: ExprDef;
+        switch (mappingRHSExpr.expr) {
+          case ENew(_, params):
+            actionBodyParam = params[0].expr;
+          default:
+            continue;
+        }
+
+        // (cast OneOf<str, (_) -> str>) to cast OneOf<str, (_) -> str>
+        var actionBodyCast: ExprDef;
+        switch (actionBodyParam) {
+          case EMeta(_, e):
+            actionBodyCast = e.expr;
+          default:
+            continue;
+        }
+
+        // cast OneOf<str, (_) -> str> to OneOf<str, (_) -> str>
+        var actionBodyEither: ExprDef;
+        switch(actionBodyCast) {
+          case ECast(e, _):
+            actionBodyEither = e.expr;
+          default:
+            continue;
+        }
+
+        // OneOf<str, (_) -> str> to str OR (_) -> str and then fix if module level function
+        switch(actionBodyEither) {
+          case ECall(_, params):
+            params[0].expr = fixModuleStatic(params[0].expr);
+          default:
         }
 
         var mappingLHSExpr: Expr;
@@ -194,5 +236,26 @@ class TypeGeneration {
     kind: kind,
     name: name,
     pos: Context.currentPos()
+  }
+
+  static function fixModuleStatic(expr: ExprDef): ExprDef {
+    switch (expr) {
+      case EField(e1, field1, kind1):
+        switch (e1.expr) {
+          case EField(e2, field2, _):
+            switch (e2.expr) {
+              case EField(_, field3, _):
+                final moduleStaticsClassName: String = field3 + "_Fields_";
+                if (moduleStaticsClassName == field2) {
+                  return EField(e2, field1, kind1);
+                }
+              default:
+            }
+          default:
+        }
+      default:
+    }
+
+    return expr;
   }
 }

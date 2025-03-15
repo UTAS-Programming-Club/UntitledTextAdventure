@@ -1,5 +1,5 @@
 -D dump=pretty
--dce no
+-dce std
 -m frontends.CmdFrontend
 # --macro backend.Macros.findEnums("backend/coregame")
 # --macro backend.Macros.findEnums("extensions")
@@ -7,6 +7,6 @@
 # --macro backend.Macros2.createGameEnums2()
 # --macro haxe.macro.Compiler.registerDefinesDescriptionFile('define.json', 'testadventure')
 # --python test.py
-#--cpp cpp
+# --cpp cpp
 # --java java
 --interp

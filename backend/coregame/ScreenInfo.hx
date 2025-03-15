@@ -4,7 +4,7 @@ import backend.Game;
 import backend.GameInfo;
 import backend.Screen;
 
-final CoreScreenInfo: Map<GameScreen, Screen> = [
+final CoreScreens: Map<GameScreen, Screen> = [
   MainMenu => new ActionScreen(function(state: Game): UnicodeString {
       return state.campaign.mainMenu;
     }, [
