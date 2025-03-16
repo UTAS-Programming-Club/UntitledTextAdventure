@@ -6,6 +6,10 @@ import backend.Screen;
 enum GameAction {
 }
 
+@:build(backend.macros.TypeGeneration.buildGameEnum("Rooms.hx"))
+enum GameRoom {
+}
+
 @:build(backend.macros.TypeGeneration.buildGameEnum("Screens.hx"))
 enum GameScreen {
 }

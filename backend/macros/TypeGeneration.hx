@@ -50,6 +50,10 @@ class TypeGeneration {
       findFilePaths();
     }
 
+    if (filePaths[fileName] == null) {
+      return enumFields;
+    }
+
     for (enumPath in filePaths[fileName]) {
       final types: Array<Type> = enumPath.getModule();
 
@@ -93,6 +97,10 @@ class TypeGeneration {
 
     if (!foundFilePaths) {
       findFilePaths();
+    }
+
+    if (filePaths[fileName] == null) {
+      return fields;
     }
 
     for (mapPath in filePaths[fileName]) {
@@ -169,6 +177,7 @@ class TypeGeneration {
       access: [AFinal, APublic, AStatic],
       name: typeName,
       kind: FVar(
+        // TODO: Remove these types to allow generating other maps e.g. equipment
         macro: Map<GameScreen, Screen>, macro $a{mapExprs}
       ),
       pos: Context.currentPos()

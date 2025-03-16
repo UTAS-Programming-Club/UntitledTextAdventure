@@ -3,7 +3,7 @@ package campaigns;
 import backend.Campaign;
 import backend.GameInfo;
 import backend.coregame.CoreGame;
-import extensions.rooms.Rooms;
+import extensions.rooms.RoomsExtension;
 
 @:nullSafety(Strict)
 final UntitledTextAdventure: Campaign = {

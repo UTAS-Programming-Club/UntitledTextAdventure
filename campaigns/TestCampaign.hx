@@ -3,7 +3,7 @@ package campaigns;
 import backend.Campaign;
 import backend.GameInfo;
 import backend.coregame.CoreGame;
-import extensions.test.Test;
+import extensions.test.TestExtension;
 
 @:nullSafety(Strict)
 final TestCampaign: Campaign = {
