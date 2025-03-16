@@ -2,18 +2,18 @@ package backend;
 
 import backend.Screen;
 
-@:build(backend.macros.TypeGeneration.buildGameEnum("Action"))
+@:build(backend.macros.TypeGeneration.buildGameEnum("Actions.hx"))
 enum GameAction {
 }
 
-@:build(backend.macros.TypeGeneration.buildGameEnum("Screen"))
+@:build(backend.macros.TypeGeneration.buildGameEnum("Screens.hx"))
 enum GameScreen {
 }
 
-@:build(backend.macros.TypeGeneration.buildGameMap("Screens"))
+@:build(backend.macros.TypeGeneration.buildGameMap("ScreenInfo.hx", "Screens"))
 class GameInfo {
 }
 
-@:build(backend.macros.TypeGeneration.buildGameEnum("Outcome"))
+@:build(backend.macros.TypeGeneration.buildGameEnum("Outcomes.hx"))
 enum GameOutcome {
 }

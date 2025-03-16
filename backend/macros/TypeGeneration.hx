@@ -10,15 +10,10 @@ using StringTools;
 using sys.FileSystem;
 
 class TypeGeneration {
-  static var foundExtPaths: Bool = false;
-  static var extPaths: Null<Map<String, Array<String>>> = [
-    "Action" => [],
-    "Screen" => [],
-    "Screens" => [],
-    "Outcome" => []
-  ];
+  static var foundFilePaths: Bool = false;
+  static var filePaths: Map<String, Array<String>> = [];
 
-  static function findExtPaths(directory: String = "."): Void {
+  static function findFilePaths(directory: String = "."): Void {
     if (!directory.exists()) {
       return;
     }
@@ -26,42 +21,36 @@ class TypeGeneration {
     final files: Array<String> = directory.readDirectory();
     var file: String;
     for (file in files) {
-
       final path: String = Path.join([directory, file]);
+
       if (path.isDirectory()) {
-        findExtPaths(path);
+        findFilePaths(path);
         continue;
       }
 
-      var type: String;
-      switch (file) {
-        case "Actions.hx":
-          type = "Action";
-        case "Screens.hx":
-          type = "Screen";
-        case "ScreenInfo.hx":
-          type = "Screens";
-        case "Outcomes.hx":
-          type = "Outcome";
-        default:
-          continue;
+      if (!file.endsWith(".hx")) {
+        continue;
+      }
+
+      if (filePaths[file] == null) {
+        filePaths[file] = [];
       }
 
       final module: String = path.withoutExtension().replace("/", ".");
-      extPaths[type].push(module);
+      filePaths[file].push(module);
     }
 
-    foundExtPaths = true;
+    foundFilePaths = true;
   }
   
-  static public function buildGameEnum(type: String): Array<Field> {
+  static public function buildGameEnum(fileName: String): Array<Field> {
     final enumFields: Array<Field> = [];
 
-    if (!foundExtPaths) {
-      findExtPaths();
+    if (!foundFilePaths) {
+      findFilePaths();
     }
 
-    for (enumPath in extPaths[type]) {
+    for (enumPath in filePaths[fileName]) {
       final types: Array<Type> = enumPath.getModule();
 
       var enumType: EnumType;
@@ -98,15 +87,15 @@ class TypeGeneration {
     return enumFields;
   }
 
-  static public function buildGameMap(type: String): Array<Field> {
+  static public function buildGameMap(fileName: String, typeName: String): Array<Field> {
     final fields: Array<Field> = Context.getBuildFields();
     final mapExprs: Array<Expr> = [];
 
-    if (!foundExtPaths) {
-      findExtPaths();
+    if (!foundFilePaths) {
+      findFilePaths();
     }
 
-    for (mapPath in extPaths[type]) {
+    for (mapPath in filePaths[fileName]) {
       final types: Array<Type> = mapPath.getModule();
 
       var classType: ClassType;
@@ -125,7 +114,7 @@ class TypeGeneration {
       final fields: Array<ClassField> = classType.statics.get();
       var mapExpr: Null<TypedExpr> = null;
       for (field in fields) {
-        if (field.name.endsWith(type)) {
+        if (field.name.endsWith(typeName)) {
           mapExpr = field.expr();
           break;
         }
@@ -178,7 +167,7 @@ class TypeGeneration {
 
     fields.push({
       access: [AFinal, APublic, AStatic],
-      name: type,
+      name: typeName,
       kind: FVar(
         macro: Map<GameScreen, Screen>, macro $a{mapExprs}
       ),
