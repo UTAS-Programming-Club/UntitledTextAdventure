@@ -25,25 +25,22 @@ abstract class Screen {
 class ScreenAction {
   public final action: GameAction;
   public final title: UnicodeString;
-  // public final isVisible: (GameState, Room, Bool) -> Bool;
+  // TODO: Add visibilityHandler in Extension?
+  public final isVisible: (Game, Screen) -> Bool;
+  // TODO: Is actionHandler in Extension enough? Remove this?
   private final outcome: Game -> GameOutcome;
 
   public function new(action: GameAction, title: UnicodeString,
-                      /*?isVisible: (GameState, Room, Bool) -> Bool,*/
+                      ?isVisible: (Game, Screen) -> Bool,
                       ?outcome: Game -> GameOutcome) {
     this.action = action;
     this.title = title;
-    // this.isVisible = isVisible ?? AlwaysVisible;
+    this.isVisible = isVisible ?? AlwaysVisible;
     this.outcome = outcome ?? AlwaysInvalidOutcome;
   }
 
-  // static function AlwaysVisible(state: GameState, room: Room, roomState: Bool): Bool {
-  //   return true;
-  // }
-
-  static function AlwaysInvalidOutcome(state: Game): GameOutcome {
-    return Invalid;
-  }
+  static function AlwaysVisible(Game, Screen): Bool return true;
+  static function AlwaysInvalidOutcome(Game): GameOutcome return Invalid;
 
   public function handleAction(state: Game): GameOutcome {
     for (ext in state.campaign.extensions) {

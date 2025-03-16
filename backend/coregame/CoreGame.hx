@@ -15,8 +15,8 @@ final CoreGameExt: Extension = {
         return GetNextOutput;
       case QuitGame:
         return QuitGame;
+      default:
+        return Invalid;
     }
-
-    return Invalid;
   }
 };

@@ -1,8 +1,8 @@
 package campaigns;
 
 import backend.Campaign;
-import backend.GameInfo;
 import backend.coregame.CoreGame;
+import backend.GameInfo;
 import extensions.rooms.RoomsExtension;
 
 @:nullSafety(Strict)
@@ -16,5 +16,16 @@ final UntitledTextAdventure: Campaign = {
   extensions: [CoreGameExt, RoomsExt],
 
   initialScreen: MainMenu,
-  gameScreen: GameRooms
+  gameScreen: GameRooms,
+
+  rooms: {
+    final gridSize: UInt = 10;
+    final rooms = [for (x in 0...gridSize) [for (y in 0...gridSize) Unused]];
+    rooms[0][0] = Empty;
+    rooms[0][1] = Empty;
+    rooms[1][0] = Empty;
+    rooms[1][1] = Empty;
+    rooms[1][2] = Trap;
+    rooms;
+  }
 };

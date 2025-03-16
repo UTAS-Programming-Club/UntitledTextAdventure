@@ -1,8 +1,8 @@
 package campaigns;
 
 import backend.Campaign;
-import backend.GameInfo;
 import backend.coregame.CoreGame;
+import backend.GameInfo;
 import extensions.test.TestExtension;
 
 @:nullSafety(Strict)
@@ -14,5 +14,7 @@ final TestCampaign: Campaign = {
   extensions: [CoreGameExt, TestExt],
 
   initialScreen: MainMenu,
-  gameScreen: Test
+  gameScreen: Test,
+
+  rooms: [[Empty]]
 };

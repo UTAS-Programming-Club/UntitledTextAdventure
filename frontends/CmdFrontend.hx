@@ -40,10 +40,13 @@ class CmdFrontend {
   static function PrintButtonInputs(state: Game, screen: ActionScreen): Void {
     Sys.println("\n\nUse the numbers below to make a selection.");
 
-    // TODO: Deal with hidden inputs
     final actions: Array<ScreenAction> = screen.GetActions(state);
-    for (i in 0...actions.length) {
-      Sys.println((i + 1) + ". " + actions[i].title);
+    var inputNumber: UInt = 0;
+    for (action in actions) {
+      if (action.isVisible(state, screen)) {
+        inputNumber++;
+        Sys.println('$inputNumber. ${action.title}');
+      }
     }
   }
 
@@ -107,22 +110,43 @@ class CmdFrontend {
     return true;
   }
 
+  static function MapInputIndex(state: Game, screen: Screen, actions: Array<ScreenAction>, inputIndex: UInt): UInt {
+  var index: UInt = 0;
+  var visibleInputCount: UInt = 0;
+  while (index < actions.length) {
+    if (!actions[index].isVisible(state, screen)) {
+      index++;
+      continue;
+    }
+
+    if (inputIndex == visibleInputCount) {
+      return index;
+    }
+
+    visibleInputCount++;
+    index++;
+  }
+
+  return actions.length;
+}
+
   static function HandleInput(state: Game): Bool {
     final screen: Screen = state.getScreen();
     if (!(screen is ActionScreen)) {
       return false;
     }
 
-    final screen = cast(screen, ActionScreen);
-    final index: UInt = GetButtonInput();
-    final actions: Array<ScreenAction> = screen.GetActions(state);
+    final actionScreen: ActionScreen = cast screen;
+    final actions: Array<ScreenAction> = actionScreen.GetActions(state);
+
+    final inputIndex: UInt = GetButtonInput();
+    final index: UInt = MapInputIndex(state, screen, actions, inputIndex);
     if (index >= actions.length) {
       // TODO: Is this still the case?
       // This is a recoverable error so just ignore it
       return true;
     }
 
-    // TODO: Deal with hidden inputs
     final outcome: GameOutcome = actions[index].handleAction(state);
      switch (outcome) {
        case GetNextOutput:

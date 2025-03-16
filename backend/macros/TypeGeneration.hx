@@ -3,8 +3,8 @@ package backend.macros;
 import haxe.macro.Expr;
 import haxe.macro.Type;
 
-using haxe.macro.Context;
 using haxe.io.Path;
+using haxe.macro.Context;
 using haxe.macro.ExprTools;
 using StringTools;
 using sys.FileSystem;
@@ -57,7 +57,8 @@ class TypeGeneration {
     for (enumPath in filePaths[fileName]) {
       final types: Array<Type> = enumPath.getModule();
 
-      var enumType: EnumType;
+      // TODO: Check type name
+      var enumType: Null<EnumType> = null;
       for (type in types) {
         switch (type) {
           case TEnum(e, _):
@@ -65,6 +66,10 @@ class TypeGeneration {
           default:
             continue;
         }
+      }
+
+      if (enumType == null) {
+        continue;
       }
 
       for (construct in enumType.constructs) {
@@ -106,7 +111,8 @@ class TypeGeneration {
     for (mapPath in filePaths[fileName]) {
       final types: Array<Type> = mapPath.getModule();
 
-      var classType: ClassType;
+      // TODO: Check type name
+      var classType: Null<ClassType> = null;
       for (type in types) {
         switch (type) {
           case TInst(t, _):
@@ -114,6 +120,10 @@ class TypeGeneration {
           default:
             continue;
         }
+      }
+
+      if (classType == null) {
+        continue;
       }
 
       // Previously, we assumed there was only one static field per extension
@@ -193,26 +203,11 @@ class TypeGeneration {
   }
 
   static function fixModuleStatics(expr: Expr): Expr {
-    switch (expr.expr) {
-      case EField(e1, field1, kind1):
-        switch (e1.expr) {
-          case EField(e2, field2, _):
-            switch (e2.expr) {
-              case EField(_, field3, _):
-                final moduleStaticsClassName: String = field3 + "_Fields_";
-                if (moduleStaticsClassName == field2) {
-                  return {
-                    expr: EField(e2, field1, kind1),
-                    pos: expr.pos
-                  }
-                }
-              default:
-            }
-          default:
-        }
+    return switch (expr.expr) {
+      case EField(e, field, _) if (field.endsWith("_Fields_")):
+        e;
       default:
+        expr.map(fixModuleStatics);
     }
-
-    return expr.map(fixModuleStatics);
   }
 }

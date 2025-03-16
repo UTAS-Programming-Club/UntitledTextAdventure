@@ -10,4 +10,6 @@ typedef Campaign = {
 
   final initialScreen: GameScreen;
   final gameScreen: GameScreen;
+
+  final rooms: Array<Array<GameRoom>>;
 }
