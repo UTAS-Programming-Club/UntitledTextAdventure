@@ -5,6 +5,7 @@ import backend.GameInfo;
 import backend.coregame.CoreGame;
 import extensions.test.Test;
 
+@:nullSafety(Strict)
 final TestCampaign: Campaign = {
   mainMenu:   "A campaign example\n"
             + "------------------\n"

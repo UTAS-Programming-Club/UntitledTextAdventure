@@ -5,7 +5,7 @@ import haxe.macro.Type;
 
 using haxe.macro.Context;
 using haxe.io.Path;
-using haxe.macro.Tools;
+using haxe.macro.ExprTools;
 using StringTools;
 using sys.FileSystem;
 
@@ -146,14 +146,10 @@ class TypeGeneration {
       for (i in 1...(mapItems.length - 1)) {
         var mapItemElems: Array<TypedExpr>;
         switch (mapItems[i].expr) {
-          case TBlock(el):
+          case TBlock(el) if (el.length == 2):
             mapItemElems = el;
           default:
             continue;
-        }
-
-        if (mapItemElems.length != 2) {
-          continue;
         }
 
         var mappingRHSExpr: Expr;
@@ -164,41 +160,7 @@ class TypeGeneration {
             continue;
         }
 
-        // Everything through to mappingLHSExpr is specific to the Screens map
-        // TODO: Generalise
-        // new ActionScreen((cast OneOf<str, (_) -> str>), ...) to (cast OneOf<str, (_) -> str>)
-        var actionBodyParam: ExprDef;
-        switch (mappingRHSExpr.expr) {
-          case ENew(_, params):
-            actionBodyParam = params[0].expr;
-          default:
-            continue;
-        }
-
-        // (cast OneOf<str, (_) -> str>) to cast OneOf<str, (_) -> str>
-        var actionBodyCast: ExprDef;
-        switch (actionBodyParam) {
-          case EMeta(_, e):
-            actionBodyCast = e.expr;
-          default:
-            continue;
-        }
-
-        // cast OneOf<str, (_) -> str> to OneOf<str, (_) -> str>
-        var actionBodyEither: ExprDef;
-        switch(actionBodyCast) {
-          case ECast(e, _):
-            actionBodyEither = e.expr;
-          default:
-            continue;
-        }
-
-        // OneOf<str, (_) -> str> to str OR (_) -> str and then fix if module level function
-        switch(actionBodyEither) {
-          case ECall(_, params):
-            params[0].expr = fixModuleStatic(params[0].expr);
-          default:
-        }
+        mappingRHSExpr = fixModuleStatics(mappingRHSExpr);
 
         var mappingLHSExpr: Expr;
         switch (mapItemElems[1].expr) {
@@ -232,8 +194,8 @@ class TypeGeneration {
     pos: Context.currentPos()
   }
 
-  static function fixModuleStatic(expr: ExprDef): ExprDef {
-    switch (expr) {
+  static function fixModuleStatics(expr: Expr): Expr {
+    switch (expr.expr) {
       case EField(e1, field1, kind1):
         switch (e1.expr) {
           case EField(e2, field2, _):
@@ -241,7 +203,10 @@ class TypeGeneration {
               case EField(_, field3, _):
                 final moduleStaticsClassName: String = field3 + "_Fields_";
                 if (moduleStaticsClassName == field2) {
-                  return EField(e2, field1, kind1);
+                  return {
+                    expr: EField(e2, field1, kind1),
+                    pos: expr.pos
+                  }
                 }
               default:
             }
@@ -250,6 +215,6 @@ class TypeGeneration {
       default:
     }
 
-    return expr;
+    return expr.map(fixModuleStatics);
   }
 }

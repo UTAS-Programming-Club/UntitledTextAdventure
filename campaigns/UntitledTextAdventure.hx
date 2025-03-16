@@ -5,6 +5,7 @@ import backend.GameInfo;
 import backend.coregame.CoreGame;
 import extensions.rooms.Rooms;
 
+@:nullSafety(Strict)
 final UntitledTextAdventure: Campaign = {
   mainMenu:   "Untitled text adventure game\n"
             + "----------------------------\n"
