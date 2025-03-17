@@ -15,19 +15,17 @@ final RoomsExt: Extension = {
 
     switch (action) {
       case GoNorth:
-        roomScreen.y++;
-        return GetNextOutput;
+        roomScreen.changeRoom(state, roomScreen.x, roomScreen.y + 1);
       case GoEast:
-        roomScreen.x--;
-        return GetNextOutput;
+        roomScreen.changeRoom(state, roomScreen.x - 1, roomScreen.y);
       case GoSouth:
-        roomScreen.y--;
-        return GetNextOutput;
+        roomScreen.changeRoom(state, roomScreen.x, roomScreen.y - 1);
       case GoWest:
-        roomScreen.x++;
-        return GetNextOutput;
+        roomScreen.changeRoom(state, roomScreen.x + 1, roomScreen.y);
       default:
         return Invalid;
     }
+
+    return GetNextOutput;
   }
 };

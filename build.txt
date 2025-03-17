@@ -4,5 +4,6 @@ Not needed?: cp -r haxe/.haxelib .haxelib
 
 haxe haxe/run.hxml
 haxe haxe/run.hxml -D testrooms
-haxe haxe/build.hxml && python test.py
+haxe haxe/build.hxml && python out/test.py
+haxe haxe/buildstatic.hxml && out/cpptest/CmdFrontend
 # TODO: Support Discord bot, PicoVision and website

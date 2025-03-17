@@ -151,7 +151,7 @@ static function MapInputIndex(state: Game, screen: Screen, actions: Array<Screen
        case QuitGame:
          return false;
        default:
-         throw new haxe.Exception("Unknown screen action outcome \"" + outcome + "\" received");
+        throw 'Unknown screen action outcome $outcome received.';
      }
   }
 

@@ -1,6 +1,9 @@
 package backend;
 
+import backend.Room;
 import backend.Screen;
+
+// TODO: Either namespace game data per campaign or remove support for multiple campaign in a single build
 
 @:build(backend.macros.TypeGeneration.buildGameEnum("Actions.hx"))
 enum GameAction {
@@ -14,8 +17,11 @@ enum GameRoom {
 enum GameScreen {
 }
 
+@:build(backend.macros.TypeGeneration.buildGameMap("RoomInfo.hx", "Rooms"))
 @:build(backend.macros.TypeGeneration.buildGameMap("ScreenInfo.hx", "Screens"))
 class GameInfo {
+  public static final Rooms: Map<GameRoom, Void -> Room> = [];
+  public static final Screens: Map<GameScreen, Screen> = [];
 }
 
 @:build(backend.macros.TypeGeneration.buildGameEnum("Outcomes.hx"))

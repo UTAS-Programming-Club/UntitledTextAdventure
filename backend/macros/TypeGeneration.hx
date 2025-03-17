@@ -108,6 +108,17 @@ class TypeGeneration {
       return fields;
     }
 
+    var mapField: Null<Field> = null;
+    for (field in fields) {
+      if (field.name == typeName) {
+        mapField = field;
+      }
+    }
+
+    if (mapField == null) {
+      return fields;
+    }
+
     for (mapPath in filePaths[fileName]) {
       final types: Array<Type> = mapPath.getModule();
 
@@ -153,45 +164,52 @@ class TypeGeneration {
       for (i in 1...(mapItems.length - 1)) {
         var mapItemElems: Array<TypedExpr>;
         switch (mapItems[i].expr) {
-          case TBlock(el) if (el.length == 2):
+          case TBlock(el):
             mapItemElems = el;
           default:
             continue;
         }
 
+        var mappingLHSExpr: Expr;
         var mappingRHSExpr: Expr;
-        switch (mapItemElems[0].expr) {
-          case TVar(_, expr):
-            mappingRHSExpr = expr.getTypedExpr();
-          default:
-            continue;
+        if (mapItemElems.length == 0 || mapItemElems.length > 2) {
+          continue;
+        } else if (mapItemElems.length == 2) {
+          switch (mapItemElems[0].expr) {
+            case TVar(_, expr):
+              mappingRHSExpr = expr.getTypedExpr();
+            default:
+               continue;
+          }
+
+          switch (mapItemElems[1].expr) {
+            case TCall(_, el) if (el.length == 2):
+              mappingLHSExpr = el[0].getTypedExpr();
+            default:
+              continue;
+          }
+        } else {
+          switch (mapItemElems[0].expr) {
+            case TCall(_, el) if (el.length == 2):
+              mappingLHSExpr = el[0].getTypedExpr();
+              mappingRHSExpr = el[1].getTypedExpr();
+            default:
+              continue;
+          }
         }
 
         mappingRHSExpr = fixModuleStatics(mappingRHSExpr);
-
-        var mappingLHSExpr: Expr;
-        switch (mapItemElems[1].expr) {
-          case TCall(_, el):
-            mappingLHSExpr = el[0].getTypedExpr();
-          default:
-            continue;
-        }
-
         mapExprs.push(
           macro $mappingLHSExpr => $mappingRHSExpr
         );
       }
     }
 
-    fields.push({
-      access: [AFinal, APublic, AStatic],
-      name: typeName,
-      kind: FVar(
-        // TODO: Remove these types to allow generating other maps e.g. equipment
-        macro: Map<GameScreen, Screen>, macro $a{mapExprs}
-      ),
-      pos: Context.currentPos()
-    });
+    switch (mapField.kind) {
+      case FVar(t, _):
+        mapField.kind = FVar(t, macro $a{mapExprs});
+      default:
+    }
 
     return fields;
   }

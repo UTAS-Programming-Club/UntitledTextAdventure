@@ -43,6 +43,7 @@ class ScreenAction {
   static function AlwaysInvalidOutcome(Game): GameOutcome return Invalid;
 
   public function handleAction(state: Game): GameOutcome {
+    var outcome: GameOutcome;
     for (ext in state.campaign.extensions) {
       final outcome: GameOutcome = ext.actionHandler(state, action);
       if (outcome != Invalid) {
@@ -50,7 +51,12 @@ class ScreenAction {
       }
     }
 
-    return outcome(state);
+    outcome = this.outcome(state);
+    if (outcome == Invalid) {
+      throw 'Unhandled action outcome $action on ${state.getScreen()}.';
+    }
+
+    return outcome;
   }
 }
 

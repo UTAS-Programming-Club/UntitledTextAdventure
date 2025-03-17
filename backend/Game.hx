@@ -2,7 +2,6 @@ package backend;
 
 import backend.Campaign;
 import backend.GameInfo;
-import haxe.Exception;
 
 class Game {
   public final campaign: Campaign;
@@ -15,7 +14,7 @@ class Game {
 
   public function getScreen(): Screen {
     if (!GameInfo.Screens.exists(currentScreen)) {
-      throw new Exception("Invalid current screen: " + currentScreen);
+      throw 'Invalid screen $currentScreen.';
     }
 
     return cast GameInfo.Screens[currentScreen];
