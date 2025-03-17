@@ -20,24 +20,22 @@ final RoomScreens: Map<GameScreen, Screen> = [
     // TODO: Prevent visiting Unused rooms
     new ScreenAction(GoNorth, "Go North", function (state: Game, screen: Screen): Bool {
       final roomScreen = cast(screen, GameRoomScreen);
-      // TODO: Figure out why this is -2, -1 causes state.campaign.rooms.length to be reachable
-      return roomScreen.y < state.campaign.rooms.length - 2;
+      return roomScreen.y < state.campaign.rooms.length - 1 &&
+             state.campaign.rooms[roomScreen.x][roomScreen.y + 1] != Unused;
     }),
-    // TODO: Prevent visiting Unused rooms
     new ScreenAction(GoEast, "Go East", function (state: Game, screen: Screen): Bool {
       final roomScreen = cast(screen, GameRoomScreen);
-      return roomScreen.x > 0;
+      return roomScreen.x > 0 && state.campaign.rooms[roomScreen.x - 1][roomScreen.y] != Unused;
     }),
-    // TODO: Prevent visiting Unused rooms
     new ScreenAction(GoSouth, "Go South", function (state: Game, screen: Screen): Bool {
       final roomScreen = cast(screen, GameRoomScreen);
-      return roomScreen.y > 0;
+      return roomScreen.y > 0 && state.campaign.rooms[roomScreen.x][roomScreen.y - 1] != Unused;
     }),
     // TODO: Prevent visiting Unused rooms
     new ScreenAction(GoWest, "Go West", function (state: Game, screen: Screen): Bool {
       final roomScreen = cast(screen, GameRoomScreen);
-      // TODO: Figure out why this is -2, -1 causes state.campaign.rooms.length to be reachable
-      return roomScreen.x < state.campaign.rooms.length - 2;
+      return roomScreen.x < state.campaign.rooms.length - 1 &&
+             state.campaign.rooms[roomScreen.x + 1][roomScreen.y] != Unused;
     }),
 #if testrooms
     new ScreenAction(QuitGame, "Quit Game")

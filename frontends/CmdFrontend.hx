@@ -110,21 +110,18 @@ class CmdFrontend {
     return true;
   }
 
-  static function MapInputIndex(state: Game, screen: Screen, actions: Array<ScreenAction>, inputIndex: UInt): UInt {
-  var index: UInt = 0;
-  var visibleInputCount: UInt = 0;
-  while (index < actions.length) {
+static function MapInputIndex(state: Game, screen: Screen, actions: Array<ScreenAction>, inputIndex: UInt): UInt {
+  var index: UInt;
+  for (index in 0...actions.length) {
     if (!actions[index].isVisible(state, screen)) {
-      index++;
       continue;
     }
 
-    if (inputIndex == visibleInputCount) {
+    if (inputIndex == 0) {
       return index;
     }
 
-    visibleInputCount++;
-    index++;
+    inputIndex--;
   }
 
   return actions.length;
