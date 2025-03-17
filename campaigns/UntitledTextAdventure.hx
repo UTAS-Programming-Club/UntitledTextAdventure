@@ -15,7 +15,11 @@ final UntitledTextAdventure: Campaign = {
 
   extensions: [CoreGameExt, RoomsExt],
 
+#if testrooms
+  initialScreen: GameRooms,
+#else
   initialScreen: MainMenu,
+#end
   gameScreen: GameRooms,
 
   rooms: {

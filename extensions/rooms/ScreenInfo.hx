@@ -39,6 +39,10 @@ final RoomScreens: Map<GameScreen, Screen> = [
       // TODO: Figure out why this is -2, -1 causes state.campaign.rooms.length to be reachable
       return roomScreen.x < state.campaign.rooms.length - 2;
     }),
+#if testrooms
+    new ScreenAction(QuitGame, "Quit Game")
+#else
     new ScreenAction(GotoScreen(MainMenu), "Return to main menu")
+#end
   ], 0, 0),
 ];
