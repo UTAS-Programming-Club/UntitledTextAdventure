@@ -25,6 +25,7 @@ class GameRoomScreen extends ActionScreen {
     this.y = y;
   }
 
+  // TODO: Call on first room appearing
   public function changeRoom(state: Game, x: UInt, y: UInt): Void {
     this.x = x;
     this.y = y;

@@ -8,7 +8,37 @@
 
 -m frontends.CmdFrontend
 
---python out/test.py
-# --java out/java/
+# C#: Fails during Array.exists.
+# --cs out/csharptest/
+
+# C++: Works! See buildstatic.hxml
+
+# Eval: Works! See run.hxml
+
+# Flash: Untested. Expected to fail because of frontend using Sys class.
+
+# HashLink: Works!
+# --hl out/test.hl
+
+# HashLink/C: Works!
+# --hl out/hltest/test.c
+
+# Java: Exception in thread "main" Not implemented in Sys.getChar at Sys.hx:151
+# --java out/javatest/
+
+# Javascript: UInt comparisions are broken, can cast affected comparisions to Int to fix as haxe lists them on build. Frontend also using Sys class which only works with hxnodejs. Untested.
 # --js out/test.js
-# -cs out/cs/
+
+# JVM: Exception in thread "main" Not implemented in Sys.getChar at Sys.hx:151
+# --jvm out/test.jar
+
+# Lua: Works! Actions are labeled 1.0, 2.0, ..., and Std.getChar requires enter to return but otherwise fine.
+# --lua out/test.lua
+
+# Neko: Works!
+--neko out/test.n
+
+# PHP 7: Untested.
+
+# Python: Works!
+# --python out/test.py
