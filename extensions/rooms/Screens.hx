@@ -5,6 +5,7 @@ import backend.GameInfo;
 import backend.macros.Helpers;
 import backend.Room;
 import backend.Screen;
+import haxe.Constraints;
 
 enum RoomsScreen {
   GameRooms;
@@ -42,15 +43,18 @@ class GameRoomScreen extends ActionScreen {
     roomState[point] = roomClass();
   }
 
-  // TODO: Find a way to avoid roomConstructor parameter
-  public function getRoomState<T : Room>(state: Game, x: UInt, y: UInt, roomConstructor: Void -> T): T {
+  @:generic
+  public function getRoomState<T : Room & Constructible<Void -> Void>>(state: Game, x: UInt, y: UInt): T {
     final point: UInt = x * state.campaign.rooms.length + y;
 
     final roomData: Null<backend.Room> = roomState[point];
-    final room: backend.Room = roomConstructor();
+    final room: T = new T();
+    if (roomData == null) {
+      throw 'Room at $x, $y does not have any stored state.';
+    }
 
-    final roomDataType: String = Std.string(roomData);
-    final roomType: String = Std.string(room);
+    final roomDataType: String = Type.getClassName(Type.getClass(roomData));
+    final roomType: String = Type.getClassName(Type.getClass(room));
     if (roomDataType != roomType) {
       throw 'Incorrect result type $roomType provided for room with type $roomDataType in getRoomState.';
     }

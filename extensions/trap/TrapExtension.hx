@@ -23,7 +23,7 @@ final TrapExt: Extension = {
         }
 
         final gameScreen: GameRoomScreen = cast screen;
-        final roomState: TrapRoom = gameScreen.getRoomState(state, x, y, TrapRoom.new);
+        final roomState: TrapRoom = gameScreen.getRoomState(state, x, y);
 
         roomState.activatedTrap = true;
         return GetNextOutput;

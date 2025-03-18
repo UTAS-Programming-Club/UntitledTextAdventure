@@ -1,5 +1,6 @@
 -D dump=pretty
 -dce std
+# -lib hxnodejs
 
 # TODO: Enable StrictThreaded to ensure there are no issues with the Discord bot
 --macro nullSafety("backend", Strict)
@@ -8,4 +9,6 @@
 -m frontends.CmdFrontend
 
 --python out/test.py
-# --java java
+# --java out/java/
+# --js out/test.js
+# -cs out/cs/

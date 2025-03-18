@@ -3,7 +3,7 @@ package backend;
 import backend.Room;
 import backend.Screen;
 
-// TODO: Either namespace game data per campaign or remove support for multiple campaign in a single build
+// TODO: Either namespace game data per campaign or remove support for multiple campaigns in a single build
 
 @:build(backend.macros.TypeGeneration.buildGameEnum("Actions.hx"))
 enum GameAction {

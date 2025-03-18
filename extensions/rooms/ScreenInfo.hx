@@ -19,7 +19,7 @@ function RoomTest(state: Game, screen: Screen): UnicodeString {
   // TODO: Fix rooms extension depending on traps extension
   if (room == Trap) {
     final gameScreen: GameRoomScreen = cast screen;
-    final roomState: TrapRoom = gameScreen.getRoomState(state, x, y, TrapRoom.new);
+    final roomState: TrapRoom = gameScreen.getRoomState(state, x, y);
     body += '\n\nThis is a trap room which has';
 
     if (!roomState.activatedTrap) {
@@ -66,7 +66,7 @@ final RoomScreens: Map<GameScreen, Screen> = [
       }
 
       final gameScreen: GameRoomScreen = cast screen;
-      final roomState: TrapRoom = gameScreen.getRoomState(state, x, y, TrapRoom.new);
+      final roomState: TrapRoom = gameScreen.getRoomState(state, x, y);
 
       return !roomState.activatedTrap;
     }),
