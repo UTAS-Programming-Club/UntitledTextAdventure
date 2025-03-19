@@ -110,22 +110,22 @@ class CmdFrontend {
     return true;
   }
 
-static function MapInputIndex(state: Game, screen: Screen, actions: Array<ScreenAction>, inputIndex: UInt): UInt {
-  var index: UInt;
-  for (index in 0...actions.length) {
-    if (!actions[index].isVisible(state, screen)) {
-      continue;
+  static function MapInputIndex(state: Game, screen: ActionScreen, actions: Array<ScreenAction>, inputIndex: UInt): UInt {
+    var index: UInt;
+    for (index in 0...actions.length) {
+      if (!actions[index].isVisible(state, screen)) {
+        continue;
+      }
+
+      if (inputIndex == 0) {
+        return index;
+      }
+
+      inputIndex--;
     }
 
-    if (inputIndex == 0) {
-      return index;
-    }
-
-    inputIndex--;
+    return actions.length;
   }
-
-  return actions.length;
-}
 
   static function HandleInput(state: Game): Bool {
     final screen: Screen = state.getScreen();
@@ -137,7 +137,7 @@ static function MapInputIndex(state: Game, screen: Screen, actions: Array<Screen
     final actions: Array<ScreenAction> = actionScreen.GetActions(state);
 
     final inputIndex: UInt = GetButtonInput();
-    final index: UInt = MapInputIndex(state, screen, actions, inputIndex);
+    final index: UInt = MapInputIndex(state, actionScreen, actions, inputIndex);
     if (index >= actions.length) {
       // TODO: Is this still the case?
       // This is a recoverable error so just ignore it

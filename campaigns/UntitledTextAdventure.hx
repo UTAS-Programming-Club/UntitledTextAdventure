@@ -32,5 +32,7 @@ final UntitledTextAdventure: Campaign = {
     rooms[1][1] = Empty;
     rooms[1][2] = Trap;
     rooms;
-  }
+  },
+  initialRoomX: 0,
+  initialRoomY: 0
 };

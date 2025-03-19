@@ -1,5 +1,6 @@
 package backend;
 
+import backend.Campaign;
 import backend.Game;
 import backend.GameInfo;
 import backend.macros.Helpers;
@@ -26,12 +27,12 @@ class ScreenAction {
   public final action: GameAction;
   public final title: UnicodeString;
   // TODO: Add visibilityHandler in Extension?
-  public final isVisible: (Game, Screen) -> Bool;
+  public final isVisible: (Game, ActionScreen) -> Bool;
   // TODO: Is actionHandler in Extension enough? Remove this?
   private final outcome: Game -> GameOutcome;
 
   public function new(action: GameAction, title: UnicodeString,
-                      ?isVisible: (Game, Screen) -> Bool,
+                      ?isVisible: (Game, ActionScreen) -> Bool,
                       ?outcome: Game -> GameOutcome) {
     this.action = action;
     this.title = title;
@@ -39,7 +40,7 @@ class ScreenAction {
     this.outcome = outcome ?? AlwaysInvalidOutcome;
   }
 
-  static function AlwaysVisible(Game, Screen): Bool return true;
+  static function AlwaysVisible(Game, ActionScreen): Bool return true;
   static function AlwaysInvalidOutcome(Game): GameOutcome return Invalid;
 
   public function handleAction(state: Game): GameOutcome {
@@ -61,18 +62,12 @@ class ScreenAction {
 }
 
 class ActionScreen extends Screen {
-  private var actions(default, null): Null<Array<ScreenAction>>;
+  private final actions: Array<ScreenAction>;
 
   public function new(updateState: OneOf<UnicodeString, (Game, Screen) -> UnicodeString>,
-                      ?actions: Array<ScreenAction>) {
+                      actions: Array<ScreenAction>) {
     super(updateState);
-    if (actions != null) {
-      this.actions = actions;
-    }
-  }
-
-  public function Init(actions: Array<ScreenAction>): Void {
-    this.actions ??= actions;
+    this.actions = actions;
   }
 
   public function GetActions(state: Game): Array<ScreenAction> {
@@ -84,10 +79,24 @@ class ActionScreen extends Screen {
     // final roomStateRow: Vector<Bool> = state.roomState[state.player.Y];
     // final roomState: Bool = roomStateRow.length != 0 && roomStateRow[state.player.X];
 
-    if (actions == null) {
-      return [];
-    }
-    // return [for (action in actions) if (action.isVisible(state, room, roomState)) action];
+    // TODO: Use this
+    // return [for (action in actions) if (action.isVisible(state, this)) action];
     return actions;
   }
+}
+
+// TODO: Find a way to use a type parameter instead of a constructor parameter
+class StatefulActionScreen extends ActionScreen {
+  public final stateConstructor: Campaign -> ScreenState;
+
+  // TODO: Change Screen to ActionScreen if not StatefulActionScreen
+  public function new(stateConstructor: Campaign -> ScreenState,
+                      updateState: OneOf<UnicodeString, (Game, Screen) -> UnicodeString>,
+                      actions: Array<ScreenAction>) {
+    super(updateState, actions);
+    this.stateConstructor = stateConstructor;
+  }
+}
+
+class ScreenState {
 }

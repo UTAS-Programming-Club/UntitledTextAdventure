@@ -36,9 +36,9 @@
 # --lua out/test.lua
 
 # Neko: Works!
---neko out/test.n
+# --neko out/test.n
 
 # PHP 7: Untested.
 
 # Python: Works!
-# --python out/test.py
+--python out/test.py

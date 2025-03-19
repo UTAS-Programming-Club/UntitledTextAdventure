@@ -16,5 +16,7 @@ final TestCampaign: Campaign = {
   initialScreen: MainMenu,
   gameScreen: Test,
 
-  rooms: [[Empty]]
+  rooms: [[Empty]],
+  initialRoomX: 0,
+  initialRoomY: 0
 };

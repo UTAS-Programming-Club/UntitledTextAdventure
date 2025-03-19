@@ -3,6 +3,7 @@ package extensions.trap;
 import backend.Extension;
 import backend.Game;
 import backend.GameInfo;
+import backend.Screen;
 import extensions.rooms.Screens;
 import extensions.trap.Rooms;
 
@@ -12,18 +13,13 @@ final TrapExt: Extension = {
     switch (action) {
       case DodgeTrap:
         // TODO: Move to seperate function(s) to reuse
-        final screen = state.getScreen();
-        final roomScreen = cast(screen, GameRoomScreen);
-        final x: UInt = roomScreen.x;
-        final y: UInt = roomScreen.y;
-        final room: GameRoom = state.campaign.rooms[x][y];
-
-        if (room != Trap) {
+        final screen: Screen = state.getScreen();
+        final roomScreenState: Null<GameRoomState> = state.tryGetScreenState();
+        if (roomScreenState == null) {
           return Invalid;
         }
 
-        final gameScreen: GameRoomScreen = cast screen;
-        final roomState: TrapRoom = gameScreen.getRoomState(state, x, y);
+        final roomState: TrapRoom = roomScreenState.getRoomState(state);
 
         roomState.activatedTrap = true;
         return GetNextOutput;

@@ -1,5 +1,6 @@
 package extensions.rooms;
 
+import backend.Campaign;
 import backend.Game;
 import backend.GameInfo;
 import backend.macros.Helpers;
@@ -12,17 +13,16 @@ enum RoomsScreen {
 }
 
 @:nullSafety(Strict)
-class GameRoomScreen extends ActionScreen {
+class GameRoomState extends ScreenState {
+  // Only modify these using changeRoom to ensure state is setup
+  // For some reason ++ and possibly -- works despite disabling public assignment
   public var x(default, null): UInt;
   public var y(default, null): UInt;
   var roomState: Map<UInt, Room> = [];
 
-  public function new(updateState: OneOf<UnicodeString, (Game, Screen) -> UnicodeString>,
-                      ?actions: Array<ScreenAction>,
-                      x: UInt, y: UInt) {
-    super(updateState, actions);
-    this.x = x;
-    this.y = y;
+  public function new(campaign: Campaign) {
+    x = campaign.initialRoomX;
+    y = campaign.initialRoomY;
   }
 
   // TODO: Call on first room appearing
@@ -45,13 +45,16 @@ class GameRoomScreen extends ActionScreen {
   }
 
   @:generic
-  public function getRoomState<T : Room & Constructible<Void -> Void>>(state: Game, x: UInt, y: UInt): T {
-    final point: UInt = x * state.campaign.rooms.length + y;
+  public function getRoomState<T : Room & Constructible<Void -> Void>>(state: Game, ?x: UInt, ?y: UInt): T {
+    final xPos: UInt = x ?? this.x;
+    final yPos: UInt = y ?? this.y;
+
+    final point: UInt = xPos * state.campaign.rooms.length + yPos;
 
     final roomData: Null<backend.Room> = roomState[point];
     final room: T = new T();
     if (roomData == null) {
-      throw 'Room at $x, $y does not have any stored state.';
+      throw 'Room at $xPos, $yPos does not have any stored state.';
     }
 
     final roomDataType: String = Type.getClassName(Type.getClass(roomData));
