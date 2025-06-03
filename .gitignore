@@ -3,9 +3,9 @@ nppBackup/
 
 # Haxe files
 dump/
-haxe/.haxelib/
-haxe/haxe/
-haxe/neko/
+build/haxe/.haxelib/
+build/haxe/haxe/
+build/haxe/neko/
 
 # Output files
 out/
