@@ -1,8 +1,27 @@
 package backend.coregame;
 
+using StringTools;
+
 import backend.Game;
 import backend.GameInfo;
 import backend.Screen;
+
+@:nullSafety(Strict)
+function CreateStatBar(stat: UInt): UnicodeString {
+  final boxCount: UInt = Std.int(stat / 10);
+  final bar: UnicodeString = [for (i in 0...boxCount) '█'].join('');
+  final gap: UnicodeString = [for (i in 0...(10 - boxCount)) ' '].join('');
+  final percentage: UnicodeString = Std.string(stat).lpad(' ', 3);
+  return bar + gap + ' : ' + percentage + '%';
+}
+
+@:nullSafety(Strict)
+function PlayerEquipmentBody(state: Game, Screen): UnicodeString {
+  return
+    'Player Equipment\n\n' +
+    'Health:  ' + CreateStatBar(state.player.health) + '\n' +
+    'Stamina: ' + CreateStatBar(state.player.stamina);
+}
 
 final CoreScreens: Map<GameScreen, Screen> = [
   MainMenu => new ActionScreen(
@@ -15,5 +34,9 @@ final CoreScreens: Map<GameScreen, Screen> = [
   ]),
   Load => new ActionScreen("Loading is not currently supported", [
     new ScreenAction(GotoScreen(MainMenu), "Return to Main Menu")
+  ]),
+  // TODO: Go to last screen
+  PlayerEquipment => new ActionScreen(PlayerEquipmentBody, [
+    new ScreenAction(GotoGameScreen, "Return to Game")
   ])
 ];

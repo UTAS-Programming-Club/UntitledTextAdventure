@@ -8,11 +8,13 @@ import haxe.Constraints;
 class Game {
   public final campaign: Campaign;
   public var currentScreen(null, default): GameScreen;
+  public final player: Player;
   private var screenState: Map<GameScreen, ScreenState>;
 
   public function new(campaign: Campaign) {
     this.campaign = campaign;
     currentScreen = campaign.initialScreen;
+    player = new Player();
     // TODO: Switch to only create stating when visited?
     // TODO: Decide if screens even need state
     screenState = [

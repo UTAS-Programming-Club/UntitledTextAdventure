@@ -69,6 +69,7 @@ final RoomScreens: Map<GameScreen, Screen> = [
 
       return !roomState.activatedTrap;
     }),
+    new ScreenAction(GotoScreen(PlayerEquipment), "Check Inventory"),
 #if testrooms
     new ScreenAction(QuitGame, "Quit Game")
 #else

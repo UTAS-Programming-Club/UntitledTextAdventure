@@ -20,6 +20,9 @@ final TrapExt: Extension = {
         }
 
         final roomState: TrapRoom = roomScreenState.getRoomState(state);
+        if (!roomState.activatedTrap && Math.random() >= 0.50) {
+          state.player.ModifyHealth(-10);
+        }
 
         roomState.activatedTrap = true;
         return GetNextOutput;
