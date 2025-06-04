@@ -6,16 +6,14 @@ import backend.Game;
 import backend.GameInfo;
 import backend.Screen;
 
-@:nullSafety(Strict)
-function CreateStatBar(stat: UInt): UnicodeString {
-  final boxCount: UInt = Std.int(stat / 10);
+function CreateStatBar(stat: Int): UnicodeString {
+  final boxCount: Int = Std.int(stat / 10);
   final bar: UnicodeString = [for (i in 0...boxCount) '█'].join('');
   final gap: UnicodeString = [for (i in 0...(10 - boxCount)) ' '].join('');
   final percentage: UnicodeString = Std.string(stat).lpad(' ', 3);
   return bar + gap + ' : ' + percentage + '%';
 }
 
-@:nullSafety(Strict)
 function PlayerEquipmentBody(state: Game, Screen): UnicodeString {
   return
     'Player Equipment\n\n' +
