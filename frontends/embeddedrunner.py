@@ -77,7 +77,7 @@ def HandleInput(state: backend_Game) -> bool:
   if not isinstance(screen, backend_ActionScreen):
     return False
 
-  actionScreen: backend_ScreenAction = screen
+  actionScreen: backend_ActionScreen = screen
   actions: list[backend_ScreenAction] = actionScreen.GetActions(state)
 
   inputIndex: int = GetButtonInput()

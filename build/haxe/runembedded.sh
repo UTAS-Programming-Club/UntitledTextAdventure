@@ -8,4 +8,5 @@ sed -e 's/import inspect as python_lib_Inspect//'\
     -e 's/if (\(self._hx_disable_getattr\)):/if not \1 and name in self.__dict__:return self.__dict__[name]/'\
     -e "s/    \(raise AttributeError('field does not exist')\)/elif True: \1/"\
     out/embeddedgame.py > out/embeddedgamefixed.py
-mpremote cp out/embeddedgamefixed.py :embeddedgame.py + run frontends/picovisionrunner.py
+mpremote cp out/embeddedgamefixed.py :embeddedgame.py + run --no-follow frontends/embeddedrunner.py
+mpremote
