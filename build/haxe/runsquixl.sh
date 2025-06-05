@@ -11,7 +11,8 @@ sed -e 's/import inspect as python_lib_Inspect//'\
 # mpremote cp out/embeddedgamefixed.py :embeddedgame.py + run --no-follow frontends/squixlrunner.py
 # mpremote
 mpremote reset | true
-sleep 1.5
-usbipd.exe attach -w -b 3-3
-sleep 0.5
+sleep 1
+until [ -c /dev/ttyACM* ]; do
+  sleep 0.5
+done
 mpremote cp out/embeddedgamefixed.py :embeddedgame.py + run frontends/squixlrunner.py
