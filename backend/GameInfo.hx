@@ -1,5 +1,6 @@
 package backend;
 
+import backend.Equipment;
 import backend.Room;
 import backend.Screen;
 
@@ -9,8 +10,16 @@ import backend.Screen;
 enum GameAction {
 }
 
+@:build(backend.macros.TypeGeneration.buildGameEnum("Equipments.hx"))
+enum GameEquipment {
+}
+
 @:build(backend.macros.TypeGeneration.buildGameEnum("Rooms.hx"))
 enum GameRoom {
+}
+
+@:build(backend.macros.TypeGeneration.buildGameEnum("Outcomes.hx"))
+enum GameOutcome {
 }
 
 @:build(backend.macros.TypeGeneration.buildGameEnum("Screens.hx"))
@@ -19,11 +28,9 @@ enum GameScreen {
 
 @:build(backend.macros.TypeGeneration.buildGameMap("RoomInfo.hx", "Rooms"))
 @:build(backend.macros.TypeGeneration.buildGameMap("ScreenInfo.hx", "Screens"))
+@:build(backend.macros.TypeGeneration.buildGameMap("EquipmentInfo.hx", "Equipment"))
 class GameInfo {
   public static final Rooms: Map<GameRoom, Void -> Room> = [];
   public static final Screens: Map<GameScreen, Screen> = [];
-}
-
-@:build(backend.macros.TypeGeneration.buildGameEnum("Outcomes.hx"))
-enum GameOutcome {
+  public static final Equipment: Map<GameEquipment, Equipment> = [];
 }

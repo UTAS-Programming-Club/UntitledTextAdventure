@@ -9,7 +9,7 @@ final CoreGameExt: Extension = {
     switch (action) {
       case StartGame:
         state.currentScreen = state.campaign.gameScreen;
-        state.player.Reset();
+        state.player.Reset(state.campaign.initialChest);
         // TODO: Move room x, y to player class?
         // TODO: Reset state.screenState
         return GetNextOutput;

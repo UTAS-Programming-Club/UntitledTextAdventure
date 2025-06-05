@@ -1,5 +1,6 @@
 package backend;
 
+import backend.Equipment;
 import backend.Extension;
 import backend.GameInfo;
 
@@ -14,4 +15,6 @@ typedef Campaign = {
   final rooms: Array<Array<GameRoom>>;
   final initialRoomX: UInt;
   final initialRoomY: UInt;
+
+  final initialChest: GameEquipment;
 }

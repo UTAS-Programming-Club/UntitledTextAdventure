@@ -20,7 +20,8 @@ function PlayerEquipmentBody(state: Game, Screen): UnicodeString {
   return
     'Player Equipment\n\n' +
     'Health:  ' + CreateStatBar(state.player.health) + '\n' +
-    'Stamina: ' + CreateStatBar(state.player.stamina);
+    'Stamina: ' + CreateStatBar(state.player.stamina) + '\n\n' +
+    'Chest: ' + state.player.chest.name;
 }
 
 final CoreScreens: Map<GameScreen, Screen> = [

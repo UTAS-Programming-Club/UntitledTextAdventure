@@ -1,15 +1,21 @@
 package backend;
 
+import backend.Equipment;
+import backend.GameInfo;
+
 class Player {
   public var health(default, null): Int = 0;
   public var stamina(default, null): Int = 0;
+  public var chest(default, null): Equipment;
 
-  public function new() {
+  public function new(initialChest: GameEquipment) {
+    chest = Equipment.Get(initialChest);
   }
 
-  public function Reset(): Void {
+  public function Reset(initialChest: GameEquipment): Void {
     health = 100;
     stamina = 100;
+    chest = Equipment.Get(initialChest);
   }
 
   public function ModifyHealth(change: Int): Void {

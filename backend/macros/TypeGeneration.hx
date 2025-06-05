@@ -96,6 +96,8 @@ class TypeGeneration {
     return enumFields;
   }
 
+  // NOTE: To create buildGameMap, items are in a TArrayDecl instead of TBlock
+  // and each is equivalent to mappingRHSExpr without needing to trim `{` & `}`
   static public function buildGameMap(fileName: String, typeName: String): Array<Field> {
     final fields: Array<Field> = Context.getBuildFields();
     final mapExprs: Array<Expr> = [];
