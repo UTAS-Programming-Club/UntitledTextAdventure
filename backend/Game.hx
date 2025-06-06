@@ -18,8 +18,17 @@ class Game {
     previousScreen = campaign.initialScreen;
     currentScreen = campaign.initialScreen;
     player = new Player(campaign);
-    // TODO: Switch to only create stating when visited?
-    // TODO: Decide if screens even need state
+    // No screen may store state before the game starts
+    screenState = [];
+#if testrooms
+    startGame();
+#end
+  }
+
+  // TODO: Move room x, y to player class?
+  public function startGame(): Void {
+    gotoScreen(campaign.gameScreen);
+    player.Reset(campaign);
     screenState = [
       for (screen => info in GameInfo.Screens) {
         if (info is StatefulActionScreen) {

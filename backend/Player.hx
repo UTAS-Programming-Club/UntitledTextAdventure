@@ -39,6 +39,7 @@ class Player {
     secondaryWeapon = Equipment.Get(campaign.initialSecondaryWeapon);
   }
 
+  // TODO: End game on 0 health
   public function ModifyHealth(change: Int): Void {
     var newHealth: Int = health + change;
     if (newHealth < 0) {

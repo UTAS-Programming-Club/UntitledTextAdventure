@@ -14,7 +14,7 @@ function CreateStatBar(stat: Int): UnicodeString {
   return bar + gap + ' : ' + percentage + '%';
 }
 
-function PlayerEquipmentBody(state: Game, Screen): UnicodeString {
+function GenerateEquipmentBody(state: Game, Screen): UnicodeString {
   return
     'Player Equipment\n\n' +
     'Health:  ' + CreateStatBar(state.player.health) + '\n' +
@@ -40,7 +40,7 @@ final CoreScreens: Map<GameScreen, Screen> = [
   Load => new ActionScreen("Loading is not currently supported", [
     new ScreenAction(GotoScreen(MainMenu), "Return to Main Menu")
   ]),
-  PlayerEquipment => new ActionScreen(PlayerEquipmentBody, [
+  PlayerEquipment => new ActionScreen(GenerateEquipmentBody, [
     new ScreenAction(GotoPreviousScreen, "Return to Game")
   ])
 ];
