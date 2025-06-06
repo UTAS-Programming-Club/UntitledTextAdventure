@@ -10,8 +10,8 @@ import extensions.trap.Rooms.TrapRoom;
 @:nullSafety(Strict)
 function RoomTest(state: Game, screen: Screen): UnicodeString {
   final roomScreenState: GameRoomState = state.getScreenState();
-  final x: UInt = roomScreenState.x;
-  final y: UInt = roomScreenState.y;
+  final x: Int = roomScreenState.x;
+  final y: Int = roomScreenState.y;
   final room: GameRoom = state.campaign.rooms[x][y];
 
   var body: UnicodeString = 'This is the game, you are in Room [${x + 1}, ${y + 1}].';
@@ -57,9 +57,7 @@ final RoomScreens: Map<GameScreen, Screen> = [
     // TODO: Fix rooms extension depending on traps extension
     new ScreenAction(DodgeTrap, "Dodge Trap", function (state: Game, screen: ActionScreen): Bool {
       final roomScreenState: GameRoomState = state.getScreenState();
-      final x: UInt = roomScreenState.x;
-      final y: UInt = roomScreenState.y;
-      final room: GameRoom = state.campaign.rooms[x][y];
+      final room: GameRoom = state.campaign.rooms[roomScreenState.x][roomScreenState.y];
 
       if (room != Trap) {
         return false;

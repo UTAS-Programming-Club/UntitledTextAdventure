@@ -25,7 +25,7 @@ final UntitledTextAdventure: Campaign = {
   gameScreen: GameRooms,
 
   rooms: {
-    final gridSize: UInt = 10;
+    final gridSize: Int = 10;
     final rooms = [for (x in 0...gridSize) [for (y in 0...gridSize) Unused]];
     rooms[0][0] = Empty;
     rooms[0][1] = Empty;

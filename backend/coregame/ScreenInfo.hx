@@ -6,6 +6,7 @@ import backend.Game;
 import backend.GameInfo;
 import backend.Screen;
 
+// stat must be in [0, 100]
 function CreateStatBar(stat: Int): UnicodeString {
   final boxCount: Int = Std.int(stat / 10);
   final bar: UnicodeString = [for (i in 0...boxCount) '█'].join('');

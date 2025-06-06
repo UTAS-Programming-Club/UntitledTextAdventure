@@ -5,8 +5,8 @@ import backend.Equipment;
 import backend.GameInfo;
 
 class Player {
-  public var health(default, null): Int = 0;
-  public var stamina(default, null): Int = 0;
+  public var health(default, null): Int = 0;  // Must be in [0, 100]
+  public var stamina(default, null): Int = 0; // Must be in [0, 100]
 
   public var head(default, null): Equipment;
   public var upperBody(default, null): Equipment;
@@ -40,6 +40,7 @@ class Player {
   }
 
   // TODO: End game on 0 health
+  // change must be in [0, 100]
   public function ModifyHealth(change: Int): Void {
     var newHealth: Int = health + change;
     if (newHealth < 0) {

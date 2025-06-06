@@ -16,9 +16,9 @@ enum RoomsScreen {
 class GameRoomState extends ScreenState {
   // Only modify these using changeRoom to ensure state is setup
   // For some reason ++ and possibly -- works despite disabling public assignment
-  public var x(default, null): UInt;
-  public var y(default, null): UInt;
-  var roomState: Map<UInt, Room> = [];
+  public var x(default, null): Int; // Must be in [0, campaign.rooms.length)
+  public var y(default, null): Int; // Must be in [0, campaign.rooms.length)
+  var roomState: Map<Int, Room> = [];
 
   public function new(campaign: Campaign) {
     x = campaign.initialRoomX;
@@ -26,11 +26,12 @@ class GameRoomState extends ScreenState {
   }
 
   // TODO: Call on first room appearing
-  public function changeRoom(state: Game, x: UInt, y: UInt): Void {
+  // x and y must be in [0, campaign.rooms.length)
+  public function changeRoom(state: Game, x: Int, y: Int): Void {
     this.x = x;
     this.y = y;
 
-    final point: UInt = x * state.campaign.rooms.length + y;
+    final point: Int = x * state.campaign.rooms.length + y;
     if (roomState.exists(point)) {
       return;
     }
@@ -44,12 +45,13 @@ class GameRoomState extends ScreenState {
     roomState[point] = roomClass();
   }
 
+  // x and y must be in [0, campaign.rooms.length)
   @:generic
-  public function getRoomState<T : Room & Constructible<Void -> Void>>(state: Game, ?x: UInt, ?y: UInt): T {
-    final xPos: UInt = x ?? this.x;
-    final yPos: UInt = y ?? this.y;
+  public function getRoomState<T : Room & Constructible<Void -> Void>>(state: Game, ?x: Int, ?y: Int): T {
+    final xPos: Int = x ?? this.x;
+    final yPos: Int = y ?? this.y;
 
-    final point: UInt = xPos * state.campaign.rooms.length + yPos;
+    final point: Int = xPos * state.campaign.rooms.length + yPos;
 
     final roomData: Null<backend.Room> = roomState[point];
     final room: T = new T();

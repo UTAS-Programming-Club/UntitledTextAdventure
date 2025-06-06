@@ -28,11 +28,11 @@ class CmdFrontend {
   }
 
 
-  static function GetButtonInput(): UInt {
+  static function GetButtonInput(): Int {
     while (true) {
       final input: Int = Sys.getChar(false);
       if ("1".code <= input && input <= "9".code) {
-        return cast(input - "1".code, UInt);
+        return input - "1".code;
       }
     }
   }
@@ -41,7 +41,7 @@ class CmdFrontend {
     Sys.println("\n\nUse the numbers below to make a selection.");
 
     final actions: Array<ScreenAction> = screen.GetActions(state);
-    var inputNumber: UInt = 0;
+    var inputNumber: Int = 0;
     for (action in actions) {
       if (action.isVisible(state, screen)) {
         inputNumber++;
@@ -110,8 +110,8 @@ class CmdFrontend {
     return true;
   }
 
-  static function MapInputIndex(state: Game, screen: ActionScreen, actions: Array<ScreenAction>, inputIndex: UInt): UInt {
-    var index: UInt;
+  static function MapInputIndex(state: Game, screen: ActionScreen, actions: Array<ScreenAction>, inputIndex: Int): Int {
+    var index: Int;
     for (index in 0...actions.length) {
       if (!actions[index].isVisible(state, screen)) {
         continue;
@@ -136,8 +136,8 @@ class CmdFrontend {
     final actionScreen: ActionScreen = cast screen;
     final actions: Array<ScreenAction> = actionScreen.GetActions(state);
 
-    final inputIndex: UInt = GetButtonInput();
-    final index: UInt = MapInputIndex(state, actionScreen, actions, inputIndex);
+    final inputIndex: Int = GetButtonInput();
+    final index: Int = MapInputIndex(state, actionScreen, actions, inputIndex);
     if (index >= actions.length) {
       // TODO: Is this still the case?
       // This is a recoverable error so just ignore it
