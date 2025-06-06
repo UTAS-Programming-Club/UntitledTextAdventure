@@ -4,7 +4,9 @@
 #   backend_Game,
 #   backend_ScreenAction
 # )
+import machine
 import sys
+import time
 import uselect
 
 inputPoll: Poll
@@ -15,9 +17,8 @@ def SetupOutput() -> None:
   inputPoll = uselect.poll()
   inputPoll.register(sys.stdin, uselect.POLLIN)
 
-# TODO: Clear console
 def ClearOutput() -> None:
-  pass
+  print("\x1b[2J\x1b[H", end="")
 
 def UpdateOutput() -> None:
   pass
@@ -26,6 +27,9 @@ def ResetOutput() -> None:
   global inputPoll
 
   inputPoll.unregister(sys.stdin)
+
+  time.sleep(1)
+  machine.reset()
 
 
 def PrintString(text: str, end="\n", highlight: bool=False) -> None:
