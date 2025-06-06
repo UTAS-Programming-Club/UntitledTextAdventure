@@ -145,14 +145,14 @@ class CmdFrontend {
     }
 
     final outcome: GameOutcome = actions[index].handleAction(state);
-     switch (outcome) {
-       case GetNextOutput:
-         return true;
-       case QuitGame:
-         return false;
-       default:
-        throw 'Unknown screen action outcome $outcome received.';
-     }
+    switch (outcome) {
+      case GetNextOutput:
+        return true;
+      case QuitGame:
+        return false;
+      default:
+       throw 'Unknown screen action outcome $outcome received.';
+    }
   }
 
 
