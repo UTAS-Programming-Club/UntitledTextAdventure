@@ -16,5 +16,11 @@ typedef Campaign = {
   final initialRoomX: UInt;
   final initialRoomY: UInt;
 
-  final initialChest: GameEquipment;
+  final initialHead: GameEquipment;
+  final initialUpperBody: GameEquipment;
+  final initialHands: GameEquipment;
+  final initialLowerBody: GameEquipment;
+  final initialFeet: GameEquipment;
+  final initialPrimaryWeapon: GameEquipment;
+  final initialSecondaryWeapon: GameEquipment;
 }

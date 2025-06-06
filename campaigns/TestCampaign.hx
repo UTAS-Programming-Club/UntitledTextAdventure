@@ -21,5 +21,11 @@ final TestCampaign: Campaign = {
   initialRoomX: 0,
   initialRoomY: 0,
 
-  initialChest: ChestRags
+  initialHead: HeadNone,
+  initialUpperBody: UpperBodyRags,
+  initialHands: HandsNone,
+  initialLowerBody: LowerBodyRags,
+  initialFeet: FeetNone,
+  initialPrimaryWeapon: PrimaryWeaponFist,
+  initialSecondaryWeapon: SecondaryWeaponNone
 };

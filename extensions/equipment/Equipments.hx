@@ -1,5 +1,11 @@
 package extensions.equipment;
 
 enum Equipments {
-  ChestRags;
+  HeadNone;
+  UpperBodyRags;
+  HandsNone;
+  LowerBodyRags;
+  FeetNone;
+  PrimaryWeaponFist;
+  SecondaryWeaponNone;
 }

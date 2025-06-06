@@ -19,7 +19,13 @@ function PlayerEquipmentBody(state: Game, Screen): UnicodeString {
     'Player Equipment\n\n' +
     'Health:  ' + CreateStatBar(state.player.health) + '\n' +
     'Stamina: ' + CreateStatBar(state.player.stamina) + '\n\n' +
-    'Chest: ' + state.player.chest.name;
+    'Head:             ' + state.player.head.name + '\n' +
+    'Upper Body:       ' + state.player.upperBody.name + '\n' +
+    'Hands:            ' + state.player.hands.name + '\n' +
+    'Lower Body:       ' + state.player.lowerBody.name + '\n' +
+    'Feet:             ' + state.player.feet.name + '\n' +
+    'Primary Weapon:   ' + state.player.primaryWeapon.name + '\n' +
+    'Secondary Weapon: ' + state.player.secondaryWeapon.name;
 }
 
 final CoreScreens: Map<GameScreen, Screen> = [

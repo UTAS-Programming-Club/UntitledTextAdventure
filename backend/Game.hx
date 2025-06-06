@@ -14,7 +14,7 @@ class Game {
   public function new(campaign: Campaign) {
     this.campaign = campaign;
     currentScreen = campaign.initialScreen;
-    player = new Player(campaign.initialChest);
+    player = new Player(campaign);
     // TODO: Switch to only create stating when visited?
     // TODO: Decide if screens even need state
     screenState = [

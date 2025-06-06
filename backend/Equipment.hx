@@ -3,11 +3,11 @@ package backend;
 import backend.GameInfo;
 
 enum EquipmentType {
-  Helmet;
-  Chest;
-  Gloves;
-  Pants;
-  Boots;
+  Head;
+  UpperBody;
+  Hands;
+  LowerBody;
+  Feet;
   PrimaryWeapon;
   SecondaryWeapon;
 }
