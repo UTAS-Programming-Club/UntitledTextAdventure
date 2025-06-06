@@ -4,8 +4,7 @@ import backend.GameInfo;
 
 enum CoreGameAction {
   StartGame;
-  // TODO: Replace with goto last screen
-  GotoGameScreen;
   GotoScreen(screen: GameScreen);
+  GotoPreviousScreen;
   QuitGame;
 }

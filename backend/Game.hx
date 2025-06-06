@@ -7,12 +7,15 @@ import haxe.Constraints;
 
 class Game {
   public final campaign: Campaign;
-  public var currentScreen(null, default): GameScreen;
   public final player: Player;
+
+  private var currentScreen: GameScreen;
+  public var previousScreen(default, null): GameScreen;
   private var screenState: Map<GameScreen, ScreenState>;
 
   public function new(campaign: Campaign) {
     this.campaign = campaign;
+    previousScreen = campaign.initialScreen;
     currentScreen = campaign.initialScreen;
     player = new Player(campaign);
     // TODO: Switch to only create stating when visited?
@@ -27,6 +30,7 @@ class Game {
     ];
   }
 
+
   public function getScreen(): Screen {
     final screen: Null<Screen> = GameInfo.Screens[currentScreen];
     if (screen == null) {
@@ -35,6 +39,12 @@ class Game {
 
     return screen;
   }
+
+  public function gotoScreen(newScreen: GameScreen): Void {
+    previousScreen = currentScreen;
+    currentScreen = newScreen;
+  }
+
 
   @:generic
   public function tryGetScreenState<T : ScreenState & Constructible<Campaign -> Void>>(): Null<T> {

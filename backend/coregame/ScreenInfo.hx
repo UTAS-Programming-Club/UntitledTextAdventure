@@ -40,8 +40,7 @@ final CoreScreens: Map<GameScreen, Screen> = [
   Load => new ActionScreen("Loading is not currently supported", [
     new ScreenAction(GotoScreen(MainMenu), "Return to Main Menu")
   ]),
-  // TODO: Go to last screen
   PlayerEquipment => new ActionScreen(PlayerEquipmentBody, [
-    new ScreenAction(GotoGameScreen, "Return to Game")
+    new ScreenAction(GotoPreviousScreen, "Return to Game")
   ])
 ];

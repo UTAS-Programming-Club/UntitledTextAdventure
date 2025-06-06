@@ -8,16 +8,16 @@ final CoreGameExt: Extension = {
   actionHandler: function(state: Game, action: GameAction): GameOutcome {
     switch (action) {
       case StartGame:
-        state.currentScreen = state.campaign.gameScreen;
+        state.gotoScreen(state.campaign.gameScreen);
         state.player.Reset(state.campaign);
         // TODO: Move room x, y to player class?
         // TODO: Reset state.screenState
         return GetNextOutput;
-      case GotoGameScreen:
-        state.currentScreen = state.campaign.gameScreen;
-        return GetNextOutput;
       case GotoScreen(screen):
-        state.currentScreen = screen;
+        state.gotoScreen(screen);
+        return GetNextOutput;
+      case GotoPreviousScreen:
+        state.gotoScreen(state.previousScreen);
         return GetNextOutput;
       case QuitGame:
         return QuitGame;
