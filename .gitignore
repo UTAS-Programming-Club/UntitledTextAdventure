@@ -3,6 +3,7 @@ nppBackup/
 
 # Haxe files
 dump/
+build/haxe/.env/
 build/haxe/.haxelib/
 build/haxe/haxe/
 build/haxe/neko/

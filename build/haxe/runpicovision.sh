@@ -1,5 +1,17 @@
 #! /bin/sh -e
 
+if [ ! -d build/haxe/.env ]; then
+  printf "Required binaries are missing, please run setupmicropython.sh to acquire them\n"
+  exit 1
+fi
+
+. build/haxe/.env/bin/activate
+
+if ! command -v mpy-cross-v6.1 >/dev/null || ! command -v mpremote >/dev/null; then
+  printf "Required binaries are missing, please run setupmicropython.sh to acquire them\n"
+  exit 1
+fi
+
 haxe build/haxe/buildembedded.hxml
 sed -e 's/import inspect as python_lib_Inspect//'\
     -e 's/import traceback as python_lib_Traceback//'\

@@ -1,5 +1,17 @@
 #! /bin/sh -e
 
+if [ ! -d build/haxe/.env ]; then
+  printf "Required binaries are missing, please run setupsquixl.sh to acquire them\n"
+  exit 1
+fi
+
+. build/haxe/.env/bin/activate
+
+if ! command -v mpy-cross-v6.3 >/dev/null || ! command -v mpremote >/dev/null; then
+  printf "Required binaries are missing, please run setupsquixl.sh to acquire them\n"
+  exit 1
+fi
+
 haxe build/haxe/buildembedded.hxml
 sed -e 's/import inspect as python_lib_Inspect//'\
     -e 's/import traceback as python_lib_Traceback//'\
@@ -9,8 +21,8 @@ sed -e 's/import inspect as python_lib_Inspect//'\
     -e "s/    \(raise AttributeError('field does not exist')\)/elif True: \1/"\
     out/embeddedgame.py > out/embeddedgamefixed.py
 
-mpy-cross-v6.1 out/embeddedgamefixed.py -o out/embeddedgame.mpy &
-mpy-cross-v6.1 frontends/squixlhelpers.py -o out/nativehelpers.mpy &
+mpy-cross-v6.3 out/embeddedgamefixed.py -o out/embeddedgame.mpy &
+mpy-cross-v6.3 frontends/squixlhelpers.py -o out/nativehelpers.mpy &
 
 mpremote reset | true
 sleep 1
