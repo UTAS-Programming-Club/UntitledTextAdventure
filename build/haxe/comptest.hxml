@@ -1,0 +1,7 @@
+-dce std
+
+-lib lzstring
+
+-m frontends.CompressionTest
+
+--interp
