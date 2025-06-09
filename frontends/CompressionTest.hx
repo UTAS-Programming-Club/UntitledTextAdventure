@@ -7,7 +7,7 @@ import haxe.zip.Compress;
 import lzstring.LZString;
 using StringTools;
 
-final SaveDataSizeOLD1: Int = 9 * 8 + 1;
+final SaveDataSizeOLD1: Int = 9 * 4 + 1;
 final SaveDataSizeOLD2: Int = 10;
 final SaveDataSize: Int = Math.ceil(2 * 7/8 + 7 * 5/8 + 1/8);
 
@@ -212,6 +212,7 @@ function base85decode(str: UnicodeString, expectedSize: Int): Bytes {
     Std.int(Math.pow(85, 3)),
     Std.int(Math.pow(85, 4))
   ];
+
   var i: Int = 0;
   while (i < buffer85.length) {
     final tempBuffer: Bytes = Bytes.alloc(5);
@@ -231,8 +232,8 @@ function base85decode(str: UnicodeString, expectedSize: Int): Bytes {
 
     i += 5;
   }
-  final longPassword: Bytes = buffer.getBytes();
 
+  final longPassword: Bytes = buffer.getBytes();
   if (longPassword.length < expectedSize) {
     throw 'Password too short';
   }
@@ -259,12 +260,11 @@ class CompressionTest {
     final saveBytes: Bytes = saveData.serialise();
     final saveHex: UnicodeString = saveBytes.toHex();
     final saveBase64: UnicodeString = Base64.encode(saveBytes, false);
-    final saveBytesBase85: UnicodeString = base85encode(saveBytes);
-
+    final saveBase85: UnicodeString = base85encode(saveBytes);
 
     final l = new LZString();
-    final lzCompressedBase64: UnicodeString = l.compressToBase64(saveBytes.toHex()).replace('=', '');
-    final lzCompressedString: UnicodeString = l.compress(saveBytes.toHex());
+    final lzCompressedBase64: UnicodeString = l.compressToBase64(saveBase85).replace('=', '');
+    final lzCompressedString: UnicodeString = l.compress(saveBase85);
 
     final zCompressed: Bytes = Compress.run(saveBytes, 9);
     final zCompressedHex: UnicodeString = zCompressed.toHex();
@@ -272,18 +272,19 @@ class CompressionTest {
     final zCompressedBase85: UnicodeString = base85encode(zCompressed);
 
     trace('    zlib as    hex, ${zCompressedHex.length}: $zCompressedHex');
-    trace('LZString as base64, ${lzCompressedBase64.length}: $lzCompressedBase64');
     trace('    zlib as base64, ${zCompressedBase64.length}: $zCompressedBase64');
     trace('    zlib as base85, ${zCompressedBase85.length}: $zCompressedBase85');
+    trace('LZString as base64, ${lzCompressedBase64.length}: $lzCompressedBase64');
     trace('    data as    hex, ${saveHex.length}: $saveHex');
     trace('    data as base64, ${saveBase64.length}: $saveBase64');
+    trace('    data as base85, ${saveBase85.length}: $saveBase85');
     trace('LZString as string, ${lzCompressedString.length}: $lzCompressedString');
-    trace('    data as base85, ${saveBytesBase85.length}: $saveBytesBase85');
 
     trace('\n');
-    trace(saveData.serialiseOLD1().toHex());
-    trace(saveData.serialiseOLD2().toHex());
-    trace(saveBytes.toHex());
-    trace(base85decode(base85encode(saveBytes), SaveDataSize).toHex());
+    trace('Serialise V1:         ' + saveData.serialiseOLD1().toHex());
+    trace('Serialise V2:         ' + saveData.serialiseOLD2().toHex());
+    trace('Current version:      ' + saveBytes.toHex());
+    trace('Round trip base85:    ' + base85decode(saveBase85, SaveDataSize).toHex());
+    trace('Round trip lz base85: ' + base85decode(l.decompress(lzCompressedString), SaveDataSize).toHex());
   }
 }
