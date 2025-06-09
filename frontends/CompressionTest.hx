@@ -12,18 +12,18 @@ final SaveDataSizeOLD2: Int = 10;
 final SaveDataSize: Int = Math.ceil(2 * 7/8 + 7 * 5/8 + 1/8);
 
 class SaveData {
-  final health: Null<Int>;  // 7 Bits, [1, 100]
-  final stamina: Null<Int>; // 7 Bits, [1, 100]
+  var health: Null<Int>;  // 7 Bits, [1, 100]
+  var stamina: Null<Int>; // 7 Bits, [1, 100]
 
-  final headKey: Null<Int>;            // 5 Bits, [00, 11]
-  final upperBodyKey: Null<Int>;       // 5 Bits, [12, 23]
-  final handsKey: Null<Int>;           // 5 Bits, [24, 35]
-  final lowerBodyKey: Null<Int>;       // 5 Bits, [36, 47]
-  final feetKey: Null<Int>;            // 5 Bits, [48, 59]
-  final primaryWeaponKey: Null<Int>;   // 5 Bits, [60, 75]
-  final secondaryWeaponKey: Null<Int>; // 5 Bits, [60, 75]
+  var headKey: Null<Int>;            // 5 Bits, [00, 11]
+  var upperBodyKey: Null<Int>;       // 5 Bits, [12, 23]
+  var handsKey: Null<Int>;           // 5 Bits, [24, 35]
+  var lowerBodyKey: Null<Int>;       // 5 Bits, [36, 47]
+  var feetKey: Null<Int>;            // 5 Bits, [48, 59]
+  var primaryWeaponKey: Null<Int>;   // 5 Bits, [60, 75]
+  var secondaryWeaponKey: Null<Int>; // 5 Bits, [60, 75]
 
-  final triggeredTrap: Null<Bool>; // 1 Bit
+  var triggeredTrap: Null<Bool>; // 1 Bit
 
   public function new() {
     health = 100;
@@ -38,10 +38,14 @@ class SaveData {
     triggeredTrap = true;
   }
 
+  public function dump(): UnicodeString {
+    return '$health, $stamina, $headKey, $upperBodyKey, $handsKey, $lowerBodyKey, $feetKey, $primaryWeaponKey, $secondaryWeaponKey, $triggeredTrap';
+  }
+
   // TODO: Remove existingMiddleBits and finalMiddleBits?
   // offset and size are in bits
   // Returns new offset in bits
-  public static function addBitInt(buffer: Bytes, offset: Int, val: Int, size: Int): Int {
+  public static function setBitInt(buffer: Bytes, offset: Int, val: Int, size: Int): Int {
     final firstByte: Int = Std.int(offset / 8);
     final firstBit: Int = offset % 8;
     final finalByte: Int = firstByte + Std.int((firstBit + size - 1) / 8);
@@ -84,6 +88,42 @@ class SaveData {
     return finalByte * 8 + finalBit + 1;
   }
 
+  public static function getBitInt(buffer: Bytes, offset: Int, size: Int): Int {
+    final firstByte: Int = Std.int(offset / 8);
+    final firstBit: Int = offset % 8;
+    final finalByte: Int = firstByte + Std.int((firstBit + size - 1) / 8);
+    if (finalByte >= buffer.length) {
+      throw 'Buffer too small to read save data.';
+    }
+
+    var val: Int = 0;
+
+    final firstBits: Int = Bytes.fastGet(buffer, firstByte);
+    final firstBitCount: Int = Std.int(Math.min(8 - firstBit, size));
+    final firstMask: Int = (1 << firstBitCount) - 1;
+    val |= (firstBits >> firstBit) & firstMask;
+
+    var previousBitCount: Int = firstBitCount;
+
+    for (currentByte in (firstByte + 1)...(finalByte)) {
+      final middleBits: Int = Bytes.fastGet(buffer, currentByte);
+      val |= middleBits << previousBitCount;
+
+      previousBitCount += 8;
+    }
+
+    final finalBitCount: Int = size - previousBitCount;
+    if (finalBitCount > 8) {
+      throw 'Unable to read final byte from save data buffer.';
+    }
+
+    final finalBits: Int = Bytes.fastGet(buffer, finalByte);
+    final finalMask: Int = ((1 << finalBitCount) - 1) << previousBitCount;
+    val |= (finalBits << previousBitCount) & finalMask;
+
+    return val;
+  }
+
   public function serialiseOLD1(): Bytes {
     final buffer = new BytesBuffer();
     buffer.addInt32(health);
@@ -117,17 +157,60 @@ class SaveData {
   public function serialise(): Bytes {
     final buffer: Bytes = Bytes.alloc(SaveDataSize);
     var offset: Int = 0;
-    offset = addBitInt(buffer, offset, health, 7);
-    offset = addBitInt(buffer, offset, health, 7);
-    offset = addBitInt(buffer, offset, headKey, 5);
-    offset = addBitInt(buffer, offset, upperBodyKey - 12, 5);
-    offset = addBitInt(buffer, offset, handsKey - 24, 5);
-    offset = addBitInt(buffer, offset, lowerBodyKey - 34, 5);
-    offset = addBitInt(buffer, offset, feetKey - 48, 5);
-    offset = addBitInt(buffer, offset, primaryWeaponKey - 60, 5);
-    offset = addBitInt(buffer, offset, secondaryWeaponKey - 60, 5);
-    addBitInt(buffer, offset, triggeredTrap ? 1 : 0, 1);
+    offset = setBitInt(buffer, offset, health, 7);
+    offset = setBitInt(buffer, offset, health, 7);
+    offset = setBitInt(buffer, offset, headKey, 5);
+    offset = setBitInt(buffer, offset, upperBodyKey - 12, 5);
+    offset = setBitInt(buffer, offset, handsKey - 24, 5);
+    offset = setBitInt(buffer, offset, lowerBodyKey - 34, 5);
+    offset = setBitInt(buffer, offset, feetKey - 48, 5);
+    offset = setBitInt(buffer, offset, primaryWeaponKey - 60, 5);
+    offset = setBitInt(buffer, offset, secondaryWeaponKey - 60, 5);
+    setBitInt(buffer, offset, triggeredTrap ? 1 : 0, 1);
     return buffer;
+  }
+
+  // data.length == SaveDataSizeOLD1
+  public function deserialiseOLD1(data: Bytes): Void {
+    health =             data.getInt32(0);
+    stamina =            data.getInt32(4);
+    headKey =            data.getInt32(8);
+    upperBodyKey =       data.getInt32(12);
+    handsKey =           data.getInt32(16);
+    lowerBodyKey =       data.getInt32(20);
+    feetKey =            data.getInt32(24);
+    primaryWeaponKey =   data.getInt32(28);
+    secondaryWeaponKey = data.getInt32(32);
+    triggeredTrap = Bytes.fastGet(data, 36) == 1;
+  }
+
+  // data.length == SaveDataSizeOLD2
+  public function deserialiseOLD2(data: Bytes): Void {
+    health =             Bytes.fastGet(data, 0);
+    stamina =            Bytes.fastGet(data, 1);
+    headKey =            Bytes.fastGet(data, 2);
+    upperBodyKey =       Bytes.fastGet(data, 3);
+    handsKey =           Bytes.fastGet(data, 4);
+    lowerBodyKey =       Bytes.fastGet(data, 5);
+    feetKey =            Bytes.fastGet(data, 6);
+    primaryWeaponKey =   Bytes.fastGet(data, 7);
+    secondaryWeaponKey = Bytes.fastGet(data, 8);
+    triggeredTrap =      Bytes.fastGet(data, 9) == 1;
+  }
+
+  // data.length == SaveDataSize
+  public function deserialise(data: Bytes): Void {
+    var offset: Int = 0;
+    health =             getBitInt(data, offset, 7);      offset += 7;
+    health =             getBitInt(data, offset, 7);      offset += 7;
+    headKey =            getBitInt(data, offset, 5);      offset += 5;
+    upperBodyKey =       getBitInt(data, offset, 5) + 12; offset += 5;
+    handsKey =           getBitInt(data, offset, 5) + 24; offset += 5;
+    lowerBodyKey =       getBitInt(data, offset, 5) + 34; offset += 5;
+    feetKey =            getBitInt(data, offset, 5) + 48; offset += 5;
+    primaryWeaponKey =   getBitInt(data, offset, 5) + 60; offset += 5;
+    secondaryWeaponKey = getBitInt(data, offset, 5) + 60; offset += 5;
+    triggeredTrap =      getBitInt(data, offset, 1) == 1;
   }
 }
 
@@ -280,11 +363,35 @@ class CompressionTest {
     trace('    data as base85, ${saveBase85.length}: $saveBase85');
     trace('LZString as string, ${lzCompressedString.length}: $lzCompressedString');
 
+
+    final saveBytesOLD1: Bytes = saveData.serialiseOLD1();
+    final saveBytesOLD2: Bytes = saveData.serialiseOLD2();
+
     trace('\n');
-    trace('Serialise V1:         ' + saveData.serialiseOLD1().toHex());
-    trace('Serialise V2:         ' + saveData.serialiseOLD2().toHex());
+    trace('Serialise V1:         ' + saveBytesOLD1.toHex());
+    trace('Serialise V2:         ' + saveBytesOLD2.toHex());
     trace('Current version:      ' + saveBytes.toHex());
     trace('Round trip base85:    ' + base85decode(saveBase85, SaveDataSize).toHex());
     trace('Round trip lz base85: ' + base85decode(l.decompress(lzCompressedString), SaveDataSize).toHex());
+
+
+    final saveBase85OLD1: UnicodeString = base85encode(saveBytesOLD1);
+    final saveUnencodedOLD1: Bytes = base85decode(saveBase85OLD1, SaveDataSizeOLD1);
+    final saveUnserialisedOLD1 = new SaveData();
+    saveUnserialisedOLD1.deserialiseOLD1(saveUnencodedOLD1);
+
+    final saveBase85OLD2: UnicodeString = base85encode(saveBytesOLD2);
+    final saveUnencodedOLD2: Bytes = base85decode(saveBase85OLD2, SaveDataSizeOLD2);
+    final saveUnserialisedOLD2 = new SaveData();
+    saveUnserialisedOLD2.deserialiseOLD2(saveUnencodedOLD2);
+
+    final saveUnserialised = new SaveData();
+    saveUnserialised.deserialise(saveBytes);
+
+    trace('\n');
+    trace('Save Data:               ' + saveData.dump());
+    trace('Serialised V1 Save Data: ' + saveUnserialisedOLD1.dump());
+    trace('Serialised V2 Save Data: ' + saveUnserialisedOLD2.dump());
+    trace('Serialised V3 Save Data: ' + saveUnserialised.dump());
   }
 }
