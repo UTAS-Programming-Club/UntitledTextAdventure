@@ -99,7 +99,7 @@ class CompressionTest {
     trace('\n');
     trace('Serialise V3:         ' + saveBytes.toHex());
     trace('Round trip base85:    ' + Base85.decode(saveBase85, SaveDataSize).toHex());
-    trace('Round trip lz base85: ' + Base85.decode(l.decompress(lzCompressedString), SaveDataSize).toHex());
+    trace('Round trip lz string: ' + Base85.decode(l.decompress(lzCompressedString), SaveDataSize).toHex());
 
 
     final saveUnserialised = new SaveData();

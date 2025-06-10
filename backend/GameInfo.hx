@@ -11,7 +11,7 @@ enum GameAction {
 }
 
 @:build(backend.macros.TypeGeneration.buildGameEnum("Equipments.hx"))
-enum GameEquipment {
+enum abstract GameEquipment(Int) from Int {
 }
 
 @:build(backend.macros.TypeGeneration.buildGameEnum("Rooms.hx"))
