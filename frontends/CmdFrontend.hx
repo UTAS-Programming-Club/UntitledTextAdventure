@@ -91,9 +91,9 @@ class CmdFrontend {
   }
 
   static function PrintTextInput(): Void {
+    Sys.print(": ");
     Sys.println(ESC + "7"); // Backup cursor position
-    // TODO: Move to backend
-    Sys.println("\nPress Enter to confirm password entry.\nPress Esc to return to the previous screen.");
+    Sys.println("\nPress Enter to confirm text entry.\nPress Esc to return to the previous screen.");
     Sys.print(ESC + "8"); // Restore cursor position
   }
 
@@ -104,6 +104,8 @@ class CmdFrontend {
 
     if (screen is ActionScreen) {
       PrintButtonInputs(state, cast(screen, ActionScreen));
+    } else if (screen is TextScreen) {
+      PrintTextInput();
     } else {
       return false;
     }
@@ -128,14 +130,8 @@ class CmdFrontend {
     return actions.length;
   }
 
-  static function HandleInput(state: Game): Bool {
-    final screen: Screen = state.getScreen();
-    if (!(screen is ActionScreen)) {
-      return false;
-    }
-
-    final actionScreen: ActionScreen = cast screen;
-    final actions: Array<Action> = actionScreen.GetActions();
+  static function HandleActionInput(state: Game, screen: ActionScreen): Bool {
+    final actions: Array<Action> = screen.GetActions();
 
     final inputIndex: Int = GetButtonInput();
     final index: Int = MapInputIndex(state, actions, inputIndex);
@@ -151,10 +147,29 @@ class CmdFrontend {
       case QuitGame:
         return false;
       default:
-       throw ': Unknown screen action outcome $outcome received';
+       throw ": Unknown screen action outcome $outcome received";
     }
   }
 
+  // TODO: Handle ESC
+  static function HandleTextInput(state: Game): Bool {
+    final input: UnicodeString = GetTextInput();
+    Sys.println("\n\n\n\n\nYour input: " + input);
+    Sys.getChar(true);
+    return false;
+  }
+
+  static function HandleInput(state: Game): Bool {
+    final screen: Screen = state.getScreen();
+
+    if (screen is ActionScreen) {
+      return HandleActionInput(state, cast(screen, ActionScreen));
+    } else if (screen is TextScreen) {
+      return HandleTextInput(state);
+    } else {
+      return false;
+    }
+  }
 
   public static function main(): Void {
     SetupConsole();

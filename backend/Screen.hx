@@ -44,6 +44,11 @@ abstract class StatefulActionScreen<T : ScreenState & Constructible<Void -> Void
   function getBody(state: Game): UnicodeString return getStatefulBody(state, state.getScreenState());
 }
 
+// Body is used as the name of the text field
+// TODO: Add handleInput function
+abstract class TextScreen extends Screen {
+}
+
 abstract class ScreenState {
   public function new() {
   }

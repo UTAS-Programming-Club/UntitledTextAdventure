@@ -7,7 +7,7 @@ import haxe.io.Bytes;
 
   // If adding compression, version must be prepended after compression is done but before encoding.
 final SaveVersion: Int = 1; // 2 Bytes, 65535 is reserved
-final SaveDataSize: Int = Std.int(1 * 2 + 2 * 7/8 + 8 * 1);
+final SaveDataSize: Int = Math.ceil(1 * 2 + 2 * 7/8 + 7 * 1);
 
 // TODO: Store screen state
 // TODO: Avoid data being nullable
@@ -66,7 +66,6 @@ class SaveData {
 
   // Assumes data.length == SaveDataSize
   public function deserialise(bytes: Bytes) {
-    // version = ctx.getByte() << 0x8 + ctx.getByte();
     var offset: Int = 0;
     final version: Int = bytes.getBitInt(offset, 16); offset += 16;
     if (version != SaveVersion) {
