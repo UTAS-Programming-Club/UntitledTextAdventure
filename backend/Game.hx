@@ -79,8 +79,6 @@ class Game {
       return;
     }
 
-    // TODO: Remove once saving loading works
-    player.reset(campaign);
     gotoRoom(campaign.initialRoomX, campaign.initialRoomY);
     screenState = [
       for (ext in campaign.extensions) {
