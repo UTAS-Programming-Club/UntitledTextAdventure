@@ -16,9 +16,10 @@ function CreateStatBar(stat: Int): UnicodeString {
   return bar + gap + ' : ' + percentage + '%';
 }
 
-function GenerateLoadBody(state: Game, Screen) : UnicodeString {
+function GenerateLoadPrompt(state: Game, Screen) : UnicodeString {
   // TODO: Figure out why Save.Load gives "backend.GameScreen has no field Load"
-  return backend.Save.Load(state, "YYO01OJFAJ89#");
+  // return backend.Save.Load(state, "YYO01OJFAJ89#");
+  return "Password";
 }
 
 function GenerateEquipmentBody(state: Game, Screen): UnicodeString {
@@ -44,9 +45,7 @@ final CoreScreens: Map<GameScreen, Screen> = [
     new ScreenAction(GotoScreen(Load), "Load Game"),
     new ScreenAction(QuitGame, "Quit Game")
   ]),
-  Load => new ActionScreen(GenerateLoadBody, [
-    new ScreenAction(GotoScreen(MainMenu), "Return to Main Menu")
-  ]),
+  Load => new TextScreen(GenerateLoadPrompt),
   PlayerEquipment => new ActionScreen(GenerateEquipmentBody, [
     new ScreenAction(GotoPreviousScreen, "Return to Game")
   ])

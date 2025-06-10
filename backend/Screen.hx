@@ -98,5 +98,11 @@ class StatefulActionScreen extends ActionScreen {
   }
 }
 
+// Body is used as the name of the text field
+
+  // TODO: Add handleInput function
+class TextScreen extends Screen {
+}
+
 class ScreenState {
 }
