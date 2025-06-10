@@ -1,7 +1,7 @@
 package frontends;
 
 import haxe.crypto.Base64;
-import haxe.io.Bytes;
+using haxe.io.Bytes;
 import haxe.io.BytesBuffer;
 import haxe.zip.Compress;
 import lzstring.LZString;
@@ -57,7 +57,7 @@ class SaveData {
     final firstBitCount: Int = Std.int(Math.min(8 - firstBit, size));
     final firstMask: Int = (1 << firstBitCount) - 1;
     final newFirstBits: Int = (val & firstMask) << firstBit;
-    final existingFirstBits: Int = Bytes.fastGet(buffer, firstByte);
+    final existingFirstBits: Int = buffer.fastGet(firstByte);
     final mergedFirstBits: Int = existingFirstBits | newFirstBits;
     buffer.set(firstByte, mergedFirstBits);
 
@@ -67,7 +67,7 @@ class SaveData {
       final middleBitCount: Int = 8;
       final middleMask: Int = ((1 << middleBitCount) - 1) << previousBitCount;
       final newMiddleBits: Int = (val & middleMask) >> previousBitCount;
-      final existingMiddleBits: Int = Bytes.fastGet(buffer, currentByte);
+      final existingMiddleBits: Int = buffer.fastGet(currentByte);
       final mergedMiddleBits: Int = existingMiddleBits | newMiddleBits;
       buffer.set(currentByte, mergedMiddleBits);
 
@@ -81,7 +81,7 @@ class SaveData {
 
     final finalMask: Int = ((1 << finalBitCount) - 1) << previousBitCount;
     final newFinalBits: Int = (val & finalMask) >> previousBitCount;
-    final existingFinalBits: Int = Bytes.fastGet(buffer, finalByte);
+    final existingFinalBits: Int = buffer.fastGet(finalByte);
     final mergedFinalBits: Int = existingFinalBits | newFinalBits;
     buffer.set(finalByte, mergedFinalBits);
 
@@ -98,7 +98,7 @@ class SaveData {
 
     var val: Int = 0;
 
-    final firstBits: Int = Bytes.fastGet(buffer, firstByte);
+    final firstBits: Int = buffer.fastGet(firstByte);
     final firstBitCount: Int = Std.int(Math.min(8 - firstBit, size));
     final firstMask: Int = (1 << firstBitCount) - 1;
     val |= (firstBits >> firstBit) & firstMask;
@@ -106,7 +106,7 @@ class SaveData {
     var previousBitCount: Int = firstBitCount;
 
     for (currentByte in (firstByte + 1)...(finalByte)) {
-      final middleBits: Int = Bytes.fastGet(buffer, currentByte);
+      final middleBits: Int = buffer.fastGet(currentByte);
       val |= middleBits << previousBitCount;
 
       previousBitCount += 8;
@@ -117,7 +117,7 @@ class SaveData {
       throw 'Unable to read final byte from save data buffer.';
     }
 
-    final finalBits: Int = Bytes.fastGet(buffer, finalByte);
+    final finalBits: Int = buffer.fastGet(finalByte);
     final finalMask: Int = ((1 << finalBitCount) - 1) << previousBitCount;
     val |= (finalBits << previousBitCount) & finalMask;
 
@@ -181,21 +181,21 @@ class SaveData {
     feetKey =            data.getInt32(24);
     primaryWeaponKey =   data.getInt32(28);
     secondaryWeaponKey = data.getInt32(32);
-    triggeredTrap = Bytes.fastGet(data, 36) == 1;
+    triggeredTrap =      data.fastGet(36) == 1;
   }
 
   // data.length == SaveDataSizeOLD2
   public function deserialiseOLD2(data: Bytes): Void {
-    health =             Bytes.fastGet(data, 0);
-    stamina =            Bytes.fastGet(data, 1);
-    headKey =            Bytes.fastGet(data, 2);
-    upperBodyKey =       Bytes.fastGet(data, 3);
-    handsKey =           Bytes.fastGet(data, 4);
-    lowerBodyKey =       Bytes.fastGet(data, 5);
-    feetKey =            Bytes.fastGet(data, 6);
-    primaryWeaponKey =   Bytes.fastGet(data, 7);
-    secondaryWeaponKey = Bytes.fastGet(data, 8);
-    triggeredTrap =      Bytes.fastGet(data, 9) == 1;
+    health =             data.fastGet(0);
+    stamina =            data.fastGet(1);
+    headKey =            data.fastGet(2);
+    upperBodyKey =       data.fastGet(3);
+    handsKey =           data.fastGet(4);
+    lowerBodyKey =       data.fastGet(5);
+    feetKey =            data.fastGet(6);
+    primaryWeaponKey =   data.fastGet(7);
+    secondaryWeaponKey = data.fastGet(8);
+    triggeredTrap =      data.fastGet(9) == 1;
   }
 
   // data.length == SaveDataSize
@@ -260,6 +260,7 @@ function base85encode(bytes: Bytes): UnicodeString {
 
     final digit0: Int = Std.int(value1 / powers[0]);
 
+    // 33 is '!', first used char
     buffer.addChar(digit0 + 33);
     buffer.addChar(digit1 + 33);
     buffer.addChar(digit2 + 33);
@@ -275,18 +276,17 @@ function base85encode(bytes: Bytes): UnicodeString {
     extraCharCount++;
   }
 
-  if (extraCharCount > 0) {
-    final shorterBuffer = new StringBuf();
-    shorterBuffer.addSub(base85, 0, base85.length - extraCharCount);
-    base85 = shorterBuffer.toString();
-  }
-
-  return base85.replace('`', 'v').replace('!!!!!', 'w').replace('!!!!', 'x').replace('!!!', 'y').replace('!!', 'z');
+  return base85.substr(0, base85.length - extraCharCount)
+               .replace('`', 'v')
+               .replace('!!!!!', 'w')
+               .replace('!!!!', 'x')
+               .replace('!!!', 'y')
+               .replace('!!', 'z');
 }
 
 function base85decode(str: UnicodeString, expectedSize: Int): Bytes {
-  final base85: UnicodeString = str.replace('v', '`').replace('w', '!!!!!').replace('x', '!!!!').replace('y', '!!!').replace('z', '!!');
-  final buffer85: Bytes = Bytes.ofString(base85);
+  final fullStr: UnicodeString = str.replace('v', '`').replace('w', '!!!!!').replace('x', '!!!!').replace('y', '!!!').replace('z', '!!');
+  final buffer85: Bytes = Bytes.ofString(fullStr);
   final buffer = new BytesBuffer();
   final powers: Array<Int> = [
     Std.int(Math.pow(85, 0)),
@@ -305,11 +305,11 @@ function base85decode(str: UnicodeString, expectedSize: Int): Bytes {
     final quot: Int = Std.int(Math.min(rem, 5));
     tempBuffer.blit(0, buffer85, i, quot);
 
-    final digit0: Int = Bytes.fastGet(tempBuffer, 0) - 33;
-    final digit1: Int = Bytes.fastGet(tempBuffer, 1) - 33;
-    final digit2: Int = Bytes.fastGet(tempBuffer, 2) - 33;
-    final digit3: Int = Bytes.fastGet(tempBuffer, 3) - 33;
-    final digit4: Int = Bytes.fastGet(tempBuffer, 4) - 33;
+    final digit0: Int = tempBuffer.fastGet(0) - 33;
+    final digit1: Int = tempBuffer.fastGet(1) - 33;
+    final digit2: Int = tempBuffer.fastGet(2) - 33;
+    final digit3: Int = tempBuffer.fastGet(3) - 33;
+    final digit4: Int = tempBuffer.fastGet(4) - 33;
 
     buffer.addInt32(digit4 * powers[4] + digit3 * powers[3] + digit2 * powers[2] + digit1 * powers[1] + digit0 * powers[0]);
 
@@ -323,7 +323,7 @@ function base85decode(str: UnicodeString, expectedSize: Int): Bytes {
 
   final expectedExtraByteCount: Int = longPassword.length - expectedSize;
   var extraByteCount: Int = 0;
-  while (extraByteCount < expectedExtraByteCount && Bytes.fastGet(longPassword, longPassword.length - extraByteCount - 1) == 0) {
+  while (extraByteCount < expectedExtraByteCount && longPassword.fastGet(longPassword.length - extraByteCount - 1) == 0) {
     extraByteCount++;
   }
 
@@ -336,6 +336,7 @@ function base85decode(str: UnicodeString, expectedSize: Int): Bytes {
 
   return password;
 }
+
 
 class CompressionTest {
   static function main(): Void {
@@ -390,8 +391,8 @@ class CompressionTest {
 
     trace('\n');
     trace('Save Data:               ' + saveData.dump());
-    trace('Serialised V1 Save Data: ' + saveUnserialisedOLD1.dump());
-    trace('Serialised V2 Save Data: ' + saveUnserialisedOLD2.dump());
-    trace('Serialised V3 Save Data: ' + saveUnserialised.dump());
+    trace('Unserialised V1 Save Data: ' + saveUnserialisedOLD1.dump());
+    trace('Unserialised V2 Save Data: ' + saveUnserialisedOLD2.dump());
+    trace('Unserialised V3 Save Data: ' + saveUnserialised.dump());
   }
 }
