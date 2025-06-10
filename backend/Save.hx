@@ -100,5 +100,6 @@ function Load(state: Game, str: UnicodeString): Bool {
 
   final saveData = new SaveData(state);
   saveData.deserialise(bytes);
+  state.player.deserialise(saveData);
   return true;
 }

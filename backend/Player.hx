@@ -58,26 +58,14 @@ class Player {
     stamina = 100;
 
     headKey = campaign.initialHead;
-    head = Equipment.Get(campaign.initialHead);
-
     upperBodyKey = campaign.initialUpperBody;
-    upperBody = Equipment.Get(campaign.initialUpperBody);
-
     handsKey = campaign.initialHands;
-    hands = Equipment.Get(campaign.initialHands);
-
     lowerBodyKey = campaign.initialLowerBody;
-    lowerBody = Equipment.Get(campaign.initialLowerBody);
-
     feetKey = campaign.initialFeet;
-    feet = Equipment.Get(campaign.initialFeet);
-
     primaryWeaponKey = campaign.initialPrimaryWeapon;
-    primaryWeapon = Equipment.Get(campaign.initialPrimaryWeapon);
-
     secondaryWeaponKey = campaign.initialSecondaryWeapon;
-    secondaryWeapon = Equipment.Get(campaign.initialSecondaryWeapon);
-  }
+    updateEquipment();
+}
 
 
   // TODO: End game on 0 health
@@ -94,15 +82,40 @@ class Player {
   }
 
 
+  private function updateEquipment() {
+    head            = Equipment.Get(headKey);
+    upperBody       = Equipment.Get(upperBodyKey);
+    hands           = Equipment.Get(handsKey);
+    lowerBody       = Equipment.Get(lowerBodyKey);
+    feet            = Equipment.Get(feetKey);
+    primaryWeapon   = Equipment.Get(primaryWeaponKey);
+    secondaryWeapon = Equipment.Get(secondaryWeaponKey);
+  }
+
+
   public function serialise(saveData: SaveData): Void {
-    saveData.health = health;
-    saveData.stamina = stamina;
-    saveData.headKey = headKey;
-    saveData.upperBodyKey = upperBodyKey;
-    saveData.handsKey = handsKey;
-    saveData.lowerBodyKey = lowerBodyKey;
-    saveData.feetKey = feetKey;
-    saveData.primaryWeaponKey = primaryWeaponKey;
+    saveData.health             = health;
+    saveData.stamina            = stamina;
+    saveData.headKey            = headKey;
+    saveData.upperBodyKey       = upperBodyKey;
+    saveData.handsKey           = handsKey;
+    saveData.lowerBodyKey       = lowerBodyKey;
+    saveData.feetKey            = feetKey;
+    saveData.primaryWeaponKey   = primaryWeaponKey;
     saveData.secondaryWeaponKey = secondaryWeaponKey;
+  }
+
+  // TODO: Remove these casts once SaveData fields are not nullable
+  public function deserialise(saveData: SaveData): Void {
+    health             = cast saveData.health;
+    stamina            = cast saveData.stamina;
+    headKey            = cast saveData.headKey;
+    upperBodyKey       = cast saveData.upperBodyKey;
+    handsKey           = cast saveData.handsKey;
+    lowerBodyKey       = cast saveData.lowerBodyKey;
+    feetKey            = cast saveData.feetKey;
+    primaryWeaponKey   = cast saveData.primaryWeaponKey;
+    secondaryWeaponKey = cast saveData.secondaryWeaponKey;
+    updateEquipment();
   }
 }

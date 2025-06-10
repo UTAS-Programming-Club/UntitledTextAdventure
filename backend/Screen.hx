@@ -103,7 +103,6 @@ class StatefulActionScreen extends ActionScreen {
 }
 
 // Body is used as the name of the text field
-
 class TextScreen extends Screen {
   public function handleInput(state: Game, str: Null<UnicodeString>): GameOutcome {
     if (str == null) {

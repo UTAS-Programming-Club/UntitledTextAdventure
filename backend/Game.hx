@@ -44,8 +44,6 @@ class Game {
     }
 
     gotoScreen(campaign.gameScreen);
-    // TODO: Remove once saving loading works
-    player.Reset(campaign);
     screenState = [
       for (screen => info in GameInfo.Screens) {
         if (info is StatefulActionScreen) {
