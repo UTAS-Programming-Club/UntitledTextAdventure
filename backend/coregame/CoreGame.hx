@@ -21,5 +21,14 @@ final CoreGameExt: Extension = {
       default:
         return Invalid;
     }
+  },
+  textHandler: function(state: Game, str: UnicodeString): GameOutcome {
+    switch (state.currentScreen) {
+      case Load:
+        state.loadGame(str);
+        return GetNextOutput;
+      default:
+        return Invalid;
+    }
   }
 };

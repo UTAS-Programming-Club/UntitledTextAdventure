@@ -29,5 +29,6 @@ final TrapExt: Extension = {
       default:
         return Invalid;
     }
-  }
+  },
+  textHandler: null
 };

@@ -98,7 +98,7 @@ class Base85 {
 
     final longPassword: Bytes = buffer.getBytes();
     if (longPassword.length < expectedSize) {
-      throw 'Password too short';
+      return Bytes.alloc(0);
     }
 
     final expectedExtraByteCount: Int = longPassword.length - expectedSize;
@@ -111,7 +111,7 @@ class Base85 {
     password.blit(0, longPassword, 0, password.length);
 
     if (password.length > expectedSize) {
-      throw 'Password too long';
+      return Bytes.alloc(0);
     }
 
     return password;

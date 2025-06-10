@@ -9,7 +9,7 @@ class Game {
   public final campaign: Campaign;
   public final player: Player;
 
-  private var currentScreen: GameScreen;
+  public var currentScreen(default, null): GameScreen;
   public var previousScreen(default, null): GameScreen;
   private var screenState: Map<GameScreen, ScreenState>;
 
@@ -28,6 +28,23 @@ class Game {
   // TODO: Move room x, y to player class?
   public function startGame(): Void {
     gotoScreen(campaign.gameScreen);
+    player.Reset(campaign);
+    screenState = [
+      for (screen => info in GameInfo.Screens) {
+        if (info is StatefulActionScreen) {
+          final statefulScreen: StatefulActionScreen = cast info;
+          screen => statefulScreen.stateConstructor(campaign);
+        }
+      }
+    ];
+  }
+  public function loadGame(str: UnicodeString): Void {
+    if (!backend.Save.Load(this, str)) {
+      return;
+    }
+
+    gotoScreen(campaign.gameScreen);
+    // TODO: Remove once saving loading works
     player.Reset(campaign);
     screenState = [
       for (screen => info in GameInfo.Screens) {

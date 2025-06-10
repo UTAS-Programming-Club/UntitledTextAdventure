@@ -5,6 +5,6 @@ import backend.GameInfo;
 import backend.Screen;
 
 typedef Extension = {
-  // TODO: Make optional?
-  final actionHandler: (state: Game, action: GameAction) -> GameOutcome;
+  final actionHandler: Null<(state: Game, action: GameAction) -> GameOutcome>;
+  final textHandler: Null<(state: Game, str: UnicodeString) -> GameOutcome>;
 }

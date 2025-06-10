@@ -30,5 +30,6 @@ final RoomsExt: Extension = {
     }
 
     return GetNextOutput;
-  }
+  },
+  textHandler: null
 };

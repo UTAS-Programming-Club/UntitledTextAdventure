@@ -53,7 +53,7 @@ class CmdFrontend {
 
   // Returns input text as a utf-8 string if enter is pressed, "\x1B" on esc
   // being pressed or NULL if buffer allocation failed
-  static function GetTextInput(): String {
+  static function GetTextInput(): Null<UnicodeString> {
     var bufSize = 16;
     var bufOffset = 0;
     var buf = haxe.io.Bytes.alloc(bufSize);
@@ -71,7 +71,7 @@ class CmdFrontend {
       buf.fill(bufOffset, 1, input);
       // This also detects any key that sends an escape sequence e.g. arrow keys
       if (input == 0x1B) {
-        return ESC;
+        return null;
       }
 
       if (input == 0x7F && bufOffset >= 1) {
@@ -129,7 +129,7 @@ class CmdFrontend {
     return actions.length;
   }
 
-  static function HandleActionInput(state: Game, screen: ActionScreen): Bool {
+  static function HandleActionInput(state: Game, screen: ActionScreen): GameOutcome {
     final actions: Array<ScreenAction> = screen.GetActions(state);
 
     final inputIndex: Int = GetButtonInput();
@@ -137,37 +137,37 @@ class CmdFrontend {
     if (index >= actions.length) {
       // TODO: Is this still the case?
       // This is a recoverable error so just ignore it
-      return true;
+      return GetNextOutput;
     }
 
-    final outcome: GameOutcome = actions[index].handleAction(state);
+    return actions[index].handleAction(state);
+  }
+
+  static function HandleTextInput(state: Game, screen: TextScreen): GameOutcome {
+    final input: Null<UnicodeString> = GetTextInput();
+    Sys.print("\n\n\n\n\n"); // In case of exceptions
+    return screen.handleInput(state, input);
+  }
+
+  static function HandleInput(state: Game): Bool {
+    final screen: Screen = state.getScreen();
+
+    var outcome: GameOutcome;
+    if (screen is ActionScreen) {
+      outcome = HandleActionInput(state, cast(screen, ActionScreen));
+    } else if (screen is TextScreen) {
+      outcome = HandleTextInput(state, cast(screen, TextScreen));
+    } else {
+      return false;
+    }
+
     switch (outcome) {
       case GetNextOutput:
         return true;
       case QuitGame:
         return false;
       default:
-       throw "Unknown screen action outcome $outcome received.";
-    }
-  }
-
-  // TODO: Handle ESC
-  static function HandleTextInput(state: Game): Bool {
-    final input: UnicodeString = GetTextInput();
-    Sys.println("\n\n\n\n\nYour input: " + input);
-    Sys.getChar(true);
-    return false;
-  }
-
-  static function HandleInput(state: Game): Bool {
-    final screen: Screen = state.getScreen();
-
-    if (screen is ActionScreen) {
-      return HandleActionInput(state, cast(screen, ActionScreen));
-    } else if (screen is TextScreen) {
-      return HandleTextInput(state);
-    } else {
-      return false;
+       throw 'Unknown screen action outcome $outcome received.';
     }
   }
 

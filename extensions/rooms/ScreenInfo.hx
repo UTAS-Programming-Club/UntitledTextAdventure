@@ -33,6 +33,8 @@ function GenerateRoomBody(state: Game, Screen): UnicodeString {
 }
 
 function GenerateSaveBody(state: Game, Screen): UnicodeString {
+  // TODO: Figure out why Save.Save gives "backend.GameScreen has no field Load"
+  // TODO: Tidy up output
   return "This is a test: " + backend.Save.Save(state);
 }
 

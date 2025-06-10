@@ -29,7 +29,7 @@ class ScreenAction {
   // TODO: Add visibilityHandler in Extension?
   public final isVisible: (Game, ActionScreen) -> Bool;
   // TODO: Is actionHandler in Extension enough? Remove this?
-  private final outcome: Game -> GameOutcome;
+  private final outcomeHandler: Game -> GameOutcome;
 
   public function new(action: GameAction, title: UnicodeString,
                       ?isVisible: (Game, ActionScreen) -> Bool,
@@ -37,7 +37,7 @@ class ScreenAction {
     this.action = action;
     this.title = title;
     this.isVisible = isVisible ?? AlwaysVisible;
-    this.outcome = outcome ?? AlwaysInvalidOutcome;
+    this.outcomeHandler = outcome ?? AlwaysInvalidOutcome;
   }
 
   static function AlwaysVisible(Game, ActionScreen): Bool return true;
@@ -46,15 +46,19 @@ class ScreenAction {
   public function handleAction(state: Game): GameOutcome {
     var outcome: GameOutcome;
     for (ext in state.campaign.extensions) {
+      if (ext.actionHandler == null) {
+        continue;
+      }
+
       final outcome: GameOutcome = ext.actionHandler(state, action);
       if (outcome != Invalid) {
         return outcome;
       }
     }
 
-    outcome = this.outcome(state);
+    outcome = this.outcomeHandler(state);
     if (outcome == Invalid) {
-      throw 'Unhandled action outcome $action on ${state.getScreen()}.';
+      throw 'Unhandled action $action provided for ${state.getScreen()}.';
     }
 
     return outcome;
@@ -100,8 +104,28 @@ class StatefulActionScreen extends ActionScreen {
 
 // Body is used as the name of the text field
 
-  // TODO: Add handleInput function
 class TextScreen extends Screen {
+  public function handleInput(state: Game, str: Null<UnicodeString>): GameOutcome {
+    if (str == null) {
+      state.gotoScreen(state.previousScreen);
+      return GetNextOutput;
+    }
+
+    var outcome: GameOutcome;
+    for (ext in state.campaign.extensions) {
+      if (ext.textHandler == null) {
+        continue;
+      }
+
+      final outcome: GameOutcome = ext.textHandler(state, str);
+      if (outcome != Invalid) {
+        return outcome;
+      }
+    }
+
+    // TODO: Figure out why this gives "Cannot add UnicodeString and backend.Screen" without explicit conversion
+    throw 'Unhandled input "$str" provided for ${Std.string(state.getScreen())}.';
+  }
 }
 
 class ScreenState {
