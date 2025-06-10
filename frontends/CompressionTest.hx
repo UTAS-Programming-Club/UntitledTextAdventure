@@ -44,7 +44,7 @@ class SaveData {
     final buffer: Bytes = Bytes.alloc(SaveDataSize);
     var offset: Int = 0;
     offset = buffer.setBitInt(offset, health, 7);
-    offset = buffer.setBitInt(offset, health, 7);
+    offset = buffer.setBitInt(offset, stamina, 7);
     offset = buffer.setBitInt(offset, headKey, 5);
     offset = buffer.setBitInt(offset, upperBodyKey - 12, 5);
     offset = buffer.setBitInt(offset, handsKey - 24, 5);
@@ -60,7 +60,7 @@ class SaveData {
   public function deserialise(data: Bytes): Void {
     var offset: Int = 0;
     health =             data.getBitInt(offset, 7);      offset += 7;
-    health =             data.getBitInt(offset, 7);      offset += 7;
+    stamina =            data.getBitInt(offset, 7);      offset += 7;
     headKey =            data.getBitInt(offset, 5);      offset += 5;
     upperBodyKey =       data.getBitInt(offset, 5) + 12; offset += 5;
     handsKey =           data.getBitInt(offset, 5) + 24; offset += 5;

@@ -4,6 +4,7 @@ using StringTools;
 
 import backend.Game;
 import backend.GameInfo;
+import backend.Save;
 import backend.Screen;
 
 // stat must be in [0, 100]
@@ -13,6 +14,11 @@ function CreateStatBar(stat: Int): UnicodeString {
   final gap: UnicodeString = [for (i in 0...(10 - boxCount)) ' '].join('');
   final percentage: UnicodeString = Std.string(stat).lpad(' ', 3);
   return bar + gap + ' : ' + percentage + '%';
+}
+
+function GenerateLoadBody(state: Game, Screen) : UnicodeString {
+  // TODO: Figure out why Save.Load gives "backend.GameScreen has no field Load"
+  return backend.Save.Load(state, "YYO01OJFAJ89#");
 }
 
 function GenerateEquipmentBody(state: Game, Screen): UnicodeString {
@@ -38,7 +44,7 @@ final CoreScreens: Map<GameScreen, Screen> = [
     new ScreenAction(GotoScreen(Load), "Load Game"),
     new ScreenAction(QuitGame, "Quit Game")
   ]),
-  Load => new ActionScreen("Loading is not currently supported", [
+  Load => new ActionScreen(GenerateLoadBody, [
     new ScreenAction(GotoScreen(MainMenu), "Return to Main Menu")
   ]),
   PlayerEquipment => new ActionScreen(GenerateEquipmentBody, [
