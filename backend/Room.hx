@@ -36,10 +36,11 @@ abstract class Room extends ActionScreen {
       new GoWest("Go West"),
       // getRoomActions goes here
       new GotoScreen(PlayerEquipmentScreen, "Check Inventory"),
+      new GotoScreen(SaveScreen, "Save and Quit"),
 #if testrooms
       new Quit("Quit Game")
 #else
-      new GotoScreen(MainMenuScreen, "Return to main menu")
+      new GotoScreen(MainMenuScreen, "Quit")
 #end
     ];
 

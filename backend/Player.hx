@@ -3,6 +3,7 @@ package backend;
 import backend.Campaign;
 import backend.Equipment;
 import backend.GameInfo;
+import backend.Save;
 
 // Only import backend.Player from backend.Game
 
@@ -202,5 +203,18 @@ class Player {
 
     this.x = x;
     this.y = y;
+  }
+
+
+  public function serialise(campaign: Campaign, saveData: SaveData): Void {
+    saveData.health = health;
+    saveData.stamina = stamina;
+    saveData.headIdx = campaign.equipmentOrder.indexOf(head);
+    saveData.upperBodyIdx = campaign.equipmentOrder.indexOf(upperBody);
+    saveData.handsIdx = campaign.equipmentOrder.indexOf(hands);
+    saveData.lowerBodyIdx = campaign.equipmentOrder.indexOf(lowerBody);
+    saveData.feetIdx = campaign.equipmentOrder.indexOf(feet);
+    saveData.primaryWeaponIdx = campaign.equipmentOrder.indexOf(primaryWeapon);
+    saveData.secondaryWeaponIdx = campaign.equipmentOrder.indexOf(secondaryWeapon);
   }
 }

@@ -31,6 +31,7 @@ final CoreGameExt: Extension = {
   ],
   screens: [
     MainMenuScreen,
+    SaveScreen,
     LoadScreen,
     PlayerEquipmentScreen,
   ],

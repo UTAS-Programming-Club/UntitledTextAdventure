@@ -3,6 +3,7 @@ package backend.coregame;
 import backend.coregame.Actions;
 import backend.Game;
 import backend.GameInfo;
+import backend.Save;
 import backend.Screen;
 
 final MainMenuScreen: GameScreen = new CoreGame_MainMenu();
@@ -13,6 +14,16 @@ class CoreGame_MainMenu extends ActionScreen {
     new StartGame('Start Game'),
     new GotoScreen(LoadScreen, 'Load Game'),
     new Quit('Quit Game'),
+  ];
+}
+
+
+final SaveScreen: GameScreen = new CoreGame_Save();
+class CoreGame_Save extends ActionScreen {
+  function getBody(state: Game): UnicodeString return 'This is a test: ' + Save(state);
+
+  function getAllActions(): Array<Action> return [
+    new Quit('Quit'),
   ];
 }
 
