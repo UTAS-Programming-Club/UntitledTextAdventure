@@ -11,7 +11,7 @@ final SaveDataSize: Int = Math.ceil(1 * 2 + 2 * 7/8 + 7 * 1);
 
 // TODO: Store screen state
 // TODO: Avoid data being nullable
-// NOTE: if the constructor doesn't throw then no fields are null.
+// If the constructor doesn't throw then no fields are null.
 class SaveData {
   public var health: Null<Int>;  // 7 Bits, [1, 100]
   public var stamina: Null<Int>; // 7 Bits, [1, 100]
@@ -91,9 +91,13 @@ function Save(state: Game): UnicodeString {
 }
 
 // TODO: Modify game state
-function Load(state: Game, str: UnicodeString): UnicodeString {
+function Load(state: Game, str: UnicodeString): Bool {
   final bytes: Bytes = Base85.decode(str, SaveDataSize);
+  if (bytes.length != SaveDataSize) {
+    return false;
+  }
+
   final saveData = new SaveData(state);
   saveData.deserialise(bytes);
-  return saveData.dump();
+  return true;
 }

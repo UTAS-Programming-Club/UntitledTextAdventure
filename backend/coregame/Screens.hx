@@ -1,6 +1,7 @@
 package backend.coregame;
 
 import backend.coregame.Actions;
+import backend.coregame.Outcomes;
 import backend.Game;
 import backend.GameInfo;
 import backend.Save;
@@ -29,9 +30,11 @@ class CoreGame_Save extends ActionScreen {
 
 final LoadScreen: GameScreen = new CoreGame_Load();
 class CoreGame_Load extends TextScreen {
-  function getBody(state: Game): UnicodeString {
-    // return Load(state, "c@U11M+O5!:B,");
-    return 'Password';
+  function getBody(state: Game): UnicodeString return 'Password';
+
+  function onTextEntry(state:backend.Game, str:UnicodeString): GameOutcome {
+    state.loadGame(str);
+    return GetNextOutput;
   }
 }
 

@@ -7,6 +7,7 @@ import backend.Campaign;
 import backend.macros.Helpers;
 import backend.GameInfo;
 import backend.Player;
+import backend.Save;
 import backend.Screen;
 
 class Game {
@@ -59,6 +60,26 @@ class Game {
   }
 
   public function startGame(): Void {
+    player.reset(campaign);
+    gotoRoom(campaign.initialRoomX, campaign.initialRoomY);
+    screenState = [
+      for (ext in campaign.extensions) {
+        for (screen in ext.screens) {
+          if (screen.hasState()) {
+            screen => screen.createState();
+          }
+        }
+      }
+    ];
+    roomState = [];
+  }
+
+  public function loadGame(str: UnicodeString): Void {
+    if (!Load(this, str)) {
+      return;
+    }
+
+    // TODO: Remove once saving loading works
     player.reset(campaign);
     gotoRoom(campaign.initialRoomX, campaign.initialRoomY);
     screenState = [

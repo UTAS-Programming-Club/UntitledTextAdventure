@@ -60,6 +60,7 @@ class EmbeddedFrontend {
     return actions.length;
   }
 
+  // TODO: Support TextScreens
   static function HandleInput(state: Game): Bool {
     final screen: Screen = state.getScreen();
     if (!(screen is ActionScreen)) {
