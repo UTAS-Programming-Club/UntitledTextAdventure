@@ -4,19 +4,15 @@ import backend.compression.Base85;
 using backend.compression.ByteHelpers;
 import backend.Game;
 import haxe.io.Bytes;
-import haxe.io.BytesBuffer;
 
-final SaveVersion: Int = 1;
+  // If adding compression, version must be prepended after compression is done but before encoding.
+final SaveVersion: Int = 1; // 2 Bytes, 65535 is reserved
 final SaveDataSize: Int = Std.int(1 * 2 + 2 * 7/8 + 8 * 1);
-
 
 // TODO: Store screen state
 // TODO: Avoid data being nullable
 // NOTE: if the constructor doesn't throw then no fields are null.
 class SaveData {
-  // NOTE: If adding compression, version but be prepended after compression is done but before encoding.
-  private final version: Int = SaveVersion; // 2 Bytes, 65535 is reserved
-
   public var health: Null<Int>;  // 7 Bits, [1, 100]
   public var stamina: Null<Int>; // 7 Bits, [1, 100]
 
@@ -46,9 +42,16 @@ class SaveData {
     }
   }
 
+  // TODO: Remove once testing is done
+  public function dump(): UnicodeString {
+    return '$health, $stamina, $headIdx, $upperBodyIdx, $handsIdx, $lowerBodyIdx, $feetIdx, $primaryWeaponIdx, $secondaryWeaponIdx';
+  }
+
+  // Assumes all fields are non null
   public function serialize(): Bytes {
     final buffer: Bytes = Bytes.alloc(SaveDataSize);
     var offset: Int = 0;
+    offset = buffer.setBitInt(offset, SaveVersion, 16);
     offset = buffer.setBitInt(offset, cast health, 7);
     offset = buffer.setBitInt(offset, cast stamina, 7);
     offset = buffer.setBitInt(offset, cast headIdx, 8);
@@ -62,17 +65,36 @@ class SaveData {
   }
 
   // Assumes data.length == SaveDataSize
-  public function unserialize(bytes: Bytes) {
+  public function deserialise(bytes: Bytes) {
     // version = ctx.getByte() << 0x8 + ctx.getByte();
+    var offset: Int = 0;
+    final version: Int = bytes.getBitInt(offset, 16); offset += 16;
+    if (version != SaveVersion) {
+      throw 'Unexpected save version $version';
+    }
+
+    health =             bytes.getBitInt(offset, 7); offset += 7;
+    stamina =            bytes.getBitInt(offset, 7); offset += 7;
+    headIdx =            bytes.getBitInt(offset, 8); offset += 8;
+    upperBodyIdx =       bytes.getBitInt(offset, 8); offset += 8;
+    handsIdx =           bytes.getBitInt(offset, 8); offset += 8;
+    lowerBodyIdx =       bytes.getBitInt(offset, 8); offset += 8;
+    feetIdx =            bytes.getBitInt(offset, 8); offset += 8;
+    primaryWeaponIdx =   bytes.getBitInt(offset, 8); offset += 8;
+    secondaryWeaponIdx = bytes.getBitInt(offset, 8);
   }
 }
 
 function Save(state: Game): UnicodeString {
   final saveData = new SaveData(state);
   final bytes: Bytes = saveData.serialize();
-  return Base85.encode(bytes);
+  return saveData.dump() + ", " + Base85.encode(bytes);
 }
 
-function Load(): Void {
-  throw "Loading not implemented";
+// TODO: Modify game state
+function Load(state: Game, str: UnicodeString): UnicodeString {
+  final bytes: Bytes = Base85.decode(str, SaveDataSize);
+  final saveData = new SaveData(state);
+  saveData.deserialise(bytes);
+  return saveData.dump();
 }

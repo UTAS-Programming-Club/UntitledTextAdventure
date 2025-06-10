@@ -29,7 +29,7 @@ class CoreGame_Save extends ActionScreen {
 
 final LoadScreen: GameScreen = new CoreGame_Load();
 class CoreGame_Load extends ActionScreen {
-  function getBody(Game): UnicodeString return 'Loading is not currently supported';
+  function getBody(state: Game): UnicodeString return Load(state, "c@U11M+O5!:B,");
 
   function getAllActions(): Array<Action> return [
     new GotoScreen(MainMenuScreen, 'Return to Main Menu'),
