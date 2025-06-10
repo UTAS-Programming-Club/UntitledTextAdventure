@@ -1,5 +1,6 @@
 package frontends;
 
+using backend.compression.ByteHelpers;
 import haxe.crypto.Base64;
 using haxe.io.Bytes;
 import haxe.io.BytesBuffer;
@@ -7,8 +8,6 @@ import haxe.zip.Compress;
 import lzstring.LZString;
 using StringTools;
 
-final SaveDataSizeOLD1: Int = 9 * 4 + 1;
-final SaveDataSizeOLD2: Int = 10;
 final SaveDataSize: Int = Math.ceil(2 * 7/8 + 7 * 5/8 + 1/8);
 
 class SaveData {
@@ -42,188 +41,36 @@ class SaveData {
     return '$health, $stamina, $headKey, $upperBodyKey, $handsKey, $lowerBodyKey, $feetKey, $primaryWeaponKey, $secondaryWeaponKey, $triggeredTrap';
   }
 
-  // TODO: Remove existingMiddleBits and finalMiddleBits?
-  // offset and size are in bits
-  // Returns new offset in bits
-  public static function setBitInt(buffer: Bytes, offset: Int, val: Int, size: Int): Int {
-    final firstByte: Int = Std.int(offset / 8);
-    final firstBit: Int = offset % 8;
-    final finalByte: Int = firstByte + Std.int((firstBit + size - 1) / 8);
-    final finalBit: Int = (firstBit + size - 1) % 8;
-    if (finalByte >= buffer.length) {
-      throw 'Buffer too small to fit save data.';
-    }
-
-    final firstBitCount: Int = Std.int(Math.min(8 - firstBit, size));
-    final firstMask: Int = (1 << firstBitCount) - 1;
-    final newFirstBits: Int = (val & firstMask) << firstBit;
-    final existingFirstBits: Int = buffer.fastGet(firstByte);
-    final mergedFirstBits: Int = existingFirstBits | newFirstBits;
-    buffer.set(firstByte, mergedFirstBits);
-
-    var previousBitCount: Int = firstBitCount;
-
-    for (currentByte in (firstByte + 1)...(finalByte)) {
-      final middleBitCount: Int = 8;
-      final middleMask: Int = ((1 << middleBitCount) - 1) << previousBitCount;
-      final newMiddleBits: Int = (val & middleMask) >> previousBitCount;
-      final existingMiddleBits: Int = buffer.fastGet(currentByte);
-      final mergedMiddleBits: Int = existingMiddleBits | newMiddleBits;
-      buffer.set(currentByte, mergedMiddleBits);
-
-      previousBitCount += middleBitCount;
-    }
-
-    final finalBitCount: Int = size - previousBitCount;
-    if (finalBitCount > 8) {
-      throw 'Unable to store final byte in save data buffer.';
-    }
-
-    final finalMask: Int = ((1 << finalBitCount) - 1) << previousBitCount;
-    final newFinalBits: Int = (val & finalMask) >> previousBitCount;
-    final existingFinalBits: Int = buffer.fastGet(finalByte);
-    final mergedFinalBits: Int = existingFinalBits | newFinalBits;
-    buffer.set(finalByte, mergedFinalBits);
-
-    return finalByte * 8 + finalBit + 1;
-  }
-
-  public static function getBitInt(buffer: Bytes, offset: Int, size: Int): Int {
-    final firstByte: Int = Std.int(offset / 8);
-    final firstBit: Int = offset % 8;
-    final finalByte: Int = firstByte + Std.int((firstBit + size - 1) / 8);
-    if (finalByte >= buffer.length) {
-      throw 'Buffer too small to read save data.';
-    }
-
-    var val: Int = 0;
-
-    final firstBits: Int = buffer.fastGet(firstByte);
-    final firstBitCount: Int = Std.int(Math.min(8 - firstBit, size));
-    final firstMask: Int = (1 << firstBitCount) - 1;
-    val |= (firstBits >> firstBit) & firstMask;
-
-    var previousBitCount: Int = firstBitCount;
-
-    for (currentByte in (firstByte + 1)...(finalByte)) {
-      final middleBits: Int = buffer.fastGet(currentByte);
-      val |= middleBits << previousBitCount;
-
-      previousBitCount += 8;
-    }
-
-    final finalBitCount: Int = size - previousBitCount;
-    if (finalBitCount > 8) {
-      throw 'Unable to read final byte from save data buffer.';
-    }
-
-    final finalBits: Int = buffer.fastGet(finalByte);
-    final finalMask: Int = ((1 << finalBitCount) - 1) << previousBitCount;
-    val |= (finalBits << previousBitCount) & finalMask;
-
-    return val;
-  }
-
-  public function serialiseOLD1(): Bytes {
-    final buffer = new BytesBuffer();
-    buffer.addInt32(health);
-    buffer.addInt32(stamina);
-    buffer.addInt32(headKey);
-    buffer.addInt32(upperBodyKey);
-    buffer.addInt32(handsKey);
-    buffer.addInt32(lowerBodyKey);
-    buffer.addInt32(feetKey);
-    buffer.addInt32(primaryWeaponKey);
-    buffer.addInt32(secondaryWeaponKey);
-    buffer.addByte(triggeredTrap ? 1 : 0);
-    return buffer.getBytes();
-  }
-
-  public function serialiseOLD2(): Bytes {
-    final buffer = new BytesBuffer();
-    buffer.addByte(health);
-    buffer.addByte(stamina);
-    buffer.addByte(headKey);
-    buffer.addByte(upperBodyKey);
-    buffer.addByte(handsKey);
-    buffer.addByte(lowerBodyKey);
-    buffer.addByte(feetKey);
-    buffer.addByte(primaryWeaponKey);
-    buffer.addByte(secondaryWeaponKey);
-    buffer.addByte(triggeredTrap ? 1 : 0);
-    return buffer.getBytes();
-  }
-
   public function serialise(): Bytes {
     final buffer: Bytes = Bytes.alloc(SaveDataSize);
     var offset: Int = 0;
-    offset = setBitInt(buffer, offset, health, 7);
-    offset = setBitInt(buffer, offset, health, 7);
-    offset = setBitInt(buffer, offset, headKey, 5);
-    offset = setBitInt(buffer, offset, upperBodyKey - 12, 5);
-    offset = setBitInt(buffer, offset, handsKey - 24, 5);
-    offset = setBitInt(buffer, offset, lowerBodyKey - 34, 5);
-    offset = setBitInt(buffer, offset, feetKey - 48, 5);
-    offset = setBitInt(buffer, offset, primaryWeaponKey - 60, 5);
-    offset = setBitInt(buffer, offset, secondaryWeaponKey - 60, 5);
-    setBitInt(buffer, offset, triggeredTrap ? 1 : 0, 1);
+    offset = buffer.setBitInt(offset, health, 7);
+    offset = buffer.setBitInt(offset, health, 7);
+    offset = buffer.setBitInt(offset, headKey, 5);
+    offset = buffer.setBitInt(offset, upperBodyKey - 12, 5);
+    offset = buffer.setBitInt(offset, handsKey - 24, 5);
+    offset = buffer.setBitInt(offset, lowerBodyKey - 34, 5);
+    offset = buffer.setBitInt(offset, feetKey - 48, 5);
+    offset = buffer.setBitInt(offset, primaryWeaponKey - 60, 5);
+    offset = buffer.setBitInt(offset, secondaryWeaponKey - 60, 5);
+    buffer.setBitInt(offset, triggeredTrap ? 1 : 0, 1);
     return buffer;
   }
 
-  // data.length == SaveDataSizeOLD1
-  public function deserialiseOLD1(data: Bytes): Void {
-    health =             data.getInt32(0);
-    stamina =            data.getInt32(4);
-    headKey =            data.getInt32(8);
-    upperBodyKey =       data.getInt32(12);
-    handsKey =           data.getInt32(16);
-    lowerBodyKey =       data.getInt32(20);
-    feetKey =            data.getInt32(24);
-    primaryWeaponKey =   data.getInt32(28);
-    secondaryWeaponKey = data.getInt32(32);
-    triggeredTrap =      data.fastGet(36) == 1;
-  }
-
-  // data.length == SaveDataSizeOLD2
-  public function deserialiseOLD2(data: Bytes): Void {
-    health =             data.fastGet(0);
-    stamina =            data.fastGet(1);
-    headKey =            data.fastGet(2);
-    upperBodyKey =       data.fastGet(3);
-    handsKey =           data.fastGet(4);
-    lowerBodyKey =       data.fastGet(5);
-    feetKey =            data.fastGet(6);
-    primaryWeaponKey =   data.fastGet(7);
-    secondaryWeaponKey = data.fastGet(8);
-    triggeredTrap =      data.fastGet(9) == 1;
-  }
-
-  // data.length == SaveDataSize
+  // Assumes data.length == SaveDataSize
   public function deserialise(data: Bytes): Void {
     var offset: Int = 0;
-    health =             getBitInt(data, offset, 7);      offset += 7;
-    health =             getBitInt(data, offset, 7);      offset += 7;
-    headKey =            getBitInt(data, offset, 5);      offset += 5;
-    upperBodyKey =       getBitInt(data, offset, 5) + 12; offset += 5;
-    handsKey =           getBitInt(data, offset, 5) + 24; offset += 5;
-    lowerBodyKey =       getBitInt(data, offset, 5) + 34; offset += 5;
-    feetKey =            getBitInt(data, offset, 5) + 48; offset += 5;
-    primaryWeaponKey =   getBitInt(data, offset, 5) + 60; offset += 5;
-    secondaryWeaponKey = getBitInt(data, offset, 5) + 60; offset += 5;
-    triggeredTrap =      getBitInt(data, offset, 1) == 1;
+    health =             data.getBitInt(offset, 7);      offset += 7;
+    health =             data.getBitInt(offset, 7);      offset += 7;
+    headKey =            data.getBitInt(offset, 5);      offset += 5;
+    upperBodyKey =       data.getBitInt(offset, 5) + 12; offset += 5;
+    handsKey =           data.getBitInt(offset, 5) + 24; offset += 5;
+    lowerBodyKey =       data.getBitInt(offset, 5) + 34; offset += 5;
+    feetKey =            data.getBitInt(offset, 5) + 48; offset += 5;
+    primaryWeaponKey =   data.getBitInt(offset, 5) + 60; offset += 5;
+    secondaryWeaponKey = data.getBitInt(offset, 5) + 60; offset += 5;
+    triggeredTrap =      data.getBitInt(offset, 1) == 1;
   }
-}
-
-// pos < bytes.length
-function getInt32Safe(bytes: Bytes, pos: Int): Int {
-  final buffer: Bytes = Bytes.alloc(4);
-  buffer.fill(0, buffer.length, 0);
-
-  final rem: Int = bytes.length - pos;
-  final quot: Int = Std.int(Math.min(rem, 4));
-  buffer.blit(0, bytes, pos, quot);
-
-  return buffer.getInt32(0);
 }
 
 // Compared to just [33, 118] i.e ! to u
@@ -244,7 +91,7 @@ function base85encode(bytes: Bytes): UnicodeString {
 
   var i: Int = 0;
   while (i < bytes.length) {
-    final value: UInt = getInt32Safe(bytes, i);
+    final value: UInt = bytes.getInt32Safe(i);
 
     final digit4: Int = Std.int(value / powers[4]);
     final value4: Int = value - digit4 * powers[4];
@@ -365,34 +212,17 @@ class CompressionTest {
     trace('LZString as string, ${lzCompressedString.length}: $lzCompressedString');
 
 
-    final saveBytesOLD1: Bytes = saveData.serialiseOLD1();
-    final saveBytesOLD2: Bytes = saveData.serialiseOLD2();
-
     trace('\n');
-    trace('Serialise V1:         ' + saveBytesOLD1.toHex());
-    trace('Serialise V2:         ' + saveBytesOLD2.toHex());
-    trace('Current version:      ' + saveBytes.toHex());
+    trace('Serialise V3:         ' + saveBytes.toHex());
     trace('Round trip base85:    ' + base85decode(saveBase85, SaveDataSize).toHex());
     trace('Round trip lz base85: ' + base85decode(l.decompress(lzCompressedString), SaveDataSize).toHex());
 
-
-    final saveBase85OLD1: UnicodeString = base85encode(saveBytesOLD1);
-    final saveUnencodedOLD1: Bytes = base85decode(saveBase85OLD1, SaveDataSizeOLD1);
-    final saveUnserialisedOLD1 = new SaveData();
-    saveUnserialisedOLD1.deserialiseOLD1(saveUnencodedOLD1);
-
-    final saveBase85OLD2: UnicodeString = base85encode(saveBytesOLD2);
-    final saveUnencodedOLD2: Bytes = base85decode(saveBase85OLD2, SaveDataSizeOLD2);
-    final saveUnserialisedOLD2 = new SaveData();
-    saveUnserialisedOLD2.deserialiseOLD2(saveUnencodedOLD2);
 
     final saveUnserialised = new SaveData();
     saveUnserialised.deserialise(saveBytes);
 
     trace('\n');
-    trace('Save Data:               ' + saveData.dump());
-    trace('Unserialised V1 Save Data: ' + saveUnserialisedOLD1.dump());
-    trace('Unserialised V2 Save Data: ' + saveUnserialisedOLD2.dump());
+    trace('Save Data:                 ' + saveData.dump());
     trace('Unserialised V3 Save Data: ' + saveUnserialised.dump());
   }
 }
