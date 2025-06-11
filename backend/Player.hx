@@ -218,16 +218,15 @@ class Player {
     saveData.secondaryWeaponIdx = campaign.equipmentOrder.indexOf(secondaryWeapon);
   }
 
-  // TODO: Remove these casts once SaveData fields are not nullable
   public function deserialise(campaign: Campaign, saveData: SaveData): Void {
-    health          = cast saveData.health;
-    stamina         = cast saveData.stamina;
-    head            = campaign.equipmentOrder[cast saveData.headIdx];
-    upperBody       = campaign.equipmentOrder[cast saveData.upperBodyIdx];
-    hands           = campaign.equipmentOrder[cast saveData.handsIdx];
-    lowerBody       = campaign.equipmentOrder[cast saveData.lowerBodyIdx];
-    feet            = campaign.equipmentOrder[cast saveData.feetIdx];
-    primaryWeapon   = campaign.equipmentOrder[cast saveData.primaryWeaponIdx];
-    secondaryWeapon = campaign.equipmentOrder[cast saveData.secondaryWeaponIdx];
+    health          = saveData.health;
+    stamina         = saveData.stamina;
+    head            = campaign.equipmentOrder[saveData.headIdx];
+    upperBody       = campaign.equipmentOrder[saveData.upperBodyIdx];
+    hands           = campaign.equipmentOrder[saveData.handsIdx];
+    lowerBody       = campaign.equipmentOrder[saveData.lowerBodyIdx];
+    feet            = campaign.equipmentOrder[saveData.feetIdx];
+    primaryWeapon   = campaign.equipmentOrder[saveData.primaryWeaponIdx];
+    secondaryWeapon = campaign.equipmentOrder[saveData.secondaryWeaponIdx];
   }
 }
