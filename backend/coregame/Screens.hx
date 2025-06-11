@@ -21,7 +21,7 @@ class CoreGame_MainMenu extends ActionScreen {
 
 final SaveScreen: GameScreen = new CoreGame_Save();
 class CoreGame_Save extends ActionScreen {
-  function getBody(state: Game): UnicodeString return 'This is a test: ' + Save(state);
+  function getBody(state: Game): UnicodeString return 'Here is your password: ' + Save(state);
 
   function getAllActions(): Array<Action> return [
     new Quit('Quit'),

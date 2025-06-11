@@ -15,8 +15,7 @@ class ByteHelpers {
     return buffer.getInt32(0);
   }
 
-  // TODO: Remove existingMiddleBits and finalMiddleBits?
-  // Assumes offset and size are in bits
+  // Assumes offset and size are in bits and buffer[i] for i > offset % 8 is safe to overrride
   // Returns new offset in bits
   public static function setBitInt(buffer: Bytes, offset: Int, val: Int, size: Int): Int {
     final firstByte: Int = Std.int(offset / 8);
@@ -24,7 +23,7 @@ class ByteHelpers {
     final finalByte: Int = firstByte + Std.int((firstBit + size - 1) / 8);
     final finalBit: Int = (firstBit + size - 1) % 8;
     if (finalByte >= buffer.length) {
-      throw 'Buffer too small to fit save data.';
+      throw 'Buffer too small to fit data.';
     }
 
     final firstBitCount: Int = Std.int(Math.min(8 - firstBit, size));
@@ -40,23 +39,21 @@ class ByteHelpers {
       final middleBitCount: Int = 8;
       final middleMask: Int = ((1 << middleBitCount) - 1) << previousBitCount;
       final newMiddleBits: Int = (val & middleMask) >> previousBitCount;
-      final existingMiddleBits: Int = buffer.fastGet(currentByte);
-      final mergedMiddleBits: Int = existingMiddleBits | newMiddleBits;
-      buffer.set(currentByte, mergedMiddleBits);
+      buffer.set(currentByte, newMiddleBits);
 
       previousBitCount += middleBitCount;
     }
 
     final finalBitCount: Int = size - previousBitCount;
     if (finalBitCount > 8) {
-      throw 'Unable to store final byte in save data buffer.';
+      throw 'Unable to store final byte in data buffer.';
     }
 
-    final finalMask: Int = ((1 << finalBitCount) - 1) << previousBitCount;
-    final newFinalBits: Int = (val & finalMask) >> previousBitCount;
-    final existingFinalBits: Int = buffer.fastGet(finalByte);
-    final mergedFinalBits: Int = existingFinalBits | newFinalBits;
-    buffer.set(finalByte, mergedFinalBits);
+    if (finalByte != firstByte) {
+      final finalMask: Int = ((1 << finalBitCount) - 1) << previousBitCount;
+      final newFinalBits: Int = (val & finalMask) >> previousBitCount;
+      buffer.set(finalByte, existingFinalBits);
+    }
 
     return finalByte * 8 + finalBit + 1;
   }
@@ -67,7 +64,7 @@ class ByteHelpers {
     final firstBit: Int = offset % 8;
     final finalByte: Int = firstByte + Std.int((firstBit + size - 1) / 8);
     if (finalByte >= buffer.length) {
-      throw 'Buffer too small to read save data.';
+      throw 'Buffer too small to read data from.';
     }
 
     var val: Int = 0;
@@ -88,7 +85,7 @@ class ByteHelpers {
 
     final finalBitCount: Int = size - previousBitCount;
     if (finalBitCount > 8) {
-      throw 'Unable to read final byte from save data buffer.';
+      throw 'Unable to read final byte from data buffer.';
     }
 
     final finalBits: Int = buffer.fastGet(finalByte);
