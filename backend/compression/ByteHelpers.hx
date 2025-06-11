@@ -1,6 +1,6 @@
 package backend.compression;
 
-using haxe.io.Bytes;
+import haxe.io.Bytes;
 
 class ByteHelpers {
   // Assumes pos < bytes.length
@@ -29,7 +29,7 @@ class ByteHelpers {
     final firstBitCount: Int = Std.int(Math.min(8 - firstBit, size));
     final firstMask: Int = (1 << firstBitCount) - 1;
     final newFirstBits: Int = (val & firstMask) << firstBit;
-    final existingFirstBits: Int = buffer.fastGet(firstByte);
+    final existingFirstBits: Int = buffer.get(firstByte);
     final mergedFirstBits: Int = existingFirstBits | newFirstBits;
     buffer.set(firstByte, mergedFirstBits);
 
@@ -52,7 +52,7 @@ class ByteHelpers {
     if (finalByte != firstByte) {
       final finalMask: Int = ((1 << finalBitCount) - 1) << previousBitCount;
       final newFinalBits: Int = (val & finalMask) >> previousBitCount;
-      buffer.set(finalByte, existingFinalBits);
+      buffer.set(finalByte, newFinalBits);
     }
 
     return finalByte * 8 + finalBit + 1;
@@ -69,7 +69,7 @@ class ByteHelpers {
 
     var val: Int = 0;
 
-    final firstBits: Int = buffer.fastGet(firstByte);
+    final firstBits: Int = buffer.get(firstByte);
     final firstBitCount: Int = Std.int(Math.min(8 - firstBit, size));
     final firstMask: Int = (1 << firstBitCount) - 1;
     val |= (firstBits >> firstBit) & firstMask;
@@ -77,7 +77,7 @@ class ByteHelpers {
     var previousBitCount: Int = firstBitCount;
 
     for (currentByte in (firstByte + 1)...(finalByte)) {
-      final middleBits: Int = buffer.fastGet(currentByte);
+      final middleBits: Int = buffer.get(currentByte);
       val |= middleBits << previousBitCount;
 
       previousBitCount += 8;
@@ -88,7 +88,7 @@ class ByteHelpers {
       throw 'Unable to read final byte from data buffer.';
     }
 
-    final finalBits: Int = buffer.fastGet(finalByte);
+    final finalBits: Int = buffer.get(finalByte);
     final finalMask: Int = ((1 << finalBitCount) - 1) << previousBitCount;
     val |= (finalBits << previousBitCount) & finalMask;
 
