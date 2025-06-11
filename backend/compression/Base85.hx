@@ -65,7 +65,7 @@ class Base85 {
                  .replace('!!', 'z');
   }
 
-  // TODO: Remove expectedSize
+  // TODO: Remove expectedSize?
   public static function decode(str: UnicodeString, expectedSize: Int): Bytes {
     final fullStr: UnicodeString = str.replace('v', '`')
                                       .replace('w', '!!!!!')
