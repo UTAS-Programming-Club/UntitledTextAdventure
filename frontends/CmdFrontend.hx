@@ -5,6 +5,7 @@ import backend.GameInfo;
 import backend.Screen;
 import campaigns.UntitledTextAdventure;
 import campaigns.TestCampaign;
+import haxe.io.Bytes;
 
 class CmdFrontend {
   static final ESC = "\x1B";
@@ -54,33 +55,33 @@ class CmdFrontend {
   // Returns input text as a utf-8 string if enter is pressed, "\x1B" on esc
   // being pressed or NULL if buffer allocation failed
   static function GetTextInput(): Null<UnicodeString> {
-    var bufSize = 16;
-    var bufOffset = 0;
-    var buf = haxe.io.Bytes.alloc(bufSize);
+    var bufSize: Int = 16;
+    var bufOffset: Int = 0;
+    var buf: Bytes = Bytes.alloc(bufSize);
 
     while (true) {
       if (bufOffset == bufSize) {
-        final newBufSize = bufSize * bufSize;
-        var newBuf = haxe.io.Bytes.alloc(newBufSize);
+        final newBufSize: Int = bufSize * bufSize;
+        final newBuf: Bytes = haxe.io.Bytes.alloc(newBufSize);
         newBuf.blit(0, buf, 0, bufSize);
         bufSize = newBufSize;
         buf = newBuf;
       }
 
-      final input = Sys.getChar(false);
-      buf.fill(bufOffset, 1, input);
+      final inputChar: Int = Sys.getChar(false);
+      buf.fill(bufOffset, 1, inputChar);
       // This also detects any key that sends an escape sequence e.g. arrow keys
-      if (input == 0x1B) {
+      if (inputChar == 0x1B) {
         return null;
       }
 
-      if (input == 0x7F && bufOffset >= 1) {
+      if (inputChar == 0x7F && bufOffset >= 1) {
         Sys.print("\010 \010");
         --bufOffset;
-      } else if (input == 9 || (input >= 32 && input <= 126)) {
-        Sys.print(String.fromCharCode(input));
+      } else if (inputChar == 9 || (inputChar >= 32 && inputChar <= 126)) {
+        Sys.print(String.fromCharCode(inputChar));
         ++bufOffset;
-      } else if (input == "\r".code) {
+      } else if (inputChar == "\r".code) {
         return buf.getString(0, bufOffset);
       }
 
@@ -112,6 +113,7 @@ class CmdFrontend {
     return true;
   }
 
+
   static function MapInputIndex(state: Game, screen: ActionScreen, actions: Array<ScreenAction>, inputIndex: Int): Int {
     var index: Int;
     for (index in 0...actions.length) {
@@ -133,14 +135,14 @@ class CmdFrontend {
     final actions: Array<ScreenAction> = screen.GetActions(state);
 
     final inputIndex: Int = GetButtonInput();
-    final index: Int = MapInputIndex(state, screen, actions, inputIndex);
-    if (index >= actions.length) {
+    final actionindex: Int = MapInputIndex(state, screen, actions, inputIndex);
+    if (actionindex >= actions.length) {
       // TODO: Is this still the case?
       // This is a recoverable error so just ignore it
       return GetNextOutput;
     }
 
-    return actions[index].handleAction(state);
+    return actions[actionindex].handleAction(state);
   }
 
   static function HandleTextInput(state: Game, screen: TextScreen): GameOutcome {
@@ -171,7 +173,8 @@ class CmdFrontend {
     }
   }
 
-  public static function main(): Void {
+
+  static function main(): Void {
     SetupConsole();
 
     // TODO: Change to cmd parameter
