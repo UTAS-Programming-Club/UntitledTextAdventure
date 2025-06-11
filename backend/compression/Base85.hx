@@ -1,17 +1,19 @@
 package backend.compression;
 
 using backend.compression.ByteHelpers;
+using haxe.Int64;
 import haxe.io.Bytes;
 import haxe.io.BytesBuffer;
 using StringTools;
 
 class Base85 {
+  // This used to have Std.int(Math.pow(85, n)) but that failed on MicroPython
   static final powers: Array<Int> = [
-    Std.int(Math.pow(85, 0)),
-    Std.int(Math.pow(85, 1)),
-    Std.int(Math.pow(85, 2)),
-    Std.int(Math.pow(85, 3)),
-    Std.int(Math.pow(85, 4))
+    1,
+    85,
+    85 * 85,
+    85 * 85 * 85,
+    85 * 85 * 85 * 85
   ];
 
   // Compared to just [33, 118] i.e ! to u
@@ -25,10 +27,10 @@ class Base85 {
 
     var i: Int = 0;
     while (i < bytes.length) {
-      final value: UInt = bytes.getInt32Safe(i);
+      final value: Int64 = Int64.make(0, bytes.getInt32Safe(i));
 
-      final digit4: Int = Std.int(value / powers[4]);
-      final value4: Int = value - digit4 * powers[4];
+      final digit4: Int = (value / powers[4]).toInt();
+      final value4: Int = (value - digit4 * powers[4]).toInt();
 
       final digit3: Int = Std.int(value4 / powers[3]);
       final value3: Int = value4 - digit3 * powers[3];
@@ -41,12 +43,11 @@ class Base85 {
 
       final digit0: Int = Std.int(value1 / powers[0]);
 
-      // 33 is '!', first used char
-      buffer.addChar(digit0 + 33);
-      buffer.addChar(digit1 + 33);
-      buffer.addChar(digit2 + 33);
-      buffer.addChar(digit3 + 33);
-      buffer.addChar(digit4 + 33);
+      buffer.addChar(digit0 + '!'.code);
+      buffer.addChar(digit1 + '!'.code);
+      buffer.addChar(digit2 + '!'.code);
+      buffer.addChar(digit3 + '!'.code);
+      buffer.addChar(digit4 + '!'.code);
 
       i += 4;
     }
