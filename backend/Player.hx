@@ -105,17 +105,16 @@ class Player {
     saveData.secondaryWeaponKey = secondaryWeaponKey;
   }
 
-  // TODO: Remove these casts once SaveData fields are not nullable
   public function deserialise(saveData: SaveData): Void {
-    health             = cast saveData.health;
-    stamina            = cast saveData.stamina;
-    headKey            = cast saveData.headKey;
-    upperBodyKey       = cast saveData.upperBodyKey;
-    handsKey           = cast saveData.handsKey;
-    lowerBodyKey       = cast saveData.lowerBodyKey;
-    feetKey            = cast saveData.feetKey;
-    primaryWeaponKey   = cast saveData.primaryWeaponKey;
-    secondaryWeaponKey = cast saveData.secondaryWeaponKey;
+    health             = saveData.health;
+    stamina            = saveData.stamina;
+    headKey            = saveData.headKey;
+    upperBodyKey       = saveData.upperBodyKey;
+    handsKey           = saveData.handsKey;
+    lowerBodyKey       = saveData.lowerBodyKey;
+    feetKey            = saveData.feetKey;
+    primaryWeaponKey   = saveData.primaryWeaponKey;
+    secondaryWeaponKey = saveData.secondaryWeaponKey;
     updateEquipment();
   }
 }
