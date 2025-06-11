@@ -24,11 +24,13 @@ sed -e 's/import inspect as python_lib_Inspect//'\
 mpy-cross-v6.3 out/embeddedgamefixed.py -o out/embeddedgame.mpy &
 mpy-cross-v6.3 frontends/squixlhelpers.py -o out/nativehelpers.mpy &
 
-mpremote reset | true
-sleep 1
-until [ -c /dev/ttyACM* ]; do
+if [ $# -ne 1 ] || [ "$1" != -q ]; then
+  mpremote reset | true
+  sleep 1
+  until [ -c /dev/ttyACM* ]; do
   sleep 0.5
-done
+  done
+fi
 
 mpremote cp out/embeddedgame.mpy out/nativehelpers.mpy :
 mpremote exec "import embeddedgame"
