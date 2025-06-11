@@ -1,7 +1,7 @@
 package backend.compression;
 
 using backend.compression.ByteHelpers;
-using haxe.io.Bytes;
+import haxe.io.Bytes;
 import haxe.io.BytesBuffer;
 using StringTools;
 
@@ -85,11 +85,11 @@ class Base85 {
       final quot: Int = Std.int(Math.min(rem, 5));
       tempBuffer.blit(0, buffer85, i, quot);
 
-      final digit0: Int = tempBuffer.fastGet(0) - 33;
-      final digit1: Int = tempBuffer.fastGet(1) - 33;
-      final digit2: Int = tempBuffer.fastGet(2) - 33;
-      final digit3: Int = tempBuffer.fastGet(3) - 33;
-      final digit4: Int = tempBuffer.fastGet(4) - 33;
+      final digit0: Int = tempBuffer.get(0) - 33;
+      final digit1: Int = tempBuffer.get(1) - 33;
+      final digit2: Int = tempBuffer.get(2) - 33;
+      final digit3: Int = tempBuffer.get(3) - 33;
+      final digit4: Int = tempBuffer.get(4) - 33;
 
       buffer.addInt32(digit4 * powers[4] + digit3 * powers[3] + digit2 * powers[2] + digit1 * powers[1] + digit0 * powers[0]);
 
@@ -103,7 +103,7 @@ class Base85 {
 
     final expectedExtraByteCount: Int = longPassword.length - expectedSize;
     var extraByteCount: Int = 0;
-    while (extraByteCount < expectedExtraByteCount && longPassword.fastGet(longPassword.length - extraByteCount - 1) == 0) {
+    while (extraByteCount < expectedExtraByteCount && longPassword.get(longPassword.length - extraByteCount - 1) == 0) {
       extraByteCount++;
     }
 
