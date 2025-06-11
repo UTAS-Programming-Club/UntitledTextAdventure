@@ -9,6 +9,7 @@ import SQUiXL as squixl
 import time
 
 screen_size: int = 480 # Hardcoded for display
+text_size: int = 8 # Hardcoded for FrameBuffer
 display: bytearray = squixl.create_display()
 fb: FrameBuffer = framebuf.FrameBuffer(display, screen_size, screen_size, framebuf.RGB565)
 
@@ -19,12 +20,14 @@ button_colour    : int = 0xf800 # Red
 padding: int = 5
 outer_button_padding: int = 2 * padding
 inner_button_padding: int = 2 * outer_button_padding # GetButtonInput depends on 2x
-button_width: int = 100
+action_button_width: int = 100
+text_button_width: int = 20
 button_height: int = 40
 
 # This gives 4 buttons per row with outer_button_padding to the edges and inner_button_padding between
-# Result must be a whole number(even without //) therefore button_width and outer_button_padding must be even
-button_row_count: int = 4 # (screen_size - 2 * outer_button_padding + inner_button_padding) / (button_width + inner_button_padding)
+# Result must be a whole number(even without //) therefore action_button_width and outer_button_padding must be even
+action_button_row_count: int = 4 # (screen_size - 2 * outer_button_padding + inner_button_padding) / (action_button_width + inner_button_padding)
+text_button_row_count: int = 12 # (screen_size - 2 * outer_button_padding + inner_button_padding) / (text_button_width + inner_button_padding)
 
 current_y: int = padding
 buttons_start_y: int
@@ -69,8 +72,6 @@ def PrintActionInputs(state: backend_Game, screen: backend_ActionScreen) -> None
 
   PrintString("\n\nPress a button below to make a selection.")
 
-  text_size: int = 8 # Hardcoded for FrameBuffer
-
   buttons_start_y = current_y + outer_button_padding
   current_y += 2 * outer_button_padding
 
@@ -79,16 +80,50 @@ def PrintActionInputs(state: backend_Game, screen: backend_ActionScreen) -> None
   column: int = 0
   for action in actions:
     if action.isVisible(state):
-      button_x: int = outer_button_padding + (inner_button_padding + button_width) * column
-      text_x: int = button_x + (button_width - text_size * len(action.title)) // 2
+      button_x: int = outer_button_padding + (inner_button_padding + action_button_width) * column
+      text_x: int = button_x + (action_button_width - text_size * len(action.title)) // 2
       text_y: int = current_y + (button_height - text_size) // 2
-      fb.rect(button_x, current_y, button_width, button_height, button_colour, True)
+      fb.rect(button_x, current_y, action_button_width, button_height, button_colour, True)
       fb.text(action.title, text_x, text_y, text_colour)
 
       column += 1
-      if column == button_row_count:
+      if column == action_button_row_count:
         column = 0
         current_y += 50
+
+def PrintTextInput() -> None:
+  global buttons_start_y
+  global current_y
+
+  PrintString(':\n\nPress a button below to select a character.')
+
+  buttons_start_y = current_y + outer_button_padding
+  current_y += 2 * outer_button_padding
+
+  actions: list[str] = [
+    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L',
+    'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
+    'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+    'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+    'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
+    '8', '9', '!', '"', '#', '$', '%', '&', "'", '(', ')', '*',
+    '+', ',', '-', '.', '/', ':', ';', '<', '=', '>', '?', '@',
+   '\\', '[', ']', '^', '_', '~', '~', '~', '~', '<', '~', '>'
+  ]
+
+  column: int = 0
+  for action in actions:
+    if action != '~':
+      button_x: int = outer_button_padding + (inner_button_padding + text_button_width) * column
+      text_x: int = button_x + (text_button_width - text_size) // 2
+      text_y: int = current_y + (button_height - text_size) // 2
+      fb.rect(button_x, current_y, text_button_width, button_height, button_colour, True)
+      fb.text(action, text_x, text_y, text_colour)
+
+    column += 1
+    if column == text_button_row_count:
+      column = 0
+      current_y += 50
 
 
 def GetActionInput(input_count: int) -> int:
@@ -102,7 +137,12 @@ def GetActionInput(input_count: int) -> int:
       if point_count > 0:
         last_touch_time = time.ticks_ms()
         point = points[point_count - 1]
-        button_x: int = point[1] // (button_width + inner_button_padding)
+        button_x: int = point[1] // (action_button_width + inner_button_padding)
         button_y: int = (point[0] - buttons_start_y) // (button_height + inner_button_padding)
-        button_input: int = button_row_count * button_y + button_x
+        button_input: int = action_button_row_count * button_y + button_x
         return button_input
+
+# TODO: get text input
+def GetTextInput() -> str | None:
+  time.sleep(5)
+  return None

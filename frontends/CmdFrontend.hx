@@ -6,7 +6,7 @@ import backend.coregame.Outcomes;
 // TODO: Recreate some merged type that works for switch exhaustion?
 import backend.GameInfo;
 import backend.Screen;
-import haxe.io.Bytes;
+import Bytes;
 
 class CmdFrontend {
   static final ESC = "\x1B";
@@ -63,7 +63,7 @@ class CmdFrontend {
     while (true) {
       if (bufOffset == bufSize) {
         final newBufSize: Int = bufSize * bufSize;
-        final newBuf: Bytes = haxe.io.Bytes.alloc(newBufSize);
+        final newBuf: Bytes = Bytes.alloc(newBufSize);
         newBuf.blit(0, buf, 0, bufSize);
         bufSize = newBufSize;
         buf = newBuf;
