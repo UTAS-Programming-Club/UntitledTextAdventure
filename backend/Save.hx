@@ -28,11 +28,6 @@ class SaveData {
   public function new() {
   }
 
-  // TODO: Remove once testing is done
-  public function dump(): UnicodeString {
-    return '$health, $stamina, $headKey, $upperBodyKey, $handsKey, $lowerBodyKey, $feetKey, $primaryWeaponKey, $secondaryWeaponKey';
-  }
-
   public function serialize(): Bytes {
     final buffer: Bytes = Bytes.alloc(SaveDataSize);
     var offset: Int = 0;
@@ -74,7 +69,7 @@ function Save(state: Game): UnicodeString {
   state.player.serialise(saveData);
 
   final bytes: Bytes = saveData.serialize();
-  return saveData.dump() + ", " + Base85.encode(bytes);
+  return Base85.encode(bytes);
 }
 
 // TODO: Modify game state

@@ -10,7 +10,6 @@ import haxe.Constraints;
 
 enum RoomsScreen {
   GameRooms;
-  Save;
 }
 
 @:nullSafety(Strict)

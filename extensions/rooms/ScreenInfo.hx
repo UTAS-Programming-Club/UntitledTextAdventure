@@ -32,12 +32,6 @@ function GenerateRoomBody(state: Game, Screen): UnicodeString {
   return body;
 }
 
-function GenerateSaveBody(state: Game, Screen): UnicodeString {
-  // TODO: Figure out why Save.Save gives "backend.GameScreen has no field Load"
-  // TODO: Tidy up output
-  return "This is a test: " + backend.Save.Save(state);
-}
-
 @:nullSafety(Strict)
 final RoomScreens: Map<GameScreen, Screen> = [
   GameRooms => new StatefulActionScreen(GameRoomState.new, GenerateRoomBody, [
@@ -80,13 +74,6 @@ final RoomScreens: Map<GameScreen, Screen> = [
     new ScreenAction(QuitGame, "Quit Game")
 #else
     new ScreenAction(GotoScreen(MainMenu), "Quit")
-#end
-  ]),
-  Save => new ActionScreen(GenerateSaveBody, [
-#if testrooms
-    new ScreenAction(QuitGame, "Quit Game")
-#else
-    new ScreenAction(GotoScreen(MainMenu), "Return to main menu")
 #end
   ])
 ];

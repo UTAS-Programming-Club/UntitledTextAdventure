@@ -16,6 +16,10 @@ function CreateStatBar(stat: Int): UnicodeString {
   return bar + gap + ' : ' + percentage + '%';
 }
 
+function GenerateSaveBody(state: Game, Screen): UnicodeString {
+  return "Here is your password: " + backend.Save.Save(state);
+}
+
 function GenerateEquipmentBody(state: Game, Screen): UnicodeString {
   return
     'Player Equipment\n\n' +
@@ -38,6 +42,13 @@ final CoreScreens: Map<GameScreen, Screen> = [
     new ScreenAction(StartGame, "Start Game"),
     new ScreenAction(GotoScreen(Load), "Load Game"),
     new ScreenAction(QuitGame, "Quit Game")
+  ]),
+  Save => new ActionScreen(GenerateSaveBody, [
+#if testrooms
+    new ScreenAction(QuitGame, "Quit Game")
+#else
+    new ScreenAction(GotoScreen(MainMenu), "Return to main menu")
+#end
   ]),
   Load => new TextScreen("Password"),
   PlayerEquipment => new ActionScreen(GenerateEquipmentBody, [
