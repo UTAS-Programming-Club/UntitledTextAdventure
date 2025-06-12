@@ -2,6 +2,7 @@
 # from embeddedgame import (
 #   backend_ActionScreen,
 #   backend_Game,
+#   backend_Screen,
 #   backend_ScreenAction
 # )
 import framebuf
@@ -13,23 +14,25 @@ text_size: int = 8 # Hardcoded for FrameBuffer
 display: bytearray = squixl.create_display()
 fb: FrameBuffer = framebuf.FrameBuffer(display, screen_size, screen_size, framebuf.RGB565)
 
-background_colour: int = 0x0000 # Black
-text_colour      : int = 0xffff # White
-button_colour    : int = 0xf800 # Red
+background_colour:     int = 0x0000 # Black
+text_colour:           int = 0xffff # White
+button_colour:         int = 0xf800 # Red
+special_button_colour: int = 0x07ff # Cyan
 
-# TODO: Simulate qwerty
+back_label:  str = 'BACK'
+enter_label: str = 'ENTER'
+back_char:   str = '<'
+enter_char:  str = '>'
 text_buttons: list[str] = [
-  'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L',
-  'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
-  'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
-  'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-  'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
-  '8', '9', '!', '"', '#', '$', '%', '&', "'", '(', ')', '*',
-  '+', ',', '-', '.', '/', ':', ';', '<', '=', '>', '?', '@',
- '\\', '[', ']', '^', '_', ' ', ' ', ' ', ' ', '<', ' ', '>'
+  '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=',
+  'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']',
+  'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', "'", ' ',
+  'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', '\\', ' ',
+  '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+',
+  'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', ' ', ' ',
+  'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '"', '?',
+  'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>', back_label, ' ', enter_label
 ]
-back_index = len(text_buttons) - 3
-enter_index = len(text_buttons) - 1
 
 padding: int = 5
 outer_button_padding: int = 2 * padding
@@ -107,11 +110,14 @@ def PrintActionInputs(state: backend_Game, screen: backend_ActionScreen) -> None
         current_y += action_button_height + 2 * outer_button_padding
 
 # Designed for password entry
-def PrintTextInput() -> None:
+def PrintTextInput(state: backend_Game, screen: backend_Screen) -> None:
   global buttons_start_y
   global current_y
 
-  PrintString(':\n\nPress a button below to select a character.')
+  PrintString(screen.GetBody(state) + ':')
+  PrintString("")
+  PrintString('Press a button below to select a character.')
+  PrintString('Back(also backspace) and accept are in the bottom right.')
 
   buttons_start_y = current_y + outer_button_padding
   current_y += 2 * outer_button_padding
@@ -122,8 +128,18 @@ def PrintTextInput() -> None:
       button_x: int = outer_button_padding + (inner_button_padding + text_button_width) * column
       text_x: int = button_x + (text_button_width - text_size) // 2
       text_y: int = current_y + (text_button_height - text_size) // 2
-      fb.rect(button_x, current_y, text_button_width, text_button_height, button_colour, True)
-      fb.text(char, text_x, text_y, text_colour)
+      text_button_colour: int = button_colour
+      text_text_colour: int = text_colour
+      if char == back_label:
+        text_button_colour = special_button_colour
+        text_text_colour = background_colour
+        char = back_char
+      elif char == enter_label:
+        text_button_colour = special_button_colour
+        text_text_colour = background_colour
+        char = enter_char
+      fb.rect(button_x, current_y, text_button_width, text_button_height, text_button_colour, True)
+      fb.text(char, text_x, text_y, text_text_colour)
 
     column += 1
     if column == text_button_row_count:
@@ -165,14 +181,16 @@ def GetTextInput() -> str | None:
         button_x: int = point[1] // (text_button_width + inner_button_padding)
         button_y: int = (point[0] - buttons_start_y) // (text_button_height + inner_button_padding)
         button_input: int = text_button_row_count * button_y + button_x
-        if button_input == enter_index: # Enter
+        if button_input >= len(text_buttons):
+          continue
+        input_char: str = text_buttons[button_input]
+        if input_char == enter_label: # Enter
           return text
-        elif button_input == back_index and len(text) == 0: # ESC
+        elif input_char == back_label and len(text) == 0: # ESC
           return None
-        elif button_input == back_index: # Backspace
+        elif input_char == back_label: # Backspace
           print('\010 \010', end='')
           text = text[:-1]
-        elif button_input < len(text_buttons):
-          input_char: str = text_buttons[button_input]
+        else:
           text += input_char
           print(input_char, end='')

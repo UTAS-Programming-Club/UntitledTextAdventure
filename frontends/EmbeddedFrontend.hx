@@ -16,7 +16,7 @@ extern class Native {
 
   static function PrintString(str: UnicodeString, end: UnicodeString = "\n", highlightAction: Bool = false): Void;
   static function PrintActionInputs(state: Game, screen: ActionScreen): Void;
-  static function PrintTextInput(): Void;
+  static function PrintTextInput(state: Game, screen: Screen): Void;
 
   static function GetActionInput(inputCount: Int): Int;
   static function GetTextInput(): Null<UnicodeString>;
@@ -35,7 +35,7 @@ class EmbeddedFrontend {
     if (screen is ActionScreen) {
       Native.PrintActionInputs(state, cast(screen, ActionScreen));
     } else if (screen is TextScreen) {
-      Native.PrintTextInput();
+      Native.PrintTextInput(state, screen);
     } else {
       return false;
     }
