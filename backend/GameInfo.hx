@@ -10,6 +10,7 @@ import backend.Screen;
 enum GameAction {
 }
 
+// TODO: Split by equipment type
 @:build(backend.macros.TypeGeneration.buildGameEnum("Equipments.hx"))
 enum GameEquipment {
 }
