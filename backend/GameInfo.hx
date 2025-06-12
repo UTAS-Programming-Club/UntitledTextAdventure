@@ -8,6 +8,7 @@ import backend.Screen;
 
 // TODO: Just use Action?
 typedef GameAction = Class<Action>;
+// TODO: Split by equipment type
 typedef GameEquipment = Equipment;
 // TODO: Just use Outcome?
 typedef GameOutcome = Class<Outcome>;

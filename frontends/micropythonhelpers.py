@@ -67,6 +67,7 @@ def GetActionInput(input_count: int) -> int:
 
 def GetTextInput() -> str | None:
   text: str = ''
+
   while True:
     inputChar: str = sys.stdin.read(1)
     if ord(inputChar) == 10: # Enter
