@@ -82,34 +82,34 @@ class SaveData {
     valid = valid && checkVal(stamina, 1, 100);
     offset += 7;
 
-    final equipmentCount: Int = Type.getEnumConstructs(GameEquipment).length;
+    final equipmentMax: Int = Type.getEnumConstructs(GameEquipment).length - 1;
 
     headKey = bytes.getBitInt(offset, 8);
-    valid = valid && checkVal(headKey, 0, equipmentCount);
+    valid = valid && checkVal(headKey, 0, equipmentMax);
     offset += 8;
 
     upperBodyKey = bytes.getBitInt(offset, 8);
-    valid = valid && checkVal(upperBodyKey, 0, equipmentCount);
+    valid = valid && checkVal(upperBodyKey, 0, equipmentMax);
     offset += 8;
 
     handsKey = bytes.getBitInt(offset, 8);
-    valid = valid && checkVal(handsKey, 0, equipmentCount);
+    valid = valid && checkVal(handsKey, 0, equipmentMax);
     offset += 8;
 
     lowerBodyKey = bytes.getBitInt(offset, 8);
-    valid = valid && checkVal(lowerBodyKey, 0, equipmentCount);
+    valid = valid && checkVal(lowerBodyKey, 0, equipmentMax);
     offset += 8;
 
     feetKey = bytes.getBitInt(offset, 8);
-    valid = valid && checkVal(feetKey, 0, equipmentCount);
+    valid = valid && checkVal(feetKey, 0, equipmentMax);
     offset += 8;
 
     primaryWeaponKey = bytes.getBitInt(offset, 8);
-    valid = valid && checkVal(primaryWeaponKey, 0, equipmentCount);
+    valid = valid && checkVal(primaryWeaponKey, 0, equipmentMax);
     offset += 8;
 
     secondaryWeaponKey = bytes.getBitInt(offset, 8);
-    valid = valid && checkVal(secondaryWeaponKey, 0, equipmentCount);
+    valid = valid && checkVal(secondaryWeaponKey, 0, equipmentMax);
 
     return valid;
   }
