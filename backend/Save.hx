@@ -81,34 +81,34 @@ class SaveData {
     valid = valid && checkVal(stamina, 1, 100);
     offset += 7;
 
-    final equipmentCount: Int = state.campaign.equipmentOrder.length;
+    final equipmentMax: Int = state.campaign.equipmentOrder.length - 1;
 
     headIdx = bytes.getBitInt(offset, 8);
-    valid = valid && checkVal(headIdx, 0, equipmentCount);
+    valid = valid && checkVal(headIdx, 0, equipmentMax);
     offset += 8;
 
     upperBodyIdx = bytes.getBitInt(offset, 8);
-    valid = valid && checkVal(upperBodyIdx, 0, equipmentCount);
+    valid = valid && checkVal(upperBodyIdx, 0, equipmentMax);
     offset += 8;
 
     handsIdx = bytes.getBitInt(offset, 8);
-    valid = valid && checkVal(handsIdx, 0, equipmentCount);
+    valid = valid && checkVal(handsIdx, 0, equipmentMax);
     offset += 8;
 
     lowerBodyIdx = bytes.getBitInt(offset, 8);
-    valid = valid && checkVal(lowerBodyIdx, 0, equipmentCount);
+    valid = valid && checkVal(lowerBodyIdx, 0, equipmentMax);
     offset += 8;
 
     feetIdx = bytes.getBitInt(offset, 8);
-    valid = valid && checkVal(feetIdx, 0, equipmentCount);
+    valid = valid && checkVal(feetIdx, 0, equipmentMax);
     offset += 8;
 
     primaryWeaponIdx = bytes.getBitInt(offset, 8);
-    valid = valid && checkVal(primaryWeaponIdx, 0, equipmentCount);
+    valid = valid && checkVal(primaryWeaponIdx, 0, equipmentMax);
     offset += 8;
 
     secondaryWeaponIdx = bytes.getBitInt(offset, 8);
-    valid = valid && checkVal(secondaryWeaponIdx, 0, equipmentCount);
+    valid = valid && checkVal(secondaryWeaponIdx, 0, equipmentMax);
 
     return valid;
   }
