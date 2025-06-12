@@ -6,7 +6,7 @@ import backend.coregame.Outcomes;
 // TODO: Recreate some merged type that works for switch exhaustion?
 import backend.GameInfo;
 import backend.Screen;
-import Bytes;
+import haxe.io.Bytes;
 
 class CmdFrontend {
   static final ESC = "\x1B";

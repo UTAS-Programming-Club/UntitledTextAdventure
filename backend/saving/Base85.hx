@@ -1,6 +1,6 @@
-package backend.compression;
+package backend.saving;
 
-using backend.compression.ByteHelpers;
+using backend.saving.ByteHelpers;
 using haxe.Int64;
 import haxe.io.Bytes;
 import haxe.io.BytesBuffer;

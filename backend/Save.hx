@@ -1,7 +1,7 @@
 package backend;
 
-import backend.compression.Base85;
-using backend.compression.ByteHelpers;
+import backend.saving.Base85;
+using backend.saving.ByteHelpers;
 import backend.Game;
 import haxe.io.Bytes;
 
@@ -26,6 +26,11 @@ class SaveData {
   public var secondaryWeaponIdx: Int = -1; // 4 Bits, [60, 75]
 
   public function new() {
+  }
+
+  // min and max are inclusive bounds
+  public function checkVal(val: Int, min: Int, max: Int): Bool {
+    return val >= min && val <= max;
   }
 
   public function serialize(): Bytes {
@@ -59,22 +64,53 @@ class SaveData {
   }
 
   // Assumes data.length == SaveDataSize
-  public function deserialise(bytes: Bytes) {
+  public function deserialise(state: Game, bytes: Bytes): Bool {
     var offset: Int = 0;
     final version: Int = bytes.getBitInt(offset, 16); offset += 16;
     if (version != SaveVersion) {
       throw 'Unexpected save version $version';
     }
 
-    health =             bytes.getBitInt(offset, 7); offset += 7;
-    stamina =            bytes.getBitInt(offset, 7); offset += 7;
-    headIdx =            bytes.getBitInt(offset, 8); offset += 8;
-    upperBodyIdx =       bytes.getBitInt(offset, 8); offset += 8;
-    handsIdx =           bytes.getBitInt(offset, 8); offset += 8;
-    lowerBodyIdx =       bytes.getBitInt(offset, 8); offset += 8;
-    feetIdx =            bytes.getBitInt(offset, 8); offset += 8;
-    primaryWeaponIdx =   bytes.getBitInt(offset, 8); offset += 8;
+    var valid: Bool = true;
+
+    health = bytes.getBitInt(offset, 7);
+    valid = valid && checkVal(health, 1, 100);
+    offset += 7;
+
+    stamina = bytes.getBitInt(offset, 7);
+    valid = valid && checkVal(stamina, 1, 100);
+    offset += 7;
+
+    final equipmentCount: Int = state.campaign.equipmentOrder.length;
+
+    headIdx = bytes.getBitInt(offset, 8);
+    valid = valid && checkVal(headIdx, 0, equipmentCount);
+    offset += 8;
+
+    upperBodyIdx = bytes.getBitInt(offset, 8);
+    valid = valid && checkVal(upperBodyIdx, 0, equipmentCount);
+    offset += 8;
+
+    handsIdx = bytes.getBitInt(offset, 8);
+    valid = valid && checkVal(handsIdx, 0, equipmentCount);
+    offset += 8;
+
+    lowerBodyIdx = bytes.getBitInt(offset, 8);
+    valid = valid && checkVal(lowerBodyIdx, 0, equipmentCount);
+    offset += 8;
+
+    feetIdx = bytes.getBitInt(offset, 8);
+    valid = valid && checkVal(feetIdx, 0, equipmentCount);
+    offset += 8;
+
+    primaryWeaponIdx = bytes.getBitInt(offset, 8);
+    valid = valid && checkVal(primaryWeaponIdx, 0, equipmentCount);
+    offset += 8;
+
     secondaryWeaponIdx = bytes.getBitInt(offset, 8);
+    valid = valid && checkVal(secondaryWeaponIdx, 0, equipmentCount);
+
+    return valid;
   }
 }
 
@@ -93,7 +129,10 @@ function Load(state: Game, str: UnicodeString): Bool {
   }
 
   final saveData = new SaveData();
-  saveData.deserialise(bytes);
+  if (!saveData.deserialise(state, bytes)) {
+    return false;
+  }
+
   state.player.deserialise(state.campaign, saveData);
   return true;
 }

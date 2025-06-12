@@ -1,4 +1,4 @@
-package backend.compression;
+package backend.saving;
 
 import haxe.io.Bytes;
 
@@ -14,6 +14,7 @@ class ByteHelpers {
 
     return buffer.getInt32(0);
   }
+
 
   // Assumes offset and size are in bits and buffer[i] for i > offset % 8 is safe to overrride
   // Returns new offset in bits
