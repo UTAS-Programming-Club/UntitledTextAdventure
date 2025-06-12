@@ -1,8 +1,8 @@
-package backend.compression;
+package backend.saving;
 
 import haxe.io.Bytes;
 
-class ByteHelpers {
+class Helpers {
   // Assumes pos < bytes.length
   public static function getInt32Safe(bytes: Bytes, pos: Int): Int {
     final buffer: Bytes = Bytes.alloc(4);
@@ -14,6 +14,7 @@ class ByteHelpers {
 
     return buffer.getInt32(0);
   }
+
 
   // Assumes offset and size are in bits and buffer[i] for i > offset % 8 is safe to overrride
   // Returns new offset in bits
@@ -93,5 +94,17 @@ class ByteHelpers {
     val |= (finalBits << previousBitCount) & finalMask;
 
     return val;
+  }
+
+
+  public static function EnumToInt(e: EnumValue): Int {
+    if (Type.enumParameters(e).length > 0) {
+      throw 'Cannot convert enums with parameters to ints.';
+    }
+    return Type.enumIndex(e);
+  }
+
+  public static function IntToEnum<T>(e: Enum<T>, val: Int): T {
+    return Type.createEnumIndex(e, val, null);
   }
 }

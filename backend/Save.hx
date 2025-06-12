@@ -1,7 +1,7 @@
 package backend;
 
-import backend.compression.Base85;
-using backend.compression.ByteHelpers;
+import backend.saving.Base85;
+using backend.saving.Helpers;
 import backend.Game;
 import backend.GameInfo;
 import haxe.io.Bytes;
@@ -18,15 +18,20 @@ class SaveData {
 
   // Original plan says 12 sets for the body but ideas page says 9
   // Listed bounds are currently wrong as GameEquipment isn't complete
-  public var headKey:            GameEquipment = -1; // 4 Bits, [00, 11]
-  public var upperBodyKey:       GameEquipment = -1; // 4 Bits, [12, 23]
-  public var handsKey:           GameEquipment = -1; // 4 Bits, [24, 35]
-  public var lowerBodyKey:       GameEquipment = -1; // 4 Bits, [36, 47]
-  public var feetKey:            GameEquipment = -1; // 4 Bits, [48, 59]
-  public var primaryWeaponKey:   GameEquipment = -1; // 4 Bits, [60, 75]
-  public var secondaryWeaponKey: GameEquipment = -1; // 4 Bits, [60, 75]
+  public var headKey:            Int = -1; // 4 Bits, [00, 11]
+  public var upperBodyKey:       Int = -1; // 4 Bits, [12, 23]
+  public var handsKey:           Int = -1; // 4 Bits, [24, 35]
+  public var lowerBodyKey:       Int = -1; // 4 Bits, [36, 47]
+  public var feetKey:            Int = -1; // 4 Bits, [48, 59]
+  public var primaryWeaponKey:   Int = -1; // 4 Bits, [60, 75]
+  public var secondaryWeaponKey: Int = -1; // 4 Bits, [60, 75]
 
   public function new() {
+  }
+
+  // min and max are inclusive bounds
+  public function checkVal(val: Int, min: Int, max: Int): Bool {
+    return val >= min && val <= max;
   }
 
   public function serialize(): Bytes {
@@ -49,33 +54,64 @@ class SaveData {
     offset = buffer.setBitInt(offset, SaveVersion, 16);
     offset = buffer.setBitInt(offset, health, 7);
     offset = buffer.setBitInt(offset, stamina, 7);
-    offset = buffer.setBitInt(offset, cast(headKey, Int), 8);
-    offset = buffer.setBitInt(offset, cast(upperBodyKey, Int), 8);
-    offset = buffer.setBitInt(offset, cast(handsKey, Int), 8);
-    offset = buffer.setBitInt(offset, cast(lowerBodyKey, Int), 8);
-    offset = buffer.setBitInt(offset, cast(feetKey, Int), 8);
-    offset = buffer.setBitInt(offset, cast(primaryWeaponKey, Int), 8);
-    offset = buffer.setBitInt(offset, cast(secondaryWeaponKey, Int), 8);
+    offset = buffer.setBitInt(offset, headKey, 8);
+    offset = buffer.setBitInt(offset, upperBodyKey, 8);
+    offset = buffer.setBitInt(offset, handsKey, 8);
+    offset = buffer.setBitInt(offset, lowerBodyKey, 8);
+    offset = buffer.setBitInt(offset, feetKey, 8);
+    offset = buffer.setBitInt(offset, primaryWeaponKey, 8);
+    offset = buffer.setBitInt(offset, secondaryWeaponKey, 8);
     return buffer;
   }
 
   // Assumes data.length == SaveDataSize
-  public function deserialise(bytes: Bytes) {
+  public function deserialise(bytes: Bytes): Bool {
     var offset: Int = 0;
     final version: Int = bytes.getBitInt(offset, 16); offset += 16;
     if (version != SaveVersion) {
       throw 'Unexpected save version $version';
     }
 
-    health =             bytes.getBitInt(offset, 7); offset += 7;
-    stamina =            bytes.getBitInt(offset, 7); offset += 7;
-    headKey =            bytes.getBitInt(offset, 8); offset += 8;
-    upperBodyKey =       bytes.getBitInt(offset, 8); offset += 8;
-    handsKey =           bytes.getBitInt(offset, 8); offset += 8;
-    lowerBodyKey =       bytes.getBitInt(offset, 8); offset += 8;
-    feetKey =            bytes.getBitInt(offset, 8); offset += 8;
-    primaryWeaponKey =   bytes.getBitInt(offset, 8); offset += 8;
+    var valid: Bool = true;
+
+    health = bytes.getBitInt(offset, 7);
+    valid = valid && checkVal(health, 1, 100);
+    offset += 7;
+
+    stamina = bytes.getBitInt(offset, 7);
+    valid = valid && checkVal(stamina, 1, 100);
+    offset += 7;
+
+    final equipmentCount: Int = Type.getEnumConstructs(GameEquipment).length;
+
+    headKey = bytes.getBitInt(offset, 8);
+    valid = valid && checkVal(headKey, 0, equipmentCount);
+    offset += 8;
+
+    upperBodyKey = bytes.getBitInt(offset, 8);
+    valid = valid && checkVal(upperBodyKey, 0, equipmentCount);
+    offset += 8;
+
+    handsKey = bytes.getBitInt(offset, 8);
+    valid = valid && checkVal(handsKey, 0, equipmentCount);
+    offset += 8;
+
+    lowerBodyKey = bytes.getBitInt(offset, 8);
+    valid = valid && checkVal(lowerBodyKey, 0, equipmentCount);
+    offset += 8;
+
+    feetKey = bytes.getBitInt(offset, 8);
+    valid = valid && checkVal(feetKey, 0, equipmentCount);
+    offset += 8;
+
+    primaryWeaponKey = bytes.getBitInt(offset, 8);
+    valid = valid && checkVal(primaryWeaponKey, 0, equipmentCount);
+    offset += 8;
+
     secondaryWeaponKey = bytes.getBitInt(offset, 8);
+    valid = valid && checkVal(secondaryWeaponKey, 0, equipmentCount);
+
+    return valid;
   }
 }
 
@@ -94,7 +130,10 @@ function Load(state: Game, str: UnicodeString): Bool {
   }
 
   final saveData = new SaveData();
-  saveData.deserialise(bytes);
+  if (!saveData.deserialise(bytes)) {
+    return false;
+  }
+
   state.player.deserialise(saveData);
   return true;
 }

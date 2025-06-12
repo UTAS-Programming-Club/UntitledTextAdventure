@@ -5,7 +5,7 @@ import backend.GameInfo;
 import backend.Screen;
 import campaigns.UntitledTextAdventure;
 import campaigns.TestCampaign;
-import Bytes;
+import haxe.io.Bytes;
 
 class CmdFrontend {
   static final ESC = "\x1B";
