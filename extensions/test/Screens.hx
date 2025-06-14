@@ -1,5 +1,5 @@
 package extensions.test;
 
-enum TestScreen {
+enum Screen {
   Test;
 }

@@ -33,8 +33,8 @@ function GenerateRoomBody(state: Game, Screen): UnicodeString {
 }
 
 @:nullSafety(Strict)
-final RoomScreens: Map<GameScreen, Screen> = [
-  GameRooms => new StatefulActionScreen(GameRoomState.new, GenerateRoomBody, [
+final RoomScreens: Map<GameScreen, backend.Screen> = [
+  GameScreen.GameRooms => new StatefulActionScreen(GameRoomState.new, GenerateRoomBody, [
     new ScreenAction(GoNorth, "Go North", function (state: Game, screen: ActionScreen): Bool {
       final roomScreenState: GameRoomState = state.getScreenState();
       return roomScreenState.y < state.campaign.rooms.length - 1 &&

@@ -1,6 +1,6 @@
 package backend.coregame;
 
-enum CoreOutcome {
+enum Outcome {
   Invalid;
   GetNextOutput;
   QuitGame;

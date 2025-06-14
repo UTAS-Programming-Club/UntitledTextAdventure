@@ -1,6 +1,6 @@
 package backend.coregame;
 
-enum CoreScreen {
+enum Screen {
   MainMenu;
   Save;
   Load;

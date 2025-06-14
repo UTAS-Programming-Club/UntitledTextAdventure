@@ -13,7 +13,7 @@ final TrapExt: Extension = {
     switch (action) {
       case DodgeTrap:
         // TODO: Move to seperate function(s) to reuse
-        final screen: Screen = state.getScreen();
+        final screen: backend.Screen = state.getScreen();
         final roomScreenState: Null<GameRoomState> = state.tryGetScreenState();
         if (roomScreenState == null) {
           return Invalid;

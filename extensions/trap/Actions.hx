@@ -1,5 +1,5 @@
 package extensions.trap;
 
-enum TrapAction {
+enum Action {
   DodgeTrap;
 }

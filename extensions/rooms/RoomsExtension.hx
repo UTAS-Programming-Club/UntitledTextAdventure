@@ -10,7 +10,7 @@ import extensions.rooms.Screens;
 @:nullSafety(Strict)
 final RoomsExt: Extension = {
   actionHandler: function(state: Game, action: GameAction): GameOutcome {
-    final screen: Screen = state.getScreen();
+    final screen: backend.Screen = state.getScreen();
     final roomScreenState: Null<GameRoomState> = state.tryGetScreenState();
     if (roomScreenState == null) {
       return Invalid;

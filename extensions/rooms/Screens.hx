@@ -8,7 +8,7 @@ import backend.Room;
 import backend.Screen;
 import haxe.Constraints;
 
-enum RoomsScreen {
+enum Screen {
   GameRooms;
 }
 

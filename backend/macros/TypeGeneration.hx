@@ -43,7 +43,7 @@ class TypeGeneration {
     foundFilePaths = true;
   }
   
-  static public function buildGameEnum(fileName: String): Array<Field> {
+  static public function buildGameEnum(fileName: String, enumName: String): Array<Field> {
     final enumFields: Array<Field> = [];
 
     if (!foundFilePaths) {
@@ -57,12 +57,14 @@ class TypeGeneration {
     for (enumPath in filePaths[fileName]) {
       final types: Array<Type> = enumPath.getModule();
 
-      // TODO: Check type name
       var enumType: Null<EnumType> = null;
       for (type in types) {
         switch (type) {
           case TEnum(e, _):
-            enumType = e.get();
+            final possibleEnumType: EnumType = e.get();
+            if (possibleEnumType.name == enumName) {
+              enumType = possibleEnumType;
+            }
           default:
             continue;
         }

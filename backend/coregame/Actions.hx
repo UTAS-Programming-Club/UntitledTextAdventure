@@ -2,7 +2,7 @@ package backend.coregame;
 
 import backend.GameInfo;
 
-enum CoreGameAction {
+enum Action {
   StartGame;
   GotoScreen(screen: GameScreen);
   GotoPreviousScreen;
