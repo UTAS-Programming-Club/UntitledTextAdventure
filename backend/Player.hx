@@ -25,10 +25,10 @@ class Player {
   private var feetKey: GameEquipmentFeet;
   public var feet(default, null): Equipment;
 
-  private var primaryWeaponKey: GameEquipmentPrimaryWeapon;
+  private var primaryWeaponKey: GameEquipmentWeapon;
   public var primaryWeapon(default, null): Equipment;
 
-  private var secondaryWeaponKey: GameEquipmentSecondaryWeapon;
+  private var secondaryWeaponKey: GameEquipmentWeapon;
   public var secondaryWeapon(default, null): Equipment;
 
   public function new(campaign: Campaign) {
@@ -48,10 +48,10 @@ class Player {
     feet = Equipment.Get(Feet, feetKey);
 
     primaryWeaponKey = campaign.initialPrimaryWeapon;
-    primaryWeapon = Equipment.Get(PrimaryWeapon, primaryWeaponKey);
+    primaryWeapon = Equipment.Get(Weapon, primaryWeaponKey);
 
     secondaryWeaponKey = campaign.initialSecondaryWeapon;
-    secondaryWeapon = Equipment.Get(SecondaryWeapon, secondaryWeaponKey);
+    secondaryWeapon = Equipment.Get(Weapon, secondaryWeaponKey);
   }
 
   public function Reset(campaign: Campaign): Void {
@@ -89,8 +89,8 @@ class Player {
     hands           = Equipment.Get(Hands, handsKey);
     lowerBody       = Equipment.Get(LowerBody, lowerBodyKey);
     feet            = Equipment.Get(Feet, feetKey);
-    primaryWeapon   = Equipment.Get(PrimaryWeapon, primaryWeaponKey);
-    secondaryWeapon = Equipment.Get(SecondaryWeapon, secondaryWeaponKey);
+    primaryWeapon   = Equipment.Get(Weapon, primaryWeaponKey);
+    secondaryWeapon = Equipment.Get(Weapon, secondaryWeaponKey);
   }
 
 
@@ -114,8 +114,8 @@ class Player {
     handsKey           = Helpers.IntToEnum(GameEquipmentHands, saveData.handsKey);
     lowerBodyKey       = Helpers.IntToEnum(GameEquipmentLowerBody, saveData.lowerBodyKey);
     feetKey            = Helpers.IntToEnum(GameEquipmentFeet, saveData.feetKey);
-    primaryWeaponKey   = Helpers.IntToEnum(GameEquipmentPrimaryWeapon, saveData.primaryWeaponKey);
-    secondaryWeaponKey = Helpers.IntToEnum(GameEquipmentSecondaryWeapon, saveData.secondaryWeaponKey);
+    primaryWeaponKey   = Helpers.IntToEnum(GameEquipmentWeapon, saveData.primaryWeaponKey);
+    secondaryWeaponKey = Helpers.IntToEnum(GameEquipmentWeapon, saveData.secondaryWeaponKey);
     updateEquipment();
   }
 }

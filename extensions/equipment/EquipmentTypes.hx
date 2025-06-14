@@ -20,10 +20,7 @@ enum EquipmentFeet {
   FeetNone;
 }
 
-enum EquipmentPrimaryWeapon {
-  PrimaryWeaponFist;
-}
-
-enum EquipmentSecondaryWeapon {
-  SecondaryWeaponNone;
+enum EquipmentWeapon {
+  WeaponFist;
+  WeaponNone;
 }

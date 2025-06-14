@@ -42,6 +42,6 @@ final UntitledTextAdventure: Campaign = {
   initialHands: HandsNone,
   initialLowerBody: LowerBodyRags,
   initialFeet: FeetNone,
-  initialPrimaryWeapon: PrimaryWeaponFist,
-  initialSecondaryWeapon: SecondaryWeaponNone
+  initialPrimaryWeapon: WeaponFist,
+  initialSecondaryWeapon: WeaponNone
 };

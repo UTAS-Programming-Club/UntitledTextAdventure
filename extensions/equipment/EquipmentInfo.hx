@@ -29,11 +29,7 @@ final EquipmentEquipmentFeet: Map<GameEquipmentFeet, Equipment> = [
 ];
 
 @:nullSafety(Strict)
-final EquipmentEquipmentPrimaryWeapon: Map<GameEquipmentPrimaryWeapon, Equipment> = [
-  PrimaryWeaponFist => new Equipment(PrimaryWeapon, "Fist")
-];
-
-@:nullSafety(Strict)
-final EquipmentEquipmentSecondaryWeapon: Map<GameEquipmentSecondaryWeapon, Equipment> = [
-  SecondaryWeaponNone => new Equipment(SecondaryWeapon, "Nothing")
+final EquipmentEquipmentWeapon: Map<GameEquipmentWeapon, Equipment> = [
+  WeaponFist => new Equipment(Weapon, "Fist"),
+  WeaponNone => new Equipment(Weapon, "Nothing")
 ];

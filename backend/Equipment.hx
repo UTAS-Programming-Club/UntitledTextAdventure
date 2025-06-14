@@ -9,8 +9,7 @@ enum EquipmentType {
   Hands;
   LowerBody;
   Feet;
-  PrimaryWeapon;
-  SecondaryWeapon;
+  Weapon;
 }
 
 class Equipment {
@@ -47,14 +46,10 @@ class Equipment {
         final idx: Int = key.enumIndex();
         final equipmentKey: GameEquipmentFeet = GameEquipmentFeet.createEnumIndex(idx, null);
         equipment = GameInfo.EquipmentFeet[equipmentKey];
-      case GameEquipmentPrimaryWeapon:
+      case GameEquipmentWeapon:
         final idx: Int = key.enumIndex();
-        final equipmentKey: GameEquipmentPrimaryWeapon = GameEquipmentPrimaryWeapon.createEnumIndex(idx, null);
-        equipment = GameInfo.EquipmentPrimaryWeapon[equipmentKey];
-      case GameEquipmentSecondaryWeapon:
-        final idx: Int = key.enumIndex();
-        final equipmentKey: GameEquipmentSecondaryWeapon = GameEquipmentSecondaryWeapon.createEnumIndex(idx, null);
-        equipment = GameInfo.EquipmentSecondaryWeapon[equipmentKey];
+        final equipmentKey: GameEquipmentWeapon = GameEquipmentWeapon.createEnumIndex(idx, null);
+        equipment = GameInfo.EquipmentWeapon[equipmentKey];
       default:
         throw 'Unexpected equipment type "e"';
     }

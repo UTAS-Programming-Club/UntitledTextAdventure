@@ -21,6 +21,6 @@ typedef Campaign = {
   final initialHands: GameEquipmentHands;
   final initialLowerBody: GameEquipmentLowerBody;
   final initialFeet: GameEquipmentFeet;
-  final initialPrimaryWeapon: GameEquipmentPrimaryWeapon;
-  final initialSecondaryWeapon: GameEquipmentSecondaryWeapon;
+  final initialPrimaryWeapon: GameEquipmentWeapon;
+  final initialSecondaryWeapon: GameEquipmentWeapon;
 }

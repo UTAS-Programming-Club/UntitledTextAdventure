@@ -108,12 +108,12 @@ class SaveData {
     valid = valid && checkVal(feetKey, 0, feetMax);
     offset += 8;
 
-    final primaryWeaponMax = Type.getEnumConstructs(GameEquipmentPrimaryWeapon).length - 1;
+    final primaryWeaponMax = Type.getEnumConstructs(GameEquipmentWeapon).length - 1;
     primaryWeaponKey = bytes.getBitInt(offset, 8);
     valid = valid && checkVal(primaryWeaponKey, 0, primaryWeaponMax);
     offset += 8;
 
-    final secondaryWeaponMax = Type.getEnumConstructs(GameEquipmentSecondaryWeapon).length - 1;
+    final secondaryWeaponMax = Type.getEnumConstructs(GameEquipmentWeapon).length - 1;
     secondaryWeaponKey = bytes.getBitInt(offset, 8);
     valid = valid && checkVal(secondaryWeaponKey, 0, secondaryWeaponMax);
 
