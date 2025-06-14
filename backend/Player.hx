@@ -10,48 +10,48 @@ class Player {
   public var health(default, null): Int = 0;  // Must be in [0, 100]
   public var stamina(default, null): Int = 0; // Must be in [0, 100]
 
-  private var headKey: GameEquipment;
+  private var headKey: GameEquipmentHead;
   public var head(default, null): Equipment;
 
-  private var upperBodyKey: GameEquipment;
+  private var upperBodyKey: GameEquipmentUpperBody;
   public var upperBody(default, null): Equipment;
 
-  private var handsKey: GameEquipment;
+  private var handsKey: GameEquipmentHands;
   public var hands(default, null): Equipment;
 
-  private var lowerBodyKey: GameEquipment;
+  private var lowerBodyKey: GameEquipmentLowerBody;
   public var lowerBody(default, null): Equipment;
 
-  private var feetKey: GameEquipment;
+  private var feetKey: GameEquipmentFeet;
   public var feet(default, null): Equipment;
 
-  private var primaryWeaponKey: GameEquipment;
+  private var primaryWeaponKey: GameEquipmentPrimaryWeapon;
   public var primaryWeapon(default, null): Equipment;
 
-  private var secondaryWeaponKey: GameEquipment;
+  private var secondaryWeaponKey: GameEquipmentSecondaryWeapon;
   public var secondaryWeapon(default, null): Equipment;
 
   public function new(campaign: Campaign) {
     headKey = campaign.initialHead;
-    head = Equipment.Get(campaign.initialHead);
+    head = Equipment.Get(Head, headKey);
 
     upperBodyKey = campaign.initialUpperBody;
-    upperBody = Equipment.Get(campaign.initialUpperBody);
+    upperBody = Equipment.Get(UpperBody, upperBodyKey);
 
     handsKey = campaign.initialHands;
-    hands = Equipment.Get(campaign.initialHands);
+    hands = Equipment.Get(Hands, handsKey);
 
     lowerBodyKey = campaign.initialLowerBody;
-    lowerBody = Equipment.Get(campaign.initialLowerBody);
+    lowerBody = Equipment.Get(LowerBody, lowerBodyKey);
 
     feetKey = campaign.initialFeet;
-    feet = Equipment.Get(campaign.initialFeet);
+    feet = Equipment.Get(Feet, feetKey);
 
     primaryWeaponKey = campaign.initialPrimaryWeapon;
-    primaryWeapon = Equipment.Get(campaign.initialPrimaryWeapon);
+    primaryWeapon = Equipment.Get(PrimaryWeapon, primaryWeaponKey);
 
     secondaryWeaponKey = campaign.initialSecondaryWeapon;
-    secondaryWeapon = Equipment.Get(campaign.initialSecondaryWeapon);
+    secondaryWeapon = Equipment.Get(SecondaryWeapon, secondaryWeaponKey);
   }
 
   public function Reset(campaign: Campaign): Void {
@@ -84,13 +84,13 @@ class Player {
 
 
   private function updateEquipment() {
-    head            = Equipment.Get(headKey);
-    upperBody       = Equipment.Get(upperBodyKey);
-    hands           = Equipment.Get(handsKey);
-    lowerBody       = Equipment.Get(lowerBodyKey);
-    feet            = Equipment.Get(feetKey);
-    primaryWeapon   = Equipment.Get(primaryWeaponKey);
-    secondaryWeapon = Equipment.Get(secondaryWeaponKey);
+    head            = Equipment.Get(Head, headKey);
+    upperBody       = Equipment.Get(UpperBody, upperBodyKey);
+    hands           = Equipment.Get(Hands, handsKey);
+    lowerBody       = Equipment.Get(LowerBody, lowerBodyKey);
+    feet            = Equipment.Get(Feet, feetKey);
+    primaryWeapon   = Equipment.Get(PrimaryWeapon, primaryWeaponKey);
+    secondaryWeapon = Equipment.Get(SecondaryWeapon, secondaryWeaponKey);
   }
 
 
@@ -109,13 +109,13 @@ class Player {
   public function deserialise(saveData: SaveData): Void {
     health             = saveData.health;
     stamina            = saveData.stamina;
-    headKey            = Helpers.IntToEnum(GameEquipment, saveData.headKey);
-    upperBodyKey       = Helpers.IntToEnum(GameEquipment, saveData.upperBodyKey);
-    handsKey           = Helpers.IntToEnum(GameEquipment, saveData.handsKey);
-    lowerBodyKey       = Helpers.IntToEnum(GameEquipment, saveData.lowerBodyKey);
-    feetKey            = Helpers.IntToEnum(GameEquipment, saveData.feetKey);
-    primaryWeaponKey   = Helpers.IntToEnum(GameEquipment, saveData.primaryWeaponKey);
-    secondaryWeaponKey = Helpers.IntToEnum(GameEquipment, saveData.secondaryWeaponKey);
+    headKey            = Helpers.IntToEnum(GameEquipmentHead, saveData.headKey);
+    upperBodyKey       = Helpers.IntToEnum(GameEquipmentUpperBody, saveData.upperBodyKey);
+    handsKey           = Helpers.IntToEnum(GameEquipmentHands, saveData.handsKey);
+    lowerBodyKey       = Helpers.IntToEnum(GameEquipmentLowerBody, saveData.lowerBodyKey);
+    feetKey            = Helpers.IntToEnum(GameEquipmentFeet, saveData.feetKey);
+    primaryWeaponKey   = Helpers.IntToEnum(GameEquipmentPrimaryWeapon, saveData.primaryWeaponKey);
+    secondaryWeaponKey = Helpers.IntToEnum(GameEquipmentSecondaryWeapon, saveData.secondaryWeaponKey);
     updateEquipment();
   }
 }

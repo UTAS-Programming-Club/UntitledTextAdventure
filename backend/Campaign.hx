@@ -16,11 +16,11 @@ typedef Campaign = {
   final initialRoomX: Int; // Must be in [0, rooms.length)
   final initialRoomY: Int; // Must be in [0, rooms.length)
 
-  final initialHead: GameEquipment;
-  final initialUpperBody: GameEquipment;
-  final initialHands: GameEquipment;
-  final initialLowerBody: GameEquipment;
-  final initialFeet: GameEquipment;
-  final initialPrimaryWeapon: GameEquipment;
-  final initialSecondaryWeapon: GameEquipment;
+  final initialHead: GameEquipmentHead;
+  final initialUpperBody: GameEquipmentUpperBody;
+  final initialHands: GameEquipmentHands;
+  final initialLowerBody: GameEquipmentLowerBody;
+  final initialFeet: GameEquipmentFeet;
+  final initialPrimaryWeapon: GameEquipmentPrimaryWeapon;
+  final initialSecondaryWeapon: GameEquipmentSecondaryWeapon;
 }

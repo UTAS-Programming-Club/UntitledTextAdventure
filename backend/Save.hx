@@ -18,6 +18,7 @@ class SaveData {
 
   // Original plan says 12 sets for the body but ideas page says 9
   // Listed bounds are currently wrong as GameEquipment isn't complete
+  // TODO: Use bounds
   public var headKey:            Int = -1; // 4 Bits, [00, 11]
   public var upperBodyKey:       Int = -1; // 4 Bits, [12, 23]
   public var handsKey:           Int = -1; // 4 Bits, [24, 35]
@@ -60,7 +61,7 @@ class SaveData {
     offset = buffer.setBitInt(offset, lowerBodyKey, 8);
     offset = buffer.setBitInt(offset, feetKey, 8);
     offset = buffer.setBitInt(offset, primaryWeaponKey, 8);
-    offset = buffer.setBitInt(offset, secondaryWeaponKey, 8);
+    buffer.setBitInt(offset, secondaryWeaponKey, 8);
     return buffer;
   }
 
@@ -82,34 +83,39 @@ class SaveData {
     valid = valid && checkVal(stamina, 1, 100);
     offset += 7;
 
-    final equipmentMax: Int = Type.getEnumConstructs(GameEquipment).length - 1;
-
+    final headMax = Type.getEnumConstructs(GameEquipmentHead).length - 1;
     headKey = bytes.getBitInt(offset, 8);
-    valid = valid && checkVal(headKey, 0, equipmentMax);
+    valid = valid && checkVal(headKey, 0, headMax);
     offset += 8;
 
+    final upperBodyMax = Type.getEnumConstructs(GameEquipmentUpperBody).length - 1;
     upperBodyKey = bytes.getBitInt(offset, 8);
-    valid = valid && checkVal(upperBodyKey, 0, equipmentMax);
+    valid = valid && checkVal(upperBodyKey, 0, upperBodyMax);
     offset += 8;
 
+    final handsMax = Type.getEnumConstructs(GameEquipmentHands).length - 1;
     handsKey = bytes.getBitInt(offset, 8);
-    valid = valid && checkVal(handsKey, 0, equipmentMax);
+    valid = valid && checkVal(handsKey, 0, handsMax);
     offset += 8;
 
+    final lowerBodyMax = Type.getEnumConstructs(GameEquipmentLowerBody).length - 1;
     lowerBodyKey = bytes.getBitInt(offset, 8);
-    valid = valid && checkVal(lowerBodyKey, 0, equipmentMax);
+    valid = valid && checkVal(lowerBodyKey, 0, lowerBodyMax);
     offset += 8;
 
+    final feetMax = Type.getEnumConstructs(GameEquipmentFeet).length - 1;
     feetKey = bytes.getBitInt(offset, 8);
-    valid = valid && checkVal(feetKey, 0, equipmentMax);
+    valid = valid && checkVal(feetKey, 0, feetMax);
     offset += 8;
 
+    final primaryWeaponMax = Type.getEnumConstructs(GameEquipmentPrimaryWeapon).length - 1;
     primaryWeaponKey = bytes.getBitInt(offset, 8);
-    valid = valid && checkVal(primaryWeaponKey, 0, equipmentMax);
+    valid = valid && checkVal(primaryWeaponKey, 0, primaryWeaponMax);
     offset += 8;
 
+    final secondaryWeaponMax = Type.getEnumConstructs(GameEquipmentSecondaryWeapon).length - 1;
     secondaryWeaponKey = bytes.getBitInt(offset, 8);
-    valid = valid && checkVal(secondaryWeaponKey, 0, equipmentMax);
+    valid = valid && checkVal(secondaryWeaponKey, 0, secondaryWeaponMax);
 
     return valid;
   }
