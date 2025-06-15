@@ -50,19 +50,10 @@ enum GameScreen {
 
 @:build(backend.macros.TypeGeneration.buildGameMap('RoomInfo.hx', 'Rooms'))
 @:build(backend.macros.TypeGeneration.buildGameMap('ScreenInfo.hx', 'Screens'))
-@:build(backend.macros.TypeGeneration.buildGameMap('EquipmentInfo.hx', 'EquipmentHead'))
-@:build(backend.macros.TypeGeneration.buildGameMap('EquipmentInfo.hx', 'EquipmentUpperBody'))
-@:build(backend.macros.TypeGeneration.buildGameMap('EquipmentInfo.hx', 'EquipmentHands'))
-@:build(backend.macros.TypeGeneration.buildGameMap('EquipmentInfo.hx', 'EquipmentLowerBody'))
-@:build(backend.macros.TypeGeneration.buildGameMap('EquipmentInfo.hx', 'EquipmentFeet'))
-@:build(backend.macros.TypeGeneration.buildGameMap('EquipmentInfo.hx', 'EquipmentWeapon'))
+@:build(backend.macros.TypeGeneration.buildGameMap('EquipmentInfo.hx', 'Equipment'))
 class GameInfo {
   public static final Rooms: Map<GameRoom, Void -> Room> = [];
   public static final Screens: Map<GameScreen, Screen> = [];
-  public static final EquipmentHead: Map<GameEquipmentHead, Equipment> = [];
-  public static final EquipmentUpperBody: Map<GameEquipmentUpperBody, Equipment> = [];
-  public static final EquipmentHands: Map<GameEquipmentHands, Equipment> = [];
-  public static final EquipmentLowerBody: Map<GameEquipmentLowerBody, Equipment> = [];
-  public static final EquipmentFeet: Map<GameEquipmentFeet, Equipment> = [];
-  public static final EquipmentWeapon: Map<GameEquipmentWeapon, Equipment> = [];
+  // TODO: Avoid EnumValue
+  public static final Equipment: Map<EquipmentType, Map<EnumValue, Equipment>> = [];
 }
