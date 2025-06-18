@@ -4,7 +4,7 @@ import backend.Game;
 import backend.GameInfo;
 import backend.Screen;
 import extensions.rooms.Screens;
-// TODO: Fix rooms extension depending on traps extension
+// TODO: Fix rooms extension depending on other extensions
 import extensions.trap.Rooms.TrapRoom;
 
 @:nullSafety(Strict)
@@ -16,16 +16,20 @@ function RoomTest(state: Game, screen: Screen): UnicodeString {
 
   var body: UnicodeString = 'This is the game, you are in Room [${x + 1}, ${y + 1}].';
 
-  // TODO: Fix rooms extension depending on traps extension
-  if (room == Trap) {
-    final roomState: TrapRoom = roomScreenState.getRoomState(state);
-    body += '\n\nThis is a trap room which has';
+  // TODO: Fix rooms extension depending on other extensions
+  switch (room) {
+    case Trap:
+      final roomState: TrapRoom = roomScreenState.getRoomState(state);
+      body += '\n\nThis is a trap room which has';
 
-    if (!roomState.activatedTrap) {
-      body += ' not';
-    }
+      if (!roomState.activatedTrap) {
+        body += ' not';
+      }
 
-    body += ' been triggered.';
+      body += ' been triggered.';
+    case Healing:
+      body += '\n\nThis is the healing fountain room.';
+    default:
   }
 
   return body;
@@ -54,7 +58,7 @@ final RoomScreens: Map<GameScreen, Screen> = [
       return roomScreenState.x < state.campaign.rooms.length - 1 &&
              state.campaign.rooms[roomScreenState.x + 1][roomScreenState.y] != Unused;
     }),
-    // TODO: Fix rooms extension depending on traps extension
+    // TODO: Fix rooms extension depending on other extensions
     new ScreenAction(DodgeTrap, "Dodge Trap", function (state: Game, screen: ActionScreen): Bool {
       final roomScreenState: GameRoomState = state.getScreenState();
       final room: GameRoom = state.campaign.rooms[roomScreenState.x][roomScreenState.y];
@@ -66,6 +70,11 @@ final RoomScreens: Map<GameScreen, Screen> = [
       final roomState: TrapRoom = roomScreenState.getRoomState(state);
 
       return !roomState.activatedTrap;
+    }),
+    new ScreenAction(Heal, "Heal", function (state: Game, screen: ActionScreen): Bool {
+      final roomScreenState: GameRoomState = state.getScreenState();
+      final room: GameRoom = state.campaign.rooms[roomScreenState.x][roomScreenState.y];
+      return room == Healing;
     }),
     new ScreenAction(GotoScreen(PlayerEquipment), "Check Inventory"),
 #if testrooms

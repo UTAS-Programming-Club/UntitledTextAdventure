@@ -4,6 +4,7 @@ import backend.Campaign;
 import backend.coregame.CoreGame;
 import backend.GameInfo;
 import extensions.equipment.EquipmentExtension;
+import extensions.healing.HealingExtension;
 import extensions.rooms.RoomsExtension;
 import extensions.trap.TrapExtension;
 
@@ -15,13 +16,9 @@ final UntitledTextAdventure: Campaign = {
             + "\n"
             + "Currently unimplemented :(",
 
-  extensions: [CoreGameExt, EquipmentExt, RoomsExt, TrapExt],
+  extensions: [CoreGameExt, EquipmentExt, HealingExt, RoomsExt, TrapExt],
 
-#if testrooms
-  initialScreen: GameRooms,
-#else
   initialScreen: MainMenu,
-#end
   gameScreen: GameRooms,
 
   rooms: {
@@ -32,6 +29,7 @@ final UntitledTextAdventure: Campaign = {
     rooms[1][0] = Empty;
     rooms[1][1] = Empty;
     rooms[1][2] = Trap;
+    rooms[2][1] = Healing;
     rooms;
   },
   initialRoomX: 0,
