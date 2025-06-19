@@ -4,8 +4,8 @@ import backend.Campaign;
 import backend.coregame.CoreGame;
 import backend.GameInfo;
 import extensions.equipment.EquipmentExtension;
-import extensions.rooms.RoomsExtension;
-import extensions.trap.TrapExtension;
+// import extensions.rooms.RoomsExtension;
+// import extensions.trap.TrapExtension;
 
 @:nullSafety(Strict)
 final UntitledTextAdventure: Campaign = {
@@ -15,7 +15,7 @@ final UntitledTextAdventure: Campaign = {
             + "\n"
             + "Currently unimplemented :(",
 
-  extensions: [CoreGameExt, EquipmentExt, RoomsExt, TrapExt],
+  extensions: [CoreGameExt, EquipmentExt, /*RoomsExt, TrapExt*/],
 
 #if testrooms
   initialScreen: GameRooms,
