@@ -2,6 +2,7 @@ package backend;
 
 import backend.Campaign;
 import backend.GameInfo;
+import backend.Player;
 import backend.Screen;
 import haxe.Constraints;
 
@@ -13,11 +14,11 @@ class Game {
   public var previousScreen(default, null): GameScreen;
   private var screenState: Map<GameScreen, ScreenState>;
 
-  public function new(campaign: Campaign) {
-    this.campaign = campaign;
+  public function new() {
+    this.campaign = campaigns.UntitledTextAdventure.UntitledTextAdventure;
     previousScreen = campaign.initialScreen;
     currentScreen = campaign.initialScreen;
-    player = new Player(campaign);
+    player = new Player(this.campaign);
     // No screen may store state before the game starts
     screenState = [];
 #if testrooms
@@ -27,7 +28,7 @@ class Game {
 
   // TODO: Move room x, y to player class?
   public function startGame(): Void {
-    gotoScreen(campaign.gameScreen);
+    // gotoScreen(campaign.gameScreen);
     player.Reset(campaign);
     screenState = [
       for (screen => info in GameInfo.Screens) {

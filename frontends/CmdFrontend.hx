@@ -3,8 +3,6 @@ package frontends;
 import backend.Game;
 import backend.GameInfo;
 import backend.Screen;
-import campaigns.UntitledTextAdventure;
-import campaigns.TestCampaign;
 
 class CmdFrontend {
   static final ESC = "\x1B";
@@ -159,9 +157,7 @@ class CmdFrontend {
   public static function main(): Void {
     SetupConsole();
 
-    // TODO: Change to cmd parameter
-    final state = new Game(UntitledTextAdventure);
-    // final state = new Game(TestCampaign);
+    final state = new Game();
     do {
       if (!HandleOutput(state)) {
         break;

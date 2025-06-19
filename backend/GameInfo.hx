@@ -10,25 +10,27 @@ import backend.Screen;
 enum GameAction {
 }
 
-@:build(backend.macros.TypeGeneration.buildGameEnum("Equipments.hx"))
+// @:build(backend.macros.TypeGeneration.buildGameEnum("Equipments.hx"))
 enum GameEquipment {
 }
 
-@:build(backend.macros.TypeGeneration.buildGameEnum("Rooms.hx"))
+// @:build(backend.macros.TypeGeneration.buildGameEnum("Rooms.hx"))
 enum GameRoom {
 }
 
-@:build(backend.macros.TypeGeneration.buildGameEnum("Outcomes.hx"))
+// @:build(backend.macros.TypeGeneration.buildGameEnum("Outcomes.hx"))
 enum GameOutcome {
+  GetNextOutput;
+  Invalid;
 }
 
-@:build(backend.macros.TypeGeneration.buildGameEnum("Screens.hx"))
+// @:build(backend.macros.TypeGeneration.buildGameEnum("Screens.hx"))
 enum GameScreen {
 }
 
-@:build(backend.macros.TypeGeneration.buildGameMap("RoomInfo.hx", "Rooms"))
-@:build(backend.macros.TypeGeneration.buildGameMap("ScreenInfo.hx", "Screens"))
-@:build(backend.macros.TypeGeneration.buildGameMap("EquipmentInfo.hx", "Equipment"))
+// @:build(backend.macros.TypeGeneration.buildGameMap("RoomInfo.hx", "Rooms"))
+// @:build(backend.macros.TypeGeneration.buildGameMap("ScreenInfo.hx", "Screens"))
+// @:build(backend.macros.TypeGeneration.buildGameMap("EquipmentInfo.hx", "Equipment"))
 class GameInfo {
   public static final Rooms: Map<GameRoom, Void -> Room> = [];
   public static final Screens: Map<GameScreen, Screen> = [];

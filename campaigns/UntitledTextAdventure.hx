@@ -22,26 +22,26 @@ final UntitledTextAdventure: Campaign = {
 #else
   initialScreen: MainMenu,
 #end
-  gameScreen: GameRooms,
+  // gameScreen: GameRooms,
 
-  rooms: {
-    final gridSize: Int = 10;
-    final rooms = [for (x in 0...gridSize) [for (y in 0...gridSize) Unused]];
-    rooms[0][0] = Empty;
-    rooms[0][1] = Empty;
-    rooms[1][0] = Empty;
-    rooms[1][1] = Empty;
-    rooms[1][2] = Trap;
-    rooms;
-  },
+  // rooms: {
+  //   final gridSize: Int = 10;
+  //   final rooms = [for (x in 0...gridSize) [for (y in 0...gridSize) Unused]];
+  //   rooms[0][0] = Empty;
+  //   rooms[0][1] = Empty;
+  //   rooms[1][0] = Empty;
+  //   rooms[1][1] = Empty;
+  //   rooms[1][2] = Trap;
+  //   rooms;
+  // },
   initialRoomX: 0,
   initialRoomY: 0,
 
-  initialHead: HeadNone,
-  initialUpperBody: UpperBodyRags,
-  initialHands: HandsNone,
-  initialLowerBody: LowerBodyRags,
-  initialFeet: FeetNone,
-  initialPrimaryWeapon: PrimaryWeaponFist,
-  initialSecondaryWeapon: SecondaryWeaponNone
+  // initialHead: HeadNone,
+  // initialUpperBody: UpperBodyRags,
+  // initialHands: HandsNone,
+  // initialLowerBody: LowerBodyRags,
+  // initialFeet: FeetNone,
+  // initialPrimaryWeapon: PrimaryWeaponFist,
+  // initialSecondaryWeapon: SecondaryWeaponNone
 };
