@@ -29,6 +29,7 @@ final UntitledTextAdventure: Campaign = {
     rooms[1][0] = Empty;
     rooms[1][1] = Empty;
     rooms[1][2] = Trap;
+    rooms[1][3] = Chest;
     rooms[2][1] = Healing;
     rooms;
   },

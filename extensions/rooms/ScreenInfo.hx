@@ -5,6 +5,7 @@ import backend.GameInfo;
 import backend.Screen;
 import extensions.rooms.Screens;
 // TODO: Fix rooms extension depending on other extensions
+import extensions.equipment.Rooms.ChestRoom;
 import extensions.trap.Rooms.TrapRoom;
 
 @:nullSafety(Strict)
@@ -28,7 +29,16 @@ function RoomTest(state: Game, screen: Screen): UnicodeString {
 
       body += ' been triggered.';
     case Healing:
-      body += '\n\nThis is the healing fountain room.';
+      body += '\n\nThis is a healing fountain room.';
+    case Chest:
+      final roomState: ChestRoom = roomScreenState.getRoomState(state);
+      body += '\n\nThis is a chest room which has';
+
+      if (!roomState.openedChest) {
+        body += ' not';
+      }
+
+      body += ' been opened.';
     default:
   }
 
@@ -75,6 +85,18 @@ final RoomScreens: Map<GameScreen, Screen> = [
       final roomScreenState: GameRoomState = state.getScreenState();
       final room: GameRoom = state.campaign.rooms[roomScreenState.x][roomScreenState.y];
       return room == Healing;
+    }),
+    new ScreenAction(OpenChest, "Open Chest", function (state: Game, screen: ActionScreen): Bool {
+      final roomScreenState: GameRoomState = state.getScreenState();
+      final room: GameRoom = state.campaign.rooms[roomScreenState.x][roomScreenState.y];
+
+      if (room != Chest) {
+        return false;
+      }
+
+      final roomState: ChestRoom = roomScreenState.getRoomState(state);
+
+      return !roomState.openedChest;
     }),
     new ScreenAction(GotoScreen(PlayerEquipment), "Check Inventory"),
 #if testrooms
