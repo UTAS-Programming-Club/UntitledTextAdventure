@@ -1,7 +1,6 @@
 package extensions.rooms;
 
 import backend.Campaign;
-import backend.Game;
 import backend.GameInfo;
 import backend.macros.Helpers;
 import backend.Room;

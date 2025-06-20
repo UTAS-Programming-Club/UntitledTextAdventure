@@ -1,11 +1,11 @@
 package backend.coregame;
 
 import backend.Extension;
-import backend.Game;
-import backend.GameInfo;
+import backend.coregame.Actions;
 
 final CoreGameExt: Extension = {
-  actionHandler: function(state: Game, action: GameAction): GameOutcome {
+  actions: [CoreGameAction],
+  /*actionHandler: function(state: Game, action: GameAction): GameOutcome {
     switch (action) {
       case StartGame:
         state.startGame();
@@ -21,5 +21,5 @@ final CoreGameExt: Extension = {
       default:
         return Invalid;
     }
-  }
+  }*/
 };

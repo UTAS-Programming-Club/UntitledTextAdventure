@@ -1,6 +1,6 @@
 package backend;
 
-import backend.GameInfo;
+import backend.GameEnums;
 
 enum EquipmentType {
   Head;
@@ -22,11 +22,12 @@ class Equipment {
   }
 
   public static function Get(key: GameEquipment): Equipment {
-    final equipment: Null<Equipment> = GameInfo.Equipment[key];
+    throw 'Not Implemented';
+    /*final equipment: Null<Equipment> = GameInfo.Equipment[key];
     if (equipment == null) {
       throw 'Invalid screen $equipment.';
     }
 
-    return equipment;
+    return equipment;*/
   }
 }

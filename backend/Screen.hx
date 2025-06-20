@@ -1,8 +1,7 @@
 package backend;
 
 import backend.Campaign;
-import backend.Game;
-import backend.GameInfo;
+import backend.GameEnums;
 import backend.macros.Helpers;
 import haxe.ds.Either;
 
@@ -45,12 +44,12 @@ class ScreenAction {
 
   public function handleAction(state: Game): GameOutcome {
     var outcome: GameOutcome;
-    for (ext in state.campaign.extensions) {
+    /*for (ext in state.campaign.extensions) {
       final outcome: GameOutcome = ext.actionHandler(state, action);
       if (outcome != Invalid) {
         return outcome;
       }
-    }
+    }*/
 
     outcome = this.outcome(state);
     if (outcome == Invalid) {

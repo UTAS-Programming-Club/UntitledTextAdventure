@@ -1,6 +1,5 @@
 package extensions.rooms;
 
-import backend.Game;
 import backend.GameInfo;
 import backend.Screen;
 import extensions.rooms.Screens;

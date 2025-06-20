@@ -1,6 +1,6 @@
 package backend.coregame;
 
-import backend.GameInfo;
+import backend.GameEnums;
 
 enum CoreGameAction {
   StartGame;

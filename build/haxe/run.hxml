@@ -1,3 +1,5 @@
+-D campaign=UntitledTextAdventure
+
 -D dump=pretty
 -dce std
 

@@ -1,0 +1,20 @@
+Modules in each block can only import modules in the same or earlier blocks
+
+// Backend, pre macro generation
+backend.Campaign
+backend.Equipment
+backend.Extension
+backend.GameInfo but only the GameAction, GameEquipment, GameOutcome, GameRoom & GameScreen enums may be used which exist but are empty
+backend.Player
+backend.Room
+backend.Screen
+
+// Campaigns and extensions, each extension may only import from itself and each campaign may only import extensions to use Extension objects
+backend.coregame.*
+campaigns.*
+extensions.*
+
+// Game and frontends, post macro generation
+backend.Game
+backend.GameInfo including GameInfo object
+frontend.*

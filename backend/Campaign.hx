@@ -1,8 +1,7 @@
 package backend;
 
-import backend.Equipment;
 import backend.Extension;
-import backend.GameInfo;
+import backend.GameEnums;
 
 typedef Campaign = {
   final mainMenu: UnicodeString;

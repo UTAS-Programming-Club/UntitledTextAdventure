@@ -1,7 +1,6 @@
 package extensions.trap;
 
 import backend.Extension;
-import backend.Game;
 import backend.GameInfo;
 import backend.Screen;
 import extensions.rooms.Screens;

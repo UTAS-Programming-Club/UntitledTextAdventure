@@ -1,7 +1,7 @@
 package frontends;
 
 import backend.Game;
-import backend.GameInfo;
+import backend.GameEnums;
 import backend.Screen;
 
 class CmdFrontend {
@@ -9,20 +9,20 @@ class CmdFrontend {
   static final CSI = ESC + "[";
 
   static function SetupConsole(): Void {
-    Sys.print(CSI + "?1049h"); // Switch to alternative buffer
+    // Sys.print(CSI + "?1049h"); // Switch to alternative buffer
   }
 
   static function ResetConsole(): Void {
-    Sys.print(CSI + "?1049l"); // Restore original buffer
+    // Sys.print(CSI + "?1049l"); // Restore original buffer
   }
 
 
   static function PrintOutputBody(body: UnicodeString): Void {
-    Sys.print(CSI + "?25l"); // Hide cursor
-    Sys.print(CSI + "0;0H"); // Move cursor to 0, 0
-    Sys.print(CSI + "0J");   // Erase entire screen
+    // Sys.print(CSI + "?25l"); // Hide cursor
+    // Sys.print(CSI + "0;0H"); // Move cursor to 0, 0
+    // Sys.print(CSI + "0J");   // Erase entire screen
     Sys.print(body);
-    Sys.print(CSI + "?25h"); // Show cursor
+    // Sys.print(CSI + "?25h"); // Show cursor
   }
 
 

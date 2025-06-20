@@ -2,7 +2,6 @@ package backend.coregame;
 
 using StringTools;
 
-import backend.Game;
 import backend.GameInfo;
 import backend.Screen;
 

@@ -1,6 +1,5 @@
 package extensions.test;
 
-import backend.Game;
 import backend.GameInfo;
 import backend.Screen;
 

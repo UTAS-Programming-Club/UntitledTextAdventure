@@ -1,6 +1,7 @@
 package backend;
 
 import backend.Campaign;
+import backend.GameEnums;
 import backend.GameInfo;
 import backend.Player;
 import backend.Screen;
@@ -15,10 +16,10 @@ class Game {
   private var screenState: Map<GameScreen, ScreenState>;
 
   public function new() {
-    this.campaign = campaigns.UntitledTextAdventure.UntitledTextAdventure;
+    campaign = campaigns.UntitledTextAdventure.UntitledTextAdventure;
     previousScreen = campaign.initialScreen;
     currentScreen = campaign.initialScreen;
-    player = new Player(this.campaign);
+    player = new Player(campaign);
     // No screen may store state before the game starts
     screenState = [];
 #if testrooms
