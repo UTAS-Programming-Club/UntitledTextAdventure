@@ -26,4 +26,6 @@ enum GameRoom {
 // @:build(backend.macros.TypeGeneration.buildGameEnum("Screens.hx"))
 enum GameScreen {
   MainMenu;
+  Test;
+  Test2;
 }
