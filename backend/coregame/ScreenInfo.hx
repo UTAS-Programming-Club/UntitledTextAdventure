@@ -19,22 +19,21 @@ function GenerateEquipmentBody(state: BaseGame, Screen): UnicodeString {
   return
     'Player Equipment\n\n' +
     'Health:  ' + CreateStatBar(state.player.health) + '\n' +
-    'Stamina: ' + CreateStatBar(state.player.stamina) /*+ '\n\n' +
+    'Stamina: ' + CreateStatBar(state.player.stamina) + '\n\n' +
     'Head:             ' + state.player.head.name + '\n' +
     'Upper Body:       ' + state.player.upperBody.name + '\n' +
     'Hands:            ' + state.player.hands.name + '\n' +
     'Lower Body:       ' + state.player.lowerBody.name + '\n' +
     'Feet:             ' + state.player.feet.name + '\n' +
     'Primary Weapon:   ' + state.player.primaryWeapon.name + '\n' +
-    'Secondary Weapon: ' + state.player.secondaryWeapon.name*/;
+    'Secondary Weapon: ' + state.player.secondaryWeapon.name;
 }
 
 final CoreScreens: Map<GameScreen, Screen> = [
   MainMenu => new ActionScreen(
-    /*function(state: Game, Screen): UnicodeString {
+    function(state: BaseGame, Screen): UnicodeString {
       return state.campaign.mainMenu;
-    }*/
-    "Main Menu", [
+    }, [
     new ScreenAction(StartGame, "Start Game"),
     new ScreenAction(GotoScreen(Load), "Load Game"),
     new ScreenAction(QuitGame, "Quit Game")

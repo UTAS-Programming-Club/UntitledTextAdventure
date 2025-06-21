@@ -37,11 +37,11 @@ final UntitledTextAdventure: Campaign = {
   initialRoomX: 0,
   initialRoomY: 0,
 
-  // initialHead: HeadNone,
-  // initialUpperBody: UpperBodyRags,
-  // initialHands: HandsNone,
-  // initialLowerBody: LowerBodyRags,
-  // initialFeet: FeetNone,
-  // initialPrimaryWeapon: PrimaryWeaponFist,
-  // initialSecondaryWeapon: SecondaryWeaponNone
+  initialHead: HeadNone,
+  initialUpperBody: UpperBodyRags,
+  initialHands: HandsNone,
+  initialLowerBody: LowerBodyRags,
+  initialFeet: FeetNone,
+  initialPrimaryWeapon: PrimaryWeaponFist,
+  initialSecondaryWeapon: SecondaryWeaponNone
 };

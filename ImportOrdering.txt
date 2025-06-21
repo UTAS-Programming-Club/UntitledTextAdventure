@@ -1,6 +1,7 @@
 Modules in each block can only import modules in the same or earlier blocks
 
 // Backend, pre macro generation
+backend.BaseGame
 backend.Campaign
 backend.Equipment
 backend.Extension
