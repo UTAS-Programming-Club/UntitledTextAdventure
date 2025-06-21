@@ -1,5 +1,6 @@
 package backend;
 
+import backend.BaseGame;
 import backend.GameEnums;
 import backend.Screen;
 
@@ -8,5 +9,5 @@ typedef Extension = {
   final equipmentObjs: Array<Map<GameEquipment, Equipment>>;
   final roomObjs: Array<Map<GameRoom, Void -> Room>>;
   final screenObjs: Array<Map<GameScreen, Screen>>;
-  // final actionHandler: Null<(state: Game, action: GameAction) -> GameOutcome>;
+  final actionHandler: Null<(state: BaseGame, action: GameAction) -> GameOutcome>;
 }

@@ -1,7 +1,7 @@
 package extensions.test;
 
 import backend.Extension;
-import backend.GameInfo;
+import backend.GameEnums;
 
 @:nullSafety(Strict)
 final TestExt: Extension = {

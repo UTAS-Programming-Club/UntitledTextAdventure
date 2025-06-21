@@ -10,6 +10,7 @@ enum GameAction {
   GoEast;
   GoSouth;
   GoWest;
+  DodgeTrap;
 }
 
 // @:build(backend.macros.TypeGeneration.buildGameEnum("Equipments.hx"))
@@ -41,4 +42,6 @@ enum GameRoom {
 enum GameScreen {
   MainMenu;
   GameRooms;
+  Load;
+  PlayerEquipment;
 }

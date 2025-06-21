@@ -2,7 +2,6 @@ package backend;
 
 import backend.Campaign;
 import backend.Equipment;
-import backend.GameInfo;
 
 class Player {
   public var health(default, null): Int = 0;  // Must be in [0, 100]

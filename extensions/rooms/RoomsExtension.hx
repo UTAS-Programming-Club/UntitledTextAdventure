@@ -1,5 +1,6 @@
 package extensions.rooms;
 
+import backend.BaseGame;
 import backend.Extension;
 import backend.GameEnums;
 import backend.Screen;
@@ -12,8 +13,8 @@ final RoomsExt: Extension = {
   actions: [],
   equipmentObjs: [],
   roomObjs: [],
-  screenObjs: [RoomScreens]
-  /*actionHandler: function(state: Game, action: GameAction): GameOutcome {
+  screenObjs: [RoomScreens],
+  actionHandler: function(state: BaseGame, action: GameAction): GameOutcome {
     final screen: Screen = state.getScreen();
     final roomScreenState: Null<GameRoomState> = state.tryGetScreenState();
     if (roomScreenState == null) {
@@ -34,5 +35,5 @@ final RoomsExt: Extension = {
     }
 
     return GetNextOutput;
-  }*/
+  }
 };

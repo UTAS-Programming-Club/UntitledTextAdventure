@@ -1,5 +1,6 @@
 package backend.coregame;
 
+import backend.BaseGame;
 import backend.Extension;
 import backend.GameEnums;
 import backend.coregame.Actions;
@@ -9,8 +10,8 @@ final CoreGameExt: Extension = {
   actions: [CoreGameAction],
   equipmentObjs: [],
   roomObjs: [],
-  screenObjs: [CoreScreens]
-  /*actionHandler: function(state: Game, action: GameAction): GameOutcome {
+  screenObjs: [CoreScreens],
+  actionHandler: function(state: BaseGame, action: GameAction): GameOutcome {
     switch (action) {
       case StartGame:
         state.startGame();
@@ -26,5 +27,5 @@ final CoreGameExt: Extension = {
       default:
         return Invalid;
     }
-  }*/
+  }
 };

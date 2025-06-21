@@ -1,6 +1,6 @@
 package extensions.test;
 
-import backend.GameInfo;
+import backend.GameEnums;
 import backend.Screen;
 
 @:nullSafety(Strict)
