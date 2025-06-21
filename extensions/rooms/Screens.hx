@@ -26,7 +26,7 @@ class GameRoomState extends ScreenState {
 
   // TODO: Call on first room appearing
   // x and y must be in [0, campaign.rooms.length)
-  public function changeRoom(state: Game, x: Int, y: Int): Void {
+  /*public function changeRoom(state: Game, x: Int, y: Int): Void {
     this.x = x;
     this.y = y;
 
@@ -65,5 +65,5 @@ class GameRoomState extends ScreenState {
     }
 
     return cast roomData;
-  }
+  }*/
 }

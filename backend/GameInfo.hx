@@ -8,7 +8,7 @@ import backend.Screen;
 // @:build(backend.macros.TypeGeneration.buildGameMap("EquipmentInfo.hx", "Equipment"))
 // @:build(backend.macros.TypeGeneration.buildGameMap("RoomInfo.hx", "Rooms"))
 // @:build(backend.macros.TypeGeneration.buildGameMap("ScreenInfo.hx", "Screens"))
-@:build(backend.macros.TypeGeneration.macro3())
+@:build(backend.macros.TypeGeneration.buildGameMaps())
 class GameInfo {
   public static final Equipment: Map<GameEquipment, Equipment> = [];
   public static final Rooms: Map<GameRoom, Void -> Room> = [];

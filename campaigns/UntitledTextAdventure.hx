@@ -3,9 +3,9 @@ package campaigns;
 import backend.Campaign;
 import backend.coregame.CoreGame;
 import backend.GameEnums;
-// import extensions.equipment.EquipmentExtension;
-// import extensions.rooms.RoomsExtension;
-// import extensions.trap.TrapExtension;
+import extensions.equipment.EquipmentExtension;
+import extensions.rooms.RoomsExtension;
+import extensions.trap.TrapExtension;
 
 @:nullSafety(Strict)
 final UntitledTextAdventure: Campaign = {
@@ -15,25 +15,25 @@ final UntitledTextAdventure: Campaign = {
             + "\n"
             + "Currently unimplemented :(",
 
-  extensions: [CoreGameExt, /*EquipmentExt, RoomsExt, TrapExt*/],
+  extensions: [CoreGameExt, EquipmentExt, RoomsExt, TrapExt],
 
 #if testrooms
   initialScreen: GameRooms,
 #else
   initialScreen: MainMenu,
 #end
-  // gameScreen: GameRooms,
+  gameScreen: GameRooms,
 
-  // rooms: {
-  //   final gridSize: Int = 10;
-  //   final rooms = [for (x in 0...gridSize) [for (y in 0...gridSize) Unused]];
-  //   rooms[0][0] = Empty;
-  //   rooms[0][1] = Empty;
-  //   rooms[1][0] = Empty;
-  //   rooms[1][1] = Empty;
-  //   rooms[1][2] = Trap;
-  //   rooms;
-  // },
+  rooms: {
+    final gridSize: Int = 10;
+    final rooms = [for (x in 0...gridSize) [for (y in 0...gridSize) Unused]];
+    rooms[0][0] = Empty;
+    rooms[0][1] = Empty;
+    rooms[1][0] = Empty;
+    rooms[1][1] = Empty;
+    rooms[1][2] = Trap;
+    rooms;
+  },
   initialRoomX: 0,
   initialRoomY: 0,
 

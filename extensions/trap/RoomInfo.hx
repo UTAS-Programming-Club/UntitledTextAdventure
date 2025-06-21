@@ -1,6 +1,6 @@
 package extensions.trap;
 
-import backend.GameInfo;
+import backend.GameEnums;
 import extensions.trap.Rooms;
 
 @:nullSafety(Strict)

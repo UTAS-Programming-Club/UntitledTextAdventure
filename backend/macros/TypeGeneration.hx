@@ -340,19 +340,29 @@ class TypeGeneration {
     return fieldArray;
   }
 
-  static public function macro3(): Array<Field> {
+  static public function buildGameMaps(): Array<Field> {
     final fields: Array<Field> = Context.getBuildFields();
     final campaign: TypedExpr = getCampaignObject();
     final extensionRefs: Array<TypedExpr> = getExtensions(campaign);
 
+    final equipmentObjs: Array<TypedExpr> = [];
+    final roomObjs: Array<TypedExpr> = [];
     final screenObjs: Array<TypedExpr> = [];
     for (extensionRef in extensionRefs) {
       final extensionFields = getExtensionFields(extensionRef);
+      for (equipmentObj in getExtensionArray(extensionFields, 'equipmentObjs')) {
+        equipmentObjs.push(equipmentObj);
+      }
+      for (roomObj in getExtensionArray(extensionFields, 'roomObjs')) {
+        roomObjs.push(roomObj);
+      }
       for (screenObj in getExtensionArray(extensionFields, 'screenObjs')) {
         screenObjs.push(screenObj);
       }
     }
 
+    buildGameMap(fields, 'Equipment', equipmentObjs);
+    buildGameMap(fields, 'Rooms', roomObjs);
     buildGameMap(fields, 'Screens', screenObjs);
 
     return fields;

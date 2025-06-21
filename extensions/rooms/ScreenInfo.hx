@@ -1,13 +1,13 @@
 package extensions.rooms;
 
-import backend.GameInfo;
+import backend.GameEnums;
 import backend.Screen;
 import extensions.rooms.Screens;
 // TODO: Fix rooms extension depending on traps extension
 import extensions.trap.Rooms.TrapRoom;
 
 @:nullSafety(Strict)
-function RoomTest(state: Game, screen: Screen): UnicodeString {
+/*function RoomTest(state: Game, screen: Screen): UnicodeString {
   final roomScreenState: GameRoomState = state.getScreenState();
   final x: Int = roomScreenState.x;
   final y: Int = roomScreenState.y;
@@ -28,12 +28,12 @@ function RoomTest(state: Game, screen: Screen): UnicodeString {
   }
 
   return body;
-}
+}*/
 
 @:nullSafety(Strict)
 final RoomScreens: Map<GameScreen, Screen> = [
-  GameRooms => new StatefulActionScreen(GameRoomState.new, RoomTest, [
-    new ScreenAction(GoNorth, "Go North", function (state: Game, screen: ActionScreen): Bool {
+  GameRooms => new StatefulActionScreen(GameRoomState.new, /*RoomTest*/ "Test room", [
+    /*new ScreenAction(GoNorth, "Go North", function (state: Game, screen: ActionScreen): Bool {
       final roomScreenState: GameRoomState = state.getScreenState();
       return roomScreenState.y < state.campaign.rooms.length - 1 &&
              state.campaign.rooms[roomScreenState.x][roomScreenState.y + 1] != Unused;
@@ -66,7 +66,7 @@ final RoomScreens: Map<GameScreen, Screen> = [
 
       return !roomState.activatedTrap;
     }),
-    new ScreenAction(GotoScreen(PlayerEquipment), "Check Inventory"),
+    new ScreenAction(GotoScreen(PlayerEquipment), "Check Inventory"),*/
 #if testrooms
     new ScreenAction(QuitGame, "Quit Game")
 #else

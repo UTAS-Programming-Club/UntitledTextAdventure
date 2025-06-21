@@ -1,14 +1,19 @@
 package extensions.rooms;
 
 import backend.Extension;
-import backend.GameInfo;
+import backend.GameEnums;
 import backend.Screen;
+import extensions.rooms.ScreenInfo;
 import extensions.rooms.Screens;
 
 // TODO: Merge into CoreGame?
 @:nullSafety(Strict)
 final RoomsExt: Extension = {
-  actionHandler: function(state: Game, action: GameAction): GameOutcome {
+  actions: [],
+  equipmentObjs: [],
+  roomObjs: [],
+  screenObjs: [RoomScreens]
+  /*actionHandler: function(state: Game, action: GameAction): GameOutcome {
     final screen: Screen = state.getScreen();
     final roomScreenState: Null<GameRoomState> = state.tryGetScreenState();
     if (roomScreenState == null) {
@@ -29,5 +34,5 @@ final RoomsExt: Extension = {
     }
 
     return GetNextOutput;
-  }
+  }*/
 };
