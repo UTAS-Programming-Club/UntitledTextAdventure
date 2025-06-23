@@ -1,5 +1,6 @@
 package extensions.rooms;
 
+import backend.BaseGame;
 import backend.GameEnums;
 import backend.Screen;
 import extensions.rooms.Screens;
@@ -7,7 +8,8 @@ import extensions.rooms.Screens;
 import extensions.trap.Rooms.TrapRoom;
 
 @:nullSafety(Strict)
-/*function RoomTest(state: Game, screen: Screen): UnicodeString {
+function GenerateRoomBody(state: BaseGame, screen: Screen): UnicodeString {
+  // trace(state.getScreenState);
   final roomScreenState: GameRoomState = state.getScreenState();
   final x: Int = roomScreenState.x;
   final y: Int = roomScreenState.y;
@@ -28,33 +30,33 @@ import extensions.trap.Rooms.TrapRoom;
   }
 
   return body;
-}*/
+}
 
 @:nullSafety(Strict)
 final RoomScreens: Map<GameScreen, Screen> = [
-  GameRooms => new StatefulActionScreen(GameRoomState.new, /*RoomTest*/ "Test room", [
-    /*new ScreenAction(GoNorth, "Go North", function (state: Game, screen: ActionScreen): Bool {
+  GameRooms => new StatefulActionScreen(GameRoomState.new, GenerateRoomBody, [
+    /*new ScreenAction(GoNorth, "Go North", function (state: BaseGame, screen: ActionScreen): Bool {
       final roomScreenState: GameRoomState = state.getScreenState();
       return roomScreenState.y < state.campaign.rooms.length - 1 &&
              state.campaign.rooms[roomScreenState.x][roomScreenState.y + 1] != Unused;
     }),
-    new ScreenAction(GoEast, "Go East", function (state: Game, screen: ActionScreen): Bool {
+    new ScreenAction(GoEast, "Go East", function (state: BaseGame, screen: ActionScreen): Bool {
       final roomScreenState: GameRoomState = state.getScreenState();
       return roomScreenState.x > 0 &&
              state.campaign.rooms[roomScreenState.x - 1][roomScreenState.y] != Unused;
     }),
-    new ScreenAction(GoSouth, "Go South", function (state: Game, screen: ActionScreen): Bool {
+    new ScreenAction(GoSouth, "Go South", function (state: BaseGame, screen: ActionScreen): Bool {
       final roomScreenState: GameRoomState = state.getScreenState();
       return roomScreenState.y > 0 &&
              state.campaign.rooms[roomScreenState.x][roomScreenState.y - 1] != Unused;
     }),
-    new ScreenAction(GoWest, "Go West", function (state: Game, screen: ActionScreen): Bool {
+    new ScreenAction(GoWest, "Go West", function (state: BaseGame, screen: ActionScreen): Bool {
       final roomScreenState: GameRoomState = state.getScreenState();
       return roomScreenState.x < state.campaign.rooms.length - 1 &&
              state.campaign.rooms[roomScreenState.x + 1][roomScreenState.y] != Unused;
     }),
     // TODO: Fix rooms extension depending on traps extension
-    new ScreenAction(DodgeTrap, "Dodge Trap", function (state: Game, screen: ActionScreen): Bool {
+    new ScreenAction(DodgeTrap, "Dodge Trap", function (state: BaseGame, screen: ActionScreen): Bool {
       final roomScreenState: GameRoomState = state.getScreenState();
       final room: GameRoom = state.campaign.rooms[roomScreenState.x][roomScreenState.y];
 
