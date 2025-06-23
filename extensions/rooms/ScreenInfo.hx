@@ -35,7 +35,7 @@ function GenerateRoomBody(state: BaseGame, screen: Screen): UnicodeString {
 @:nullSafety(Strict)
 final RoomScreens: Map<GameScreen, Screen> = [
   GameRooms => new StatefulActionScreen(GameRoomState.new, GenerateRoomBody, [
-    /*new ScreenAction(GoNorth, "Go North", function (state: BaseGame, screen: ActionScreen): Bool {
+    new ScreenAction(GoNorth, "Go North", function (state: BaseGame, screen: ActionScreen): Bool {
       final roomScreenState: GameRoomState = state.getScreenState();
       return roomScreenState.y < state.campaign.rooms.length - 1 &&
              state.campaign.rooms[roomScreenState.x][roomScreenState.y + 1] != Unused;
@@ -67,7 +67,7 @@ final RoomScreens: Map<GameScreen, Screen> = [
       final roomState: TrapRoom = roomScreenState.getRoomState(state);
 
       return !roomState.activatedTrap;
-    }),*/
+    }),
     new ScreenAction(GotoScreen(PlayerEquipment), "Check Inventory"),
 #if testrooms
     new ScreenAction(QuitGame, "Quit Game")

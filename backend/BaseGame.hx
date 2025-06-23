@@ -10,15 +10,27 @@ abstract class BaseGame {
   public final campaign: Campaign;
   public final player: Player;
 
+  public final equipment: Map<GameEquipment, Equipment>;
+  public final rooms: Map<GameRoom, Void -> Room>;
+  public final screens: Map<GameScreen, Screen>;
+
   public var previousScreen(default, null): GameScreen;
   private var currentScreen: GameScreen;
   private var screenState: Map<GameScreen, ScreenState>;
 
-  public function new(campaign: Campaign) {
+  public function new(
+    campaign: Campaign, equipment: Map<GameEquipment, Equipment>,
+    rooms: Map<GameRoom, Void -> Room>, screens: Map<GameScreen, Screen>
+  ) {
     this.campaign = campaign;
+    player = new Player(campaign);
+
+    this.equipment = equipment;
+    this.rooms = rooms;
+    this.screens = screens;
+
     previousScreen = campaign.initialScreen;
     currentScreen = campaign.initialScreen;
-    player = new Player(campaign);
     // No screen may store state before the game starts
     screenState = [];
   }

@@ -3,7 +3,6 @@ package extensions.rooms;
 import backend.BaseGame;
 import backend.Campaign;
 import backend.GameEnums;
-import backend.macros.Helpers;
 import backend.Room;
 import backend.Screen;
 import haxe.Constraints;
@@ -28,8 +27,7 @@ class GameRoomState extends ScreenState {
   // TODO: Call on first room appearing
   // x and y must be in [0, campaign.rooms.length)
   public function changeRoom(state: BaseGame, x: Int, y: Int): Void {
-    throw 'Not implemented';
-    /*this.x = x;
+    this.x = x;
     this.y = y;
 
     final point: Int = x * state.campaign.rooms.length + y;
@@ -38,12 +36,12 @@ class GameRoomState extends ScreenState {
     }
 
     final room: GameRoom = state.campaign.rooms[x][y];
-    if (!GameInfo.Rooms.exists(room)) {
+    if (!state.rooms.exists(room)) {
       return;
     }
 
-    final roomClass: Void -> Room = cast GameInfo.Rooms[room];
-    roomState[point] = roomClass();*/
+    final roomClass: Void -> Room = cast state.rooms[room];
+    roomState[point] = roomClass();
   }
 
   // x and y must be in [0, campaign.rooms.length)

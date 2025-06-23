@@ -9,9 +9,11 @@ import backend.Screen;
 import haxe.Constraints;
 
 class Game extends BaseGame {
-
   public function new() {
-    super(campaigns.UntitledTextAdventure.UntitledTextAdventure);
+    super(
+     campaigns.UntitledTextAdventure.UntitledTextAdventure,
+     GameInfo.Equipment, GameInfo.Rooms, GameInfo.Screens
+    );
 #if testrooms
     startGame();
 #end
@@ -22,7 +24,7 @@ class Game extends BaseGame {
     gotoScreen(campaign.gameScreen);
     player.Reset(campaign);
     screenState = [
-      for (screen => info in GameInfo.Screens) {
+      for (screen => info in screens) {
         if (info is StatefulActionScreen) {
           final statefulScreen: StatefulActionScreen = cast info;
           screen => statefulScreen.stateConstructor(campaign);
@@ -33,7 +35,7 @@ class Game extends BaseGame {
 
 
   public function getScreen(): Screen {
-    final screen: Null<Screen> = GameInfo.Screens[currentScreen];
+    final screen: Null<Screen> = screens[currentScreen];
     if (screen == null) {
       throw 'Invalid screen $currentScreen.';
     }
