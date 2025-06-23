@@ -1,15 +1,12 @@
 package backend;
 
 import backend.BaseGame;
-import backend.Campaign;
-import backend.GameEnums;
 import backend.GameInfo;
-import backend.Player;
 import backend.Screen;
-import haxe.Constraints;
 
 class Game extends BaseGame {
   public function new() {
+    // TODO: Avoid hardcoding campaign
     super(
      campaigns.UntitledTextAdventure.UntitledTextAdventure,
      GameInfo.Equipment, GameInfo.Rooms, GameInfo.Screens
@@ -19,6 +16,7 @@ class Game extends BaseGame {
 #end
   }
 
+  // TODO: Find out why moving this to BaseGame.hx causes "Class<backend.GameInfo> has not field Equipment" in Equipment.hx
   // TODO: Move room x, y to player class?
   public function startGame(): Void {
     gotoScreen(campaign.gameScreen);
@@ -31,20 +29,5 @@ class Game extends BaseGame {
         }
       }
     ];
-  }
-
-
-  public function getScreen(): Screen {
-    final screen: Null<Screen> = screens[currentScreen];
-    if (screen == null) {
-      throw 'Invalid screen $currentScreen.';
-    }
-
-    return screen;
-  }
-
-  public function gotoScreen(newScreen: GameScreen): Void {
-    previousScreen = currentScreen;
-    currentScreen = newScreen;
   }
 }

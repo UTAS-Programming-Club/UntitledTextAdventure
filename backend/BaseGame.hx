@@ -1,11 +1,16 @@
 package backend;
 
 import backend.Campaign;
+import backend.Equipment;
 import backend.GameEnums;
 import backend.Player;
+import backend.Room;
 import backend.Screen;
 import haxe.Constraints;
 
+// This class is only seperate from Game to allow accessing GameInfo's maps
+// That incldues the references passed via the constructor and the startGame
+// function which somehow allows Equipment.hx to access GameInfo as well.
 abstract class BaseGame {
   public final campaign: Campaign;
   public final player: Player;
@@ -39,9 +44,19 @@ abstract class BaseGame {
   abstract public function startGame(): Void;
 
 
-  abstract public function getScreen(): Screen;
+  public function getScreen(): Screen {
+    final screen: Null<Screen> = screens[currentScreen];
+    if (screen == null) {
+      throw 'Invalid screen $currentScreen.';
+    }
 
-  abstract public function gotoScreen(newScreen: GameScreen): Void;
+    return screen;
+  }
+
+  public function gotoScreen(newScreen: GameScreen): Void {
+    previousScreen = currentScreen;
+    currentScreen = newScreen;
+  }
 
 
   @:generic
