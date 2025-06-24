@@ -1,25 +1,25 @@
 package backend;
 
 import backend.Campaign;
-import backend.GameInfo;
-import backend.Screen;
-import haxe.Constraints;
+// import backend.GameInfo;
+// import backend.Screen;
+// import haxe.Constraints;
 
 class Game {
   public final campaign: Campaign;
   public final player: Player;
 
-  private var currentScreen: GameScreen;
-  public var previousScreen(default, null): GameScreen;
-  private var screenState: Map<GameScreen, ScreenState>;
+  private var currentScreen: Screen;
+  // public var previousScreen(default, null): GameScreen;
+  // private var screenState: Map<GameScreen, ScreenState>;
 
   public function new(campaign: Campaign) {
     this.campaign = campaign;
-    previousScreen = campaign.initialScreen;
-    currentScreen = campaign.initialScreen;
+    // previousScreen = campaign.initialScreen;
+    currentScreen = campaign.initialScreen();
     player = new Player(campaign);
     // No screen may store state before the game starts
-    screenState = [];
+    // screenState = [];
 #if testrooms
     startGame();
 #end
@@ -27,29 +27,37 @@ class Game {
 
   // TODO: Move room x, y to player class?
   public function startGame(): Void {
-    gotoScreen(campaign.gameScreen);
-    player.Reset(campaign);
-    screenState = [
-      for (screen => info in GameInfo.Screens) {
-        if (info is StatefulActionScreen) {
-          final statefulScreen: StatefulActionScreen = cast info;
-          screen => statefulScreen.stateConstructor(campaign);
-        }
-      }
-    ];
+    // gotoScreen(campaign.gameScreen);
+    // player.Reset(campaign);
+    // screenState = [
+    //   for (screen => info in GameInfo.Screens) {
+    //     if (info is StatefulActionScreen) {
+    //       final statefulScreen: StatefulActionScreen = cast info;
+    //       screen => statefulScreen.stateConstructor(campaign);
+    //     }
+    //   }
+    // ];
   }
 
 
   public function getScreen(): Screen {
-    final screen: Null<Screen> = GameInfo.Screens[currentScreen];
-    if (screen == null) {
-      throw 'Invalid screen $currentScreen.';
+#if debug
+    var screenExists: Bool = false;
+    for (extension in campaign.extensions) {
+      for (screen in extension.screens) {
+        screenExists = screenExists || Type.getClass(currentScreen) == screen.type;
+      }
     }
 
-    return screen;
+    if (!screenExists) {
+      throw 'Invalid screen $currentScreen.';
+    }
+#end
+
+    return currentScreen;
   }
 
-  public function gotoScreen(newScreen: GameScreen): Void {
+  /*public function gotoScreen(newScreen: GameScreen): Void {
     previousScreen = currentScreen;
     currentScreen = newScreen;
   }
@@ -88,5 +96,5 @@ class Game {
     }
 
     return cast screenData;
-  }
+  }*/
 }

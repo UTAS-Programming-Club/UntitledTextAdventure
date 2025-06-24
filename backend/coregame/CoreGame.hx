@@ -1,11 +1,15 @@
 package backend.coregame;
 
 import backend.Extension;
-import backend.Game;
-import backend.GameInfo;
+// import backend.Game;
+// import backend.GameInfo;
+import backend.coregame.Screens;
 
 final CoreGameExt: Extension = {
-  actionHandler: function(state: Game, action: GameAction): GameOutcome {
+  screens: [
+    {type: MainMenu, constructor: MainMenu.new}
+  ],
+  /*actionHandler: function(state: Game, action: GameAction): GameOutcome {
     switch (action) {
       case StartGame:
         state.startGame();
@@ -21,5 +25,5 @@ final CoreGameExt: Extension = {
       default:
         return Invalid;
     }
-  }
+  }*/
 };

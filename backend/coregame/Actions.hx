@@ -1,10 +1,10 @@
 package backend.coregame;
 
-import backend.GameInfo;
+// import backend.GameInfo;
 
-enum CoreGameAction {
+/*enum CoreGameAction {
   StartGame;
   GotoScreen(screen: GameScreen);
   GotoPreviousScreen;
   QuitGame;
-}
+}*/

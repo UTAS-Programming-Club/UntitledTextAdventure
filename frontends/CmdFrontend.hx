@@ -4,27 +4,27 @@ import backend.Game;
 import backend.GameInfo;
 import backend.Screen;
 import campaigns.UntitledTextAdventure;
-import campaigns.TestCampaign;
+// import campaigns.TestCampaign;
 
 class CmdFrontend {
   static final ESC = "\x1B";
   static final CSI = ESC + "[";
 
   static function SetupConsole(): Void {
-    Sys.print(CSI + "?1049h"); // Switch to alternative buffer
+    // Sys.print(CSI + "?1049h"); // Switch to alternative buffer
   }
 
   static function ResetConsole(): Void {
-    Sys.print(CSI + "?1049l"); // Restore original buffer
+    // Sys.print(CSI + "?1049l"); // Restore original buffer
   }
 
 
   static function PrintOutputBody(body: UnicodeString): Void {
-    Sys.print(CSI + "?25l"); // Hide cursor
-    Sys.print(CSI + "0;0H"); // Move cursor to 0, 0
-    Sys.print(CSI + "0J");   // Erase entire screen
+    // Sys.print(CSI + "?25l"); // Hide cursor
+    // Sys.print(CSI + "0;0H"); // Move cursor to 0, 0
+    // Sys.print(CSI + "0J");   // Erase entire screen
     Sys.print(body);
-    Sys.print(CSI + "?25h"); // Show cursor
+    // Sys.print(CSI + "?25h"); // Show cursor
   }
 
 
@@ -99,7 +99,7 @@ class CmdFrontend {
 
   static function HandleOutput(state: Game): Bool {
     final screen: Screen = state.getScreen();
-    PrintOutputBody(screen.GetBody(state));
+    PrintOutputBody(screen.getBody(state));
 
     if (screen is ActionScreen) {
       PrintButtonInputs(state, cast(screen, ActionScreen));
@@ -144,15 +144,16 @@ class CmdFrontend {
       return true;
     }
 
-    final outcome: GameOutcome = actions[index].handleAction(state);
-    switch (outcome) {
-      case GetNextOutput:
-        return true;
-      case QuitGame:
-        return false;
-      default:
-       throw 'Unknown screen action outcome $outcome received.';
-    }
+    // final outcome: GameOutcome = actions[index].handleAction(state);
+    return false;
+    // switch (outcome) {
+    //   case GetNextOutput:
+    //     return true;
+    //   case QuitGame:
+    //     return false;
+    //   default:
+    //    throw 'Unknown screen action outcome $outcome received.';
+    // }
   }
 
 
