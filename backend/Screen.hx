@@ -2,8 +2,10 @@ package backend;
 
 import backend.Campaign;
 import backend.Game;
-// import backend.GameInfo;
+import backend.GameInfo;
+import backend.Outcome;
 import backend.macros.Helpers;
+import backend.coregame.Outcomes;
 import haxe.ds.Either;
 
 abstract class Screen {
@@ -16,43 +18,31 @@ abstract class Screen {
 class ScreenAction {
   // public final action: GameAction;
   public final title: UnicodeString;
-  // TODO: Add visibilityHandler in Extension?
   public final isVisible: (Game, ActionScreen) -> Bool;
-  // TODO: Is actionHandler in Extension enough? Remove this?
-  // private final outcome: Game -> GameOutcome;
+  private final outcome: Game -> GameOutcome;
 
   public function new(/*action: GameAction,*/ title: UnicodeString,
                       ?isVisible: (Game, ActionScreen) -> Bool,
-                      /*?outcome: Game -> GameOutcome*/) {
+                      ?outcome: Game -> GameOutcome) {
     // this.action = action;
     this.title = title;
     this.isVisible = isVisible ?? AlwaysVisible;
-    // this.outcome = outcome ?? AlwaysInvalidOutcome;
+    this.outcome = outcome ?? AlwaysInvalidOutcome;
   }
 
   static function AlwaysVisible(Game, ActionScreen): Bool return true;
-  // static function AlwaysInvalidOutcome(Game): GameOutcome return Invalid;
+  static function AlwaysInvalidOutcome(Game): GameOutcome return Invalid;
 
-  /*public function handleAction(state: Game): GameOutcome {
-    var outcome: GameOutcome;
-    for (ext in state.campaign.extensions) {
-      if (ext.actionHandler == null) {
-        continue;
-      }
-
-      final outcome: GameOutcome = ext.actionHandler(state, action);
-      if (outcome != Invalid) {
-        return outcome;
-      }
-    }
-
-    outcome = this.outcome(state);
+  public function handleAction(state: Game): GameOutcome {
+    final outcome: GameOutcome = this.outcome(state);
     if (outcome == Invalid) {
-      throw 'Unhandled action outcome $action on ${state.getScreen()}.';
+      // TODO: Fix
+      // throw 'Unhandled action $action on ${state.getScreen()}.';
+      throw 'Unhandled action on ${state.getScreen()}.';
     }
 
     return outcome;
-  }*/
+  }
 }
 
 abstract class ActionScreen extends Screen {

@@ -3,12 +3,6 @@ package backend.coregame;
 import backend.Game;
 import backend.Screen;
 
-/*enum CoreScreen {
-  MainMenu;
-  Load;
-  PlayerEquipment;
-}*/
-
 class MainMenu extends Screen {
   public function getBody(state: Game): UnicodeString return state.campaign.mainMenu;
 }

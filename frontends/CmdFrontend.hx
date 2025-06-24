@@ -1,7 +1,10 @@
 package frontends;
 
 import backend.Game;
+import backend.coregame.Outcomes;
+// TODO: Recreate some merged type that works for switch exhaustion?
 import backend.GameInfo;
+import backend.Outcome;
 import backend.Screen;
 import campaigns.UntitledTextAdventure;
 // import campaigns.TestCampaign;
@@ -144,16 +147,15 @@ class CmdFrontend {
       return true;
     }
 
-    // final outcome: GameOutcome = actions[index].handleAction(state);
-    return false;
-    // switch (outcome) {
-    //   case GetNextOutput:
-    //     return true;
-    //   case QuitGame:
-    //     return false;
-    //   default:
-    //    throw 'Unknown screen action outcome $outcome received.';
-    // }
+    final outcome: GameOutcome = actions[index].handleAction(state);
+    switch (outcome) {
+      case GetNextOutput:
+        return true;
+      case QuitGame:
+        return false;
+      default:
+       throw 'Unknown screen action outcome $outcome received.';
+    }
   }
 
 

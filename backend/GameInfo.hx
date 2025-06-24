@@ -1,8 +1,12 @@
 package backend;
 
 // import backend.Equipment;
+import backend.Outcome;
 // import backend.Room;
-// import backend.Screen;
+import backend.Screen;
+
+typedef GameOutcome = Class<Outcome>;
+typedef GameScreen = Class<Screen>;
 
 // TODO: Either namespace game data per campaign or remove support for multiple campaigns in a single build
 
