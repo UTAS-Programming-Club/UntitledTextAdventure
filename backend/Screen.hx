@@ -16,15 +16,15 @@ abstract class Screen {
 }
 
 class ScreenAction {
-  // public final action: GameAction;
+  public final action: GameAction;
   public final title: UnicodeString;
   public final isVisible: (Game, ActionScreen) -> Bool;
   private final outcome: Game -> GameOutcome;
 
-  public function new(/*action: GameAction,*/ title: UnicodeString,
+  public function new(action: GameAction, title: UnicodeString,
                       ?isVisible: (Game, ActionScreen) -> Bool,
                       ?outcome: Game -> GameOutcome) {
-    // this.action = action;
+    this.action = action;
     this.title = title;
     this.isVisible = isVisible ?? AlwaysVisible;
     this.outcome = outcome ?? AlwaysInvalidOutcome;
@@ -36,9 +36,11 @@ class ScreenAction {
   public function handleAction(state: Game): GameOutcome {
     final outcome: GameOutcome = this.outcome(state);
     if (outcome == Invalid) {
-      // TODO: Fix
-      // throw 'Unhandled action $action on ${state.getScreen()}.';
-      throw 'Unhandled action on ${state.getScreen()}.';
+#if debug
+      throw 'Unhandled action ${Type.getClassName(action).split('.').pop()} on ${state.getScreen()}.';
+#else
+      throw 'Unhandled action $action on ${state.getScreen()}.';
+#end
     }
 
     return outcome;
@@ -46,12 +48,7 @@ class ScreenAction {
 }
 
 abstract class ActionScreen extends Screen {
-  private final actions: Array<ScreenAction>;
-
-  public function new(actions: Array<ScreenAction>) {
-    super();
-    this.actions = actions;
-  }
+  private abstract function getAllActions(): Array<ScreenAction>;
 
   public function GetActions(state: Game): Array<ScreenAction> {
     // final room: Null<Room> = GlobalData.rooms[state.player.Y][state.player.X];
@@ -64,12 +61,12 @@ abstract class ActionScreen extends Screen {
 
     // TODO: Use this
     // return [for (action in actions) if (action.isVisible(state, this)) action];
-    return actions;
+    return getAllActions();
   }
 }
 
 // TODO: Find a way to use a type parameter instead of a constructor parameter
-abstract class StatefulActionScreen extends ActionScreen {
+/*abstract class StatefulActionScreen extends ActionScreen {
   public final stateConstructor: Campaign -> ScreenState;
 
   // TODO: Change Screen to ActionScreen if not StatefulActionScreen
@@ -78,7 +75,7 @@ abstract class StatefulActionScreen extends ActionScreen {
     super(actions);
     this.stateConstructor = stateConstructor;
   }
-}
+}*/
 
 class ScreenState {
 }

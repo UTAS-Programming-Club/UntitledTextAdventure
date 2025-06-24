@@ -1,10 +1,22 @@
 package backend.coregame;
 
-// import backend.GameInfo;
+import backend.Action;
+import backend.GameInfo;
 
-/*enum CoreGameAction {
-  StartGame;
-  GotoScreen(screen: GameScreen);
-  GotoPreviousScreen;
-  QuitGame;
-}*/
+class StartGame extends Action {
+}
+
+class GotoScreen extends Action {
+  final screen: GameScreen;
+
+  public function new(screen: GameScreen) {
+    super();
+    this.screen = screen;
+  }
+}
+
+class GotoPreviousScreen extends Action {
+}
+
+class Quit extends Action {
+}

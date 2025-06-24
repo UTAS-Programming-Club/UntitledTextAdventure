@@ -1,14 +1,21 @@
 package backend.coregame;
 
+import backend.coregame.Actions;
 import backend.Game;
 import backend.Screen;
 
-class MainMenu extends Screen {
-  public function getBody(state: Game): UnicodeString return state.campaign.mainMenu;
+class MainMenu extends ActionScreen {
+  function getBody(state: Game): UnicodeString return state.campaign.mainMenu;
+
+  function getAllActions(): Array<ScreenAction> return [
+    new ScreenAction(StartGame, "Start Game"),
+    // new ScreenAction(GotoScreen(Load), "Load Game"),
+    new ScreenAction(Quit, "Quit Game"),
+  ];
 }
 
 class Load extends Screen {
-  public function getBody(Game): UnicodeString return 'Loading is not currently supported';
+  function getBody(Game): UnicodeString return 'Loading is not currently supported';
 }
 
 
@@ -22,7 +29,7 @@ function CreateStatBar(stat: Int): UnicodeString {
 }
 
 class PlayerEquipment extends Screen {
-  public function getBody(state: Game): UnicodeString return
+  function getBody(state: Game): UnicodeString return
     'Player Equipment\n\n' +
     'Health:  ' + CreateStatBar(state.player.health) + '\n' +
     'Stamina: ' + CreateStatBar(state.player.stamina)/* + '\n\n' +
