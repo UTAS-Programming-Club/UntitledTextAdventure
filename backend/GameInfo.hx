@@ -5,6 +5,8 @@ import backend.GameEnums;
 import backend.Room;
 import backend.Screen;
 
+import backend.Extension;
+
 // @:build(backend.macros.TypeGeneration.buildGameMap("EquipmentInfo.hx", "Equipment"))
 // @:build(backend.macros.TypeGeneration.buildGameMap("RoomInfo.hx", "Rooms"))
 // @:build(backend.macros.TypeGeneration.buildGameMap("ScreenInfo.hx", "Screens"))

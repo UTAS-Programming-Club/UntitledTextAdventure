@@ -1,47 +1,21 @@
 package backend;
 
-// @:build(backend.macros.TypeGeneration.buildGameEnum("Actions.hx"))
+@:build(backend.macros.TypeGeneration.buildGameEnum3("actions"))
 enum GameAction {
-  StartGame;
-  GotoScreen(screen: GameScreen);
-  GotoPreviousScreen;
-  QuitGame;
-  GoNorth;
-  GoEast;
-  GoSouth;
-  GoWest;
-  DodgeTrap;
 }
 
-// @:build(backend.macros.TypeGeneration.buildGameEnum("Equipments.hx"))
+@:build(backend.macros.TypeGeneration.buildGameEnum3("equipment"))
 enum GameEquipment {
-  HeadNone;
-  UpperBodyRags;
-  HandsNone;
-  LowerBodyRags;
-  FeetNone;
-  PrimaryWeaponFist;
-  SecondaryWeaponNone;
 }
 
-// @:build(backend.macros.TypeGeneration.buildGameEnum("Outcomes.hx"))
+@:build(backend.macros.TypeGeneration.buildGameEnum3("outcomes"))
 enum GameOutcome {
-  Invalid;
-  GetNextOutput;
-  QuitGame;
 }
 
-// @:build(backend.macros.TypeGeneration.buildGameEnum("Rooms.hx"))
+@:build(backend.macros.TypeGeneration.buildGameEnum3("rooms"))
 enum GameRoom {
-  Unused;
-  Empty;
-  Trap;
 }
 
-// @:build(backend.macros.TypeGeneration.buildGameEnum("Screens.hx"))
+@:build(backend.macros.TypeGeneration.buildGameEnum3("screens"))
 enum GameScreen {
-  MainMenu;
-  GameRooms;
-  Load;
-  PlayerEquipment;
 }

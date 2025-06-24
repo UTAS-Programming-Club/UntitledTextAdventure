@@ -1,6 +1,5 @@
 package backend;
 
-import backend.BaseGame;
 import backend.Campaign;
 import backend.GameEnums;
 import backend.macros.Helpers;
@@ -41,7 +40,7 @@ class ScreenAction {
   }
 
   static function AlwaysVisible(BaseGame, ActionScreen): Bool return true;
-  static function AlwaysInvalidOutcome(BaseGame): GameOutcome return Invalid;
+  static function AlwaysInvalidOutcome(BaseGame): GameOutcome return GameOutcome.Invalid;
 
   public function handleAction(state: BaseGame): GameOutcome {
     var outcome: GameOutcome;
@@ -57,9 +56,9 @@ class ScreenAction {
     }
 
     outcome = this.outcome(state);
-    if (outcome == Invalid) {
+    // if (outcome == Invalid) {
       throw 'Unhandled action outcome $action on ${state.getScreen()}.';
-    }
+    // }
 
     return outcome;
   }

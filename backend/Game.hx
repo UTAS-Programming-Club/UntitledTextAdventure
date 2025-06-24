@@ -1,15 +1,15 @@
 package backend;
 
-import backend.BaseGame;
 import backend.GameInfo;
+
+import backend.BaseGame;
 import backend.Screen;
 
 class Game extends BaseGame {
   public function new() {
     // TODO: Avoid hardcoding campaign
     super(
-     campaigns.UntitledTextAdventure.UntitledTextAdventure,
-     GameInfo.Equipment, GameInfo.Rooms, GameInfo.Screens
+     campaigns.untitledtextadventure.UntitledTextAdventure.UntitledTextAdventure,
     );
 #if testrooms
     startGame();
@@ -22,7 +22,7 @@ class Game extends BaseGame {
     gotoScreen(campaign.gameScreen);
     player.Reset(campaign);
     screenState = [
-      for (screen => info in screens) {
+      for (screen => info in GameInfo.Screens) {
         if (info is StatefulActionScreen) {
           final statefulScreen: StatefulActionScreen = cast info;
           screen => statefulScreen.stateConstructor(campaign);

@@ -2,9 +2,10 @@ package backend.coregame;
 
 using StringTools;
 
-import backend.BaseGame;
+// import backend.BaseGame;
 import backend.GameEnums;
 import backend.Screen;
+// import backend.coregame.Screens;
 
 // stat must be in [0, 100]
 function CreateStatBar(stat: Int): UnicodeString {
@@ -15,7 +16,7 @@ function CreateStatBar(stat: Int): UnicodeString {
   return bar + gap + ' : ' + percentage + '%';
 }
 
-function GenerateEquipmentBody(state: BaseGame, Screen): UnicodeString {
+/*function GenerateEquipmentBody(state: BaseGame, Screen): UnicodeString {
   return
     'Player Equipment\n\n' +
     'Health:  ' + CreateStatBar(state.player.health) + '\n' +
@@ -27,21 +28,21 @@ function GenerateEquipmentBody(state: BaseGame, Screen): UnicodeString {
     'Feet:             ' + state.player.feet.name + '\n' +
     'Primary Weapon:   ' + state.player.primaryWeapon.name + '\n' +
     'Secondary Weapon: ' + state.player.secondaryWeapon.name;
-}
+}*/
 
 final CoreScreens: Map<GameScreen, Screen> = [
-  MainMenu => new ActionScreen(
+  GameScreen.MainMenu => new ActionScreen(
     function(state: BaseGame, Screen): UnicodeString {
       return state.campaign.mainMenu;
     }, [
-    new ScreenAction(StartGame, "Start Game"),
-    new ScreenAction(GotoScreen(Load), "Load Game"),
-    new ScreenAction(QuitGame, "Quit Game")
+    new ScreenAction(GameAction.StartGame, "Start Game"),
+    // new ScreenAction(GotoScreen(Load), "Load Game"),
+    new ScreenAction(GameAction.QuitGame, "Quit Game")
   ]),
-  Load => new ActionScreen("Loading is not currently supported", [
+  /*Load => new ActionScreen("Loading is not currently supported", [
     new ScreenAction(GotoScreen(MainMenu), "Return to Main Menu")
   ]),
   PlayerEquipment => new ActionScreen(GenerateEquipmentBody, [
     new ScreenAction(GotoPreviousScreen, "Return to Game")
-  ])
+  ])*/
 ];

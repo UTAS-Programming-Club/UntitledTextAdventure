@@ -1,38 +1,28 @@
 package backend;
 
 import backend.Campaign;
-import backend.Equipment;
+// import backend.Equipment;
 import backend.GameEnums;
+import backend.GameInfo;
 import backend.Player;
-import backend.Room;
+// import backend.Room;
 import backend.Screen;
-import haxe.Constraints;
+// import haxe.Constraints;
 
 // This class is only seperate from Game to allow accessing GameInfo's maps
-// That incldues the references passed via the constructor and the startGame
+// That includes the references passed via the constructor and the startGame
 // function which somehow allows Equipment.hx to access GameInfo as well.
 abstract class BaseGame {
   public final campaign: Campaign;
   public final player: Player;
 
-  public final equipment: Map<GameEquipment, Equipment>;
-  public final rooms: Map<GameRoom, Void -> Room>;
-  public final screens: Map<GameScreen, Screen>;
-
   public var previousScreen(default, null): GameScreen;
   private var currentScreen: GameScreen;
   private var screenState: Map<GameScreen, ScreenState>;
 
-  public function new(
-    campaign: Campaign, equipment: Map<GameEquipment, Equipment>,
-    rooms: Map<GameRoom, Void -> Room>, screens: Map<GameScreen, Screen>
-  ) {
+  public function new(campaign: Campaign) {
     this.campaign = campaign;
     player = new Player(campaign);
-
-    this.equipment = equipment;
-    this.rooms = rooms;
-    this.screens = screens;
 
     previousScreen = campaign.initialScreen;
     currentScreen = campaign.initialScreen;
@@ -45,7 +35,7 @@ abstract class BaseGame {
 
 
   public function getScreen(): Screen {
-    final screen: Null<Screen> = screens[currentScreen];
+    final screen: Null<Screen> = GameInfo.Screens[currentScreen];
     if (screen == null) {
       throw 'Invalid screen $currentScreen.';
     }
@@ -59,7 +49,7 @@ abstract class BaseGame {
   }
 
 
-  @:generic
+  /*@:generic
   public function tryGetScreenState<T : ScreenState & Constructible<Campaign -> Void>>(): Null<T> {
     final screenData: Null<ScreenState> = screenState[currentScreen];
     final screen: T = new T(campaign);
@@ -92,5 +82,5 @@ abstract class BaseGame {
     }
 
     return cast screenData;
-  }
+  }*/
 }

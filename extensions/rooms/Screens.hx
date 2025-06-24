@@ -3,6 +3,7 @@ package extensions.rooms;
 import backend.BaseGame;
 import backend.Campaign;
 import backend.GameEnums;
+import backend.GameInfo;
 import backend.Room;
 import backend.Screen;
 import haxe.Constraints;
@@ -36,11 +37,11 @@ class GameRoomState extends ScreenState {
     }
 
     final room: GameRoom = state.campaign.rooms[x][y];
-    if (!state.rooms.exists(room)) {
+    if (!GameInfo.Rooms.exists(room)) {
       return;
     }
 
-    final roomClass: Void -> Room = cast state.rooms[room];
+    final roomClass: Void -> Room = cast GameInfo.Rooms[room];
     roomState[point] = roomClass();
   }
 

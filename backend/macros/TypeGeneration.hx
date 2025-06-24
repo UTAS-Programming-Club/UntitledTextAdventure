@@ -6,6 +6,7 @@ import haxe.macro.Type;
 using haxe.io.Path;
 using haxe.macro.Context;
 using haxe.macro.ExprTools;
+using haxe.macro.TypeTools;
 using StringTools;
 using sys.FileSystem;
 
@@ -42,54 +43,28 @@ class TypeGeneration {
 
     foundFilePaths = true;
   }
-  
-  static function buildGameEnum(fileName: String): Array<Field> {
+
+
+  static function buildGameEnum(constructors: Array<EnumField>): Array<Field> {
     final enumFields: Array<Field> = [];
 
-    if (!foundFilePaths) {
-      findFilePaths();
-    }
+    for (constructor in constructors) {
+      switch (constructor.type) {
+        case TEnum(_, _):
+          enumFields.push(makeEnumField(constructor.name, FVar(null)));
+        case TFun(args, _):
+          final func: Function = {
+            args: args.map(
+              function(arg): FunctionArg return {
+                name: arg.name,
+                type: arg.t.toComplexType()
+              }
+            )
+          };
 
-    if (filePaths[fileName] == null) {
-      return enumFields;
-    }
-
-    for (enumPath in filePaths[fileName]) {
-      final types: Array<Type> = enumPath.getModule();
-
-      // TODO: Check type name
-      var enumType: Null<EnumType> = null;
-      for (type in types) {
-        switch (type) {
-          case TEnum(e, _):
-            enumType = e.get();
-          default:
-            continue;
-        }
-      }
-
-      if (enumType == null) {
-        continue;
-      }
-
-      for (construct in enumType.constructs) {
-        switch (construct.type) {
-          case TEnum(_, _):
-            enumFields.push(makeEnumField(construct.name, FVar(null)));
-          case TFun(args, _):
-            final func: Function = {
-              args: args.map(
-                function(arg): FunctionArg return {
-                  name: arg.name,
-                  type: arg.t.toComplexType()
-                }
-              )
-            };
-
-            enumFields.push(makeEnumField(construct.name, FFun(func)));
-          default:
-            trace("Unexpected enum constructor type: " + construct.type);
-        }
+          enumFields.push(makeEnumField(constructor.name, FFun(func)));
+        default:
+          trace("Unexpected enum constructor type: " + constructor.type);
       }
     }
 
@@ -121,10 +96,27 @@ class TypeGeneration {
           continue;
       }
 
+      // trace(mapItemElems.length);
+      // trace((new haxe.macro.Printer()).printExprWithPositions(mapItem.getTypedExpr()));
       var mappingLHSExpr: Expr;
       var mappingRHSExpr: Expr;
-      if (mapItemElems.length == 0 || mapItemElems.length > 2) {
+      if (mapItemElems.length == 0 || mapItemElems.length > 3) {
         continue;
+      } else if (mapItemElems.length == 3) {
+        switch (mapItemElems[0].expr) {
+          case TVar(_, expr):
+            mappingLHSExpr = expr.getTypedExpr();
+          default:
+            continue;
+        }
+
+        switch (mapItemElems[1].expr) {
+          case TVar(_, expr):
+            mappingRHSExpr = expr.getTypedExpr();
+          default:
+            continue;
+        }
+        // trace((new haxe.macro.Printer()).printExpr(mappingRHSExpr));
       } else if (mapItemElems.length == 2) {
         switch (mapItemElems[0].expr) {
           case TVar(_, expr):
@@ -163,15 +155,17 @@ class TypeGeneration {
     }
   }
 
-  static function getCampaignObject(): TypedExpr {
+
+  /*static function getExtensionsField(): TypedExpr {
     final campaignName: String = Context.definedValue('campaign');
-    final campaignPath: String = Path.join(['campaigns', campaignName + '.hx']);
+    final campaignPath: String = Path.join(['campaigns', campaignName.toLowerCase(), campaignName + '.hx']);
     if (!campaignPath.exists()) {
+      trace(campaignPath);
       throw 'Unable to find campaign: $campaignName.';
     }
 
     final campaignModule: String = campaignPath.withoutExtension().replace('/', '.');
-    final campaignTypes: Array<Type> =  campaignModule.getModule();
+    final campaignTypes: Array<Type> = campaignModule.getModule();
 
     for (type in campaignTypes) {
       var campaignStatics: Null<Array<ClassField>> = null;
@@ -192,11 +186,8 @@ class TypeGeneration {
       }
 
       for (field in campaignStatics) {
+        // trace(field.type.toComplexType());
         final campaignExpr: Null<TypedExpr> = field.expr();
-        if (campaignExpr == null) {
-          continue;
-        }
-
         switch (campaignExpr.t) {
           case TType(t, _) if (t.toString() == 'backend.Campaign'):
             return campaignExpr;
@@ -242,6 +233,40 @@ class TypeGeneration {
     }
 
     throw 'Unable to find extensions for $campaignName.';
+  }*/
+
+  static function getCampaignExtensions(): Array<TypedExpr> {
+    final campaignName: String = Context.definedValue('campaign');
+    final extensionsPath: String = Path.join(['campaigns', campaignName.toLowerCase(), 'Extensions.hx']);
+    if (!extensionsPath.exists()) {
+      throw 'Unable to find extensions for $campaignName.';
+    }
+
+    final extensionsModule: String = extensionsPath.withoutExtension().replace('/', '.');
+    final extensionsTypes: Array<Type> = extensionsModule.getModule();
+
+    for (type in extensionsTypes) {
+      var extensionsExpr: Null<TypedExpr> = null;
+      switch (type) {
+        case TInst(t, _):
+          extensionsExpr = t.get().findField(campaignName + "Extensions", true).expr();
+        default:
+          continue;
+      }
+
+      if (extensionsExpr == null) {
+        continue;
+      }
+
+      switch (extensionsExpr.expr) {
+        case TArrayDecl(el):
+          return el;
+        default:
+          continue;
+      }
+    }
+
+    return [];
   }
 
   static function getExtensionFields(extension: TypedExpr): Array<{name: String, expr: TypedExpr}> {
@@ -281,8 +306,60 @@ class TypeGeneration {
     }
   }
 
-  static function getExtensionArray(extensionFields: Array<{name: String, expr: TypedExpr}>, fieldName: String): Array<TypedExpr> {
-    final fieldArray: Array<TypedExpr> = [];
+
+  static function getExtensionEnums(extensionFields: Array<{name: String, expr: TypedExpr}>, fieldName: String): Array<EnumField> {
+    final enumFields: Array<EnumField> = [];
+
+    var fieldArray: Null<Array<TypedExpr>> = null;
+    for (field in extensionFields) {
+      if (field.name != fieldName) {
+        continue;
+      }
+
+      switch (field.expr.expr) {
+        case TArrayDecl(el):
+          fieldArray = el;
+        default:
+          continue;
+      }
+    }
+
+    if (fieldArray == null) {
+      return enumFields;
+    }
+
+    for (item in fieldArray) {
+      var enumDecl: Null<ModuleType> = null;
+      switch (item.expr) {
+        case TTypeExpr(m):
+          enumDecl = m;
+        default:
+          continue;
+      }
+
+      var enumConstructors: Null<Map<String, EnumField>> = null;
+      switch (enumDecl) {
+        case TEnumDecl(e):
+          enumConstructors = e.get().constructs;
+        default:
+          continue;
+      }
+
+      if (enumConstructors == null) {
+        continue;
+      }
+
+      for (constructor in enumConstructors) {
+        // trace(constructor.type);
+        enumFields.push(constructor);
+      }
+    }
+
+    return enumFields;
+  }
+
+  static function getExtensionMaps(extensionFields: Array<{name: String, expr: TypedExpr}>, fieldName: String): Array<TypedExpr> {
+    final mapFields: Array<TypedExpr> = [];
 
     var fieldArrays: Null<Array<TypedExpr>> = null;
     for (field in extensionFields) {
@@ -298,6 +375,10 @@ class TypeGeneration {
       }
     }
 
+    if (fieldArrays == null) {
+      return mapFields;
+    }
+
     for (array in fieldArrays) {
       var arrayModuleField: Null<FieldAccess> = null;
       switch (array.expr) {
@@ -306,7 +387,6 @@ class TypeGeneration {
         default:
           continue;
       }
-
       var arrayField: Null<TypedExpr> = null;
       switch (arrayModuleField) {
         case FStatic(_, cf):
@@ -332,40 +412,65 @@ class TypeGeneration {
       }
 
       // mapItems[0] == 'var ` = new haxe.ds.EnumValueMap();' and mapItems[length - 1] == '`', neither are wanted
-      for (i in 1...(mapItems.length - 1)) {
-        fieldArray.push(mapItems[i]);
+      // trace(mapItems[1].expr);
+      final max: Int = mapItems[mapItems.length - 1].expr.match(TBlock(_)) ? mapItems.length : mapItems.length - 1;
+      // trace(max);
+      for (i in 1...max) {
+        mapFields.push(mapItems[i]);
       }
     }
 
-    return fieldArray;
+    return mapFields;
   }
 
-  static public function buildGameMaps(): Array<Field> {
+
+  public static macro function buildGameEnum3(fieldName: String): Array<Field> {
+    #if macro
+    final enumFields: Array<EnumField> = [];
+    final extensionRefs: Array<TypedExpr> = getCampaignExtensions();
+
+    for (extensionRef in extensionRefs) {
+      final extensionFields: Array<{name: String, expr: TypedExpr}> = getExtensionFields(extensionRef);
+      for (enumField in getExtensionEnums(extensionFields, fieldName)) {
+        enumFields.push(enumField);
+      }
+    }
+
+    return buildGameEnum(enumFields);
+    #else
+    return Context.getBuildFields();
+    #end
+  }
+
+  public static macro function buildGameMaps(): Array<Field> {
+  #if macro
     final fields: Array<Field> = Context.getBuildFields();
-    final campaign: TypedExpr = getCampaignObject();
-    final extensionRefs: Array<TypedExpr> = getExtensions(campaign);
+    final extensionRefs: Array<TypedExpr> = getCampaignExtensions();
 
     final equipmentObjs: Array<TypedExpr> = [];
     final roomObjs: Array<TypedExpr> = [];
     final screenObjs: Array<TypedExpr> = [];
     for (extensionRef in extensionRefs) {
-      final extensionFields = getExtensionFields(extensionRef);
-      for (equipmentObj in getExtensionArray(extensionFields, 'equipmentObjs')) {
-        equipmentObjs.push(equipmentObj);
-      }
-      for (roomObj in getExtensionArray(extensionFields, 'roomObjs')) {
-        roomObjs.push(roomObj);
-      }
-      for (screenObj in getExtensionArray(extensionFields, 'screenObjs')) {
+      final extensionFields: Array<{name: String, expr: TypedExpr}> = getExtensionFields(extensionRef);
+      // for (equipmentObj in getExtensionMaps(extensionFields, 'equipmentObjs')) {
+      //   equipmentObjs.push(equipmentObj);
+      // }
+      // for (roomObj in getExtensionMaps(extensionFields, 'roomObjs')) {
+      //   roomObjs.push(roomObj);
+      // }
+      for (screenObj in getExtensionMaps(extensionFields, 'screenObjs')) {
         screenObjs.push(screenObj);
       }
     }
 
-    buildGameMap(fields, 'Equipment', equipmentObjs);
-    buildGameMap(fields, 'Rooms', roomObjs);
+    // buildGameMap(fields, 'Equipment', equipmentObjs);
+    // buildGameMap(fields, 'Rooms', roomObjs);
     buildGameMap(fields, 'Screens', screenObjs);
 
     return fields;
+  #else
+    return Context.getBuildFields();
+  #end
   }
 
 

@@ -1,20 +1,20 @@
 package extensions.trap;
 
-import backend.BaseGame;
+// import backend.BaseGame;
 import backend.Extension;
-import backend.GameEnums;
-import backend.Screen;
-import extensions.rooms.Screens;
-import extensions.trap.RoomInfo;
-import extensions.trap.Rooms;
+// import backend.GameEnums;
+// import backend.Screen;
+// import extensions.rooms.Screens;
+// import extensions.trap.RoomInfo;
+// import extensions.trap.Rooms;
 
 @:nullSafety(Strict)
 final TrapExt: Extension = {
   actions: [],
-  equipmentObjs: [],
-  roomObjs: [TrapRooms],
-  screenObjs: [],
-  actionHandler: function(state: BaseGame, action: GameAction): GameOutcome {
+  // equipmentObjs: [],
+  // roomObjs: [],
+  // screenObjs: [],
+  /*actionHandler: function(state: BaseGame, action: GameAction): GameOutcome {
     switch (action) {
       case DodgeTrap:
         // TODO: Move to seperate function(s) to reuse
@@ -34,5 +34,5 @@ final TrapExt: Extension = {
       default:
         return Invalid;
     }
-  }
+  }*/
 };

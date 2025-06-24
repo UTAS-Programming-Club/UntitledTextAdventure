@@ -1,31 +1,37 @@
 package backend.coregame;
 
-import backend.BaseGame;
+// import backend.BaseGame;
 import backend.Extension;
 import backend.GameEnums;
 import backend.coregame.Actions;
+import backend.coregame.Outcomes;
 import backend.coregame.ScreenInfo;
+import backend.coregame.Screens;
 
 final CoreGameExt: Extension = {
   actions: [CoreGameAction],
-  equipmentObjs: [],
-  roomObjs: [],
+  // equipment: [],
+  outcomes: [CoreOutcome],
+  rooms: [],
+  screens: [CoreScreen],
+  // equipmentObjs: [],
+  // roomObjs: [],
   screenObjs: [CoreScreens],
   actionHandler: function(state: BaseGame, action: GameAction): GameOutcome {
     switch (action) {
-      case StartGame:
+      /*case GameAction.StartGame:
         state.startGame();
         return GetNextOutput;
-      case GotoScreen(screen):
+      case GameAction.GotoScreen(screen):
         state.gotoScreen(screen);
         return GetNextOutput;
-      case GotoPreviousScreen:
+      case GameAction.GotoPreviousScreen:
         state.gotoScreen(state.previousScreen);
         return GetNextOutput;
-      case QuitGame:
-        return QuitGame;
+      case GameAction.QuitGame:
+        return QuitGame;*/
       default:
-        return Invalid;
+        return GameOutcome.Invalid;
     }
   }
 };

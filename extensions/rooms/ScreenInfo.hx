@@ -1,14 +1,14 @@
 package extensions.rooms;
 
-import backend.BaseGame;
+// import backend.BaseGame;
 import backend.GameEnums;
 import backend.Screen;
 import extensions.rooms.Screens;
 // TODO: Fix rooms extension depending on traps extension
-import extensions.trap.Rooms.TrapRoom;
+// import extensions.trap.Rooms.TrapRoom;
 
 @:nullSafety(Strict)
-function GenerateRoomBody(state: BaseGame, screen: Screen): UnicodeString {
+/*function GenerateRoomBody(state: BaseGame, screen: Screen): UnicodeString {
   // trace(state.getScreenState);
   final roomScreenState: GameRoomState = state.getScreenState();
   final x: Int = roomScreenState.x;
@@ -30,12 +30,12 @@ function GenerateRoomBody(state: BaseGame, screen: Screen): UnicodeString {
   }
 
   return body;
-}
+}*/
 
 @:nullSafety(Strict)
 final RoomScreens: Map<GameScreen, Screen> = [
-  GameRooms => new StatefulActionScreen(GameRoomState.new, GenerateRoomBody, [
-    new ScreenAction(GoNorth, "Go North", function (state: BaseGame, screen: ActionScreen): Bool {
+  GameRooms => new StatefulActionScreen(GameRoomState.new, /*GenerateRoomBody*/ "Rooms", [
+    /*new ScreenAction(GoNorth, "Go North", function (state: BaseGame, screen: ActionScreen): Bool {
       final roomScreenState: GameRoomState = state.getScreenState();
       return roomScreenState.y < state.campaign.rooms.length - 1 &&
              state.campaign.rooms[roomScreenState.x][roomScreenState.y + 1] != Unused;
@@ -68,7 +68,7 @@ final RoomScreens: Map<GameScreen, Screen> = [
 
       return !roomState.activatedTrap;
     }),
-    new ScreenAction(GotoScreen(PlayerEquipment), "Check Inventory"),
+    new ScreenAction(GotoScreen(PlayerEquipment), "Check Inventory"),*/
 #if testrooms
     new ScreenAction(QuitGame, "Quit Game")
 #else

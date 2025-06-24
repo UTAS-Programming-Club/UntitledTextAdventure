@@ -1,21 +1,24 @@
 Modules in each block can only import modules in the same or earlier blocks
 
 // Backend, pre macro generation
-backend.BaseGame
-backend.Campaign
-backend.Equipment(breaks rule and somehow is allowed to use backend.GameInfo)
+backend.BaseGame(breaks rule and is somehow allowed to use backend.Campaign)
+backend.Equipment(breaks rule and is somehow allowed to use backend.GameInfo)
 backend.Extension
 backend.GameEnums but each enum is empty
+backend.macros.*
 backend.Player
 backend.Room
 backend.Screen
 
-// Campaigns and extensions, extensions may not import modules from other extensions and each campaign may only import modules from extensions in order to use Extension objects
+// Extensions, extensions may not import modules from other extensions and each campaign may only import modules from extensions in order to use Extension objects
 backend.coregame.*
-campaigns.*
+campaigns.*.Extensions
 extensions.*
 
-// Game and frontends, post macro generation
+// Campaigns, game and frontends, post macro generation
+backend.Campaign
 backend.Game
+backend.GameEnums including enum values
 backend.GameInfo
+campaigns.* other than backend.*.Extensions
 frontend.*
