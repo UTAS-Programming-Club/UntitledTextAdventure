@@ -4,12 +4,18 @@ import backend.coregame.Actions;
 import backend.Game;
 import backend.Screen;
 
+enum Screens {
+  MainMenuScreen;
+  LoadScreen;
+  PlayerEquipmentScreen;
+}
+
 class MainMenu extends ActionScreen {
   function getBody(state: Game): UnicodeString return state.campaign.mainMenu;
 
   function getAllActions(): Array<Action> return [
     new StartGame("Start Game"),
-    new GotoScreen<Load>("Load Game"),
+    new GotoScreen(LoadScreen, "Load Game"),
     new Quit("Quit Game"),
   ];
 }
@@ -18,7 +24,7 @@ class Load extends ActionScreen {
   function getBody(Game): UnicodeString return 'Loading is not currently supported';
 
   function getAllActions(): Array<Action> return [
-    new GotoScreen<MainMenu>("Return to Main Menu"),
+    new GotoScreen(MainMenuScreen, "Return to Main Menu"),
   ];
 }
 

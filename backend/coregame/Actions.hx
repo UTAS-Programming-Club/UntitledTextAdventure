@@ -13,10 +13,16 @@ class StartGame extends Action {
   }
 }
 
-@:generic
-class GotoScreen<T : Screen & Constructible<Void -> Void>> extends Action {
+class GotoScreen extends Action {
+  private final screen: EnumValue;
+
+  public function new(screen: EnumValue, title: UnicodeString) {
+    super(title);
+    this.screen = screen;
+  }
+
   function trigger(state: Game): GameOutcome {
-    state.gotoScreen(new T());
+    state.gotoScreen(screen);
     return GetNextOutput;
   }
 }

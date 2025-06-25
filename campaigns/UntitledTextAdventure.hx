@@ -22,11 +22,11 @@ final UntitledTextAdventure: Campaign = {
   extensions: [CoreGameExt/*, EquipmentExt*/, RoomsExt/*, TrapExt*/],
 
 #if testrooms
-  initialScreen: GameRooms,
+  initialScreen: GameRoomsScreen,
 #else
-  initialScreen: MainMenu.new,
+  initialScreen: MainMenuScreen,
 #end
-  gameScreen: GameRooms.new,
+  gameScreen: GameRoomsScreen,
 
   // rooms: {
   //   final gridSize: Int = 10;

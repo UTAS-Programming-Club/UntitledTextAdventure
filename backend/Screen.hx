@@ -3,14 +3,14 @@ package backend;
 import backend.Action;
 import backend.Campaign;
 import backend.Game;
-import backend.GameInfo;
-import backend.macros.Helpers;
-import backend.Outcome;
-import haxe.ds.Either;
+import haxe.Constraints;
 
 abstract class Screen {
   public function new() {
   }
+
+  public function hasState(): Bool return false;
+  public function createState(campaign: Campaign): ScreenState throw 'bad';
 
   public abstract function getBody(state: Game): UnicodeString;
 }
@@ -18,7 +18,7 @@ abstract class Screen {
 abstract class ActionScreen extends Screen {
   private abstract function getAllActions(): Array<Action>;
 
-  public function GetActions(state: Game): Array<Action> {
+  public function GetActions(): Array<Action> {
     // final room: Null<Room> = GlobalData.rooms[state.player.Y][state.player.X];
     // if (room == null) {
     //   throw new haxe.Exception("Room (" + state.player.X + ", " + state.player.Y + ") does not exist");
@@ -33,17 +33,17 @@ abstract class ActionScreen extends Screen {
   }
 }
 
-// TODO: Find a way to use a type parameter instead of a constructor parameter
-/*abstract class StatefulActionScreen extends ActionScreen {
-  public final stateConstructor: Campaign -> ScreenState;
+@:generic
+abstract class StatefulActionScreen<T : ScreenState & Constructible<Campaign -> Void>> extends ActionScreen {
+  override function hasState(): Bool return true;
+  override function createState(campaign: Campaign): T return new T(campaign);
 
-  // TODO: Change Screen to ActionScreen if not StatefulActionScreen
-  public function new(stateConstructor: Campaign -> ScreenState,
-                      actions: Array<ScreenAction>) {
-    super(actions);
-    this.stateConstructor = stateConstructor;
+  abstract function getStatefulBody(state: Game, screenState: T): UnicodeString;
+
+  function getBody(state: Game): UnicodeString return getStatefulBody(state, state.getScreenState());
+}
+
+abstract class ScreenState {
+  public function new() {
   }
-}*/
-
-class ScreenState {
 }

@@ -18,6 +18,7 @@ abstract class Action {
   public function handleAction(state: Game): GameOutcome {
     final outcome: GameOutcome = trigger(state);
     if (outcome == Invalid) {
+    // TODO: Cleanup now that there is no _ prefix
     // Should these be the other way?
     // Given Std.string(action) == backend.coregame._StartGame, top one prints StartGame, bottom just prints the whole thing
 #if debug

@@ -44,7 +44,7 @@ class CmdFrontend {
   static function PrintButtonInputs(state: Game, screen: ActionScreen): Void {
     Sys.println("\n\nUse the numbers below to make a selection.");
 
-    final actions: Array<Action> = screen.GetActions(state);
+    final actions: Array<Action> = screen.GetActions();
     var inputNumber: Int = 0;
     for (action in actions) {
       if (action.isVisible(state, screen)) {
@@ -138,7 +138,7 @@ class CmdFrontend {
     }
 
     final actionScreen: ActionScreen = cast screen;
-    final actions: Array<Action> = actionScreen.GetActions(state);
+    final actions: Array<Action> = actionScreen.GetActions();
 
     final inputIndex: Int = GetButtonInput();
     final index: Int = MapInputIndex(state, actionScreen, actions, inputIndex);

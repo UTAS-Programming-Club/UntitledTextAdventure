@@ -1,7 +1,7 @@
 package extensions.rooms;
 
 import backend.Action;
-// import backend.Campaign;
+import backend.Campaign;
 import backend.coregame.Actions;
 import backend.coregame.Screens;
 import backend.Game;
@@ -11,32 +11,41 @@ import backend.Game;
 import backend.Screen;
 // import haxe.Constraints;
 
-class GameRooms extends ActionScreen {
-  function getBody(Game): UnicodeString return 'This is the game, you are in Room [Unknown, Unknown].';
+enum Screens {
+  GameRoomsScreen;
+}
+
+@:nullSafety(Strict)
+class GameRooms extends StatefulActionScreen<GameRoomState> {
+  function getStatefulBody(Game, state: GameRoomState): UnicodeString {
+    return 'This is the game, you are in Room [${state.x + 1}, ${state.y + 1}].';
+  }
 
   function getAllActions(): Array<Action> return [
+    new GotoScreen(PlayerEquipmentScreen, "Check Inventory"),
 #if testrooms
     new QuitGame("Quit Game")
 #else
-    new GotoScreen<MainMenu>("Return to main menu")
+    new GotoScreen(MainMenuScreen, "Return to main menu")
 #end
   ];
 }
 
-/*@:nullSafety(Strict)
+@:nullSafety(Strict)
 class GameRoomState extends ScreenState {
   // Only modify these using changeRoom to ensure state is setup
   // For some reason ++ and possibly -- works despite disabling public assignment
   public var x(default, null): Int; // Must be in [0, campaign.rooms.length)
   public var y(default, null): Int; // Must be in [0, campaign.rooms.length)
-  var roomState: Map<Int, Room> = [];
+  // var roomState: Map<Int, Room> = [];
 
   public function new(campaign: Campaign) {
+    super();
     x = campaign.initialRoomX;
     y = campaign.initialRoomY;
   }
 
-  // TODO: Call on first room appearing
+  /*// TODO: Call on first room appearing
   // x and y must be in [0, campaign.rooms.length)
   public function changeRoom(state: Game, x: Int, y: Int): Void {
     this.x = x;
@@ -77,5 +86,5 @@ class GameRoomState extends ScreenState {
     }
 
     return cast roomData;
-  }
-}*/
+  }*/
+}

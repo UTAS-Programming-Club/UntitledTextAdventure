@@ -2,8 +2,7 @@ package backend;
 
 // import backend.Equipment;
 import backend.Extension;
-// import backend.GameInfo;
-import backend.Screen;
+import backend.GameInfo;
 import haxe.Constraints;
 
 typedef Campaign = {
@@ -11,8 +10,8 @@ typedef Campaign = {
 
   final extensions: Array<Extension>;
 
-  final initialScreen: Void -> Screen;
-  final gameScreen: Void -> Screen;
+  final initialScreen: GameScreen;
+  final gameScreen: GameScreen;
 
   // final rooms: Array<Array<GameRoom>>; // Must be square
   final initialRoomX: Int; // Must be in [0, rooms.length)

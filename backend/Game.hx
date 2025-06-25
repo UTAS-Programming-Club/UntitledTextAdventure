@@ -4,23 +4,26 @@ import backend.Campaign;
 import backend.GameInfo;
 import backend.Player;
 import backend.Screen;
-// import haxe.Constraints;
+import haxe.Constraints;
 
 class Game {
   public final campaign: Campaign;
   public final player: Player;
 
-  private var currentScreen: Screen;
-  public var previousScreen(default, null): Screen;
-  // private var screenState: Map<GameScreen, ScreenState>;
+  private var currentScreen: GameScreen;
+  public var previousScreen(default, null): GameScreen;
+  // TODO: Fix GameScreen treating nth item in each enum as the same thing
+  private var screenState: Map<GameScreen, ScreenState>;
 
   public function new(campaign: Campaign) {
     this.campaign = campaign;
-    // TODO: Find a better way to share instances?
-    previousScreen = currentScreen = campaign.initialScreen();
     player = new Player(campaign);
+
+    currentScreen = campaign.initialScreen;
+    previousScreen = campaign.initialScreen;
     // No screen may store state before the game starts
-    // screenState = [];
+    screenState = [];
+
 #if testrooms
     startGame();
 #end
@@ -28,74 +31,90 @@ class Game {
 
   // TODO: Move room x, y to player class?
   public function startGame(): Void {
-    gotoScreen(campaign.gameScreen());
+    gotoScreen(campaign.gameScreen);
     player.Reset(campaign);
-    // screenState = [
-    //   for (screen => info in GameInfo.Screens) {
-    //     if (info is StatefulActionScreen) {
-    //       final statefulScreen: StatefulActionScreen = cast info;
-    //       screen => statefulScreen.stateConstructor(campaign);
-    //     }
-    //   }
-    // ];
+    screenState = [
+      for (extension in campaign.extensions) {
+        for (screen => screenObj in extension.screens) {
+          if (screenObj.hasState()) {
+            screen => screenObj.createState(campaign);
+          }
+        }
+      }
+    ];
   }
 
 
   public function getScreen(): Screen {
-#if debug
-    var screenExists: Bool = false;
     for (extension in campaign.extensions) {
-      for (screen in extension.screens) {
-        screenExists = screenExists || Type.getClass(currentScreen) == screen.type;
+      for (screen => screenObj in extension.screens) {
+        if (currentScreen == screen) {
+          return screenObj;
+        }
       }
     }
 
-    if (!screenExists) {
-      throw 'Invalid screen $currentScreen.';
-    }
-#end
-
-    return currentScreen;
+    throw 'Invalid screen $currentScreen.';
   }
 
-  public function gotoScreen(newScreen: Screen): Void {
+  public function gotoScreen(newScreen: GameScreen): Void {
     previousScreen = currentScreen;
     currentScreen = newScreen;
+
+#if debug
+    for (extension in campaign.extensions) {
+      for (screen => screenObj in extension.screens) {
+        if (currentScreen == screen) {
+          return;
+        }
+      }
+    }
+
+    throw 'Invalid screen $currentScreen.';
+#end
   }
 
 
   /*@:generic
   public function tryGetScreenState<T : ScreenState & Constructible<Campaign -> Void>>(): Null<T> {
-    final screenData: Null<ScreenState> = screenState[currentScreen];
-    final screen: T = new T(campaign);
-    if (screenData == null) {
+    final screenState: Null<ScreenState> = screenState[currentScreen];
+    if (!screen.hasState() || screenState == null) {
       return null;
     }
 
-    final screenDataType: String = Type.getClassName(Type.getClass(screenData));
-    final screenType: String = Type.getClassName(Type.getClass(screen));
-    if (screenDataType != screenType) {
-      throw 'Incorrect result type $screenType provided for screen with type $screenDataType in tryGetScreenState.';
+    // TODO: Fix "[1] Instance constructor not found: T" when calling generic function from generic function
+    // Constructible appears to be ignored at the second level
+#if false // debug
+    final stateType: String = Type.getClassName(Type.getClass(screenState));
+    final expectedState: T = new T(campaign);
+    final expectedType: String = Type.getClassName(Type.getClass(expectedState));
+    if (stateType != expectedType) {
+      throw 'Incorrect state type $expectedType provided for screen with type $stateType.';
     }
+#end
 
-    return cast screenData;
-  }
+    return cast screenState;
+  }*/
 
-  // For some reason, using the result of tryGetScreenState gives "[1] Instance constructor not found: getScreenState.T"
   @:generic
   public function getScreenState<T : ScreenState & Constructible<Campaign -> Void>>(): T {
-    final screenData: Null<ScreenState> = screenState[currentScreen];
-    final screen: T = new T(campaign);
-    if (screenData == null) {
+    final screen: Screen = getScreen();
+    final screenState: Null<ScreenState> = screenState[currentScreen];
+    if (!screen.hasState() || screenState == null) {
       throw 'Screen $currentScreen does not have any stored state.';
     }
 
-    final screenDataType: String = Type.getClassName(Type.getClass(screenData));
-    final screenType: String = Type.getClassName(Type.getClass(screen));
-    if (screenDataType != screenType) {
-      throw 'Incorrect result type $screenType provided for screen with type $screenDataType in getScreenState.';
+    // TODO: Fix "[1] Instance constructor not found: T" when calling generic function from generic function
+    // Constructible appears to be ignored at the second level
+#if false // debug
+    final stateType: String = Type.getClassName(Type.getClass(screenState));
+    final expectedState: T = new T(campaign);
+    final expectedType: String = Type.getClassName(Type.getClass(expectedState));
+    if (stateType != expectedType) {
+      throw 'Incorrect state type $expectedType provided for screen with type $stateType.';
     }
+#end
 
-    return cast screenData;
-  }*/
+    return cast screenState;
+  }
 }

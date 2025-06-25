@@ -18,8 +18,8 @@ final CoreGameExt: Extension = {
     {type: QuitGame, constructor: QuitGame.new},
   ],
   screens: [
-    {type: MainMenu, constructor: MainMenu.new},
-    {type: Load, constructor: Load.new},
-    {type: PlayerEquipment, constructor: PlayerEquipment.new},
+    MainMenuScreen => new MainMenu(),
+    LoadScreen => new Load(),
+    PlayerEquipmentScreen => new PlayerEquipment(),
   ],
 };

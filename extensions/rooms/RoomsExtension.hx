@@ -8,7 +8,9 @@ import extensions.rooms.Screens;
 final RoomsExt: Extension = {
   actions: [],
   outcomes: [],
-  screens: [{type: GameRooms, constructor: GameRooms.new}],
+  screens: [
+    GameRoomsScreen => new GameRooms(),
+  ],
   /*actionHandler: function(state: Game, action: GameAction): GameOutcome {
     final screen: Screen = state.getScreen();
     final roomScreenState: Null<GameRoomState> = state.tryGetScreenState();
