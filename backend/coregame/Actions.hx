@@ -3,20 +3,24 @@ package backend.coregame;
 import backend.Action;
 import backend.GameInfo;
 
-class StartGame extends Action {
+class _StartGame extends Action {
 }
+final StartGame: _StartGame = new _StartGame();
 
-class GotoScreen extends Action {
-  final screen: GameScreen;
+class _GotoScreen extends Action {
+  public final screen: GameScreen;
 
   public function new(screen: GameScreen) {
     super();
     this.screen = screen;
   }
 }
+final GotoScreen: GameScreen -> _GotoScreen = _GotoScreen.new;
 
-class GotoPreviousScreen extends Action {
+class _GotoPreviousScreen extends Action {
 }
+final GotoPreviousScreen: _GotoPreviousScreen = new _GotoPreviousScreen();
 
-class Quit extends Action {
+class _Quit extends Action {
 }
+final Quit: _Quit = new _Quit();

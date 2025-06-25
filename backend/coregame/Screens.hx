@@ -9,7 +9,7 @@ class MainMenu extends ActionScreen {
 
   function getAllActions(): Array<ScreenAction> return [
     new ScreenAction(StartGame, "Start Game"),
-    // new ScreenAction(GotoScreen(Load), "Load Game"),
+    new ScreenAction(GotoScreen(Load), "Load Game"),
     new ScreenAction(Quit, "Quit Game"),
   ];
 }

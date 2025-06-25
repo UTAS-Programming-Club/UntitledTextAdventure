@@ -16,12 +16,12 @@ abstract class Screen {
 }
 
 class ScreenAction {
-  public final action: GameAction;
+  public final action: Action;
   public final title: UnicodeString;
   public final isVisible: (Game, ActionScreen) -> Bool;
   private final outcome: Game -> GameOutcome;
 
-  public function new(action: GameAction, title: UnicodeString,
+  public function new(action: Action, title: UnicodeString,
                       ?isVisible: (Game, ActionScreen) -> Bool,
                       ?outcome: Game -> GameOutcome) {
     this.action = action;
@@ -36,8 +36,10 @@ class ScreenAction {
   public function handleAction(state: Game): GameOutcome {
     final outcome: GameOutcome = this.outcome(state);
     if (outcome == Invalid) {
+    // Should these be the other way?
+    // Given Std.string(action) == backend.coregame._StartGame, top one prints StartGame, bottom just prints the whole thing
 #if debug
-      throw 'Unhandled action ${Type.getClassName(action).split('.').pop()} on ${state.getScreen()}.';
+      throw 'Unhandled action ${StringTools.replace(Std.string(action), '_', '').split('.').pop()} on ${state.getScreen()}.';
 #else
       throw 'Unhandled action $action on ${state.getScreen()}.';
 #end

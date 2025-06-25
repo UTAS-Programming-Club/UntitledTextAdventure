@@ -6,6 +6,8 @@ import backend.Outcome;
 // import backend.Room;
 import backend.Screen;
 
+// Types able to hold any item without a constructor
+// For runtime usage, the actual types are typically required
 typedef GameAction = Class<Action>;
 typedef GameOutcome = Class<Outcome>;
 typedef GameScreen = Class<Screen>;

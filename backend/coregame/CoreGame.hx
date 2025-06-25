@@ -7,10 +7,10 @@ import backend.coregame.Screens;
 
 final CoreGameExt: Extension = {
   actions: [
-    StartGame,
-    GotoScreen,
-    GotoPreviousScreen,
-    Quit,
+    _StartGame,
+    _GotoScreen,
+    _GotoPreviousScreen,
+    _Quit,
   ],
   outcomes: [
     {type: Invalid, constructor: Invalid.new},
