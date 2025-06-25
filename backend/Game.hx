@@ -1,8 +1,9 @@
 package backend;
 
 import backend.Campaign;
-// import backend.GameInfo;
-// import backend.Screen;
+import backend.GameInfo;
+import backend.Player;
+import backend.Screen;
 // import haxe.Constraints;
 
 class Game {
@@ -10,13 +11,13 @@ class Game {
   public final player: Player;
 
   private var currentScreen: Screen;
-  // public var previousScreen(default, null): GameScreen;
+  public var previousScreen(default, null): Screen;
   // private var screenState: Map<GameScreen, ScreenState>;
 
   public function new(campaign: Campaign) {
     this.campaign = campaign;
-    // previousScreen = campaign.initialScreen;
-    currentScreen = campaign.initialScreen();
+    // TODO: Find a better way to share instances?
+    previousScreen = currentScreen = campaign.initialScreen();
     player = new Player(campaign);
     // No screen may store state before the game starts
     // screenState = [];
@@ -27,6 +28,7 @@ class Game {
 
   // TODO: Move room x, y to player class?
   public function startGame(): Void {
+    throw 'Not implemented';
     // gotoScreen(campaign.gameScreen);
     // player.Reset(campaign);
     // screenState = [
@@ -57,13 +59,13 @@ class Game {
     return currentScreen;
   }
 
-  /*public function gotoScreen(newScreen: GameScreen): Void {
+  public function gotoScreen(newScreen: Screen): Void {
     previousScreen = currentScreen;
     currentScreen = newScreen;
   }
 
 
-  @:generic
+  /*@:generic
   public function tryGetScreenState<T : ScreenState & Constructible<Campaign -> Void>>(): Null<T> {
     final screenData: Null<ScreenState> = screenState[currentScreen];
     final screen: T = new T(campaign);

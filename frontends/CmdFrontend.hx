@@ -1,5 +1,6 @@
 package frontends;
 
+import backend.Action;
 import backend.Game;
 import backend.coregame.Outcomes;
 // TODO: Recreate some merged type that works for switch exhaustion?
@@ -43,7 +44,7 @@ class CmdFrontend {
   static function PrintButtonInputs(state: Game, screen: ActionScreen): Void {
     Sys.println("\n\nUse the numbers below to make a selection.");
 
-    final actions: Array<ScreenAction> = screen.GetActions(state);
+    final actions: Array<Action> = screen.GetActions(state);
     var inputNumber: Int = 0;
     for (action in actions) {
       if (action.isVisible(state, screen)) {
@@ -113,7 +114,7 @@ class CmdFrontend {
     return true;
   }
 
-  static function MapInputIndex(state: Game, screen: ActionScreen, actions: Array<ScreenAction>, inputIndex: Int): Int {
+  static function MapInputIndex(state: Game, screen: ActionScreen, actions: Array<Action>, inputIndex: Int): Int {
     var index: Int;
     for (index in 0...actions.length) {
       if (!actions[index].isVisible(state, screen)) {
@@ -137,7 +138,7 @@ class CmdFrontend {
     }
 
     final actionScreen: ActionScreen = cast screen;
-    final actions: Array<ScreenAction> = actionScreen.GetActions(state);
+    final actions: Array<Action> = actionScreen.GetActions(state);
 
     final inputIndex: Int = GetButtonInput();
     final index: Int = MapInputIndex(state, actionScreen, actions, inputIndex);

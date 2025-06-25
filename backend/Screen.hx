@@ -1,58 +1,24 @@
 package backend;
 
+import backend.Action;
 import backend.Campaign;
 import backend.Game;
 import backend.GameInfo;
-import backend.Outcome;
 import backend.macros.Helpers;
-import backend.coregame.Outcomes;
+import backend.Outcome;
 import haxe.ds.Either;
 
 abstract class Screen {
   public function new() {
   }
 
-  public abstract function getBody(game: Game): UnicodeString;
-}
-
-class ScreenAction {
-  public final action: Action;
-  public final title: UnicodeString;
-  public final isVisible: (Game, ActionScreen) -> Bool;
-  private final outcome: Game -> GameOutcome;
-
-  public function new(action: Action, title: UnicodeString,
-                      ?isVisible: (Game, ActionScreen) -> Bool,
-                      ?outcome: Game -> GameOutcome) {
-    this.action = action;
-    this.title = title;
-    this.isVisible = isVisible ?? AlwaysVisible;
-    this.outcome = outcome ?? AlwaysInvalidOutcome;
-  }
-
-  static function AlwaysVisible(Game, ActionScreen): Bool return true;
-  static function AlwaysInvalidOutcome(Game): GameOutcome return Invalid;
-
-  public function handleAction(state: Game): GameOutcome {
-    final outcome: GameOutcome = this.outcome(state);
-    if (outcome == Invalid) {
-    // Should these be the other way?
-    // Given Std.string(action) == backend.coregame._StartGame, top one prints StartGame, bottom just prints the whole thing
-#if debug
-      throw 'Unhandled action ${StringTools.replace(Std.string(action), '_', '').split('.').pop()} on ${state.getScreen()}.';
-#else
-      throw 'Unhandled action $action on ${state.getScreen()}.';
-#end
-    }
-
-    return outcome;
-  }
+  public abstract function getBody(state: Game): UnicodeString;
 }
 
 abstract class ActionScreen extends Screen {
-  private abstract function getAllActions(): Array<ScreenAction>;
+  private abstract function getAllActions(): Array<Action>;
 
-  public function GetActions(state: Game): Array<ScreenAction> {
+  public function GetActions(state: Game): Array<Action> {
     // final room: Null<Room> = GlobalData.rooms[state.player.Y][state.player.X];
     // if (room == null) {
     //   throw new haxe.Exception("Room (" + state.player.X + ", " + state.player.Y + ") does not exist");

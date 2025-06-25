@@ -7,10 +7,10 @@ import backend.Screen;
 class MainMenu extends ActionScreen {
   function getBody(state: Game): UnicodeString return state.campaign.mainMenu;
 
-  function getAllActions(): Array<ScreenAction> return [
-    new ScreenAction(StartGame, "Start Game"),
-    new ScreenAction(GotoScreen(Load), "Load Game"),
-    new ScreenAction(Quit, "Quit Game"),
+  function getAllActions(): Array<Action> return [
+    new StartGame("Start Game"),
+    new GotoScreen<Load>("Load Game"),
+    new Quit("Quit Game"),
   ];
 }
 

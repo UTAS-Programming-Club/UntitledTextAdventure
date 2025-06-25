@@ -7,10 +7,10 @@ import backend.coregame.Screens;
 
 final CoreGameExt: Extension = {
   actions: [
-    _StartGame,
-    _GotoScreen,
-    _GotoPreviousScreen,
-    _Quit,
+    StartGame,
+    GotoScreen,
+    GotoPreviousScreen,
+    Quit,
   ],
   outcomes: [
     {type: Invalid, constructor: Invalid.new},
@@ -22,21 +22,4 @@ final CoreGameExt: Extension = {
     {type: Load, constructor: Load.new},
     {type: PlayerEquipment, constructor: PlayerEquipment.new},
   ],
-  /*actionHandler: function(state: Game, action: GameAction): GameOutcome {
-    switch (action) {
-      case StartGame:
-        state.startGame();
-        return GetNextOutput;
-      case GotoScreen(screen):
-        state.gotoScreen(screen);
-        return GetNextOutput;
-      case GotoPreviousScreen:
-        state.gotoScreen(state.previousScreen);
-        return GetNextOutput;
-      case QuitGame:
-        return QuitGame;
-      default:
-        return Invalid;
-    }
-  }*/
 };
