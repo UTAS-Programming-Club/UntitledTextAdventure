@@ -12,7 +12,7 @@ typedef Campaign = {
   final extensions: Array<Extension>;
 
   final initialScreen: Void -> Screen;
-  // final gameScreen: GameScreen;
+  final gameScreen: Void -> Screen;
 
   // final rooms: Array<Array<GameRoom>>; // Must be square
   final initialRoomX: Int; // Must be in [0, rooms.length)

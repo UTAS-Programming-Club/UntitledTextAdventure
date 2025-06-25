@@ -1,6 +1,6 @@
 package extensions.rooms;
 
-enum Room {
+/*enum Room {
   Unused;
   Empty;
-}
+}*/

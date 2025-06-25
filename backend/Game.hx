@@ -28,9 +28,8 @@ class Game {
 
   // TODO: Move room x, y to player class?
   public function startGame(): Void {
-    throw 'Not implemented';
-    // gotoScreen(campaign.gameScreen);
-    // player.Reset(campaign);
+    gotoScreen(campaign.gameScreen());
+    player.Reset(campaign);
     // screenState = [
     //   for (screen => info in GameInfo.Screens) {
     //     if (info is StatefulActionScreen) {

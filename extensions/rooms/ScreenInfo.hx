@@ -7,7 +7,7 @@ import extensions.rooms.Screens;
 // TODO: Fix rooms extension depending on traps extension
 import extensions.trap.Rooms.TrapRoom;
 
-@:nullSafety(Strict)
+/*@:nullSafety(Strict)
 function RoomTest(state: Game, screen: Screen): UnicodeString {
   final roomScreenState: GameRoomState = state.getScreenState();
   final x: Int = roomScreenState.x;
@@ -68,10 +68,5 @@ final RoomScreens: Map<GameScreen, Screen> = [
       return !roomState.activatedTrap;
     }),
     new ScreenAction(GotoScreen(PlayerEquipment), "Check Inventory"),
-#if testrooms
-    new ScreenAction(QuitGame, "Quit Game")
-#else
-    new ScreenAction(GotoScreen(MainMenu), "Return to main menu")
-#end
   ])
-];
+];*/

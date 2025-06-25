@@ -3,9 +3,9 @@ package campaigns;
 import backend.Campaign;
 import backend.coregame.CoreGame;
 import backend.coregame.Screens;
-// import backend.GameInfo;
 // import extensions.equipment.EquipmentExtension;
-// import extensions.rooms.RoomsExtension;
+import extensions.rooms.RoomsExtension;
+import extensions.rooms.Screens;
 // import extensions.trap.TrapExtension;
 // import haxe.Constraints;
 
@@ -19,14 +19,14 @@ final UntitledTextAdventure: Campaign = {
             + "\n"
             + "Currently unimplemented :(",
 
-  extensions: [CoreGameExt/*, EquipmentExt, RoomsExt, TrapExt*/],
+  extensions: [CoreGameExt/*, EquipmentExt*/, RoomsExt/*, TrapExt*/],
 
 #if testrooms
   initialScreen: GameRooms,
 #else
   initialScreen: MainMenu.new,
 #end
-  // gameScreen: GameRooms,
+  gameScreen: GameRooms.new,
 
   // rooms: {
   //   final gridSize: Int = 10;

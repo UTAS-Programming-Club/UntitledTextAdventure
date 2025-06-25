@@ -1,18 +1,29 @@
 package extensions.rooms;
 
-import backend.Campaign;
+import backend.Action;
+// import backend.Campaign;
+import backend.coregame.Actions;
+import backend.coregame.Screens;
 import backend.Game;
-import backend.GameInfo;
-import backend.macros.Helpers;
-import backend.Room;
+// import backend.GameInfo;
+// import backend.macros.Helpers;
+// import backend.Room;
 import backend.Screen;
-import haxe.Constraints;
+// import haxe.Constraints;
 
-enum RoomsScreen {
-  GameRooms;
+class GameRooms extends ActionScreen {
+  function getBody(Game): UnicodeString return 'This is the game, you are in Room [Unknown, Unknown].';
+
+  function getAllActions(): Array<Action> return [
+#if testrooms
+    new QuitGame("Quit Game")
+#else
+    new GotoScreen<MainMenu>("Return to main menu")
+#end
+  ];
 }
 
-@:nullSafety(Strict)
+/*@:nullSafety(Strict)
 class GameRoomState extends ScreenState {
   // Only modify these using changeRoom to ensure state is setup
   // For some reason ++ and possibly -- works despite disabling public assignment
@@ -67,4 +78,4 @@ class GameRoomState extends ScreenState {
 
     return cast roomData;
   }
-}
+}*/

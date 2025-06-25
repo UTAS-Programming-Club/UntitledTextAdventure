@@ -1,8 +1,8 @@
 package extensions.rooms;
 
-enum Actions {
+/*enum Actions {
   GoNorth;
   GoEast;
   GoSouth;
   GoWest;
-}
+}*/
