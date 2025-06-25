@@ -14,8 +14,12 @@ class MainMenu extends ActionScreen {
   ];
 }
 
-class Load extends Screen {
+class Load extends ActionScreen {
   function getBody(Game): UnicodeString return 'Loading is not currently supported';
+
+  function getAllActions(): Array<Action> return [
+    new GotoScreen<MainMenu>("Return to Main Menu"),
+  ];
 }
 
 
@@ -28,7 +32,7 @@ function CreateStatBar(stat: Int): UnicodeString {
   return bar + gap + ' : ' + percentage + '%';
 }
 
-class PlayerEquipment extends Screen {
+class PlayerEquipment extends ActionScreen {
   function getBody(state: Game): UnicodeString return
     'Player Equipment\n\n' +
     'Health:  ' + CreateStatBar(state.player.health) + '\n' +
@@ -40,4 +44,8 @@ class PlayerEquipment extends Screen {
     'Feet:             ' + state.player.feet.name + '\n' +
     'Primary Weapon:   ' + state.player.primaryWeapon.name + '\n' +
     'Secondary Weapon: ' + state.player.secondaryWeapon.name*/;
+
+  function getAllActions(): Array<Action> return [
+    new GotoPreviousScreen("Return to Game"),
+  ];
 }
