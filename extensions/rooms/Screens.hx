@@ -3,6 +3,7 @@ package extensions.rooms;
 import backend.Action;
 import backend.Campaign;
 import backend.coregame.Actions;
+import backend.coregame.CoreGame;
 import backend.coregame.Screens;
 import backend.Game;
 // import backend.GameInfo;
@@ -22,11 +23,11 @@ class GameRooms extends StatefulActionScreen<GameRoomState> {
   }
 
   function getAllActions(): Array<Action> return [
-    new GotoScreen(PlayerEquipmentScreen, "Check Inventory"),
+    new GotoScreen({ext: CoreGameExt, screen: PlayerEquipmentScreen}, "Check Inventory"),
 #if testrooms
     new QuitGame("Quit Game")
 #else
-    new GotoScreen(MainMenuScreen, "Return to main menu")
+    new GotoScreen({ext: CoreGameExt, screen: MainMenuScreen}, "Return to main menu")
 #end
   ];
 }

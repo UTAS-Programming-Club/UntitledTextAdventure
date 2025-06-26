@@ -10,7 +10,7 @@ import backend.Screen;
 // For runtime usage, the actual types are typically required
 typedef GameAction = Class<Action>;
 typedef GameOutcome = Class<Outcome>;
-typedef GameScreen = EnumValue;
+typedef GameScreen = {ext: Extension, screen: EnumValue};
 
 // TODO: Either namespace game data per campaign or remove support for multiple campaigns in a single build
 

@@ -12,7 +12,6 @@ typedef Extension = {
   // TODO: Check type when constructing outcomes
   final outcomes: Array<{type: GameOutcome, constructor: Void -> Outcome}>;
   // final rooms: Array<?>;
-  // Do not use [], get or exists when looping over multiple extensions
-  // Haxe considers the various GameScreen enums to be abstract ints so the nth screen for each extension are all equal
-  final screens: Map<GameScreen, Screen>;
+  // Make sure the key is from the correct extension as exists, get and [] only check index and not type.
+  final screens: Map<EnumValue, Screen>;
 }

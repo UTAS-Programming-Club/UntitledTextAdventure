@@ -1,6 +1,7 @@
 package backend.coregame;
 
 import backend.coregame.Actions;
+import backend.coregame.CoreGame;
 import backend.Game;
 import backend.Screen;
 
@@ -15,7 +16,7 @@ class MainMenu extends ActionScreen {
 
   function getAllActions(): Array<Action> return [
     new StartGame("Start Game"),
-    new GotoScreen(LoadScreen, "Load Game"),
+    new GotoScreen({ext: CoreGameExt, screen: LoadScreen}, "Load Game"),
     new Quit("Quit Game"),
   ];
 }
@@ -24,7 +25,7 @@ class Load extends ActionScreen {
   function getBody(Game): UnicodeString return 'Loading is not currently supported';
 
   function getAllActions(): Array<Action> return [
-    new GotoScreen(MainMenuScreen, "Return to Main Menu"),
+    new GotoScreen({ext: CoreGameExt, screen: MainMenuScreen}, "Return to Main Menu"),
   ];
 }
 

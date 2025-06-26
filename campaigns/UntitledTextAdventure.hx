@@ -7,7 +7,6 @@ import backend.coregame.Screens;
 import extensions.rooms.RoomsExtension;
 import extensions.rooms.Screens;
 // import extensions.trap.TrapExtension;
-// import haxe.Constraints;
 
 import backend.Room;
 
@@ -22,11 +21,11 @@ final UntitledTextAdventure: Campaign = {
   extensions: [CoreGameExt/*, EquipmentExt*/, RoomsExt/*, TrapExt*/],
 
 #if testrooms
-  initialScreen: GameRoomsScreen,
+  initialScreen: {ext: RoomsExt, screen: GameRoomsScreen},
 #else
-  initialScreen: MainMenuScreen,
+  initialScreen: {ext: CoreGameExt, screen: MainMenuScreen},
 #end
-  gameScreen: GameRoomsScreen,
+  gameScreen: {ext: RoomsExt, screen: GameRoomsScreen},
 
   // rooms: {
   //   final gridSize: Int = 10;
@@ -49,41 +48,3 @@ final UntitledTextAdventure: Campaign = {
   // initialPrimaryWeapon: PrimaryWeaponFist,
   // initialSecondaryWeapon: SecondaryWeaponNone
 };
-
-// V4 option 4
-/*abstract class RoomState {
-  public function new() {
-  }
-}
-abstract class Room {
-  public function hasState(): Bool {
-    return false;
-  }
-  
-  public function createState(): Constructible<Void -> Void> {
-    throw 'Room has no state';
-  }
-}
-@:generic
-abstract class StatefulRoom<T : Constructible<Void -> Void>> extends Room {
-  public function new() {
-  }
-
-  public override function hasState(): Bool {
-    return true;
-  }
-  
-  public override function createState(): T {
-    return new T();
-  }
-}
-
-class ChestRoomState extends RoomState {
-  public var opened: Bool = false;
-}
-@:structInit class Chest extends StatefulRoom<ChestRoomState> {
-  public final item: GameEquipment;
-}
-
-@:structInit class Empty extends Room {
-}*/

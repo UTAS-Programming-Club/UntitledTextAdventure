@@ -14,9 +14,9 @@ class StartGame extends Action {
 }
 
 class GotoScreen extends Action {
-  private final screen: EnumValue;
+  private final screen: GameScreen;
 
-  public function new(screen: EnumValue, title: UnicodeString) {
+  public function new(screen: GameScreen, title: UnicodeString) {
     super(title);
     this.screen = screen;
   }

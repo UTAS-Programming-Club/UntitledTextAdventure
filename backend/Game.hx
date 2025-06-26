@@ -12,8 +12,7 @@ class Game {
 
   private var currentScreen: GameScreen;
   public var previousScreen(default, null): GameScreen;
-  // TODO: Fix GameScreen treating nth item in each enum as the same thing
-  private var screenState: Map<GameScreen, ScreenState>;
+  private var screenState: Map<Extension, Map<EnumValue, ScreenState>>;
 
   public function new(campaign: Campaign) {
     this.campaign = campaign;
@@ -35,23 +34,22 @@ class Game {
     player.Reset(campaign);
     screenState = [
       for (extension in campaign.extensions) {
-        for (screen => screenObj in extension.screens) {
-          if (screenObj.hasState()) {
-            screen => screenObj.createState(campaign);
+        extension => [
+          for (screen => screenObj in extension.screens) {
+            if (screenObj.hasState()) {
+              screen => screenObj.createState(campaign);
+            }
           }
-        }
+        ];
       }
     ];
   }
 
 
   public function getScreen(): Screen {
-    for (extension in campaign.extensions) {
-      for (screen => screenObj in extension.screens) {
-        if (currentScreen == screen) {
-          return screenObj;
-        }
-      }
+    final screen: Null<Screen> = currentScreen.ext.screens[currentScreen.screen];
+    if (screen != null) {
+      return screen;
     }
 
     throw 'Invalid screen $currentScreen.';
@@ -62,12 +60,8 @@ class Game {
     currentScreen = newScreen;
 
 #if debug
-    for (extension in campaign.extensions) {
-      for (screen => screenObj in extension.screens) {
-        if (currentScreen == screen) {
-          return;
-        }
-      }
+    if (currentScreen.ext.screens[currentScreen.screen] != null) {
+      return;
     }
 
     throw 'Invalid screen $currentScreen.';
@@ -77,8 +71,10 @@ class Game {
 
   /*@:generic
   public function tryGetScreenState<T : ScreenState & Constructible<Campaign -> Void>>(): Null<T> {
-    final screenState: Null<ScreenState> = screenState[currentScreen];
-    if (!screen.hasState() || screenState == null) {
+    final screen: Screen = getScreen();
+    final extState: Null<Map<EnumValue, ScreenState>> = screenState[currentScreen.ext];
+    final screenState: Null<ScreenState> = extState != null ? extState[currentScreen.screen] : null;
+    if (!screen.hasState() || extState == null ||  screenState == null) {
       return null;
     }
 
@@ -99,8 +95,9 @@ class Game {
   @:generic
   public function getScreenState<T : ScreenState & Constructible<Campaign -> Void>>(): T {
     final screen: Screen = getScreen();
-    final screenState: Null<ScreenState> = screenState[currentScreen];
-    if (!screen.hasState() || screenState == null) {
+    final extState: Null<Map<EnumValue, ScreenState>> = screenState[currentScreen.ext];
+    final screenState: Null<ScreenState> = extState != null ? extState[currentScreen.screen] : null;
+    if (!screen.hasState() || extState == null ||  screenState == null) {
       throw 'Screen $currentScreen does not have any stored state.';
     }
 
