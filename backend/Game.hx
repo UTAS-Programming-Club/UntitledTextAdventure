@@ -27,7 +27,7 @@ class Game {
     // No screen may store state before the game starts
     screenState = [];
 
-#if debug
+#if debuggame
     for (ext in campaign.extensions) {
       var errors: Bool = checkGameTypeDeclarations(ext, "Outcome", ext.outcomes);
       errors = checkGameTypeDeclarations(ext, "Screen", ext.screens) || errors;
@@ -58,7 +58,8 @@ class Game {
   }
 
 
-#if debug
+// TODO: Figure out whis this fails with buildstatic.hxml
+#if debuggame
   private function checkGameTypeDeclarations<T>(ext: Extension, type: UnicodeString, declaredItems: Array<T>): Bool {
     var errors = false;
     for (item in declaredItems) {
@@ -81,7 +82,7 @@ class Game {
 #end
 
   private function checkScreen(screen: GameScreen): Void {
-#if debug
+#if debuggame
     for (ext in campaign.extensions) {
       if (ext.screens.contains(screen)) {
         return;
@@ -115,7 +116,7 @@ class Game {
 
     // TODO: Fix "[1] Instance constructor not found: T" when calling generic function from generic function
     // Constructible appears to be ignored at the second level
-#if false // debug
+#if false // debuggame
     final stateType: String = Type.getClassName(Type.getClass(screenState));
     final expectedState: T = new T(campaign);
     final expectedType: String = Type.getClassName(Type.getClass(expectedState));
@@ -137,7 +138,7 @@ class Game {
 
     // TODO: Fix "[1] Instance constructor not found: T" when calling generic function from generic function
     // Constructible appears to be ignored at the second level
-#if false // debug
+#if false // debuggame
     final stateType: String = Type.getClassName(Type.getClass(screenState));
     final expectedState: T = new T(campaign);
     final expectedType: String = Type.getClassName(Type.getClass(expectedState));
