@@ -3,31 +3,28 @@ package extensions.rooms;
 import backend.Action;
 import backend.Campaign;
 import backend.coregame.Actions;
-import backend.coregame.CoreGame;
 import backend.coregame.Screens;
 import backend.Game;
-// import backend.GameInfo;
+import backend.GameInfo;
 // import backend.macros.Helpers;
 // import backend.Room;
 import backend.Screen;
 // import haxe.Constraints;
 
-enum Screens {
-  GameRoomsScreen;
-}
 
+final GameRoomsScreen: GameScreen = new Rooms_GameRooms();
 @:nullSafety(Strict)
-class GameRooms extends StatefulActionScreen<GameRoomState> {
+class Rooms_GameRooms extends StatefulActionScreen<GameRoomState> {
   function getStatefulBody(Game, state: GameRoomState): UnicodeString {
     return 'This is the game, you are in Room [${state.x + 1}, ${state.y + 1}].';
   }
 
   function getAllActions(): Array<Action> return [
-    new GotoScreen({ext: CoreGameExt, screen: PlayerEquipmentScreen}, "Check Inventory"),
+    new GotoScreen(PlayerEquipmentScreen, "Check Inventory"),
 #if testrooms
-    new QuitGame("Quit Game")
+    new Quit("Quit Game")
 #else
-    new GotoScreen({ext: CoreGameExt, screen: MainMenuScreen}, "Return to main menu")
+    new GotoScreen(MainMenuScreen, "Return to main menu")
 #end
   ];
 }

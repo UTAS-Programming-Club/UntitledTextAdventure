@@ -10,11 +10,23 @@ class Game {
   public final campaign: Campaign;
   public final player: Player;
 
+  // Only access via getScreen
   private var currentScreen: GameScreen;
   public var previousScreen(default, null): GameScreen;
-  private var screenState: Map<Extension, Map<EnumValue, ScreenState>>;
+  private var screenState: Map<Screen, ScreenState>;
 
   public function new(campaign: Campaign) {
+  // TODO: Restore check
+/*#if debug
+    for (extension in campaign.extensions) {
+      for (screen in extension.screens) {
+        if (extension != screen.ext) {
+          throw 'Incorrect provided extension ${screen.ext} for screen $screen in $extension';
+        }
+      }
+    }
+#end*/
+
     this.campaign = campaign;
     player = new Player(campaign);
 
@@ -23,6 +35,7 @@ class Game {
     // No screen may store state before the game starts
     screenState = [];
 
+    checkScreen(campaign.initialScreen);
 #if testrooms
     startGame();
 #end
@@ -34,46 +47,44 @@ class Game {
     player.Reset(campaign);
     screenState = [
       for (extension in campaign.extensions) {
-        extension => [
-          for (screen => screenObj in extension.screens) {
-            if (screenObj.hasState()) {
-              screen => screenObj.createState(campaign);
-            }
+        for (screen in extension.screens) {
+          if (screen.hasState()) {
+            screen => screen.createState(campaign);
           }
-        ];
+        }
       }
     ];
   }
 
-
-  public function getScreen(): Screen {
-    final screen: Null<Screen> = currentScreen.ext.screens[currentScreen.screen];
-    if (screen != null) {
-      return screen;
+  private function checkScreen(screen: GameScreen): Void {
+#if debug
+    for (ext in campaign.extensions) {
+      if (ext.screens.contains(screen)) {
+        return;
+      }
     }
 
-    throw 'Invalid screen $currentScreen.';
+    throw 'Invalid screen $screen.';
+#end
+  }
+
+  public function getScreen(): Screen {
+    checkScreen(currentScreen);
+    return currentScreen;
   }
 
   public function gotoScreen(newScreen: GameScreen): Void {
+    checkScreen(newScreen);
     previousScreen = currentScreen;
     currentScreen = newScreen;
-
-#if debug
-    if (currentScreen.ext.screens[currentScreen.screen] != null) {
-      return;
-    }
-
-    throw 'Invalid screen $currentScreen.';
-#end
   }
 
 
   /*@:generic
   public function tryGetScreenState<T : ScreenState & Constructible<Campaign -> Void>>(): Null<T> {
     final screen: Screen = getScreen();
-    final extState: Null<Map<EnumValue, ScreenState>> = screenState[currentScreen.ext];
-    final screenState: Null<ScreenState> = extState != null ? extState[currentScreen.screen] : null;
+    final screenState: Null<ScreenState> = screenState[currentScreen];
+    if (!screen.hasState() || screenState == null) {
     if (!screen.hasState() || extState == null ||  screenState == null) {
       return null;
     }
@@ -95,9 +106,8 @@ class Game {
   @:generic
   public function getScreenState<T : ScreenState & Constructible<Campaign -> Void>>(): T {
     final screen: Screen = getScreen();
-    final extState: Null<Map<EnumValue, ScreenState>> = screenState[currentScreen.ext];
-    final screenState: Null<ScreenState> = extState != null ? extState[currentScreen.screen] : null;
-    if (!screen.hasState() || extState == null ||  screenState == null) {
+    final screenState: Null<ScreenState> = screenState[currentScreen];
+    if (!screen.hasState() || screenState == null) {
       throw 'Screen $currentScreen does not have any stored state.';
     }
 

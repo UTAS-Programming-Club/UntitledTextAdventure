@@ -1,31 +1,27 @@
 package backend.coregame;
 
 import backend.coregame.Actions;
-import backend.coregame.CoreGame;
 import backend.Game;
+import backend.GameInfo;
 import backend.Screen;
 
-enum Screens {
-  MainMenuScreen;
-  LoadScreen;
-  PlayerEquipmentScreen;
-}
-
-class MainMenu extends ActionScreen {
+final MainMenuScreen: GameScreen = new CoreGame_MainMenu();
+class CoreGame_MainMenu extends ActionScreen {
   function getBody(state: Game): UnicodeString return state.campaign.mainMenu;
 
   function getAllActions(): Array<Action> return [
     new StartGame("Start Game"),
-    new GotoScreen({ext: CoreGameExt, screen: LoadScreen}, "Load Game"),
+    new GotoScreen(LoadScreen, "Load Game"),
     new Quit("Quit Game"),
   ];
 }
 
-class Load extends ActionScreen {
+final LoadScreen: GameScreen = new CoreGame_Load();
+class CoreGame_Load extends ActionScreen {
   function getBody(Game): UnicodeString return 'Loading is not currently supported';
 
   function getAllActions(): Array<Action> return [
-    new GotoScreen({ext: CoreGameExt, screen: MainMenuScreen}, "Return to Main Menu"),
+    new GotoScreen(MainMenuScreen, "Return to Main Menu"),
   ];
 }
 
@@ -39,7 +35,8 @@ function CreateStatBar(stat: Int): UnicodeString {
   return bar + gap + ' : ' + percentage + '%';
 }
 
-class PlayerEquipment extends ActionScreen {
+final PlayerEquipmentScreen: GameScreen = new CoreGame_PlayerEquipment();
+class CoreGame_PlayerEquipment extends ActionScreen {
   function getBody(state: Game): UnicodeString return
     'Player Equipment\n\n' +
     'Health:  ' + CreateStatBar(state.player.health) + '\n' +

@@ -9,7 +9,7 @@ final RoomsExt: Extension = {
   actions: [],
   outcomes: [],
   screens: [
-    GameRoomsScreen => new GameRooms(),
+    GameRoomsScreen,
   ],
   /*actionHandler: function(state: Game, action: GameAction): GameOutcome {
     final screen: Screen = state.getScreen();
