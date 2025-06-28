@@ -1,5 +1,7 @@
 package backend;
 
+using StringTools;
+
 import backend.coregame.Outcomes;
 import backend.Game;
 import backend.GameInfo;
@@ -18,14 +20,8 @@ abstract class Action {
   public function handleAction(state: Game): GameOutcome {
     final outcome: GameOutcome = trigger(state);
     if (outcome == Invalid) {
-    // TODO: Cleanup now that there is no _ prefix
-    // Should these be the other way?
-    // Given Std.string(action) == backend.coregame._StartGame, top one prints StartGame, bottom just prints the whole thing
-#if debug
-      throw 'Unhandled action ${StringTools.replace(Std.string(this), '_', '').split('.').pop()} on ${state.getScreen()}.';
-#else
-      throw 'Unhandled action $this on ${state.getScreen()}.';
-#end
+      throw   ': Unhandled action ${Std.string(this).split('.').pop()}'
+            + ' on ${Std.string(state.getScreen()).replace('_', '.').split('.').pop()}.';
     }
 
     return outcome;

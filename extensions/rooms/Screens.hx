@@ -74,13 +74,13 @@ class GameRoomState extends ScreenState {
     final roomData: Null<backend.Room> = roomState[point];
     final room: T = new T();
     if (roomData == null) {
-      throw 'Room at $xPos, $yPos does not have any stored state.';
+      throw ': Room at $xPos, $yPos does not have any stored state.';
     }
 
     final roomDataType: String = Type.getClassName(Type.getClass(roomData));
     final roomType: String = Type.getClassName(Type.getClass(room));
     if (roomDataType != roomType) {
-      throw 'Incorrect result type $roomType provided for room with type $roomDataType in getRoomState.';
+      throw ': Incorrect result type $roomType provided for room with type $roomDataType in getRoomState.';
     }
 
     return cast roomData;

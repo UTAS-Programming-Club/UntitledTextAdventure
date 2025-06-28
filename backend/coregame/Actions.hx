@@ -4,7 +4,6 @@ import backend.Action;
 import backend.coregame.Outcomes;
 import backend.GameInfo;
 import backend.Screen;
-import haxe.Constraints;
 
 class StartGame extends Action {
   function trigger(state: Game): GameOutcome {

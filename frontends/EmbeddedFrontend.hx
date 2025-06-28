@@ -89,7 +89,7 @@ class EmbeddedFrontend {
       case QuitGame:
         return false;
       default:
-      throw 'Unknown screen action outcome $outcome received.';
+      throw ': Unknown screen action outcome $outcome received.';
     }
   }
 

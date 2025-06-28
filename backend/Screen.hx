@@ -10,7 +10,7 @@ abstract class Screen {
   }
 
   public function hasState(): Bool return false;
-  public function createState(campaign: Campaign): ScreenState throw 'Screen has no state';
+  public function createState(campaign: Campaign): ScreenState throw ': Screen has no state';
 
   public abstract function getBody(state: Game): UnicodeString;
 }

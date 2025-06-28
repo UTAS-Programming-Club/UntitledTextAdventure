@@ -1,9 +1,7 @@
 package backend;
 
-// import backend.Equipment;
 import backend.Extension;
 import backend.GameInfo;
-import haxe.Constraints;
 
 typedef Campaign = {
   final mainMenu: UnicodeString;

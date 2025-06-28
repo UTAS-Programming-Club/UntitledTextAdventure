@@ -21,7 +21,7 @@ class Game {
     for (extension in campaign.extensions) {
       for (screen in extension.screens) {
         if (extension != screen.ext) {
-          throw 'Incorrect provided extension ${screen.ext} for screen $screen in $extension';
+          throw ': Incorrect provided extension ${screen.ext} for screen $screen in $extension';
         }
       }
     }
@@ -64,7 +64,7 @@ class Game {
       }
     }
 
-    throw 'Invalid screen $screen.';
+    throw ': Invalid screen $screen.';
 #end
   }
 
@@ -96,7 +96,7 @@ class Game {
     final expectedState: T = new T(campaign);
     final expectedType: String = Type.getClassName(Type.getClass(expectedState));
     if (stateType != expectedType) {
-      throw 'Incorrect state type $expectedType provided for screen with type $stateType.';
+      throw ': Incorrect state type $expectedType provided for screen with type $stateType.';
     }
 #end
 
@@ -108,7 +108,7 @@ class Game {
     final screen: Screen = getScreen();
     final screenState: Null<ScreenState> = screenState[currentScreen];
     if (!screen.hasState() || screenState == null) {
-      throw 'Screen $currentScreen does not have any stored state.';
+      throw ': Screen $currentScreen does not have any stored state.';
     }
 
     // TODO: Fix "[1] Instance constructor not found: T" when calling generic function from generic function
@@ -118,7 +118,7 @@ class Game {
     final expectedState: T = new T(campaign);
     final expectedType: String = Type.getClassName(Type.getClass(expectedState));
     if (stateType != expectedType) {
-      throw 'Incorrect state type $expectedType provided for screen with type $stateType.';
+      throw ': Incorrect state type $expectedType provided for screen with type $stateType.';
     }
 #end
 
