@@ -3,7 +3,6 @@ package frontends;
 import backend.Game;
 import backend.GameInfo;
 import backend.Screen;
-import campaigns.UntitledTextAdventure;
 
 @:pythonImport("nativehelpers")
 extern class Native {
@@ -89,7 +88,7 @@ class EmbeddedFrontend {
       case QuitGame:
         return false;
       default:
-      throw ': Unknown screen action outcome $outcome received.';
+      throw ': Unknown screen action outcome $outcome received';
     }
   }
 
@@ -97,7 +96,7 @@ class EmbeddedFrontend {
   static function main(): Void {
     Native.SetupOutput();
 
-    final state = new Game(UntitledTextAdventure);
+    final state = new Game();
     do {
       if (!HandleOutput(state)) {
         break;

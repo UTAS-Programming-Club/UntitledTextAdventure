@@ -4,6 +4,7 @@ using StringTools;
 import haxe.Constraints;
 
 import backend.Campaign;
+import backend.macros.Helpers;
 import backend.GameInfo;
 import backend.Player;
 import backend.Screen;
@@ -17,8 +18,8 @@ class Game {
   public var previousScreen(default, null): GameScreen;
   private var screenState: Map<Screen, ScreenState>;
 
-  public function new(campaign: Campaign) {
-    this.campaign = campaign;
+  public function new() {
+    campaign = getCampaign();
     player = new Player(campaign);
 
     currentScreen = campaign.initialScreen;
@@ -31,7 +32,7 @@ class Game {
       var errors: Bool = checkGameTypeDeclarations(ext, "Outcome", ext.outcomes);
       errors = checkGameTypeDeclarations(ext, "Screen", ext.screens) || errors;
       if (errors) {
-        throw ': Please fix extension type declarations to continue.';
+        throw ': Please fix extension type declarations to continue';
       }
     }
 #end
@@ -87,7 +88,7 @@ class Game {
       }
     }
 
-    throw ': Invalid screen $screen.';
+    throw ': Invalid screen $screen';
 #end
   }
 
@@ -119,7 +120,7 @@ class Game {
     final expectedState: T = new T(campaign);
     final expectedType: String = Type.getClassName(Type.getClass(expectedState));
     if (stateType != expectedType) {
-      throw ': Incorrect state type $expectedType provided for screen with type $stateType.';
+      throw ': Incorrect state type $expectedType provided for screen with type $stateType';
     }
 #end
 
@@ -131,7 +132,7 @@ class Game {
     final screen: Screen = getScreen();
     final screenState: Null<ScreenState> = screenState[currentScreen];
     if (!screen.hasState() || screenState == null) {
-      throw ': Screen $currentScreen does not have any stored state.';
+      throw ': Screen $currentScreen does not have any stored state';
     }
 
     // TODO: Fix "[1] Instance constructor not found: T" when calling generic function from generic function
@@ -141,7 +142,7 @@ class Game {
     final expectedState: T = new T(campaign);
     final expectedType: String = Type.getClassName(Type.getClass(expectedState));
     if (stateType != expectedType) {
-      throw ': Incorrect state type $expectedType provided for screen with type $stateType.';
+      throw ': Incorrect state type $expectedType provided for screen with type $stateType';
     }
 #end
 

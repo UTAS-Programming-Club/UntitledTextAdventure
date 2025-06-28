@@ -7,8 +7,6 @@ import backend.coregame.Outcomes;
 import backend.GameInfo;
 import backend.Outcome;
 import backend.Screen;
-import campaigns.UntitledTextAdventure;
-// import campaigns.TestCampaign;
 
 class CmdFrontend {
   static final ESC = "\x1B";
@@ -155,7 +153,7 @@ class CmdFrontend {
       case QuitGame:
         return false;
       default:
-       throw ': Unknown screen action outcome $outcome received.';
+       throw ': Unknown screen action outcome $outcome received';
     }
   }
 
@@ -163,9 +161,7 @@ class CmdFrontend {
   public static function main(): Void {
     SetupConsole();
 
-    // TODO: Change to cmd parameter
-    final state = new Game(UntitledTextAdventure);
-    // final state = new Game(TestCampaign);
+    final state = new Game();
     do {
       if (!HandleOutput(state)) {
         break;

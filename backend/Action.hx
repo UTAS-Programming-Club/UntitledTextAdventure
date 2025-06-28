@@ -21,7 +21,7 @@ abstract class Action {
     final outcome: GameOutcome = trigger(state);
     if (outcome == Invalid) {
       throw   ': Unhandled action ${Std.string(this).split('.').pop()}'
-            + ' on ${Std.string(state.getScreen()).replace('_', '.').split('.').pop()}.';
+            + ' on ${Std.string(state.getScreen()).replace('_', '.').split('.').pop()}';
     }
 
     return outcome;
