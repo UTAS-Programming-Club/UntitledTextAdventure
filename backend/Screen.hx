@@ -1,9 +1,10 @@
 package backend;
 
+import haxe.Constraints;
+
 import backend.Action;
 import backend.Campaign;
 import backend.Game;
-import haxe.Constraints;
 
 abstract class Screen {
   public function new() {

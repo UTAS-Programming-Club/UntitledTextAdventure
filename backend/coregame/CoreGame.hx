@@ -6,6 +6,7 @@ import backend.coregame.Outcomes;
 import backend.coregame.Screens;
 
 final CoreGameExt: Extension = {
+  module: 'backend.coregame',
   actions: [
     StartGame,
     GotoScreen,
@@ -13,9 +14,9 @@ final CoreGameExt: Extension = {
     Quit,
   ],
   outcomes: [
-    {type: Invalid, constructor: Invalid.new},
-    {type: GetNextOutput, constructor: GetNextOutput.new},
-    {type: QuitGame, constructor: QuitGame.new},
+    Invalid,
+    GetNextOutput,
+    QuitGame,
   ],
   screens: [
     MainMenuScreen,

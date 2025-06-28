@@ -6,6 +6,7 @@ import extensions.rooms.Screens;
 // TODO: Merge into CoreGame?
 @:nullSafety(Strict)
 final RoomsExt: Extension = {
+  module: 'extensions.rooms',
   actions: [],
   outcomes: [],
   screens: [

@@ -1,10 +1,12 @@
 package backend;
 
+using StringTools;
+import haxe.Constraints;
+
 import backend.Campaign;
 import backend.GameInfo;
 import backend.Player;
 import backend.Screen;
-import haxe.Constraints;
 
 class Game {
   public final campaign: Campaign;
@@ -16,17 +18,6 @@ class Game {
   private var screenState: Map<Screen, ScreenState>;
 
   public function new(campaign: Campaign) {
-  // TODO: Restore check
-/*#if debug
-    for (extension in campaign.extensions) {
-      for (screen in extension.screens) {
-        if (extension != screen.ext) {
-          throw ': Incorrect provided extension ${screen.ext} for screen $screen in $extension';
-        }
-      }
-    }
-#end*/
-
     this.campaign = campaign;
     player = new Player(campaign);
 
@@ -35,6 +26,15 @@ class Game {
     // No screen may store state before the game starts
     screenState = [];
 
+#if debug
+    for (ext in campaign.extensions) {
+      var errors: Bool = checkGameTypeDeclarations(ext, "Outcome", ext.outcomes);
+      errors = checkGameTypeDeclarations(ext, "Screen", ext.screens) || errors;
+      if (errors) {
+        throw ': Please fix extension type declarations to continue.';
+      }
+    }
+#end
     checkScreen(campaign.initialScreen);
 #if testrooms
     startGame();
@@ -46,8 +46,8 @@ class Game {
     gotoScreen(campaign.gameScreen);
     player.Reset(campaign);
     screenState = [
-      for (extension in campaign.extensions) {
-        for (screen in extension.screens) {
+      for (ext in campaign.extensions) {
+        for (screen in ext.screens) {
           if (screen.hasState()) {
             screen => screen.createState(campaign);
           }
@@ -55,6 +55,29 @@ class Game {
       }
     ];
   }
+
+
+#if debug
+  private function checkGameTypeDeclarations<T>(ext: Extension, type: UnicodeString, declaredItems: Array<T>): Bool {
+    var errors = false;
+    for (item in declaredItems) {
+      final itemString: UnicodeString = Std.string(item).replace('Class<', '').replace('>', '');
+      final itemName: Null<UnicodeString> = itemString.split(".").pop();
+      if (itemName == null) {
+        throw 'Internal error';
+      }
+
+      final itemModule: UnicodeString = itemString.substring(0, itemString.length - itemName.length - 1);
+      if (ext.module != itemModule) {
+        final itemDisplayName: UnicodeString = itemName.split('_').pop() ?? itemName;
+        trace('$type $itemDisplayName declared in incorrect extension ${ext.module}.');
+        errors = true;
+      }
+    }
+
+    return errors;
+  }
+#end
 
   private function checkScreen(screen: GameScreen): Void {
 #if debug
@@ -67,6 +90,7 @@ class Game {
     throw ': Invalid screen $screen.';
 #end
   }
+
 
   public function getScreen(): Screen {
     checkScreen(currentScreen);
@@ -85,7 +109,6 @@ class Game {
     final screen: Screen = getScreen();
     final screenState: Null<ScreenState> = screenState[currentScreen];
     if (!screen.hasState() || screenState == null) {
-    if (!screen.hasState() || extState == null ||  screenState == null) {
       return null;
     }
 
