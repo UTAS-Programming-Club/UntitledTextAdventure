@@ -1,15 +1,17 @@
 package extensions.rooms;
 
+// import haxe.Constraints;
+
 import backend.Action;
+// import backend.macros.Helpers;
 import backend.Campaign;
 import backend.coregame.Actions;
 import backend.coregame.Screens;
 import backend.Game;
 import backend.GameInfo;
-// import backend.macros.Helpers;
 // import backend.Room;
 import backend.Screen;
-// import haxe.Constraints;
+import extensions.rooms.Actions;
 
 
 final GameRoomsScreen: GameScreen = new Rooms_GameRooms();
@@ -20,6 +22,10 @@ class Rooms_GameRooms extends StatefulActionScreen<GameRoomState> {
   }
 
   function getAllActions(): Array<Action> return [
+    new GoNorth("Go North"),
+    new GoEast("Go East"),
+    new GoSouth("Go South"),
+    new GoWest("Go West"),
     new GotoScreen(PlayerEquipmentScreen, "Check Inventory"),
 #if testrooms
     new Quit("Quit Game")
@@ -35,7 +41,7 @@ class GameRoomState extends ScreenState {
   // For some reason ++ and possibly -- works despite disabling public assignment
   public var x(default, null): Int; // Must be in [0, campaign.rooms.length)
   public var y(default, null): Int; // Must be in [0, campaign.rooms.length)
-  // var roomState: Map<Int, Room> = [];
+  // var roomState: Map<Int, GameRoom> = [];
 
   public function new(campaign: Campaign) {
     super();
@@ -43,28 +49,30 @@ class GameRoomState extends ScreenState {
     y = campaign.initialRoomY;
   }
 
-  /*// TODO: Call on first room appearing
+  // TODO: Call on first room appearing
   // x and y must be in [0, campaign.rooms.length)
   public function changeRoom(state: Game, x: Int, y: Int): Void {
     this.x = x;
     this.y = y;
 
-    final point: Int = x * state.campaign.rooms.length + y;
+    // TODO: Readd room state
+    /*final point: Int = x * state.campaign.rooms.length + y;
     if (roomState.exists(point)) {
       return;
     }
 
     final room: GameRoom = state.campaign.rooms[x][y];
+    // TODO: Readd check
     if (!GameInfo.Rooms.exists(room)) {
       return;
     }
 
     final roomClass: Void -> Room = cast GameInfo.Rooms[room];
-    roomState[point] = roomClass();
+    roomState[point] = roomClass();*/
   }
 
   // x and y must be in [0, campaign.rooms.length)
-  @:generic
+  /*@:generic
   public function getRoomState<T : Room & Constructible<Void -> Void>>(state: Game, ?x: Int, ?y: Int): T {
     final xPos: Int = x ?? this.x;
     final yPos: Int = y ?? this.y;

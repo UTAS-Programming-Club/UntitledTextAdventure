@@ -34,26 +34,6 @@ function RoomTest(state: Game, screen: Screen): UnicodeString {
 @:nullSafety(Strict)
 final RoomScreens: Map<GameScreen, Screen> = [
   GameRooms => new StatefulActionScreen(GameRoomState.new, RoomTest, [
-    new ScreenAction(GoNorth, "Go North", function (state: Game, screen: ActionScreen): Bool {
-      final roomScreenState: GameRoomState = state.getScreenState();
-      return roomScreenState.y < state.campaign.rooms.length - 1 &&
-             state.campaign.rooms[roomScreenState.x][roomScreenState.y + 1] != Unused;
-    }),
-    new ScreenAction(GoEast, "Go East", function (state: Game, screen: ActionScreen): Bool {
-      final roomScreenState: GameRoomState = state.getScreenState();
-      return roomScreenState.x > 0 &&
-             state.campaign.rooms[roomScreenState.x - 1][roomScreenState.y] != Unused;
-    }),
-    new ScreenAction(GoSouth, "Go South", function (state: Game, screen: ActionScreen): Bool {
-      final roomScreenState: GameRoomState = state.getScreenState();
-      return roomScreenState.y > 0 &&
-             state.campaign.rooms[roomScreenState.x][roomScreenState.y - 1] != Unused;
-    }),
-    new ScreenAction(GoWest, "Go West", function (state: Game, screen: ActionScreen): Bool {
-      final roomScreenState: GameRoomState = state.getScreenState();
-      return roomScreenState.x < state.campaign.rooms.length - 1 &&
-             state.campaign.rooms[roomScreenState.x + 1][roomScreenState.y] != Unused;
-    }),
     // TODO: Fix rooms extension depending on traps extension
     new ScreenAction(DodgeTrap, "Dodge Trap", function (state: Game, screen: ActionScreen): Bool {
       final roomScreenState: GameRoomState = state.getScreenState();

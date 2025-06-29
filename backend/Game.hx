@@ -29,7 +29,9 @@ class Game {
 
 #if debuggame
     for (ext in campaign.extensions) {
+      // TODO: Figure out why outcomes and screens are printed but not rooms
       var errors: Bool = checkGameTypeDeclarations(ext, "Outcome", ext.outcomes);
+      errors = checkGameTypeDeclarations(ext, "Room", ext.rooms) || errors;
       errors = checkGameTypeDeclarations(ext, "Screen", ext.screens) || errors;
       if (errors) {
         throw ': Please fix extension type declarations to continue';
@@ -72,7 +74,7 @@ class Game {
       final itemModule: UnicodeString = itemString.substring(0, itemString.length - itemName.length - 1);
       if (ext.module != itemModule) {
         final itemDisplayName: UnicodeString = itemName.split('_').pop() ?? itemName;
-        trace('$type $itemDisplayName declared in incorrect extension ${ext.module}.');
+        trace('$type $itemDisplayName declared in incorrect extension ${ext.module}');
         errors = true;
       }
     }
@@ -106,7 +108,7 @@ class Game {
   }
 
 
-  /*@:generic
+  @:generic
   public function tryGetScreenState<T : ScreenState & Constructible<Campaign -> Void>>(): Null<T> {
     final screen: Screen = getScreen();
     final screenState: Null<ScreenState> = screenState[currentScreen];
@@ -126,7 +128,7 @@ class Game {
 #end
 
     return cast screenState;
-  }*/
+  }
 
   @:generic
   public function getScreenState<T : ScreenState & Constructible<Campaign -> Void>>(): T {

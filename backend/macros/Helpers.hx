@@ -6,7 +6,6 @@ import haxe.macro.Expr;
 import haxe.macro.Type;
 
 import backend.Campaign;
-using backend.macros.TypeGeneration;
 
 // From https://code.haxe.org/category/other/passing-different-types-to-a-function-parameter.html
 abstract OneOf<A, B>(Either<A, B>) from Either<A, B> to Either<A, B> {
@@ -83,6 +82,5 @@ macro function getCampaign(): ExprOf<Campaign> {
     throw ': Unable to access static field for $campaignName';
   }
 
-  final campaignExpr: Expr = Context.getTypedExpr(campaignTypedExpr).fixModuleStatics();
-  return macro $campaignExpr;
+  return Context.storeTypedExpr(campaignTypedExpr);
 }

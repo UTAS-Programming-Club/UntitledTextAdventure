@@ -14,6 +14,7 @@ abstract class Action {
     this.title = title;
   }
 
+  // TODO: Provide screen state to both of these if exists
   public function isVisible(Game, ActionScreen): Bool return true;
   public abstract function trigger(state: Game): GameOutcome;
 

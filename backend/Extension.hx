@@ -1,15 +1,14 @@
 package backend;
 
 import backend.GameInfo;
-import backend.Outcome;
-import backend.Screen;
 
+// TODO: Allow extensions to depend on other extensions
 typedef Extension = {
   final module: UnicodeString;
 
   final actions: Array<GameAction>;
   // final equipment: Array<?>;
   final outcomes: Array<GameOutcome>;
-  // final rooms: Array<?>;
+  final rooms: Array<GameRoom>;
   final screens: Array<GameScreen>;
 }

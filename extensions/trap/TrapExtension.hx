@@ -12,6 +12,7 @@ final TrapExt: Extension = {
   module: 'extensions.trap',
   actions: [],
   outcomes: [],
+  rooms: [],
   screens: [],
   /*actionHandler: function(state: Game, action: GameAction): GameOutcome {
     switch (action) {

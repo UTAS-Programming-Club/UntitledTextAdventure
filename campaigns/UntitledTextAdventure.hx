@@ -4,6 +4,7 @@ import backend.Campaign;
 import backend.coregame.CoreGame;
 import backend.coregame.Screens;
 import extensions.equipment.EquipmentExtension;
+import extensions.rooms.Rooms;
 import extensions.rooms.RoomsExtension;
 import extensions.rooms.Screens;
 import extensions.trap.TrapExtension;
@@ -25,16 +26,16 @@ final UntitledTextAdventure: Campaign = {
 #end
   gameScreen: GameRoomsScreen,
 
-  // rooms: {
-  //   final gridSize: Int = 10;
-  //   final rooms = [for (x in 0...gridSize) [for (y in 0...gridSize) Unused]];
-  //   rooms[0][0] = Empty;
-  //   rooms[0][1] = Empty;
-  //   rooms[1][0] = Empty;
-  //   rooms[1][1] = Empty;
+  rooms: {
+    final gridSize: Int = 10;
+    final rooms = [for (x in 0...gridSize) [for (y in 0...gridSize) UnusedRoom]];
+    rooms[0][0] = EmptyRoom;
+    rooms[0][1] = EmptyRoom;
+    rooms[1][0] = EmptyRoom;
+    rooms[1][1] = EmptyRoom;
   //   rooms[1][2] = Trap;
-  //   rooms;
-  // },
+    rooms;
+  },
   initialRoomX: 0,
   initialRoomY: 0,
 
