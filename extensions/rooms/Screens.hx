@@ -11,7 +11,8 @@ import backend.GameInfo;
 import backend.Room;
 import backend.Screen;
 import extensions.rooms.Actions;
-
+// TODO: Fix rooms extension depending on traps extension
+import extensions.trap.Actions;
 
 final GameRoomsScreen: GameScreen = new Rooms_GameRooms();
 @:nullSafety(Strict)
@@ -25,6 +26,8 @@ class Rooms_GameRooms extends StatefulActionScreen<GameRoomState> {
     new GoEast("Go East"),
     new GoSouth("Go South"),
     new GoWest("Go West"),
+    // TODO: Fix rooms extension depending on traps extension
+    new DodgeTrap("Dodge Trap"),
     new GotoScreen(PlayerEquipmentScreen, "Check Inventory"),
 #if testrooms
     new Quit("Quit Game")

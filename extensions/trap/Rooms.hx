@@ -3,7 +3,6 @@ package extensions.trap;
 import backend.GameInfo;
 import backend.Room;
 
-
 final TrapRoom: GameRoom = new Trap_Trap();
 class Trap_Trap extends StatefulRoom<TrapRoomState> {
 }
