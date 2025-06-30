@@ -1,15 +1,14 @@
 package extensions.rooms;
 
-// import haxe.Constraints;
+import haxe.Constraints;
 
 import backend.Action;
-// import backend.macros.Helpers;
 import backend.Campaign;
 import backend.coregame.Actions;
 import backend.coregame.Screens;
 import backend.Game;
 import backend.GameInfo;
-// import backend.Room;
+import backend.Room;
 import backend.Screen;
 import extensions.rooms.Actions;
 
@@ -41,7 +40,7 @@ class GameRoomState extends ScreenState {
   // For some reason ++ and possibly -- works despite disabling public assignment
   public var x(default, null): Int; // Must be in [0, campaign.rooms.length)
   public var y(default, null): Int; // Must be in [0, campaign.rooms.length)
-  // var roomState: Map<Int, GameRoom> = [];
+  private var roomState: Map<Int, RoomState> = [];
 
   public function new(campaign: Campaign) {
     super();
@@ -55,42 +54,55 @@ class GameRoomState extends ScreenState {
     this.x = x;
     this.y = y;
 
-    // TODO: Readd room state
-    /*final point: Int = x * state.campaign.rooms.length + y;
+    final point: Int = x * state.campaign.rooms.length + y;
     if (roomState.exists(point)) {
       return;
     }
 
     final room: GameRoom = state.campaign.rooms[x][y];
-    // TODO: Readd check
-    if (!GameInfo.Rooms.exists(room)) {
+#if debuggame
+    var roomExists: Bool = false;
+    for (ext in state.campaign.extensions) {
+      roomExists = roomExists || ext.rooms.contains(room);
+      if (roomExists) {
+        break;
+      }
+    }
+
+    if (!roomExists) {
+      throw ': Invalid room $room';
+    }
+#end
+
+    if (!room.hasRoomState()) {
       return;
     }
 
-    final roomClass: Void -> Room = cast GameInfo.Rooms[room];
-    roomState[point] = roomClass();*/
+    roomState[point] = room.createRoomState();
   }
 
   // x and y must be in [0, campaign.rooms.length)
-  /*@:generic
-  public function getRoomState<T : Room & Constructible<Void -> Void>>(state: Game, ?x: Int, ?y: Int): T {
+  @:generic
+  public function getRoomState<T : RoomState & Constructible<Void -> Void>>(state: Game, ?x: Int, ?y: Int): T {
     final xPos: Int = x ?? this.x;
     final yPos: Int = y ?? this.y;
-
     final point: Int = xPos * state.campaign.rooms.length + yPos;
 
-    final roomData: Null<backend.Room> = roomState[point];
-    final room: T = new T();
-    if (roomData == null) {
-      throw ': Room at $xPos, $yPos does not have any stored state';
+    final room: GameRoom = state.campaign.rooms[xPos][yPos];
+    final roomState: Null<RoomState> = roomState[point];
+    if (!room.hasRoomState() || roomState == null) {
+      throw ': Room $room at $xPos, $yPos does not have any stored state';
     }
 
-    final roomDataType: String = Type.getClassName(Type.getClass(roomData));
-    final roomType: String = Type.getClassName(Type.getClass(room));
-    if (roomDataType != roomType) {
-      throw ': Incorrect result type $roomType provided for room with type $roomDataType in getRoomState';
+#if debuggame
+    final stateType: String = Type.getClassName(Type.getClass(roomState));
+    final expectedState: T = new T();
+    final expectedType: String = Type.getClassName(Type.getClass(expectedState));
+    if (stateType != expectedType) {
+      throw ': Incorrect result type $expectedType provided for room with type $stateType';
     }
+#end
 
-    return cast roomData;
-  }*/
+    return cast roomState;
+  }
 }

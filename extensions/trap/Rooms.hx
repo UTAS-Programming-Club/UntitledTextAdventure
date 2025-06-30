@@ -1,9 +1,13 @@
 package extensions.trap;
 
-enum Room {
-  Trap;
+import backend.GameInfo;
+import backend.Room;
+
+
+final TrapRoom: GameRoom = new Trap_Trap();
+class Trap_Trap extends StatefulRoom<TrapRoomState> {
 }
 
-class TrapRoom extends backend.Room {
+class TrapRoomState extends RoomState {
   public var activatedTrap: Bool = false;
 }

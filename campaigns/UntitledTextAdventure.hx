@@ -7,6 +7,7 @@ import extensions.equipment.EquipmentExtension;
 import extensions.rooms.Rooms;
 import extensions.rooms.RoomsExtension;
 import extensions.rooms.Screens;
+import extensions.trap.Rooms;
 import extensions.trap.TrapExtension;
 
 @:nullSafety(Strict)
@@ -33,7 +34,7 @@ final UntitledTextAdventure: Campaign = {
     rooms[0][1] = EmptyRoom;
     rooms[1][0] = EmptyRoom;
     rooms[1][1] = EmptyRoom;
-  //   rooms[1][2] = Trap;
+    rooms[1][2] = TrapRoom;
     rooms;
   },
   initialRoomX: 0,

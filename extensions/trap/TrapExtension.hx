@@ -5,14 +5,16 @@ import backend.Extension;
 // import backend.GameInfo;
 // import backend.Screen;
 // import extensions.rooms.Screens;
-// import extensions.trap.Rooms;
+import extensions.trap.Rooms;
 
 @:nullSafety(Strict)
 final TrapExt: Extension = {
   module: 'extensions.trap',
   actions: [],
   outcomes: [],
-  rooms: [],
+  rooms: [
+    TrapRoom,
+  ],
   screens: [],
   /*actionHandler: function(state: Game, action: GameAction): GameOutcome {
     switch (action) {

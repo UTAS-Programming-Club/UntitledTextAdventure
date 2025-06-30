@@ -16,7 +16,7 @@ class Game {
   // Only access via getScreen
   private var currentScreen: GameScreen;
   public var previousScreen(default, null): GameScreen;
-  private var screenState: Map<Screen, ScreenState>;
+  private var screenState: Map<GameScreen, ScreenState>;
 
   public function new() {
     campaign = getCampaign();
