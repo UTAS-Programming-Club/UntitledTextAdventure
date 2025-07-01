@@ -52,8 +52,7 @@ abstract class StatefulRoom<T : ScreenState & Constructible<Void -> Void>> exten
   override function hasState(): Bool return true;
   override function createState(): T return new T();
 
-  // TODO: Fix
-  // abstract function getStatefulBody(state: Game, screenState: T): UnicodeString;
+  function getStatefulRoomBody(state: Game, screenState: T): UnicodeString return "";
 
-  // function getBody(state: Game): UnicodeString return getStatefulBody(state, state.getScreenState());
+  override function getRoomBody(state: Game): UnicodeString return getStatefulRoomBody(state, state.getRoomState());
 }

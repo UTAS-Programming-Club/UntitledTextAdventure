@@ -5,7 +5,6 @@ import backend.Game;
 import backend.coregame.Outcomes;
 // TODO: Recreate some merged type that works for switch exhaustion?
 import backend.GameInfo;
-import backend.Outcome;
 import backend.Screen;
 
 class CmdFrontend {

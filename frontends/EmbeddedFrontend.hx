@@ -1,6 +1,8 @@
 package frontends;
 
+import backend.Action;
 import backend.Game;
+import backend.coregame.Outcomes;
 import backend.GameInfo;
 import backend.Screen;
 
@@ -27,7 +29,7 @@ class EmbeddedFrontend {
 
   static function HandleOutput(state: Game): Bool {
     final screen: Screen = state.getScreen();
-    PrintOutputBody(screen.GetBody(state));
+    PrintOutputBody(screen.getBody(state));
 
     if (screen is ActionScreen) {
       Native.PrintActionInputs(state, cast(screen, ActionScreen));
@@ -41,7 +43,7 @@ class EmbeddedFrontend {
   }
 
 
-  static function MapInputIndex(state: Game, screen: ActionScreen, actions: Array<ScreenAction>, inputIndex: Int): Int {
+  static function MapInputIndex(state: Game, screen: ActionScreen, actions: Array<Action>, inputIndex: Int): Int {
     var index: Int;
     for (index in 0...actions.length) {
       if (!actions[index].isVisible(state, screen)) {
@@ -65,8 +67,8 @@ class EmbeddedFrontend {
     }
 
     final actionScreen: ActionScreen = cast screen;
-    final actions: Array<ScreenAction> = actionScreen.GetActions(state);
-    final visibleInputs: Array<ScreenAction> = [
+    final actions: Array<Action> = actionScreen.GetActions();
+    final visibleInputs: Array<Action> = [
       for (action in actions) {
         if (action.isVisible(state, actionScreen)) {
           action;

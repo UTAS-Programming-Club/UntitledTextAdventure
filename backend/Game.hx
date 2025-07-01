@@ -30,7 +30,6 @@ class Game {
 
 #if debuggame
     for (ext in campaign.extensions) {
-      // TODO: Figure out why outcomes and screens are printed but not rooms
       var errors: Bool = checkGameTypeDeclarations(ext, "Outcome", ext.outcomes);
       errors = checkGameTypeDeclarations(ext, "Screen", ext.screens) || errors;
       if (errors) {
@@ -44,7 +43,6 @@ class Game {
 #end
   }
 
-  // TODO: Move room x, y to player class?
   public function startGame(): Void {
     player.Reset(campaign);
     gotoRoom(campaign.initialRoomX, campaign.initialRoomY);
@@ -108,8 +106,11 @@ class Game {
   }
 
 
-  // TODO: Only make generic for debuggame?
+  // TODO: Fix "[1] Instance constructor not found: T" when calling generic function from generic function
+  // Constructible appears to be ignored at the second level
+#if false // debuggame
   @:generic
+#end
   public function tryGetScreenState<T : ScreenState & Constructible<Campaign -> Void>>(): Null<T> {
     final screen: Screen = getScreen();
     final screenState: Null<ScreenState> = screenState[currentScreen];
@@ -117,8 +118,6 @@ class Game {
       return null;
     }
 
-    // TODO: Fix "[1] Instance constructor not found: T" when calling generic function from generic function
-    // Constructible appears to be ignored at the second level
 #if false // debuggame
     final stateType: String = Type.getClassName(Type.getClass(screenState));
     final expectedState: T = new T(campaign);
@@ -131,8 +130,11 @@ class Game {
     return cast screenState;
   }
 
-  // TODO: Only make generic for debuggame?
+  // TODO: Fix "[1] Instance constructor not found: T" when calling generic function from generic function
+  // Constructible appears to be ignored at the second level
+#if false // debuggame
   @:generic
+#end
   public function getScreenState<T : ScreenState & Constructible<Void -> Void>>(): T {
     final screen: Screen = getScreen();
     final screenState: Null<ScreenState> = screenState[currentScreen];
@@ -140,8 +142,6 @@ class Game {
       throw ': Screen $currentScreen does not have any stored state';
     }
 
-    // TODO: Fix "[1] Instance constructor not found: T" when calling generic function from generic function
-    // Constructible appears to be ignored at the second level
 #if false // debuggame
     final stateType: String = Type.getClassName(Type.getClass(screenState));
     final expectedState: T = new T(campaign);
@@ -189,8 +189,11 @@ class Game {
   }
 
   // x and y must be in [0, campaign.rooms.length)
-  // TODO: Only make generic for debuggame?
+  // TODO: Fix "[0] Instance constructor not found: T" when calling generic function from generic function
+  // Constructible appears to be ignored at the second level
+#if false // debuggame
   @:generic
+#end
   public function getRoomState<T : ScreenState & Constructible<Void -> Void>>(?x: Int, ?y: Int): T {
     final xPos: Int = x ?? player.x;
     final yPos: Int = y ?? player.y;
@@ -202,7 +205,7 @@ class Game {
       throw ': Room $room at $xPos, $yPos does not have any stored state';
     }
 
-#if debuggame
+#if false // debuggame
     final stateType: String = Type.getClassName(Type.getClass(roomState));
     final expectedState: T = new T();
     final expectedType: String = Type.getClassName(Type.getClass(expectedState));

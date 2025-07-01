@@ -7,11 +7,10 @@ import backend.Screen;
 
 final TrapRoom: GameRoom = new Trap_Trap();
 class Trap_Trap extends StatefulRoom<TrapRoomState> {
-  override function getRoomBody(state: Game): UnicodeString {
-    final trapRoomState: TrapRoomState = state.getRoomState();
+  override function getStatefulRoomBody(Game, state: TrapRoomState): UnicodeString {
     var body: UnicodeString = '\n\nThis is a trap room which has';
 
-    if (!trapRoomState.activatedTrap) {
+    if (!state.activatedTrap) {
       body += ' not';
     }
 
