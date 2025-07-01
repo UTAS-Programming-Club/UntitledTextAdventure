@@ -62,7 +62,7 @@ class GameRoomState extends ScreenState {
   // For some reason ++ and possibly -- works despite disabling public assignment
   public var x(default, null): Int; // Must be in [0, campaign.rooms.length)
   public var y(default, null): Int; // Must be in [0, campaign.rooms.length)
-  private var roomState: Map<Int, RoomState> = [];
+  private var roomState: Map<Int, ScreenState> = [];
 
   public function new(campaign: Campaign) {
     super();
@@ -104,14 +104,15 @@ class GameRoomState extends ScreenState {
   }
 
   // x and y must be in [0, campaign.rooms.length)
+  // TODO: Only make generic for debuggame?
   @:generic
-  public function getRoomState<T : RoomState & Constructible<Void -> Void>>(state: Game, ?x: Int, ?y: Int): T {
+  public function getRoomState<T : ScreenState & Constructible<Void -> Void>>(state: Game, ?x: Int, ?y: Int): T {
     final xPos: Int = x ?? this.x;
     final yPos: Int = y ?? this.y;
     final point: Int = xPos * state.campaign.rooms.length + yPos;
 
     final room: GameRoom = state.campaign.rooms[xPos][yPos];
-    final roomState: Null<RoomState> = roomState[point];
+    final roomState: Null<ScreenState> = roomState[point];
     if (!room.hasRoomState() || roomState == null) {
       throw ': Room $room at $xPos, $yPos does not have any stored state';
     }
