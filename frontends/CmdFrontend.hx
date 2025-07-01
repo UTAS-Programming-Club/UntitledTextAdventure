@@ -44,7 +44,7 @@ class CmdFrontend {
     final actions: Array<Action> = screen.GetActions();
     var inputNumber: Int = 0;
     for (action in actions) {
-      if (action.isVisible(state, screen)) {
+      if (action.isVisible(state)) {
         inputNumber++;
         Sys.println('$inputNumber. ${action.title}');
       }
@@ -111,10 +111,10 @@ class CmdFrontend {
     return true;
   }
 
-  static function MapInputIndex(state: Game, screen: ActionScreen, actions: Array<Action>, inputIndex: Int): Int {
+  static function MapInputIndex(state: Game, actions: Array<Action>, inputIndex: Int): Int {
     var index: Int;
     for (index in 0...actions.length) {
-      if (!actions[index].isVisible(state, screen)) {
+      if (!actions[index].isVisible(state)) {
         continue;
       }
 
@@ -138,7 +138,7 @@ class CmdFrontend {
     final actions: Array<Action> = actionScreen.GetActions();
 
     final inputIndex: Int = GetButtonInput();
-    final index: Int = MapInputIndex(state, actionScreen, actions, inputIndex);
+    final index: Int = MapInputIndex(state, actions, inputIndex);
     if (index >= actions.length) {
       // TODO: Is this still the case?
       // This is a recoverable error so just ignore it

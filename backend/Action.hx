@@ -15,11 +15,11 @@ abstract class Action {
   }
 
   // TODO: Provide screen state to both of these if exists
-  public function isVisible(Game, ActionScreen): Bool return true;
-  public abstract function trigger(state: Game): GameOutcome;
+  public function isVisible(Game): Bool return true;
+  public abstract function onTrigger(state: Game): GameOutcome;
 
   public function handleAction(state: Game): GameOutcome {
-    final outcome: GameOutcome = trigger(state);
+    final outcome: GameOutcome = onTrigger(state);
     if (outcome == Invalid) {
       throw   ': Unhandled action ${Std.string(this).split('.').pop()}'
             + ' on ${Std.string(state.getScreen()).replace('_', '.').split('.').pop()}';

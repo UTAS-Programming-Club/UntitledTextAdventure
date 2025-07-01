@@ -43,10 +43,10 @@ class EmbeddedFrontend {
   }
 
 
-  static function MapInputIndex(state: Game, screen: ActionScreen, actions: Array<Action>, inputIndex: Int): Int {
+  static function MapInputIndex(state: Game, actions: Array<Action>, inputIndex: Int): Int {
     var index: Int;
     for (index in 0...actions.length) {
-      if (!actions[index].isVisible(state, screen)) {
+      if (!actions[index].isVisible(state)) {
         continue;
       }
 
@@ -70,14 +70,14 @@ class EmbeddedFrontend {
     final actions: Array<Action> = actionScreen.GetActions();
     final visibleInputs: Array<Action> = [
       for (action in actions) {
-        if (action.isVisible(state, actionScreen)) {
+        if (action.isVisible(state)) {
           action;
         }
       }
     ];
 
     final inputIndex: Int = Native.GetActionInput(visibleInputs.length);
-    final actionindex: Int = MapInputIndex(state, actionScreen, actions, inputIndex);
+    final actionindex: Int = MapInputIndex(state, actions, inputIndex);
     if (actionindex >= actions.length) {
       return true;
     }

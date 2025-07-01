@@ -8,7 +8,7 @@ import backend.Screen;
 import extensions.trap.Rooms;
 
 class DodgeTrap extends Action {
-  override function isVisible(state: Game, ActionScreen): Bool {
+  override function isVisible(state: Game): Bool {
     final room: GameRoom = state.campaign.rooms[state.player.x][state.player.y];
 
     if (room != TrapRoom) {
@@ -20,7 +20,7 @@ class DodgeTrap extends Action {
     return !roomState.activatedTrap;
   }
 
-  function trigger(state: Game): GameOutcome {
+  function onTrigger(state: Game): GameOutcome {
     // TODO: Make this easier for rooms/stateful rooms?
     final roomState: TrapRoomState = state.getRoomState();
     if (!roomState.activatedTrap && Math.random() >= 0.50) {

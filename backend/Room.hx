@@ -9,8 +9,6 @@ import backend.coregame.Screens;
 import backend.Game;
 import backend.GameInfo;
 import backend.Screen;
-// TODO: Fix backend depending on rooms extension
-import extensions.rooms.Actions;
 
 abstract class Room extends ActionScreen {
   function getRoomBody(state: Game): UnicodeString return "";
@@ -32,7 +30,6 @@ abstract class Room extends ActionScreen {
   // TODO: Move all the actions to extensions/campaigns
   function getAllActions(): Array<Action> {
     final actions: Array<Action> = [
-      // TODO: Fix backend depending on rooms extension
       new GoNorth("Go North"),
       new GoEast("Go East"),
       new GoSouth("Go South"),

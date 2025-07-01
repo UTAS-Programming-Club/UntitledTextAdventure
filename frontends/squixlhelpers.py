@@ -78,7 +78,7 @@ def PrintActionInputs(state: backend_Game, screen: backend_ActionScreen) -> None
 
   column: int = 0
   for action in actions:
-    if action.isVisible(state, screen):
+    if action.isVisible(state):
       button_x: int = outer_button_padding + (inner_button_padding + button_width) * column
       text_x: int = button_x + (button_width - text_size * len(action.title)) // 2
       text_y: int = current_y + (button_height - text_size) // 2

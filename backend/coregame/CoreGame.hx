@@ -3,6 +3,7 @@ package backend.coregame;
 import backend.Extension;
 import backend.coregame.Actions;
 import backend.coregame.Outcomes;
+import backend.coregame.Rooms;
 import backend.coregame.Screens;
 
 final CoreGameExt: Extension = {
@@ -12,6 +13,10 @@ final CoreGameExt: Extension = {
     GotoScreen,
     GotoPreviousScreen,
     Quit,
+    GoNorth,
+    GoEast,
+    GoSouth,
+    GoWest,
   ],
   outcomes: [
     Invalid,
@@ -22,5 +27,7 @@ final CoreGameExt: Extension = {
     MainMenuScreen,
     LoadScreen,
     PlayerEquipmentScreen,
+    UnusedRoom,
+    EmptyRoom,
   ],
 };
