@@ -3,7 +3,6 @@ package backend;
 import haxe.Constraints;
 
 import backend.Action;
-import backend.Campaign;
 import backend.Game;
 
 abstract class Screen {
@@ -11,7 +10,7 @@ abstract class Screen {
   }
 
   public function hasState(): Bool return false;
-  public function createState(campaign: Campaign): ScreenState throw ': Screen has no state';
+  public function createState(): ScreenState throw ': Screen has no state';
 
   public abstract function getBody(state: Game): UnicodeString;
 }
@@ -34,10 +33,11 @@ abstract class ActionScreen extends Screen {
   }
 }
 
+// Keep in sync with StatefulRoom in Room.hx
 @:generic
-abstract class StatefulActionScreen<T : ScreenState & Constructible<Campaign -> Void>> extends ActionScreen {
+abstract class StatefulActionScreen<T : ScreenState & Constructible<Void -> Void>> extends ActionScreen {
   override function hasState(): Bool return true;
-  override function createState(campaign: Campaign): T return new T(campaign);
+  override function createState(): T return new T();
 
   abstract function getStatefulBody(state: Game, screenState: T): UnicodeString;
 

@@ -11,8 +11,7 @@ final TrapExt: Extension = {
     DodgeTrap,
   ],
   outcomes: [],
-  rooms: [
+  screens: [
     TrapRoom,
   ],
-  screens: [],
 };

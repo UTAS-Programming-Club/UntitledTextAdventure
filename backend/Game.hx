@@ -17,6 +17,7 @@ class Game {
   private var currentScreen: GameScreen;
   public var previousScreen(default, null): GameScreen;
   private var screenState: Map<GameScreen, ScreenState>;
+  private var roomState: Map<Int, ScreenState> = [];
 
   public function new() {
     campaign = getCampaign();
@@ -31,7 +32,6 @@ class Game {
     for (ext in campaign.extensions) {
       // TODO: Figure out why outcomes and screens are printed but not rooms
       var errors: Bool = checkGameTypeDeclarations(ext, "Outcome", ext.outcomes);
-      errors = checkGameTypeDeclarations(ext, "Room", ext.rooms) || errors;
       errors = checkGameTypeDeclarations(ext, "Screen", ext.screens) || errors;
       if (errors) {
         throw ': Please fix extension type declarations to continue';
@@ -46,13 +46,13 @@ class Game {
 
   // TODO: Move room x, y to player class?
   public function startGame(): Void {
-    gotoScreen(campaign.gameScreen);
+    gotoRoom(campaign.initialRoomX, campaign.initialRoomY);
     player.Reset(campaign);
     screenState = [
       for (ext in campaign.extensions) {
         for (screen in ext.screens) {
           if (screen.hasState()) {
-            screen => screen.createState(campaign);
+            screen => screen.createState();
           }
         }
       }
@@ -108,6 +108,7 @@ class Game {
   }
 
 
+  // TODO: Only make generic for debuggame?
   @:generic
   public function tryGetScreenState<T : ScreenState & Constructible<Campaign -> Void>>(): Null<T> {
     final screen: Screen = getScreen();
@@ -130,8 +131,9 @@ class Game {
     return cast screenState;
   }
 
+  // TODO: Only make generic for debuggame?
   @:generic
-  public function getScreenState<T : ScreenState & Constructible<Campaign -> Void>>(): T {
+  public function getScreenState<T : ScreenState & Constructible<Void -> Void>>(): T {
     final screen: Screen = getScreen();
     final screenState: Null<ScreenState> = screenState[currentScreen];
     if (!screen.hasState() || screenState == null) {
@@ -150,5 +152,65 @@ class Game {
 #end
 
     return cast screenState;
+  }
+
+
+  // x and y must be in [0, campaign.rooms.length)
+  public function gotoRoom(x: Int, y: Int): Void {
+    player.changeRoom(campaign, x, y);
+
+    final room: GameRoom = campaign.rooms[x][y];
+    gotoScreen(room);
+
+    final point: Int = x * campaign.rooms.length + y;
+    if (roomState.exists(point)) {
+      return;
+    }
+
+#if debuggame
+    var roomExists: Bool = false;
+    for (ext in campaign.extensions) {
+      roomExists = roomExists || ext.screens.contains(room);
+      if (roomExists) {
+        break;
+      }
+    }
+
+    if (!roomExists) {
+      throw ': Invalid room $room';
+    }
+#end
+
+    if (!room.hasState()) {
+      return;
+    }
+
+    roomState[point] = room.createState();
+  }
+
+  // x and y must be in [0, campaign.rooms.length)
+  // TODO: Only make generic for debuggame?
+  @:generic
+  public function getRoomState<T : ScreenState & Constructible<Void -> Void>>(?x: Int, ?y: Int): T {
+    final xPos: Int = x ?? player.x;
+    final yPos: Int = y ?? player.y;
+    final point: Int = xPos * campaign.rooms.length + yPos;
+
+    final room: GameRoom = campaign.rooms[xPos][yPos];
+    final roomState: Null<ScreenState> = roomState[point];
+    if (!room.hasState() || roomState == null) {
+      throw ': Room $room at $xPos, $yPos does not have any stored state';
+    }
+
+#if debuggame
+    final stateType: String = Type.getClassName(Type.getClass(roomState));
+    final expectedState: T = new T();
+    final expectedType: String = Type.getClassName(Type.getClass(expectedState));
+    if (stateType != expectedType) {
+      throw ': Incorrect result type $expectedType provided for room with type $stateType';
+    }
+#end
+
+    return cast roomState;
   }
 }

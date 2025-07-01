@@ -9,6 +9,5 @@ typedef Extension = {
   final actions: Array<GameAction>;
   // final equipment: Array<?>;
   final outcomes: Array<GameOutcome>;
-  final rooms: Array<GameRoom>;
   final screens: Array<GameScreen>;
 }

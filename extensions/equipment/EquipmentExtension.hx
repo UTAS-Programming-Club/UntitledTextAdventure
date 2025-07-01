@@ -9,6 +9,5 @@ final EquipmentExt: Extension = {
   module: 'extensions.equipment',
   actions: [],
   outcomes: [],
-  rooms: [],
   screens: [],
 };

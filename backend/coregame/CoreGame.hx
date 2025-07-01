@@ -18,7 +18,6 @@ final CoreGameExt: Extension = {
     GetNextOutput,
     QuitGame,
   ],
-  rooms: [],
   screens: [
     MainMenuScreen,
     LoadScreen,

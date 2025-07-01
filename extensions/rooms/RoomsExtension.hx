@@ -3,7 +3,6 @@ package extensions.rooms;
 import backend.Extension;
 import extensions.rooms.Actions;
 import extensions.rooms.Rooms;
-import extensions.rooms.Screens;
 
 // TODO: Merge into CoreGame?
 @:nullSafety(Strict)
@@ -16,11 +15,8 @@ final RoomsExt: Extension = {
     GoWest,
   ],
   outcomes: [],
-  rooms: [
+  screens: [
     UnusedRoom,
     EmptyRoom,
-  ],
-  screens: [
-    GameRoomsScreen,
   ],
 };

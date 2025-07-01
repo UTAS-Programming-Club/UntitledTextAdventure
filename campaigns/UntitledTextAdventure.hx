@@ -6,7 +6,6 @@ import backend.coregame.Screens;
 import extensions.equipment.EquipmentExtension;
 import extensions.rooms.Rooms;
 import extensions.rooms.RoomsExtension;
-import extensions.rooms.Screens;
 import extensions.trap.Rooms;
 import extensions.trap.TrapExtension;
 
@@ -25,7 +24,6 @@ final UntitledTextAdventure: Campaign = {
 #else
   initialScreen: MainMenuScreen,
 #end
-  gameScreen: GameRoomsScreen,
 
   rooms: {
     final gridSize: Int = 10;
