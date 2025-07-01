@@ -13,12 +13,31 @@ import backend.Screen;
 import extensions.rooms.Actions;
 // TODO: Fix rooms extension depending on traps extension
 import extensions.trap.Actions;
+import extensions.trap.Rooms;
 
 final GameRoomsScreen: GameScreen = new Rooms_GameRooms();
 @:nullSafety(Strict)
 class Rooms_GameRooms extends StatefulActionScreen<GameRoomState> {
-  function getStatefulBody(Game, state: GameRoomState): UnicodeString {
-    return 'This is the game, you are in Room [${state.x + 1}, ${state.y + 1}].';
+  function getStatefulBody(state: Game, screenState: GameRoomState): UnicodeString {
+    final x: Int = screenState.x;
+    final y: Int = screenState.y;
+    final room: GameRoom = state.campaign.rooms[x][y];
+
+    var body: UnicodeString = 'This is the game, you are in Room [${x + 1}, ${y + 1}].';
+
+    // TODO: Fix rooms extension depending on traps extension
+    if (room == TrapRoom) {
+      final trapRoomState: TrapRoomState = screenState.getRoomState(state);
+      body += '\n\nThis is a trap room which has';
+
+      if (!trapRoomState.activatedTrap) {
+        body += ' not';
+      }
+
+      body += ' been triggered.';
+    }
+
+    return body;
   }
 
   function getAllActions(): Array<Action> return [
