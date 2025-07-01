@@ -11,8 +11,6 @@ import backend.GameInfo;
 import backend.Screen;
 // TODO: Fix backend depending on rooms extension
 import extensions.rooms.Actions;
-// TODO: Fix backend depending on traps extension
-import extensions.trap.Actions;
 
 abstract class Room extends ActionScreen {
   function getRoomBody(state: Game): UnicodeString return "";
@@ -29,21 +27,31 @@ abstract class Room extends ActionScreen {
     return body;
   }
 
+  function getRoomActions(): Array<Action> return [];
+
   // TODO: Move all the actions to extensions/campaigns
-  function getAllActions(): Array<Action> return [
-    new GoNorth("Go North"),
-    new GoEast("Go East"),
-    new GoSouth("Go South"),
-    new GoWest("Go West"),
-    // TODO: Fix backend depending on traps extension
-    new DodgeTrap("Dodge Trap"),
-    new GotoScreen(PlayerEquipmentScreen, "Check Inventory"),
+  function getAllActions(): Array<Action> {
+    final actions: Array<Action> = [
+      // TODO: Fix backend depending on rooms extension
+      new GoNorth("Go North"),
+      new GoEast("Go East"),
+      new GoSouth("Go South"),
+      new GoWest("Go West"),
+      // getRoomActions goes here
+      new GotoScreen(PlayerEquipmentScreen, "Check Inventory"),
 #if testrooms
-    new Quit("Quit Game")
+      new Quit("Quit Game")
 #else
-    new GotoScreen(MainMenuScreen, "Return to main menu")
+      new GotoScreen(MainMenuScreen, "Return to main menu")
 #end
-  ];
+    ];
+
+    for (action in getRoomActions()) {
+      actions.insert(4, action);
+    }
+
+    return actions;
+  }
 }
 
 // Keep in sync with StatefulActionScreen in Screen.hx
