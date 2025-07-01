@@ -13,9 +13,10 @@ import backend.Screen;
 import extensions.rooms.Actions;
 // TODO: Fix backend depending on traps extension
 import extensions.trap.Actions;
-import extensions.trap.Rooms;
 
 abstract class Room extends ActionScreen {
+  function getRoomBody(state: Game): UnicodeString return "";
+
   // TODO: Move all the strings to extensions/campaigns
   function getBody(state: Game): UnicodeString {
     final x: Int = state.player.x;
@@ -23,18 +24,7 @@ abstract class Room extends ActionScreen {
     final room: GameRoom = state.campaign.rooms[x][y];
 
     var body: UnicodeString = 'This is the game, you are in Room [${x + 1}, ${y + 1}].';
-
-    // TODO: Fix backend depending on traps extension
-    if (room == TrapRoom) {
-      final trapRoomState: TrapRoomState = state.getRoomState();
-      body += '\n\nThis is a trap room which has';
-
-      if (!trapRoomState.activatedTrap) {
-        body += ' not';
-      }
-
-      body += ' been triggered.';
-    }
+    body += getRoomBody(state);
 
     return body;
   }

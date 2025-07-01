@@ -46,8 +46,8 @@ class Game {
 
   // TODO: Move room x, y to player class?
   public function startGame(): Void {
-    gotoRoom(campaign.initialRoomX, campaign.initialRoomY);
     player.Reset(campaign);
+    gotoRoom(campaign.initialRoomX, campaign.initialRoomY);
     screenState = [
       for (ext in campaign.extensions) {
         for (screen in ext.screens) {
