@@ -2,8 +2,10 @@ package campaigns;
 
 import backend.Campaign;
 import backend.coregame.CoreGame;
-import backend.GameInfo;
+import backend.coregame.Rooms;
+import backend.coregame.Screens;
 import extensions.equipment.EquipmentExtension;
+import extensions.test.Rooms;
 import extensions.test.TestExtension;
 
 @:nullSafety(Strict)
@@ -14,18 +16,17 @@ final TestCampaign: Campaign = {
 
   extensions: [CoreGameExt, EquipmentExt, TestExt],
 
-  initialScreen: MainMenu,
-  gameScreen: Test,
+  initialScreen: MainMenuScreen,
 
-  rooms: [[Empty]],
+  rooms: [[TestRoom]],
   initialRoomX: 0,
   initialRoomY: 0,
 
-  initialHead: HeadNone,
-  initialUpperBody: UpperBodyRags,
-  initialHands: HandsNone,
-  initialLowerBody: LowerBodyRags,
-  initialFeet: FeetNone,
-  initialPrimaryWeapon: PrimaryWeaponFist,
-  initialSecondaryWeapon: SecondaryWeaponNone
+  // initialHead: HeadNone,
+  // initialUpperBody: UpperBodyRags,
+  // initialHands: HandsNone,
+  // initialLowerBody: LowerBodyRags,
+  // initialFeet: FeetNone,
+  // initialPrimaryWeapon: PrimaryWeaponFist,
+  // initialSecondaryWeapon: SecondaryWeaponNone
 };

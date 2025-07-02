@@ -21,7 +21,6 @@ class DodgeTrap extends Action {
   }
 
   function onTrigger(state: Game): GameOutcome {
-    // TODO: Make this easier for rooms/stateful rooms?
     final roomState: TrapRoomState = state.getRoomState();
     if (!roomState.activatedTrap && Math.random() >= 0.50) {
       state.player.ModifyHealth(-10);
