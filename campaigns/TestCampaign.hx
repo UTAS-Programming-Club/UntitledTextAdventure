@@ -4,6 +4,7 @@ import backend.Campaign;
 import backend.coregame.CoreGame;
 import backend.coregame.Rooms;
 import backend.coregame.Screens;
+import extensions.equipment.Equipment;
 import extensions.equipment.EquipmentExtension;
 import extensions.test.Rooms;
 import extensions.test.TestExtension;
@@ -22,11 +23,20 @@ final TestCampaign: Campaign = {
   initialRoomX: 0,
   initialRoomY: 0,
 
-  // initialHead: HeadNone,
-  // initialUpperBody: UpperBodyRags,
-  // initialHands: HandsNone,
-  // initialLowerBody: LowerBodyRags,
-  // initialFeet: FeetNone,
-  // initialPrimaryWeapon: PrimaryWeaponFist,
-  // initialSecondaryWeapon: SecondaryWeaponNone
+  equipmentOrder: [
+    HeadNone,
+    UpperBodyRags,
+    HandsNone,
+    LowerBodyRags,
+    FeetNone,
+    PrimaryWeaponFist,
+    SecondaryWeaponNone,
+  ],
+  initialHead: HeadNone,
+  initialUpperBody: UpperBodyRags,
+  initialHands: HandsNone,
+  initialLowerBody: LowerBodyRags,
+  initialFeet: FeetNone,
+  initialPrimaryWeapon: PrimaryWeaponFist,
+  initialSecondaryWeapon: SecondaryWeaponNone
 };

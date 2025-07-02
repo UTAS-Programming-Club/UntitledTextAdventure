@@ -7,7 +7,7 @@ typedef Extension = {
   final module: UnicodeString;
 
   final actions: Array<GameAction>;
-  // final equipment: Array<?>;
+  final equipment: Array<GameEquipment>;
   final outcomes: Array<GameOutcome>;
   final screens: Array<GameScreen>;
 }

@@ -18,6 +18,7 @@ final CoreGameExt: Extension = {
     GoSouth,
     GoWest,
   ],
+  equipment: [],
   outcomes: [
     Invalid,
     GetNextOutput,

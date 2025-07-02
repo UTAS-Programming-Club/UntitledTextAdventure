@@ -10,6 +10,7 @@ final TrapExt: Extension = {
   actions: [
     DodgeTrap,
   ],
+  equipment: [],
   outcomes: [],
   screens: [
     TrapRoom,

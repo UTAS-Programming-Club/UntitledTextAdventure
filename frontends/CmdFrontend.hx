@@ -140,7 +140,6 @@ class CmdFrontend {
     final inputIndex: Int = GetButtonInput();
     final index: Int = MapInputIndex(state, actions, inputIndex);
     if (index >= actions.length) {
-      // TODO: Is this still the case?
       // This is a recoverable error so just ignore it
       return true;
     }

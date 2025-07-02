@@ -7,6 +7,7 @@ import extensions.test.Rooms;
 final TestExt: Extension = {
   module: 'extensions.test',
   actions: [],
+  equipment: [],
   outcomes: [],
   screens: [
     TestRoom,

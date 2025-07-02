@@ -29,11 +29,26 @@ class Game {
     screenState = [];
 
 #if debuggame
+    // Extension class instance checks
     for (ext in campaign.extensions) {
       var errors: Bool = checkGameTypeDeclarations(ext, "Outcome", ext.outcomes);
       errors = checkGameTypeDeclarations(ext, "Screen", ext.screens) || errors;
       if (errors) {
         throw ': Please fix extension type declarations to continue';
+      }
+
+      // TODO: Find way to check equipment
+      // They are all just instances of backend.Equipment so Std.string and Type.* aren't useful
+    }
+
+    // Campaign equipment instance checks
+    var equipment: Array<GameEquipment> = [];
+    for (ext in campaign.extensions) {
+      equipment = equipment.concat(ext.equipment);
+    }
+    for (item in campaign.equipmentOrder) {
+      if (!equipment.contains(item)) {
+        throw ': Invalid equipment ${item.type}:${item.name} not in used extensions';
       }
     }
 #end

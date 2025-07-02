@@ -14,11 +14,13 @@ typedef Campaign = {
   final initialRoomX: Int; // Must be in [0, rooms.length)
   final initialRoomY: Int; // Must be in [0, rooms.length)
 
-  // final initialHead: GameEquipment;
-  // final initialUpperBody: GameEquipment;
-  // final initialHands: GameEquipment;
-  // final initialLowerBody: GameEquipment;
-  // final initialFeet: GameEquipment;
-  // final initialPrimaryWeapon: GameEquipment;
-  // final initialSecondaryWeapon: GameEquipment;
+  // Only appending new equipment will retain save compatibility
+  final equipmentOrder: Array<GameEquipment>;
+  final initialHead: GameEquipment;
+  final initialUpperBody: GameEquipment;
+  final initialHands: GameEquipment;
+  final initialLowerBody: GameEquipment;
+  final initialFeet: GameEquipment;
+  final initialPrimaryWeapon: GameEquipment;
+  final initialSecondaryWeapon: GameEquipment;
 }

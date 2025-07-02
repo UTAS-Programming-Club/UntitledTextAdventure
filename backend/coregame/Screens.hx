@@ -40,14 +40,14 @@ class CoreGame_PlayerEquipment extends ActionScreen {
   function getBody(state: Game): UnicodeString return
     'Player Equipment\n\n' +
     'Health:  ' + CreateStatBar(state.player.health) + '\n' +
-    'Stamina: ' + CreateStatBar(state.player.stamina)/* + '\n\n' +
+    'Stamina: ' + CreateStatBar(state.player.stamina) + '\n\n' +
     'Head:             ' + state.player.head.name + '\n' +
     'Upper Body:       ' + state.player.upperBody.name + '\n' +
     'Hands:            ' + state.player.hands.name + '\n' +
     'Lower Body:       ' + state.player.lowerBody.name + '\n' +
     'Feet:             ' + state.player.feet.name + '\n' +
     'Primary Weapon:   ' + state.player.primaryWeapon.name + '\n' +
-    'Secondary Weapon: ' + state.player.secondaryWeapon.name*/;
+    'Secondary Weapon: ' + state.player.secondaryWeapon.name;
 
   function getAllActions(): Array<Action> return [
     new GotoPreviousScreen("Return to Game"),
