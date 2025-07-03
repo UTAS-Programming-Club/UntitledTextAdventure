@@ -16,7 +16,8 @@ class Game {
   // Only access via getScreen
   private var currentScreen: GameScreen;
   public var previousScreen(default, null): GameScreen;
-  private var screenState: Map<GameScreen, ScreenState>;
+    // No screen may store state before the game starts
+  private var screenState: Map<GameScreen, ScreenState> = [];
   private var roomState: Map<Int, ScreenState> = [];
 
   public function new() {
@@ -25,8 +26,6 @@ class Game {
 
     currentScreen = campaign.initialScreen;
     previousScreen = campaign.initialScreen;
-    // No screen may store state before the game starts
-    screenState = [];
 
 #if debuggame
     // Extension class instance checks
@@ -70,6 +69,7 @@ class Game {
         }
       }
     ];
+    roomState = [];
   }
 
 
