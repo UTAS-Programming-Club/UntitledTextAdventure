@@ -7,6 +7,7 @@ import backend.coregame.Rooms;
 import extensions.equipment.Equipment;
 import extensions.equipment.EquipmentExtension;
 import extensions.healing.HealingExtension;
+import extensions.healing.Rooms;
 import extensions.trap.Rooms;
 import extensions.trap.TrapExtension;
 
@@ -36,7 +37,7 @@ final UntitledTextAdventure: Campaign = {
     rooms[1][1] = EmptyRoom;
     rooms[1][2] = TrapRoom;
     // rooms[1][3] = ChestRoom;
-    // rooms[2][1] = HealingRoom;
+    rooms[2][1] = HealingRoom;
     rooms;
   },
   initialRoomX: 0,

@@ -19,17 +19,6 @@ function RoomTest(state: Game, screen: Screen): UnicodeString {
 
   // TODO: Fix rooms extension depending on other extensions
   switch (room) {
-    case Trap:
-      final roomState: TrapRoom = roomScreenState.getRoomState(state);
-      body += '\n\nThis is a trap room which has';
-
-      if (!roomState.activatedTrap) {
-        body += ' not';
-      }
-
-      body += ' been triggered.';
-    case Healing:
-      body += '\n\nThis is a healing fountain room.';
     case Chest:
       final roomState: ChestRoom = roomScreenState.getRoomState(state);
       body += '\n\nThis is a chest room which has';
@@ -48,44 +37,6 @@ function RoomTest(state: Game, screen: Screen): UnicodeString {
 @:nullSafety(Strict)
 final RoomScreens: Map<GameScreen, Screen> = [
   GameRooms => new StatefulActionScreen(GameRoomState.new, RoomTest, [
-    new ScreenAction(GoNorth, "Go North", function (state: Game, screen: ActionScreen): Bool {
-      final roomScreenState: GameRoomState = state.getScreenState();
-      return roomScreenState.y < state.campaign.rooms.length - 1 &&
-             state.campaign.rooms[roomScreenState.x][roomScreenState.y + 1] != Unused;
-    }),
-    new ScreenAction(GoEast, "Go East", function (state: Game, screen: ActionScreen): Bool {
-      final roomScreenState: GameRoomState = state.getScreenState();
-      return roomScreenState.x > 0 &&
-             state.campaign.rooms[roomScreenState.x - 1][roomScreenState.y] != Unused;
-    }),
-    new ScreenAction(GoSouth, "Go South", function (state: Game, screen: ActionScreen): Bool {
-      final roomScreenState: GameRoomState = state.getScreenState();
-      return roomScreenState.y > 0 &&
-             state.campaign.rooms[roomScreenState.x][roomScreenState.y - 1] != Unused;
-    }),
-    new ScreenAction(GoWest, "Go West", function (state: Game, screen: ActionScreen): Bool {
-      final roomScreenState: GameRoomState = state.getScreenState();
-      return roomScreenState.x < state.campaign.rooms.length - 1 &&
-             state.campaign.rooms[roomScreenState.x + 1][roomScreenState.y] != Unused;
-    }),
-    // TODO: Fix rooms extension depending on other extensions
-    new ScreenAction(DodgeTrap, "Dodge Trap", function (state: Game, screen: ActionScreen): Bool {
-      final roomScreenState: GameRoomState = state.getScreenState();
-      final room: GameRoom = state.campaign.rooms[roomScreenState.x][roomScreenState.y];
-
-      if (room != Trap) {
-        return false;
-      }
-
-      final roomState: TrapRoom = roomScreenState.getRoomState(state);
-
-      return !roomState.activatedTrap;
-    }),
-    new ScreenAction(Heal, "Heal", function (state: Game, screen: ActionScreen): Bool {
-      final roomScreenState: GameRoomState = state.getScreenState();
-      final room: GameRoom = state.campaign.rooms[roomScreenState.x][roomScreenState.y];
-      return room == Healing;
-    }),
     new ScreenAction(OpenChest, "Open Chest", function (state: Game, screen: ActionScreen): Bool {
       final roomScreenState: GameRoomState = state.getScreenState();
       final room: GameRoom = state.campaign.rooms[roomScreenState.x][roomScreenState.y];

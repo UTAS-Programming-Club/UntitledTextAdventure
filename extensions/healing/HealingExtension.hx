@@ -1,23 +1,18 @@
 package extensions.healing;
 
 import backend.Extension;
-import backend.Game;
-import backend.GameInfo;
+import extensions.healing.Actions;
+import extensions.healing.Rooms;
 
 @:nullSafety(Strict)
 final HealingExt: Extension = {
   module: 'extensions.healing',
-  actions: [],
+  actions: [
+    HealPlayer,
+  ],
   equipment: [],
   outcomes: [],
-  screens: [],
-  /*actionHandler: function(state: Game, action: GameAction): GameOutcome {
-    switch (action) {
-      case Heal:
-        state.player.ModifyHealth(100);
-        return GetNextOutput;
-      default:
-        return Invalid;
-    }
-  }*/
+  screens: [
+    HealingRoom,
+  ],
 };
