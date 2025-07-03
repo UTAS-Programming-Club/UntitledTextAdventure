@@ -38,7 +38,7 @@ final UntitledTextAdventure: Campaign = {
     rooms[1][0] = new EmptyRoom();
     rooms[1][1] = new EmptyRoom();
     rooms[1][2] = new TrapRoom();
-    rooms[1][3] = new ChestRoom();
+    rooms[1][3] = new ChestRoom(PrimaryWeaponSword);
     rooms[2][1] = new HealingRoom();
     rooms;
   },
