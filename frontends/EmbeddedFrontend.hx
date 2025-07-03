@@ -1,9 +1,10 @@
 package frontends;
 
+import backend.Action;
 import backend.Game;
+import backend.coregame.Outcomes;
 import backend.GameInfo;
 import backend.Screen;
-import campaigns.UntitledTextAdventure;
 
 @:pythonImport("nativehelpers")
 extern class Native {
@@ -28,7 +29,7 @@ class EmbeddedFrontend {
 
   static function HandleOutput(state: Game): Bool {
     final screen: Screen = state.getScreen();
-    PrintOutputBody(screen.GetBody(state));
+    PrintOutputBody(screen.getBody(state));
 
     if (screen is ActionScreen) {
       Native.PrintActionInputs(state, cast(screen, ActionScreen));
@@ -42,10 +43,10 @@ class EmbeddedFrontend {
   }
 
 
-  static function MapInputIndex(state: Game, screen: ActionScreen, actions: Array<ScreenAction>, inputIndex: Int): Int {
+  static function MapInputIndex(state: Game, actions: Array<Action>, inputIndex: Int): Int {
     var index: Int;
     for (index in 0...actions.length) {
-      if (!actions[index].isVisible(state, screen)) {
+      if (!actions[index].isVisible(state)) {
         continue;
       }
 
@@ -66,17 +67,17 @@ class EmbeddedFrontend {
     }
 
     final actionScreen: ActionScreen = cast screen;
-    final actions: Array<ScreenAction> = actionScreen.GetActions(state);
-    final visibleInputs: Array<ScreenAction> = [
+    final actions: Array<Action> = actionScreen.GetActions();
+    final visibleInputs: Array<Action> = [
       for (action in actions) {
-        if (action.isVisible(state, actionScreen)) {
+        if (action.isVisible(state)) {
           action;
         }
       }
     ];
 
     final inputIndex: Int = Native.GetActionInput(visibleInputs.length);
-    final actionindex: Int = MapInputIndex(state, actionScreen, actions, inputIndex);
+    final actionindex: Int = MapInputIndex(state, actions, inputIndex);
     if (actionindex >= actions.length) {
       return true;
     }
@@ -89,7 +90,7 @@ class EmbeddedFrontend {
       case QuitGame:
         return false;
       default:
-      throw 'Unknown screen action outcome $outcome received.';
+      throw ': Unknown screen action outcome $outcome received';
     }
   }
 
@@ -97,7 +98,7 @@ class EmbeddedFrontend {
   static function main(): Void {
     Native.SetupOutput();
 
-    final state = new Game(UntitledTextAdventure);
+    final state = new Game();
     do {
       if (!HandleOutput(state)) {
         break;

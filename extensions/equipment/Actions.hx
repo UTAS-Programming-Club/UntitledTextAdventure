@@ -1,5 +1,5 @@
 package extensions.equipment;
 
-enum EquipmentAction {
+/*enum EquipmentAction {
   OpenChest;
-}
+}*/

@@ -1,15 +1,24 @@
 package extensions.equipment;
 
 import backend.Extension;
-import backend.Game;
-import backend.GameInfo;
-import backend.Screen;
-import extensions.equipment.Rooms;
-import extensions.rooms.Screens;
+import extensions.equipment.Equipment;
 
 @:nullSafety(Strict)
 final EquipmentExt: Extension = {
-  actionHandler: function(state: Game, action: GameAction): GameOutcome {
+  module: 'extensions.equipment',
+  actions: [],
+  equipment: [
+    HeadNone,
+    UpperBodyRags,
+    HandsNone,
+    LowerBodyRags,
+    FeetNone,
+    PrimaryWeaponFist,
+    SecondaryWeaponNone,
+  ],
+  outcomes: [],
+  screens: [],
+  /*actionHandler: function(state: Game, action: GameAction): GameOutcome {
     switch (action) {
       case OpenChest:
         // TODO: Move to seperate function(s) to reuse
@@ -32,5 +41,5 @@ final EquipmentExt: Extension = {
       default:
         return Invalid;
     }
-  }
+  }*/
 };

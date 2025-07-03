@@ -6,7 +6,12 @@ import backend.GameInfo;
 
 @:nullSafety(Strict)
 final HealingExt: Extension = {
-  actionHandler: function(state: Game, action: GameAction): GameOutcome {
+  module: 'extensions.healing',
+  actions: [],
+  equipment: [],
+  outcomes: [],
+  screens: [],
+  /*actionHandler: function(state: Game, action: GameAction): GameOutcome {
     switch (action) {
       case Heal:
         state.player.ModifyHealth(100);
@@ -14,5 +19,5 @@ final HealingExt: Extension = {
       default:
         return Invalid;
     }
-  }
+  }*/
 };

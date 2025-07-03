@@ -1,5 +1,5 @@
 package extensions.healing;
 
-enum HealingAction {
+/*enum HealingAction {
   Heal;
-}
+}*/

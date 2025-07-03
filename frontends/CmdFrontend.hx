@@ -1,10 +1,11 @@
 package frontends;
 
+import backend.Action;
 import backend.Game;
+import backend.coregame.Outcomes;
+// TODO: Recreate some merged type that works for switch exhaustion?
 import backend.GameInfo;
 import backend.Screen;
-import campaigns.UntitledTextAdventure;
-import campaigns.TestCampaign;
 
 class CmdFrontend {
   static final ESC = "\x1B";
@@ -40,10 +41,10 @@ class CmdFrontend {
   static function PrintButtonInputs(state: Game, screen: ActionScreen): Void {
     Sys.println("\n\nUse the numbers below to make a selection.");
 
-    final actions: Array<ScreenAction> = screen.GetActions(state);
+    final actions: Array<Action> = screen.GetActions();
     var inputNumber: Int = 0;
     for (action in actions) {
-      if (action.isVisible(state, screen)) {
+      if (action.isVisible(state)) {
         inputNumber++;
         Sys.println('$inputNumber. ${action.title}');
       }
@@ -99,7 +100,7 @@ class CmdFrontend {
 
   static function HandleOutput(state: Game): Bool {
     final screen: Screen = state.getScreen();
-    PrintOutputBody(screen.GetBody(state));
+    PrintOutputBody(screen.getBody(state));
 
     if (screen is ActionScreen) {
       PrintButtonInputs(state, cast(screen, ActionScreen));
@@ -110,10 +111,10 @@ class CmdFrontend {
     return true;
   }
 
-  static function MapInputIndex(state: Game, screen: ActionScreen, actions: Array<ScreenAction>, inputIndex: Int): Int {
+  static function MapInputIndex(state: Game, actions: Array<Action>, inputIndex: Int): Int {
     var index: Int;
     for (index in 0...actions.length) {
-      if (!actions[index].isVisible(state, screen)) {
+      if (!actions[index].isVisible(state)) {
         continue;
       }
 
@@ -134,12 +135,11 @@ class CmdFrontend {
     }
 
     final actionScreen: ActionScreen = cast screen;
-    final actions: Array<ScreenAction> = actionScreen.GetActions(state);
+    final actions: Array<Action> = actionScreen.GetActions();
 
     final inputIndex: Int = GetButtonInput();
-    final index: Int = MapInputIndex(state, actionScreen, actions, inputIndex);
+    final index: Int = MapInputIndex(state, actions, inputIndex);
     if (index >= actions.length) {
-      // TODO: Is this still the case?
       // This is a recoverable error so just ignore it
       return true;
     }
@@ -151,7 +151,7 @@ class CmdFrontend {
       case QuitGame:
         return false;
       default:
-       throw 'Unknown screen action outcome $outcome received.';
+       throw ': Unknown screen action outcome $outcome received';
     }
   }
 
@@ -159,9 +159,7 @@ class CmdFrontend {
   public static function main(): Void {
     SetupConsole();
 
-    // TODO: Change to cmd parameter
-    final state = new Game(UntitledTextAdventure);
-    // final state = new Game(TestCampaign);
+    final state = new Game();
     do {
       if (!HandleOutput(state)) {
         break;

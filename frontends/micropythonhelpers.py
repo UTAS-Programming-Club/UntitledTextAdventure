@@ -41,7 +41,7 @@ def PrintActionInputs(state: backend_Game, screen: backend_ActionScreen) -> None
   actions: list[backend_ScreenAction] = screen.GetActions(state)
   inputNumber: int = 0
   for action in actions:
-    if action.isVisible(state, screen):
+    if action.isVisible(state):
       inputNumber += 1
       print(f"{inputNumber}. {action.title}")
 

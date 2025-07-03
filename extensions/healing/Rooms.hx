@@ -1,8 +1,8 @@
 package extensions.healing;
 
-enum Room {
+/*enum Room {
   Healing;
 }
 
 class HealingRoom extends backend.Room {
-}
+}*/

@@ -1,8 +1,10 @@
+-D campaign=UntitledTextAdventure
+
 -D dump=pretty
--dce std
 
 --macro nullSafety("backend", Strict)
 --macro nullSafety("frontends", Strict)
+-dce std
 
 -m frontends.EmbeddedFrontend
 

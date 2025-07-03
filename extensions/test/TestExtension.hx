@@ -1,14 +1,15 @@
 package extensions.test;
 
 import backend.Extension;
-import backend.Game;
-import backend.GameInfo;
+import extensions.test.Rooms;
 
 @:nullSafety(Strict)
 final TestExt: Extension = {
-  // TODO: Make optional?
-  actionHandler: function(state: Game, action: GameAction): GameOutcome {
-    // This extension defines no actions currently
-    return Invalid;
-  }
+  module: 'extensions.test',
+  actions: [],
+  equipment: [],
+  outcomes: [],
+  screens: [
+    TestRoom,
+  ],
 };

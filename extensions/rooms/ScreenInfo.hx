@@ -8,7 +8,7 @@ import extensions.rooms.Screens;
 import extensions.equipment.Rooms.ChestRoom;
 import extensions.trap.Rooms.TrapRoom;
 
-@:nullSafety(Strict)
+/*@:nullSafety(Strict)
 function RoomTest(state: Game, screen: Screen): UnicodeString {
   final roomScreenState: GameRoomState = state.getScreenState();
   final x: Int = roomScreenState.x;
@@ -105,4 +105,4 @@ final RoomScreens: Map<GameScreen, Screen> = [
     new ScreenAction(GotoScreen(MainMenu), "Return to main menu")
 #end
   ])
-];
+];*/

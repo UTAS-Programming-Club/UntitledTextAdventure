@@ -1,10 +1,13 @@
 package backend;
 
-import backend.Game;
 import backend.GameInfo;
-import backend.Screen;
 
+// TODO: Allow extensions to depend on other extensions
 typedef Extension = {
-  // TODO: Make optional?
-  final actionHandler: (state: Game, action: GameAction) -> GameOutcome;
+  final module: UnicodeString;
+
+  final actions: Array<GameAction>;
+  final equipment: Array<GameEquipment>;
+  final outcomes: Array<GameOutcome>;
+  final screens: Array<GameScreen>;
 }

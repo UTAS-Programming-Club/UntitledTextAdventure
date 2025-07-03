@@ -98,7 +98,7 @@ def PrintActionInputs(state: backend_Game, screen: backend_ActionScreen) -> None
 
   input_number: int = 0
   for action in actions:
-    if action.isVisible(state, screen):
+    if action.isVisible(state):
       highlight: bool = input_number == current_input
       input_number += 1
       PrintString(f"{input_number}. {action.title}", highlight=highlight)

@@ -1,6 +1,5 @@
 package backend;
 
-import backend.Equipment;
 import backend.Extension;
 import backend.GameInfo;
 
@@ -10,12 +9,13 @@ typedef Campaign = {
   final extensions: Array<Extension>;
 
   final initialScreen: GameScreen;
-  final gameScreen: GameScreen;
 
   final rooms: Array<Array<GameRoom>>; // Must be square
   final initialRoomX: Int; // Must be in [0, rooms.length)
   final initialRoomY: Int; // Must be in [0, rooms.length)
 
+  // Only appending new equipment will retain save compatibility
+  final equipmentOrder: Array<GameEquipment>;
   final initialHead: GameEquipment;
   final initialUpperBody: GameEquipment;
   final initialHands: GameEquipment;

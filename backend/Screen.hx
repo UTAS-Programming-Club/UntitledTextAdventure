@@ -1,76 +1,24 @@
 package backend;
 
-import backend.Campaign;
+import haxe.Constraints;
+
+import backend.Action;
 import backend.Game;
-import backend.GameInfo;
-import backend.macros.Helpers;
-import haxe.ds.Either;
 
 abstract class Screen {
-  private final updateState: (Game, Screen) -> UnicodeString;
-
-  public function new(updateState: OneOf<UnicodeString, (Game, Screen) -> UnicodeString>) {
-    this.updateState = switch(updateState) {
-      case Left(bodyStr):
-        function (Game, Screen) return bodyStr;
-      case Right(updateStateFunc):
-        updateStateFunc;
-    }
+  public function new() {
   }
 
-  public function GetBody(state: Game): UnicodeString {
-    return this.updateState(state, this);
-  }
+  public function hasState(): Bool return false;
+  public function createState(): ScreenState throw ': Screen has no state';
+
+  public abstract function getBody(state: Game): UnicodeString;
 }
 
-class ScreenAction {
-  public final action: GameAction;
-  public final title: UnicodeString;
-  // TODO: Add visibilityHandler in Extension?
-  public final isVisible: (Game, ActionScreen) -> Bool;
-  // TODO: Is actionHandler in Extension enough? Remove this?
-  private final outcome: Game -> GameOutcome;
+abstract class ActionScreen extends Screen {
+  private abstract function getAllActions(): Array<Action>;
 
-  public function new(action: GameAction, title: UnicodeString,
-                      ?isVisible: (Game, ActionScreen) -> Bool,
-                      ?outcome: Game -> GameOutcome) {
-    this.action = action;
-    this.title = title;
-    this.isVisible = isVisible ?? AlwaysVisible;
-    this.outcome = outcome ?? AlwaysInvalidOutcome;
-  }
-
-  static function AlwaysVisible(Game, ActionScreen): Bool return true;
-  static function AlwaysInvalidOutcome(Game): GameOutcome return Invalid;
-
-  public function handleAction(state: Game): GameOutcome {
-    var outcome: GameOutcome;
-    for (ext in state.campaign.extensions) {
-      final outcome: GameOutcome = ext.actionHandler(state, action);
-      if (outcome != Invalid) {
-        return outcome;
-      }
-    }
-
-    outcome = this.outcome(state);
-    if (outcome == Invalid) {
-      throw 'Unhandled action outcome $action on ${state.getScreen()}.';
-    }
-
-    return outcome;
-  }
-}
-
-class ActionScreen extends Screen {
-  private final actions: Array<ScreenAction>;
-
-  public function new(updateState: OneOf<UnicodeString, (Game, Screen) -> UnicodeString>,
-                      actions: Array<ScreenAction>) {
-    super(updateState);
-    this.actions = actions;
-  }
-
-  public function GetActions(state: Game): Array<ScreenAction> {
+  public function GetActions(): Array<Action> {
     // final room: Null<Room> = GlobalData.rooms[state.player.Y][state.player.X];
     // if (room == null) {
     //   throw new haxe.Exception("Room (" + state.player.X + ", " + state.player.Y + ") does not exist");
@@ -81,22 +29,22 @@ class ActionScreen extends Screen {
 
     // TODO: Use this
     // return [for (action in actions) if (action.isVisible(state, this)) action];
-    return actions;
+    return getAllActions();
   }
 }
 
-// TODO: Find a way to use a type parameter instead of a constructor parameter
-class StatefulActionScreen extends ActionScreen {
-  public final stateConstructor: Campaign -> ScreenState;
+// Keep in sync with StatefulRoom in Room.hx
+@:generic
+abstract class StatefulActionScreen<T : ScreenState & Constructible<Void -> Void>> extends ActionScreen {
+  override function hasState(): Bool return true;
+  override function createState(): T return new T();
 
-  // TODO: Change Screen to ActionScreen if not StatefulActionScreen
-  public function new(stateConstructor: Campaign -> ScreenState,
-                      updateState: OneOf<UnicodeString, (Game, Screen) -> UnicodeString>,
-                      actions: Array<ScreenAction>) {
-    super(updateState, actions);
-    this.stateConstructor = stateConstructor;
-  }
+  abstract function getStatefulBody(state: Game, screenState: T): UnicodeString;
+
+  function getBody(state: Game): UnicodeString return getStatefulBody(state, state.getScreenState());
 }
 
-class ScreenState {
+abstract class ScreenState {
+  public function new() {
+  }
 }
