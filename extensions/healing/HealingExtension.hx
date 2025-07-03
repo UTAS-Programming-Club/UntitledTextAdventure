@@ -12,7 +12,8 @@ final HealingExt: Extension = {
   ],
   equipment: [],
   outcomes: [],
-  screens: [
-    HealingRoom,
+  rooms: [
+    HealingRoom
   ],
+  screens: [],
 };

@@ -12,7 +12,8 @@ final TrapExt: Extension = {
   ],
   equipment: [],
   outcomes: [],
-  screens: [
+  rooms: [
     TrapRoom,
   ],
+  screens: [],
 };

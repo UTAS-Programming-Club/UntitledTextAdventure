@@ -18,31 +18,8 @@ final EquipmentExt: Extension = {
     SecondaryWeaponNone,
   ],
   outcomes: [],
-  screens: [
+  rooms: [
     ChestRoom,
   ],
-  /*actionHandler: function(state: Game, action: GameAction): GameOutcome {
-    switch (action) {
-      case OpenChest:
-        // TODO: Move to seperate function(s) to reuse
-        final screen: Screen = state.getScreen();
-        final roomScreenState: Null<GameRoomState> = state.tryGetScreenState();
-        if (roomScreenState == null) {
-          return Invalid;
-        }
-
-        final room: GameRoom = state.campaign.rooms[roomScreenState.x][roomScreenState.y];
-        final roomState: ChestRoom = roomScreenState.getRoomState(state);
-        switch (room) {
-          case Chest if (!roomState.openedChest):
-            // TODO: Track and unlock item
-          default:
-        }
-
-        roomState.openedChest = true;
-        return GetNextOutput;
-      default:
-        return Invalid;
-    }
-  }*/
+  screens: [],
 };

@@ -30,8 +30,9 @@ class Game {
 #if debuggame
     // Extension class instance checks
     for (ext in campaign.extensions) {
-      var errors: Bool = checkGameTypeDeclarations(ext, "Outcome", ext.outcomes);
-      errors = checkGameTypeDeclarations(ext, "Screen", ext.screens) || errors;
+      var errors: Bool = checkGameTypeDeclarations(ext, 'Outcome', ext.outcomes);
+      errors = checkGameTypeDeclarations(ext, 'Room', ext.rooms) || errors;
+      errors = checkGameTypeDeclarations(ext, 'Screen', ext.screens) || errors;
       if (errors) {
         throw ': Please fix extension type declarations to continue';
       }
@@ -98,9 +99,18 @@ class Game {
 
   private function checkScreen(screen: GameScreen): Void {
 #if debuggame
-    for (ext in campaign.extensions) {
-      if (ext.screens.contains(screen)) {
-        return;
+    if (screen is GameRoom) {
+      final type: Class<Room> = cast Type.getClass(screen);
+      for (ext in campaign.extensions) {
+        if (ext.rooms.contains(type)) {
+          return;
+        }
+      }
+    } else {
+      for (ext in campaign.extensions) {
+        if (ext.screens.contains(screen)) {
+          return;
+        }
       }
     }
 
@@ -183,9 +193,10 @@ class Game {
     }
 
 #if debuggame
+    final type: Class<Room> = Type.getClass(room);
     var roomExists: Bool = false;
     for (ext in campaign.extensions) {
-      roomExists = roomExists || ext.screens.contains(room);
+      roomExists = roomExists || ext.rooms.contains(type);
       if (roomExists) {
         break;
       }
