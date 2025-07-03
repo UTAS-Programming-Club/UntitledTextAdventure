@@ -86,6 +86,7 @@ fi
 if [ ! -d "$haxelib_dir"/hxcpp/$hxlib_version_2 ]; then
   printf "Downloading hxcpp\n"
   LD_LIBRARY_PATH="$neko_dir:$LD_LIBRARY_PATH" "$haxe_dir"/haxelib install hxcpp $hxlib_version
+  printf "\n"
 fi
 
 if [ $need_haxe = true ] || ! command -v haxe > /dev/null 2>&1; then

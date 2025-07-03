@@ -88,6 +88,7 @@ IF NOT EXIST "%haxelib_dir%\hxcpp\%hxlib_version_2%\" (
   SET "PATH=%neko_dir%;%PATH%"
   CALL "%haxe_dir%/haxelib" install hxcpp %hxlib_version%
   ENDLOCAL
+  ECHO:
 )
 
 WHERE haxe > NUL 2>&1
