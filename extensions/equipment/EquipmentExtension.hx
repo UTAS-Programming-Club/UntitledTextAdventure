@@ -2,6 +2,7 @@ package extensions.equipment;
 
 import backend.Extension;
 import extensions.equipment.Equipment;
+import extensions.equipment.Rooms;
 
 @:nullSafety(Strict)
 final EquipmentExt: Extension = {
@@ -17,7 +18,9 @@ final EquipmentExt: Extension = {
     SecondaryWeaponNone,
   ],
   outcomes: [],
-  screens: [],
+  screens: [
+    ChestRoom,
+  ],
   /*actionHandler: function(state: Game, action: GameAction): GameOutcome {
     switch (action) {
       case OpenChest:
