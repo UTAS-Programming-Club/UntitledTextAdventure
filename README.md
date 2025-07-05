@@ -1,7 +1,7 @@
 # Untitled Text Adventure
 
 ## Outdated
-We recently started rewriting this game to Haxe. Work is currently ongoing in [here](https://github.com/UTAS-Programming-Club/UntitledTextAdventure/tree/haxe-rewrite-4).
+We recently started rewriting this game in Haxe. Work is currently ongoing [here](https://github.com/UTAS-Programming-Club/UntitledTextAdventure/tree/haxe-rewrite-4).
 
 ## Targets
 The plan is to implement the game in c with three frontends:
