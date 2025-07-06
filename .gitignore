@@ -12,7 +12,7 @@ build/haxe/neko/
 out/
 third_party/cosmos/
 GameData.json
-Map.txt
+map.txt
 stderr.txt
 
 # Created by https://www.toptal.com/developers/gitignore/api/c
