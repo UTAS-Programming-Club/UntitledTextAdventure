@@ -10,9 +10,9 @@ class CoreGame_MainMenu extends ActionScreen {
   function getBody(state: Game): UnicodeString return state.campaign.mainMenu;
 
   function getAllActions(): Array<Action> return [
-    new StartGame("Start Game"),
-    new GotoScreen(LoadScreen, "Load Game"),
-    new Quit("Quit Game"),
+    new StartGame('Start Game'),
+    new GotoScreen(LoadScreen, 'Load Game'),
+    new Quit('Quit Game'),
   ];
 }
 
@@ -21,7 +21,7 @@ class CoreGame_Load extends ActionScreen {
   function getBody(Game): UnicodeString return 'Loading is not currently supported';
 
   function getAllActions(): Array<Action> return [
-    new GotoScreen(MainMenuScreen, "Return to Main Menu"),
+    new GotoScreen(MainMenuScreen, 'Return to Main Menu'),
   ];
 }
 
@@ -50,6 +50,13 @@ class CoreGame_PlayerEquipment extends ActionScreen {
     'Secondary Weapon: ' + state.player.secondaryWeapon.name;
 
   function getAllActions(): Array<Action> return [
-    new GotoPreviousScreen("Return to Game"),
+    new CycleEquipment(Head,            'Cycle Head Item'),
+    new CycleEquipment(UpperBody,       'Cycle Upper Body Item'),
+    new CycleEquipment(Hands,           'Cycle Hands Item'),
+    new CycleEquipment(LowerBody,       'Cycle Lower Body Item'),
+    new CycleEquipment(Feet,            'Cycle Feet Item'),
+    new CycleEquipment(PrimaryWeapon,   'Cycle Primary Weapon'),
+    new CycleEquipment(SecondaryWeapon, 'Cycle Secondary Weapon'),
+    new GotoPreviousScreen('Return to Game'),
   ];
 }

@@ -14,6 +14,7 @@ class Player {
   public var x(default, null): Int = 0; // Must be in [0, campaign.rooms.length)
   public var y(default, null): Int = 0; // Must be in [0, campaign.rooms.length)
 
+  // Only add items via unlockItem
   private var unlockedItems: Map<EquipmentType, Array<GameEquipment>> = [];
   // TODO: Switch to "equippedItems: Map<EquipmentType, GameEquipment>"?
   public var head(default, null): GameEquipment;
@@ -34,7 +35,7 @@ class Player {
     secondaryWeapon = campaign.initialSecondaryWeapon;
   }
 
-  public function Reset(campaign: Campaign): Void {
+  public function reset(campaign: Campaign): Void {
     health = 100;
     stamina = 100;
 
@@ -98,6 +99,78 @@ class Player {
         primaryWeapon = item;
       case SecondaryWeapon:
         secondaryWeapon = item;
+    }
+  }
+
+  public function cycleItemSlot(type: EquipmentType): Void {
+    final unlockedSlotItems = unlockedItems[type];
+    if (unlockedSlotItems == null) {
+      // TODO: Throw instead?
+      return;
+    }
+
+    final currentItem: GameEquipment = switch (type) {
+      case Head:
+        head;
+      case UpperBody:
+        upperBody;
+      case Hands:
+        hands;
+      case LowerBody:
+        lowerBody;
+      case Feet:
+        feet;
+      case PrimaryWeapon:
+        primaryWeapon;
+      case SecondaryWeapon:
+        secondaryWeapon;
+    }
+
+    var foundCurrentItem: Bool = false;
+    var cycledItem: Bool = false;
+    for (item in unlockedSlotItems) {
+      if (!foundCurrentItem) {
+        foundCurrentItem = currentItem == item;
+        continue;
+      }
+
+      switch (type) {
+        case Head:
+          head = item;
+        case UpperBody:
+          upperBody = item;
+        case Hands:
+          hands = item;
+        case LowerBody:
+          lowerBody = item;
+        case Feet:
+          feet = item;
+        case PrimaryWeapon:
+          primaryWeapon = item;
+        case SecondaryWeapon:
+          secondaryWeapon = item;
+      }
+
+      cycledItem = true;
+    }
+
+    if (!cycledItem) {
+      switch (type) {
+        case Head:
+          head = unlockedSlotItems[0];
+        case UpperBody:
+          upperBody = unlockedSlotItems[0];
+        case Hands:
+          hands = unlockedSlotItems[0];
+        case LowerBody:
+          lowerBody = unlockedSlotItems[0];
+        case Feet:
+          feet = unlockedSlotItems[0];
+        case PrimaryWeapon:
+          primaryWeapon = unlockedSlotItems[0];
+        case SecondaryWeapon:
+          secondaryWeapon = unlockedSlotItems[0];
+      }
     }
   }
 

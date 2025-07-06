@@ -3,6 +3,7 @@ package backend.coregame;
 import backend.Action;
 import backend.coregame.Outcomes;
 import backend.coregame.Rooms;
+import backend.Equipment;
 import backend.Game;
 import backend.GameInfo;
 import backend.Screen;
@@ -86,6 +87,21 @@ class GoWest extends Action {
 
   function onTrigger(state: Game): GameOutcome {
     state.gotoRoom(state.player.x + 1, state.player.y);
+    return GetNextOutput;
+  }
+}
+
+
+class CycleEquipment extends Action {
+  final type: EquipmentType;
+
+  public function new(type: EquipmentType, title: UnicodeString) {
+    super(title);
+    this.type = type;
+  }
+
+  function onTrigger(state: Game): GameOutcome {
+    state.player.cycleItemSlot(type);
     return GetNextOutput;
   }
 }

@@ -59,7 +59,7 @@ class Game {
   }
 
   public function startGame(): Void {
-    player.Reset(campaign);
+    player.reset(campaign);
     gotoRoom(campaign.initialRoomX, campaign.initialRoomY);
     screenState = [
       for (ext in campaign.extensions) {

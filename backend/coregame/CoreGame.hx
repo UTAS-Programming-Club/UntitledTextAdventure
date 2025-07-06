@@ -17,6 +17,7 @@ final CoreGameExt: Extension = {
     GoEast,
     GoSouth,
     GoWest,
+    CycleEquipment,
   ],
   equipment: [],
   outcomes: [
