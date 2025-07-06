@@ -93,15 +93,15 @@ class GoWest extends Action {
 
 
 class CycleEquipment extends Action {
-  final type: EquipmentType;
+  final slot: EquipmentSlot;
 
-  public function new(type: EquipmentType, title: UnicodeString) {
+  public function new(slot: EquipmentSlot, title: UnicodeString) {
     super(title);
-    this.type = type;
+    this.slot = slot;
   }
 
   function onTrigger(state: Game): GameOutcome {
-    state.player.cycleItemSlot(type);
+    state.player.cycleItemSlot(slot);
     return GetNextOutput;
   }
 }

@@ -50,13 +50,13 @@ class Player {
     unlockItem(campaign, campaign.initialPrimaryWeapon);
     unlockItem(campaign, campaign.initialSecondaryWeapon);
 
-    equipItem(campaign.initialHead);
-    equipItem(campaign.initialUpperBody);
-    equipItem(campaign.initialHands);
-    equipItem(campaign.initialLowerBody);
-    equipItem(campaign.initialFeet);
-    equipItem(campaign.initialPrimaryWeapon);
-    equipItem(campaign.initialSecondaryWeapon);
+    equipItem(campaign.initialHead, Head);
+    equipItem(campaign.initialUpperBody, UpperBody);
+    equipItem(campaign.initialHands, Hands);
+    equipItem(campaign.initialLowerBody, LowerBody);
+    equipItem(campaign.initialFeet, Feet);
+    equipItem(campaign.initialPrimaryWeapon, PrimaryWeapon);
+    equipItem(campaign.initialSecondaryWeapon, SecondaryWeapon);
   }
 
 
@@ -76,7 +76,7 @@ class Player {
     }
   }
 
-  public function equipItem(item: GameEquipment): Void {
+  function equipItem(item: GameEquipment, slot: EquipmentSlot): Void {
 #if debuggame
     final unlockedSlotItems = unlockedItems[item.type];
     if (unlockedSlotItems == null || !unlockedSlotItems.contains(item)) {
@@ -84,7 +84,11 @@ class Player {
     }
 #end
 
-    switch (item.type) {
+    if (Equipment.getType(slot) != item.type) {
+      throw ': Mismatch between item type ${item.type} and requested slot $slot';
+    }
+
+    switch (slot) {
       case Head:
         head = item;
       case UpperBody:
@@ -102,14 +106,14 @@ class Player {
     }
   }
 
-  public function cycleItemSlot(type: EquipmentType): Void {
-    final unlockedSlotItems = unlockedItems[type];
+  public function cycleItemSlot(slot: EquipmentSlot): Void {
+    final unlockedSlotItems = unlockedItems[Equipment.getType(slot)];
     if (unlockedSlotItems == null) {
       // TODO: Throw instead?
       return;
     }
 
-    final currentItem: GameEquipment = switch (type) {
+    final currentItem: GameEquipment = switch (slot) {
       case Head:
         head;
       case UpperBody:
@@ -134,7 +138,7 @@ class Player {
         continue;
       }
 
-      switch (type) {
+      switch (slot) {
         case Head:
           head = item;
         case UpperBody:
@@ -152,10 +156,11 @@ class Player {
       }
 
       cycledItem = true;
+      break;
     }
 
     if (!cycledItem) {
-      switch (type) {
+      switch (slot) {
         case Head:
           head = unlockedSlotItems[0];
         case UpperBody:
