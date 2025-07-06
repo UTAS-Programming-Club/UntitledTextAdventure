@@ -1,7 +1,7 @@
 package backend;
 
 import backend.Campaign;
-// import backend.Equipment;
+import backend.Equipment;
 import backend.GameInfo;
 
 // Only import backend.Player from backend.Game
@@ -14,6 +14,8 @@ class Player {
   public var x(default, null): Int = 0; // Must be in [0, campaign.rooms.length)
   public var y(default, null): Int = 0; // Must be in [0, campaign.rooms.length)
 
+  private var unlockedItems: Map<EquipmentType, Array<GameEquipment>> = [];
+  // TODO: Switch to "equippedItems: Map<EquipmentType, GameEquipment>"?
   public var head(default, null): GameEquipment;
   public var upperBody(default, null): GameEquipment;
   public var hands(default, null): GameEquipment;
@@ -38,21 +40,46 @@ class Player {
 
     changeRoom(campaign, campaign.initialRoomX, campaign.initialRoomY);
 
-    equipItem(campaign, campaign.initialHead);
-    equipItem(campaign, campaign.initialUpperBody);
-    equipItem(campaign, campaign.initialHands);
-    equipItem(campaign, campaign.initialLowerBody);
-    equipItem(campaign, campaign.initialFeet);
-    equipItem(campaign, campaign.initialPrimaryWeapon);
-    equipItem(campaign, campaign.initialSecondaryWeapon);
+    unlockedItems = [];
+    unlockItem(campaign, campaign.initialHead);
+    unlockItem(campaign, campaign.initialUpperBody);
+    unlockItem(campaign, campaign.initialHands);
+    unlockItem(campaign, campaign.initialLowerBody);
+    unlockItem(campaign, campaign.initialFeet);
+    unlockItem(campaign, campaign.initialPrimaryWeapon);
+    unlockItem(campaign, campaign.initialSecondaryWeapon);
+
+    equipItem(campaign.initialHead);
+    equipItem(campaign.initialUpperBody);
+    equipItem(campaign.initialHands);
+    equipItem(campaign.initialLowerBody);
+    equipItem(campaign.initialFeet);
+    equipItem(campaign.initialPrimaryWeapon);
+    equipItem(campaign.initialSecondaryWeapon);
   }
 
 
-  public function equipItem(campaign: Campaign, item: GameEquipment): Void {
+  public function unlockItem(campaign: Campaign, item: GameEquipment): Void {
 #if debuggame
-    // Assumes extension equipment declarations and equipmentOrder are valid, both are handled but Game.hx
+    // Assumes extension equipment declarations and equipmentOrder are valid, both are handled in Game.hx
     if (!campaign.equipmentOrder.contains(item)) {
       throw ': Invalid equipment ${item.type}:${item.name}';
+    }
+#end
+
+    final unlockedSlotItems = unlockedItems[item.type];
+    if (unlockedSlotItems == null) {
+      unlockedItems[item.type] = [item];
+    } else {
+      unlockedSlotItems.push(item);
+    }
+  }
+
+  public function equipItem(item: GameEquipment): Void {
+#if debuggame
+    final unlockedSlotItems = unlockedItems[item.type];
+    if (unlockedSlotItems == null || !unlockedSlotItems.contains(item)) {
+      throw ': Attempted to equip locked item ${item.type}:${item.name}';
     }
 #end
 

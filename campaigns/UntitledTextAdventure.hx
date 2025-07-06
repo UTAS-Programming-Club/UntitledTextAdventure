@@ -52,6 +52,7 @@ final UntitledTextAdventure: Campaign = {
     LowerBodyRags,
     FeetNone,
     PrimaryWeaponFist,
+    PrimaryWeaponSword,
     SecondaryWeaponNone,
   ],
   initialHead: HeadNone,
