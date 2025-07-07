@@ -48,7 +48,7 @@ class Game {
     }
     for (item in campaign.equipmentOrder) {
       if (!equipment.contains(item)) {
-        throw ': Invalid equipment ${item.type}:${item.name} not in used extensions';
+        throw ': Invalid item ${item.type}:${item.name} not declared in loaded extensions';
       }
     }
 #end
@@ -59,7 +59,7 @@ class Game {
   }
 
   public function startGame(): Void {
-    player.Reset(campaign);
+    player.reset(campaign);
     gotoRoom(campaign.initialRoomX, campaign.initialRoomY);
     screenState = [
       for (ext in campaign.extensions) {

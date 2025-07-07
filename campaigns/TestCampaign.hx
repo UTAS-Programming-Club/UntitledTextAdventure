@@ -29,14 +29,14 @@ final TestCampaign: Campaign = {
     HandsNone,
     LowerBodyRags,
     FeetNone,
-    PrimaryWeaponFist,
-    SecondaryWeaponNone,
+    WeaponFist,
+    WeaponNone,
   ],
   initialHead: HeadNone,
   initialUpperBody: UpperBodyRags,
   initialHands: HandsNone,
   initialLowerBody: LowerBodyRags,
   initialFeet: FeetNone,
-  initialPrimaryWeapon: PrimaryWeaponFist,
-  initialSecondaryWeapon: SecondaryWeaponNone
+  initialPrimaryWeapon: WeaponFist,
+  initialSecondaryWeapon: WeaponNone
 };

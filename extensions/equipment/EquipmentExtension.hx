@@ -14,8 +14,9 @@ final EquipmentExt: Extension = {
     HandsNone,
     LowerBodyRags,
     FeetNone,
-    PrimaryWeaponFist,
-    SecondaryWeaponNone,
+    WeaponNone,
+    WeaponFist,
+    WeaponSword,
   ],
   outcomes: [],
   rooms: [

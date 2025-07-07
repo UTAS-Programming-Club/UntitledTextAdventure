@@ -8,7 +8,7 @@ import backend.Screen;
 import extensions.equipment.Actions;
 
 class ChestRoom extends StatefulRoom<ChestRoomState> {
-  final item: GameEquipment;
+  public final item: GameEquipment;
 
   public function new(item: GameEquipment) {
     super();
@@ -24,8 +24,9 @@ class ChestRoom extends StatefulRoom<ChestRoomState> {
 
     body += ' been opened.';
 
-    if (state.opened) {
-      body += '\nIt contained a ${item.name}.';
+    if (state.opened && !state.reportedOpened) {
+      body += '\nIt contains a ${item.name}.';
+      state.reportedOpened = true;
     }
 
     return body;
@@ -38,4 +39,5 @@ class ChestRoom extends StatefulRoom<ChestRoomState> {
 
 class ChestRoomState extends ScreenState {
   public var opened: Bool = false;
+  public var reportedOpened: Bool = false;
 }

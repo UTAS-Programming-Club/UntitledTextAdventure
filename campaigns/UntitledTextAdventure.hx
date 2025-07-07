@@ -33,7 +33,7 @@ final UntitledTextAdventure: Campaign = {
     rooms[1][0] = new EmptyRoom();
     rooms[1][1] = new EmptyRoom();
     rooms[1][2] = new TrapRoom();
-    rooms[1][3] = new ChestRoom(PrimaryWeaponSword);
+    rooms[1][3] = new ChestRoom(WeaponSword);
     rooms[2][1] = new HealingRoom();
     rooms;
   },
@@ -46,14 +46,15 @@ final UntitledTextAdventure: Campaign = {
     HandsNone,
     LowerBodyRags,
     FeetNone,
-    PrimaryWeaponFist,
-    SecondaryWeaponNone,
+    WeaponNone,
+    WeaponFist,
+    WeaponSword,
   ],
   initialHead: HeadNone,
   initialUpperBody: UpperBodyRags,
   initialHands: HandsNone,
   initialLowerBody: LowerBodyRags,
   initialFeet: FeetNone,
-  initialPrimaryWeapon: PrimaryWeaponFist,
-  initialSecondaryWeapon: SecondaryWeaponNone
+  initialPrimaryWeapon: WeaponFist,
+  initialSecondaryWeapon: WeaponNone
 };

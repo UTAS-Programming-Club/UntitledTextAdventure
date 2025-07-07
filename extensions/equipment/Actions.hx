@@ -18,12 +18,15 @@ class OpenChest extends Action {
   }
 
   function onTrigger(state: Game): GameOutcome {
+    // onTrigger should only run after isVisible which does this check properly
+    final room: ChestRoom = cast(state.campaign.rooms[state.player.x][state.player.y], ChestRoom);
     final roomState: ChestRoomState = state.getRoomState();
-    if (!roomState.opened) {
-      // TODO: Track and unlock item
+    if (roomState.opened) {
+      return Invalid;
     }
 
     roomState.opened = true;
+    state.player.unlockItem(state.campaign, room.item);
     return GetNextOutput;
   }
 }

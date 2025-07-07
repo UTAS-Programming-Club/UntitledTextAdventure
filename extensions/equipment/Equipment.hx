@@ -12,7 +12,7 @@ final LowerBodyRags = new Equipment(LowerBody, 'Rags');
 
 final FeetNone      = new Equipment(Feet, 'Nothing');
 
-final PrimaryWeaponFist   = new Equipment(PrimaryWeapon, 'Fist');
-final PrimaryWeaponSword  = new Equipment(PrimaryWeapon, 'Sword');
 
-final SecondaryWeaponNone = new Equipment(SecondaryWeapon, 'Nothing');
+final WeaponNone   = new Equipment(Weapon, 'Nothing');
+final WeaponFist   = new Equipment(Weapon, 'Fist');
+final WeaponSword  = new Equipment(Weapon, 'Sword');
