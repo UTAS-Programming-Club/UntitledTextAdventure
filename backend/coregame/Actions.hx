@@ -45,7 +45,7 @@ class Quit extends Action {
 class GoNorth extends Action {
   override function isVisible(state: Game): Bool {
     return state.player.y < state.campaign.rooms.length - 1 &&
-           state.campaign.rooms[state.player.x][state.player.y + 1] != UnusedRoom;
+           !(state.campaign.rooms[state.player.x][state.player.y + 1] is UnusedRoom);
   };
 
   function onTrigger(state: Game): GameOutcome {
@@ -57,7 +57,7 @@ class GoNorth extends Action {
 class GoEast extends Action {
   override function isVisible(state: Game): Bool {
     return state.player.x > 0 &&
-           state.campaign.rooms[state.player.x - 1][state.player.y] != UnusedRoom;
+           !(state.campaign.rooms[state.player.x - 1][state.player.y] is UnusedRoom);
   }
 
   function onTrigger(state: Game): GameOutcome {
@@ -69,7 +69,7 @@ class GoEast extends Action {
 class GoSouth extends Action {
   override function isVisible(state: Game): Bool {
     return state.player.y > 0 &&
-            state.campaign.rooms[state.player.x][state.player.y - 1] != UnusedRoom;
+           !(state.campaign.rooms[state.player.x][state.player.y - 1] is UnusedRoom);
   }
 
   function onTrigger(state: Game): GameOutcome {
@@ -81,7 +81,7 @@ class GoSouth extends Action {
 class GoWest extends Action {
   override function isVisible(state: Game): Bool {
     return state.player.x < state.campaign.rooms.length - 1 &&
-            state.campaign.rooms[state.player.x + 1][state.player.y] != UnusedRoom;
+           !(state.campaign.rooms[state.player.x + 1][state.player.y] is UnusedRoom);
   }
 
   function onTrigger(state: Game): GameOutcome {

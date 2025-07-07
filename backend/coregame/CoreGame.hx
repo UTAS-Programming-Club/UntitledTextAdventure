@@ -24,11 +24,13 @@ final CoreGameExt: Extension = {
     GetNextOutput,
     QuitGame,
   ],
+  rooms: [
+    UnusedRoom,
+    EmptyRoom,
+  ],
   screens: [
     MainMenuScreen,
     LoadScreen,
     PlayerEquipmentScreen,
-    UnusedRoom,
-    EmptyRoom,
   ],
 };

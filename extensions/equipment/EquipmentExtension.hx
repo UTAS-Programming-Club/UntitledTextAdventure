@@ -2,6 +2,7 @@ package extensions.equipment;
 
 import backend.Extension;
 import extensions.equipment.Equipment;
+import extensions.equipment.Rooms;
 
 @:nullSafety(Strict)
 final EquipmentExt: Extension = {
@@ -17,5 +18,8 @@ final EquipmentExt: Extension = {
     SecondaryWeaponNone,
   ],
   outcomes: [],
+  rooms: [
+    ChestRoom,
+  ],
   screens: [],
 };

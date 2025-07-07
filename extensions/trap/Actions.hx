@@ -11,7 +11,7 @@ class DodgeTrap extends Action {
   override function isVisible(state: Game): Bool {
     final room: GameRoom = state.campaign.rooms[state.player.x][state.player.y];
 
-    if (room != TrapRoom) {
+    if (!(room is TrapRoom)) {
       return false;
     }
 
