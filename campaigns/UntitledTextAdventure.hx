@@ -23,12 +23,7 @@ final UntitledTextAdventure: Campaign = {
 
   extensions: [CoreGameExt, EquipmentExt, HealingExt, TrapExt],
 
-#if testrooms
-  // TODO: Fix this
-  initialScreen: GameRoomsScreen,
-#else
   initialScreen: MainMenuScreen,
-#end
 
   rooms: {
     final gridSize: Int = 10;
