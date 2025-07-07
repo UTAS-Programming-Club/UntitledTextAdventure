@@ -25,6 +25,8 @@ class Player {
   public var primaryWeapon(default, null): GameEquipment;
   public var secondaryWeapon(default, null): GameEquipment;
 
+  public var hasMap(default, null): Bool = true;
+
   public function new(campaign: Campaign) {
     head = campaign.initialHead;
     upperBody = campaign.initialUpperBody;

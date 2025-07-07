@@ -3,6 +3,7 @@ package backend.coregame;
 import backend.Action;
 import backend.coregame.Outcomes;
 import backend.coregame.Rooms;
+import backend.coregame.Screens;
 import backend.Equipment;
 import backend.Game;
 import backend.GameInfo;
@@ -102,6 +103,17 @@ class CycleEquipment extends Action {
 
   function onTrigger(state: Game): GameOutcome {
     state.player.cycleItemSlot(slot);
+    return GetNextOutput;
+  }
+}
+
+class OpenMap extends Action {
+  override function isVisible(state: Game): Bool return state.player.hasMap;
+
+  function onTrigger(state: Game): GameOutcome {
+    // TODO: Find better method to avoid loop?
+    state.gotoScreen(state.previousScreen);
+    state.gotoScreen(MapScreen);
     return GetNextOutput;
   }
 }

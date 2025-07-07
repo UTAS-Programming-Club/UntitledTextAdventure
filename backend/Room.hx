@@ -2,8 +2,6 @@ package backend;
 
 import haxe.Constraints;
 using StringTools;
-import sys.io.File;
-import sys.io.FileOutput;
 
 import backend.Action;
 // TODO: Fix backend depending on coregame extension?
@@ -19,8 +17,6 @@ abstract class Room extends ActionScreen {
 
   // TODO: Move all the strings to extensions/campaigns
   function getBody(state: Game): UnicodeString {
-    writeMap(state);
-
     final x: Int = state.player.x;
     final y: Int = state.player.y;
     final room: GameRoom = state.campaign.rooms[x][y];
@@ -80,7 +76,7 @@ abstract class Room extends ActionScreen {
     return !(state.campaign.rooms[x][y] is UnusedRoom);
   }
 
-  static function writeMapRoom(file: FileOutput, x: Int, y: Int, line: Int, state: Game) : Void {
+  static function writeMapRoom(str: StringBuf, x: Int, y: Int, line: Int, state: Game) : Void {
     if (line == RoomSizeY - 1 && y != 0) {
       return;
     }
@@ -97,19 +93,19 @@ abstract class Room extends ActionScreen {
       }
 
       if (x == 0) {
-        file.writeString(rowChars[0]);
+        str.add(rowChars[0]);
       } else {
-        file.writeString(rowChars[1]);
+        str.add(rowChars[1]);
       }
 
       if (line == 0 && roomExists(state, x, y + 1)) {
-        file.writeString(XLine + ''.rpad(' ', RoomSizeX - 4) + XLine);
+        str.add(XLine + ''.rpad(' ', RoomSizeX - 4) + XLine);
       } else {
-        file.writeString(''.rpad(XLine, RoomSizeX - 2));
+        str.add(''.rpad(XLine, RoomSizeX - 2));
       }
 
       if (x == state.campaign.rooms.length - 1) {
-        file.writeString(rowChars[2] + '\n');
+        str.add(rowChars[2] + '\n');
       }
 
     // middle row lines
@@ -127,37 +123,38 @@ abstract class Room extends ActionScreen {
         wallChar = ' ';
       }
 
+      // TODO: Add specific output for all room types
       // The pads are all -1 to allow room for the wallChar on the right side
       // Player in room
       if (x == state.player.x && y == state.player.y && line == 1) {
-        file.writeString((wallChar + 'P').rpad(' ', RoomSizeX - 1));
+        str.add((wallChar + 'P').rpad(' ', RoomSizeX - 1));
       // Room exists
       } else if (roomExists) {
-        file.writeString(wallChar.rpad(' ', RoomSizeX - 1));
+        str.add(wallChar.rpad(' ', RoomSizeX - 1));
       // Room does not exists
       } else {
-        file.writeString((wallChar + 'NO').rpad(' ', RoomSizeX - 1));
+        str.add((wallChar + 'NO').rpad(' ', RoomSizeX - 1));
       }
 
       if (x == state.campaign.rooms.length - 1) {
-        file.writeString(YLine + '\n');
+        str.add(YLine + '\n');
       }
     }
   }
 
-  static function writeMap(state: Game): Void {
-    final file: FileOutput = File.write('map.txt', false);
+  public static function createMap(state: Game): UnicodeString {
+    final str: StringBuf = new StringBuf();
 
     for (flippedY in 0...state.campaign.rooms.length) {
       final y = state.campaign.rooms.length - flippedY - 1;
       for (line in 0...RoomSizeY) {
         for (x in 0...state.campaign.rooms.length) {
-          writeMapRoom(file, x, y, line, state);
+          writeMapRoom(str, x, y, line, state);
         }
       }
     }
 
-    file.close();
+    return str.toString();
   }
 }
 
