@@ -56,6 +56,9 @@ abstract class Room extends ActionScreen {
     return actions;
   }
 
+  public function hasState(): Bool return false;
+  public function createState(): RoomState throw ': Room has no state';
+
 
   public static function getRoomID(state: Game, x: Int, y: Int): Int return y * state.campaign.rooms.length + x;
 
@@ -210,18 +213,20 @@ No: Non existent'
   }
 }
 
-// Keep in sync with StatefulActionScreen in Screen.hx
 @:generic
 abstract class StatefulRoom<T : RoomState & Constructible<Void -> Void>> extends Room {
   override function hasState(): Bool return true;
   override function createState(): T return new T();
 
-  function getStatefulRoomBody(state: Game, screenState: T): UnicodeString return '';
+  function getStatefulRoomBody(state: Game, roomState: T): UnicodeString return '';
 
   override function getRoomBody(state: Game): UnicodeString return getStatefulRoomBody(state, state.getRoomState());
 }
 
-abstract class RoomState extends ScreenState {
+abstract class RoomState {
+  public function new() {
+  }
+
   // Each stateful room must store at least one bool to track completion
   // which is used from saving and the map
   public abstract function isCompleted(): Bool;

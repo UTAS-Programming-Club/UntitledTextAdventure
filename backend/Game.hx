@@ -18,8 +18,6 @@ class Game {
   private var currentScreen: GameScreen;
   public var previousRoom(default, null): Int = -1;
   public var previousScreen(default, null): GameScreen;
-    // No screen may store state before the game starts
-  private var screenState: Map<GameScreen, ScreenState> = [];
   private var roomState: Map<Int, RoomState> = [];
 
   public function new() {
@@ -63,15 +61,6 @@ class Game {
   public function startGame(): Void {
     player.reset(campaign);
     gotoRoom(campaign.initialRoomX, campaign.initialRoomY);
-    screenState = [
-      for (ext in campaign.extensions) {
-        for (screen in ext.screens) {
-          if (screen.hasState()) {
-            screen => screen.createState();
-          }
-        }
-      }
-    ];
     roomState = [];
   }
 
@@ -130,55 +119,6 @@ class Game {
     checkScreen(newScreen);
     previousScreen = currentScreen;
     currentScreen = newScreen;
-  }
-
-
-  // TODO: Fix "[1] Instance constructor not found: T" when calling generic function from generic function
-  // Constructible appears to be ignored at the second level
-#if false // debuggame
-  @:generic
-#end
-  public function tryGetScreenState<T : ScreenState & Constructible<Campaign -> Void>>(): Null<T> {
-    final screen: Screen = getScreen();
-    final screenState: Null<ScreenState> = screenState[currentScreen];
-    if (!screen.hasState() || screenState == null) {
-      return null;
-    }
-
-#if false // debuggame
-    final stateType: String = Type.getClassName(Type.getClass(screenState));
-    final expectedState: T = new T(campaign);
-    final expectedType: String = Type.getClassName(Type.getClass(expectedState));
-    if (stateType != expectedType) {
-      throw ': Incorrect state type $expectedType provided for screen with type $stateType';
-    }
-#end
-
-    return cast screenState;
-  }
-
-  // TODO: Fix "[1] Instance constructor not found: T" when calling generic function from generic function
-  // Constructible appears to be ignored at the second level
-#if false // debuggame
-  @:generic
-#end
-  public function getScreenState<T : ScreenState & Constructible<Void -> Void>>(): T {
-    final screen: Screen = getScreen();
-    final screenState: Null<ScreenState> = screenState[currentScreen];
-    if (!screen.hasState() || screenState == null) {
-      throw ': Screen $currentScreen does not have any stored state';
-    }
-
-#if false // debuggame
-    final stateType: String = Type.getClassName(Type.getClass(screenState));
-    final expectedState: T = new T(campaign);
-    final expectedType: String = Type.getClassName(Type.getClass(expectedState));
-    if (stateType != expectedType) {
-      throw ': Incorrect state type $expectedType provided for screen with type $stateType';
-    }
-#end
-
-    return cast screenState;
   }
 
 
