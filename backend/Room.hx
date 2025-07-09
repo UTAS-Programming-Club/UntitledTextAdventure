@@ -86,31 +86,52 @@ abstract class Room extends ActionScreen {
     return !(state.campaign.rooms[x][y] is UnusedRoom);
   }
 
-  static function roomCompleted(state: Game, x: Int, y: Int, exact: Bool = false): Bool {
-#if debuggame
-    if (!roomExists(state, x, y)) {
-      throw ': Room does not exist';
-    }
-#end
+  static function getKnownRooms(state: Game): Array<Int> {
+    var previousLength: Int;
+    // Start with known stateful rooms
+    final known: Array<Int> = [
+      for (x in 0...state.campaign.rooms.length) {
+        for (y in 0...state.campaign.rooms.length) {
+          final room: Room = state.campaign.rooms[x][y];
+          if (room.hasState()) {
+            final roomState: Null<RoomState> = state.tryGetRoomState(x, y);
+            if (roomState != null && roomState.isCompleted()) {
+              getRoomID(state, x, y);
+            }
+          }
+        }
+      }
+    ];
 
-    final room: Room = state.campaign.rooms[x][y];
-    if (room.hasState()) {
-      final state: Null<RoomState> = state.tryGetRoomState(x, y);
-      return state?.isCompleted() ?? false;
-    }
+    // Add current room, duplicate doesn't matter
+    final currentRoomID: Int = getRoomID(state, state.player.x, state.player.y);
+    known.push(currentRoomID);
 
-    if (exact) {
-      return false;
-    }
+    // Add adjacent rooms until all surrounding rooms are uncompleted stateful rooms
+    do {
+      previousLength = known.length;
+      for (x in 0...state.campaign.rooms.length) {
+        for (y in 0...state.campaign.rooms.length) {
+          final room: Room = state.campaign.rooms[x][y];
+          final roomID = getRoomID(state, x, y);
+          if (known.contains(roomID) || room is UnusedRoom || room.hasState()) {
+            continue;
+          }
 
-    // For stateless rooms, the room is "completed" if any of its immediate neighbours are
-    return (roomExists(state, x - 1, y) && roomCompleted(state, x - 1, y, true)) ||
-           (roomExists(state, x + 1, y) && roomCompleted(state, x + 1, y, true)) ||
-           (roomExists(state, x, y - 1) && roomCompleted(state, x, y - 1, true)) ||
-           (roomExists(state, x, y + 1) && roomCompleted(state, x, y + 1, true));
+          if (known.contains(getRoomID(state, x - 1, y)) ||
+          known.contains(getRoomID(state, x + 1, y)) ||
+          known.contains(getRoomID(state, x, y - 1)) ||
+          known.contains(getRoomID(state, x, y + 1))) {
+            known.push(roomID);
+          }
+        }
+      }
+    } while (known.length != previousLength);
+
+    return known;
   }
 
-  static function writeMapRoom(str: StringBuf, x: Int, y: Int, line: Int, state: Game) : Void {
+  static function writeMapRoom(str: StringBuf, x: Int, y: Int, known: Bool, line: Int, state: Game) : Void {
     if (line == RoomSizeY - 1 && y != 0) {
       return;
     }
@@ -164,7 +185,7 @@ abstract class Room extends ActionScreen {
         if (x == state.player.x && y == state.player.y) {
           str.add((wallChar + 'P').rpad(' ', RoomSizeX - 1));
         // Room has been completed
-        } else if (roomExists && roomCompleted(state, x, y)) {
+        } else if (roomExists && known) {
           str.add(wallChar.rpad(' ', RoomSizeX - 1));
         // Room exists but has not been visited
         } else if (roomExists) {
@@ -185,12 +206,14 @@ abstract class Room extends ActionScreen {
 
   public static function createMap(state: Game): UnicodeString {
     final str: StringBuf = new StringBuf();
+    final knownRooms: Array<Int> = getKnownRooms(state);
 
     for (flippedY in 0...state.campaign.rooms.length) {
       final y = state.campaign.rooms.length - flippedY - 1;
       for (line in 0...RoomSizeY) {
         for (x in 0...state.campaign.rooms.length) {
-          writeMapRoom(str, x, y, line, state);
+          final known: Bool = knownRooms.contains(getRoomID(state, x, y));
+          writeMapRoom(str, x, y, known, line, state);
         }
       }
     }
