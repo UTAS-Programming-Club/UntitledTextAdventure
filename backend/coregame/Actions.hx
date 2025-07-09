@@ -46,7 +46,13 @@ class Quit extends Action {
 
 class GoNorth extends Action {
   override function isVisible(state: Game): Bool {
+    final isPreviousRoom: Bool = state.previousRoom == Room.getRoomID(state, state.player.x, state.player.y + 1);
+    // Room is stateless or need not be completed or is completed
+    final allowMovement: Bool = !state.campaign.rooms[state.player.x][state.player.y].hasState() ||
+                                !state.getRoomState().requireCompleted() ||
+                                state.getRoomState().isCompleted();
     return state.player.y < state.campaign.rooms.length - 1 &&
+           (isPreviousRoom || allowMovement) &&
            !(state.campaign.rooms[state.player.x][state.player.y + 1] is UnusedRoom);
   };
 
@@ -58,7 +64,13 @@ class GoNorth extends Action {
 
 class GoEast extends Action {
   override function isVisible(state: Game): Bool {
+    final isPreviousRoom: Bool = state.previousRoom == Room.getRoomID(state, state.player.x - 1, state.player.y);
+    // Room is stateless or need not be completed or is completed
+    final allowMovement: Bool = !state.campaign.rooms[state.player.x][state.player.y].hasState() ||
+                                !state.getRoomState().requireCompleted() ||
+                                state.getRoomState().isCompleted();
     return state.player.x > 0 &&
+           (isPreviousRoom || allowMovement) &&
            !(state.campaign.rooms[state.player.x - 1][state.player.y] is UnusedRoom);
   }
 
@@ -70,7 +82,13 @@ class GoEast extends Action {
 
 class GoSouth extends Action {
   override function isVisible(state: Game): Bool {
+    final isPreviousRoom: Bool = state.previousRoom == Room.getRoomID(state, state.player.x, state.player.y - 1);
+    // Room is stateless or need not be completed or is completed
+    final allowMovement: Bool = !state.campaign.rooms[state.player.x][state.player.y].hasState() ||
+                                !state.getRoomState().requireCompleted() ||
+                                state.getRoomState().isCompleted();
     return state.player.y > 0 &&
+           (isPreviousRoom || allowMovement) &&
            !(state.campaign.rooms[state.player.x][state.player.y - 1] is UnusedRoom);
   }
 
@@ -82,7 +100,13 @@ class GoSouth extends Action {
 
 class GoWest extends Action {
   override function isVisible(state: Game): Bool {
+    final isPreviousRoom: Bool = state.previousRoom == Room.getRoomID(state, state.player.x + 1, state.player.y);
+    // Room is stateless or need not be completed or is completed
+    final allowMovement: Bool = !state.campaign.rooms[state.player.x][state.player.y].hasState() ||
+                                !state.getRoomState().requireCompleted() ||
+                                state.getRoomState().isCompleted();
     return state.player.x < state.campaign.rooms.length - 1 &&
+           (isPreviousRoom || allowMovement) &&
            !(state.campaign.rooms[state.player.x + 1][state.player.y] is UnusedRoom);
   }
 

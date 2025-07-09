@@ -37,7 +37,11 @@ class ChestRoom extends StatefulRoom<ChestRoomState> {
   ];
 }
 
-class ChestRoomState extends ScreenState {
+class ChestRoomState extends RoomState {
   public var opened: Bool = false;
   public var reportedOpened: Bool = false;
+
+  function isCompleted(): Bool return opened;
+  // TODO: Should this be true?
+  function requireCompleted(): Bool return false;
 }

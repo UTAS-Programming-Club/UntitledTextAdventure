@@ -17,16 +17,20 @@ class DodgeTrap extends Action {
 
     final roomState: TrapRoomState = state.getRoomState();
 
-    return !roomState.activatedTrap;
+    return !roomState.activated;
   }
 
   function onTrigger(state: Game): GameOutcome {
     final roomState: TrapRoomState = state.getRoomState();
-    if (!roomState.activatedTrap && Math.random() >= 0.50) {
+    if (roomState.activated) {
+      return Invalid;
+    }
+
+    roomState.activated = true;
+    if (Math.random() >= 0.50) {
       state.player.modifyHealth(-10);
     }
 
-    roomState.activatedTrap = true;
     return GetNextOutput;
   }
 }

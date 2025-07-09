@@ -10,7 +10,7 @@ class TrapRoom extends StatefulRoom<TrapRoomState> {
   override function getStatefulRoomBody(Game, state: TrapRoomState): UnicodeString {
     var body: UnicodeString = '\n\nThis is a trap room which has';
 
-    if (!state.activatedTrap) {
+    if (!state.activated) {
       body += ' not';
     }
 
@@ -24,6 +24,9 @@ class TrapRoom extends StatefulRoom<TrapRoomState> {
   ];
 }
 
-class TrapRoomState extends ScreenState {
-  public var activatedTrap: Bool = false;
+class TrapRoomState extends RoomState {
+  public var activated: Bool = false;
+
+  function isCompleted(): Bool return activated;
+  function requireCompleted(): Bool return true;
 }
