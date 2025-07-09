@@ -103,6 +103,11 @@ abstract class Room extends ActionScreen {
       }
     ];
 
+    // TODO: Remove once tracking visited rooms
+    // Add starting room, duplicate doesn't matter
+    final startingRoomID: Int = getRoomID(state, state.campaign.initialRoomX, state.campaign.initialRoomY);
+    known.push(startingRoomID);
+
     // Add current room, duplicate doesn't matter
     final currentRoomID: Int = getRoomID(state, state.player.x, state.player.y);
     known.push(currentRoomID);
