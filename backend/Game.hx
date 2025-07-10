@@ -18,6 +18,7 @@ class Game {
   private var currentScreen: GameScreen;
   public var previousRoom(default, null): Int = -1;
   public var previousScreen(default, null): GameScreen;
+  public var visitedRooms(default, null): Array<Int> = [];
   private var roomState: Map<Int, RoomState> = [];
 
   public function new() {
@@ -59,9 +60,10 @@ class Game {
   }
 
   public function startGame(): Void {
+    visitedRooms = [];
+    roomState = [];
     player.reset(campaign);
     gotoRoom(campaign.initialRoomX, campaign.initialRoomY);
-    roomState = [];
   }
 
 
@@ -131,6 +133,9 @@ class Game {
     gotoScreen(room);
 
     final point: Int = Room.getRoomID(this, x, y);
+    if (!visitedRooms.contains(point)) {
+      visitedRooms.push(point);
+    }
     if (roomState.exists(point)) {
       return;
     }

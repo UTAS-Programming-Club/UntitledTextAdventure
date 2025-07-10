@@ -86,7 +86,8 @@ abstract class Room extends ActionScreen {
     return !(state.campaign.rooms[x][y] is UnusedRoom);
   }
 
-  static function getKnownRooms(state: Game): Array<Int> {
+  // TODO: Readd for loading
+  /*static function getKnownRooms(state: Game): Array<Int> {
     var previousLength: Int;
     // Start with known stateful rooms
     final known: Array<Int> = [
@@ -134,7 +135,7 @@ abstract class Room extends ActionScreen {
     } while (known.length != previousLength);
 
     return known;
-  }
+  }*/
 
   static function writeMapRoom(str: StringBuf, x: Int, y: Int, known: Bool, line: Int, state: Game) : Void {
     if (line == RoomSizeY - 1 && y != 0) {
@@ -211,13 +212,12 @@ abstract class Room extends ActionScreen {
 
   public static function createMap(state: Game): UnicodeString {
     final str: StringBuf = new StringBuf();
-    final knownRooms: Array<Int> = getKnownRooms(state);
 
     for (flippedY in 0...state.campaign.rooms.length) {
       final y = state.campaign.rooms.length - flippedY - 1;
       for (line in 0...RoomSizeY) {
         for (x in 0...state.campaign.rooms.length) {
-          final known: Bool = knownRooms.contains(getRoomID(state, x, y));
+          final known: Bool = state.visitedRooms.contains(getRoomID(state, x, y));
           writeMapRoom(str, x, y, known, line, state);
         }
       }
