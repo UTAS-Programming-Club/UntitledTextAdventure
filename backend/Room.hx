@@ -139,58 +139,83 @@ abstract class Room extends ActionScreen {
     return known;
   }*/
 
-  static function writeMapRoom(str: StringBuf, x: Int, y: Int, known: Bool, line: Int, state: Game) : Void {
-    if (line == RoomSizeY - 1 && y != 0) {
-      return;
-    }
-
-    final northEastRoomExists: Bool = roomExists(state, x + 1, y + 1);
+  static function writeMapRoom(state: Game, x: Int, y: Int, row: Int, known: Bool, str: StringBuf) : Void {
     final northWestRoomExists: Bool = roomExists(state, x - 1, y + 1);
     final northRoomExists: Bool = roomExists(state, x, y + 1);
-    final eastRoomExists: Bool = roomExists(state, x + 1, y);
     final westRoomExists: Bool = roomExists(state, x - 1, y);
     final currentRoomExists: Bool = roomExists(state, x, y);
 
-    // Top and bottom row lines
-    if (line == 0 || line == RoomSizeY - 1) {
+    // Top room row
+    if (row == 0) {
       var rowChars: Array<UnicodeString>;
       if (!northWestRoomExists && !northRoomExists) {
         rowChars = TopRowChars;
-      } else if (line == 0 && (northEastRoomExists || currentRoomExists)) {
+      } else if (currentRoomExists || westRoomExists) {
         rowChars = MiddleRowChars;
       } else {
         rowChars = BottomRowChars;
       }
 
-      if (!westRoomExists && currentRoomExists) {
+      // Top left corner
+      if (currentRoomExists && !westRoomExists) {
         str.add(rowChars[0]);
-      } else if (currentRoomExists || (line == 0 && northRoomExists)) {
+      } else if (currentRoomExists || northRoomExists) {
         str.add(rowChars[1]);
+      } else if (!currentRoomExists && (westRoomExists || northWestRoomExists)) {
+        str.add(rowChars[2]);
       }
 
-      if (line == 0 && northRoomExists && currentRoomExists) {
+      // Top Middle
+      if (currentRoomExists && northRoomExists) {
         str.add(XLine + ''.rpad(' ', RoomSizeX - 4) + XLine);
-      } else if ((line == 0 && northRoomExists) || currentRoomExists) {
+      } else if (currentRoomExists || northRoomExists) {
         str.add(''.rpad(XLine, RoomSizeX - 2));
       } else {
         str.add(''.rpad(' ', RoomSizeX - 1));
       }
 
-      if (currentRoomExists && !eastRoomExists && (line == RoomSizeY - 1 || !northEastRoomExists)) {
-        str.add(rowChars[2]);
-      }
       if (x == state.campaign.rooms.length - 1) {
+        // Top right corner(only if on right edge)
+        if (currentRoomExists) {
+          str.add(rowChars[2]);
+        }
         str.add('\n');
       }
 
-    // middle row lines
-    } else {
+    // bottom room row(only if on bottom edge)
+    } else if (y == 0 && row == RoomSizeY - 1) {
+      // Bottom left corner
+      if (currentRoomExists && !westRoomExists) {
+        str.add(BottomRowChars[0]);
+      } else if (currentRoomExists && northRoomExists) {
+        str.add(BottomRowChars[1]);
+      } else if (!currentRoomExists && westRoomExists) {
+        str.add(BottomRowChars[2]);
+      }
+
+      // Bottom Middle
+      if (currentRoomExists && northRoomExists) {
+        str.add(''.rpad(XLine, RoomSizeX - 2));
+      } else {
+        str.add(''.rpad(' ', RoomSizeX - 1));
+      }
+
+      if (x == state.campaign.rooms.length - 1) {
+        // Bottom right corner(only if on right edge)
+        if (currentRoomExists) {
+          str.add(BottomRowChars[2]);
+        }
+        str.add('\n');
+      }
+
+    // middle room rows
+    } else if (row < RoomSizeY - 1) {
       var wallChar: UnicodeString;
-      if ((!currentRoomExists && westRoomExists) || (currentRoomExists && !westRoomExists)) {
+      if (currentRoomExists != westRoomExists) {
         wallChar = YLine;
-      } else if (currentRoomExists && line == 1) {
+      } else if (currentRoomExists && row == 1) {
         wallChar = UpperHalfYLine;
-      } else if (currentRoomExists && line == RoomSizeY - 2) {
+      } else if (currentRoomExists && row == RoomSizeY - 2) {
         wallChar = LowerHalfYLine;
       } else {
         wallChar = ' ';
@@ -198,7 +223,7 @@ abstract class Room extends ActionScreen {
 
       // TODO: Add specific output for all room types
       // The pads are all -1 to allow room for the wallChar on the right side
-      if (line == 1) {
+      if (row == 1) {
         if (currentRoomExists && !known) {
           str.add((wallChar + '?').rpad(' ', RoomSizeX - 1));
         } else {
@@ -225,22 +250,34 @@ abstract class Room extends ActionScreen {
 
   public static function createMap(state: Game): UnicodeString {
     final str: StringBuf = new StringBuf();
+    final length: Int = state.campaign.rooms.length;
 
-    for (flippedY in 0...state.campaign.rooms.length) {
-      final y = state.campaign.rooms.length - flippedY - 1;
-      for (line in 0...RoomSizeY) {
-        for (x in 0...state.campaign.rooms.length) {
+    var anyRows: Bool = false;
+    for (flippedY in 0...length) {
+      final y = length - flippedY - 1;
+
+      var anyRoomsInRow: Bool = false;
+      for (x in 0...length) {
+        anyRoomsInRow = anyRoomsInRow || roomExists(state, x, y);
+      }
+      if (!anyRows && !anyRoomsInRow) {
+        continue;
+      }
+      anyRows = true;
+
+      for (row in 0...RoomSizeY) {
+        for (x in 0...length) {
           final known: Bool = state.visitedRooms.contains(getRoomID(state, x, y));
-          writeMapRoom(str, x, y, known, line, state);
+          writeMapRoom(state, x, y, row, known, str);
         }
       }
     }
 
-    /*str.add('
+    str.add('
 P:  Player
 ?:  Unvisited
 No: Non existent'
-    );*/
+    );
 
     return str.toString();
   }
