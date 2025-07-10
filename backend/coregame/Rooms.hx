@@ -5,7 +5,7 @@ import backend.Room;
 
 class UnusedRoom extends Room {
   function getRoomBody(Game): UnicodeString return '';
-  function getMapSymbol(): UnicodeString return 'NO';
+  function getMapSymbol(): UnicodeString return '';
 }
 
 class EmptyRoom extends Room {

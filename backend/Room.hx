@@ -144,43 +144,53 @@ abstract class Room extends ActionScreen {
       return;
     }
 
+    final northEastRoomExists: Bool = roomExists(state, x + 1, y + 1);
+    final northWestRoomExists: Bool = roomExists(state, x - 1, y + 1);
+    final northRoomExists: Bool = roomExists(state, x, y + 1);
+    final eastRoomExists: Bool = roomExists(state, x + 1, y);
+    final westRoomExists: Bool = roomExists(state, x - 1, y);
+    final currentRoomExists: Bool = roomExists(state, x, y);
+
     // Top and bottom row lines
     if (line == 0 || line == RoomSizeY - 1) {
       var rowChars: Array<UnicodeString>;
-      if (y == state.campaign.rooms.length - 1) {
+      if (!northWestRoomExists && !northRoomExists) {
         rowChars = TopRowChars;
-      } else if (y > 0 || line == 0) {
+      } else if (line == 0 && (northEastRoomExists || currentRoomExists)) {
         rowChars = MiddleRowChars;
       } else {
         rowChars = BottomRowChars;
       }
 
-      if (x == 0) {
+      if (!westRoomExists && currentRoomExists) {
         str.add(rowChars[0]);
-      } else {
+      } else if (currentRoomExists || (line == 0 && northRoomExists)) {
         str.add(rowChars[1]);
       }
 
-      if (line == 0 && roomExists(state, x, y + 1)) {
+      if (line == 0 && northRoomExists && currentRoomExists) {
         str.add(XLine + ''.rpad(' ', RoomSizeX - 4) + XLine);
-      } else {
+      } else if ((line == 0 && northRoomExists) || currentRoomExists) {
         str.add(''.rpad(XLine, RoomSizeX - 2));
+      } else {
+        str.add(''.rpad(' ', RoomSizeX - 1));
       }
 
+      if (currentRoomExists && !eastRoomExists && (line == RoomSizeY - 1 || !northEastRoomExists)) {
+        str.add(rowChars[2]);
+      }
       if (x == state.campaign.rooms.length - 1) {
-        str.add(rowChars[2] + '\n');
+        str.add('\n');
       }
 
     // middle row lines
     } else {
-      final roomExists: Bool = roomExists(state, x, y);
-
       var wallChar: UnicodeString;
-      if (!roomExists || !Room.roomExists(state, x - 1, y)) {
+      if ((!currentRoomExists && westRoomExists) || (currentRoomExists && !westRoomExists)) {
         wallChar = YLine;
-      } else if (line == 1) {
+      } else if (currentRoomExists && line == 1) {
         wallChar = UpperHalfYLine;
-      } else if (line == RoomSizeY - 2) {
+      } else if (currentRoomExists && line == RoomSizeY - 2) {
         wallChar = LowerHalfYLine;
       } else {
         wallChar = ' ';
@@ -189,7 +199,7 @@ abstract class Room extends ActionScreen {
       // TODO: Add specific output for all room types
       // The pads are all -1 to allow room for the wallChar on the right side
       if (line == 1) {
-        if (roomExists && !known) {
+        if (currentRoomExists && !known) {
           str.add((wallChar + '?').rpad(' ', RoomSizeX - 1));
         } else {
           final room: Room = state.campaign.rooms[x][y];
@@ -205,7 +215,10 @@ abstract class Room extends ActionScreen {
       }
 
       if (x == state.campaign.rooms.length - 1) {
-        str.add(YLine + '\n');
+        if (currentRoomExists) {
+          str.add(YLine);
+        }
+        str.add('\n');
       }
     }
   }
@@ -223,11 +236,11 @@ abstract class Room extends ActionScreen {
       }
     }
 
-    str.add('
+    /*str.add('
 P:  Player
 ?:  Unvisited
 No: Non existent'
-    );
+    );*/
 
     return str.toString();
   }
