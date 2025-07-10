@@ -7,7 +7,7 @@ import backend.Screen;
 import extensions.trap.Actions;
 
 class TrapRoom extends StatefulRoom<TrapRoomState> {
-  override function getStatefulRoomBody(Game, state: TrapRoomState): UnicodeString {
+  function getStatefulRoomBody(Game, state: TrapRoomState): UnicodeString {
     var body: UnicodeString = '\n\nThis is a trap room which has';
 
     if (!state.activated) {
@@ -22,6 +22,8 @@ class TrapRoom extends StatefulRoom<TrapRoomState> {
   override function getRoomActions(): Array<Action> return [
     new DodgeTrap("Dodge Trap"),
   ];
+
+  function getMapSymbol(): UnicodeString return '⚠';
 }
 
 class TrapRoomState extends RoomState {

@@ -15,7 +15,7 @@ class ChestRoom extends StatefulRoom<ChestRoomState> {
     this.item = item;
   }
 
-  override function getStatefulRoomBody(Game, state: ChestRoomState): UnicodeString {
+  function getStatefulRoomBody(Game, state: ChestRoomState): UnicodeString {
     var body: UnicodeString = '\n\nThere is a chest which has';
 
     if (!state.opened) {
@@ -35,6 +35,8 @@ class ChestRoom extends StatefulRoom<ChestRoomState> {
   override function getRoomActions(): Array<Action> return [
     new OpenChest('Open Chest'),
   ];
+
+  function getMapSymbol(): UnicodeString return '⚒';
 }
 
 class ChestRoomState extends RoomState {

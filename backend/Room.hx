@@ -15,7 +15,7 @@ import backend.GameInfo;
 import backend.Screen;
 
 abstract class Room extends ActionScreen {
-  function getRoomBody(state: Game): UnicodeString return '';
+  abstract function getRoomBody(state: Game): UnicodeString;
 
   // TODO: Move all the strings to extensions/campaigns
   function getBody(state: Game): UnicodeString {
@@ -55,6 +55,8 @@ abstract class Room extends ActionScreen {
 
     return actions;
   }
+
+  public abstract function getMapSymbol(): UnicodeString;
 
   public function hasState(): Bool return false;
   public function createState(): RoomState throw ': Room has no state';
@@ -187,21 +189,19 @@ abstract class Room extends ActionScreen {
       // TODO: Add specific output for all room types
       // The pads are all -1 to allow room for the wallChar on the right side
       if (line == 1) {
+        if (roomExists && !known) {
+          str.add((wallChar + '?').rpad(' ', RoomSizeX - 1));
+        } else {
+          final room: Room = state.campaign.rooms[x][y];
+          str.add((wallChar + room.getMapSymbol()).rpad(' ', RoomSizeX - 1));
+        }
+      } else {
         // Player in room
         if (x == state.player.x && y == state.player.y) {
           str.add((wallChar + 'P').rpad(' ', RoomSizeX - 1));
-        // Room has been completed
-        } else if (roomExists && known) {
-          str.add(wallChar.rpad(' ', RoomSizeX - 1));
-        // Room exists but has not been visited
-        } else if (roomExists) {
-          str.add((wallChar + '?').rpad(' ', RoomSizeX - 1));
-        // Room does not exists
         } else {
-          str.add((wallChar + 'NO').rpad(' ', RoomSizeX - 1));
+          str.add(wallChar.rpad(' ', RoomSizeX - 1));
         }
-      } else {
-        str.add(wallChar.rpad(' ', RoomSizeX - 1));
       }
 
       if (x == state.campaign.rooms.length - 1) {
@@ -246,9 +246,9 @@ abstract class StatefulRoom<T : RoomState & Constructible<Void -> Void>> extends
   override function hasState(): Bool return true;
   override function createState(): T return new T();
 
-  function getStatefulRoomBody(state: Game, roomState: T): UnicodeString return '';
+  abstract function getStatefulRoomBody(state: Game, roomState: T): UnicodeString;
 
-  override function getRoomBody(state: Game): UnicodeString return getStatefulRoomBody(state, state.getRoomState());
+  function getRoomBody(state: Game): UnicodeString return getStatefulRoomBody(state, state.getRoomState());
 }
 
 abstract class RoomState {
