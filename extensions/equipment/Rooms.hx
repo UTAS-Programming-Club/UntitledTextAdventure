@@ -36,7 +36,8 @@ class ChestRoom extends StatefulRoom<ChestRoomState> {
     new OpenChest('Open Chest'),
   ];
 
-  function getMapSymbol(): UnicodeString return '⚒';
+  function getName(): UnicodeString return 'Chest';
+  function getMapSymbol(): UnicodeString return '⌺';
 }
 
 class ChestRoomState extends RoomState {

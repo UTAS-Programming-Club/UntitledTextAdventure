@@ -19,7 +19,7 @@ abstract class Room extends ActionScreen {
 
   // TODO: Move all the strings to extensions/campaigns
   function getBody(state: Game): UnicodeString {
-    writeMap(state);
+    RoomMap.writeMap(state);
 
     final x: Int = state.player.x;
     final y: Int = state.player.y;
@@ -56,15 +56,19 @@ abstract class Room extends ActionScreen {
     return actions;
   }
 
+
+  public abstract function getName(): UnicodeString;
   public abstract function getMapSymbol(): UnicodeString;
+
 
   public function hasState(): Bool return false;
   public function createState(): RoomState throw ': Room has no state';
 
 
   public static function getRoomID(state: Game, x: Int, y: Int): Int return y * state.campaign.rooms.length + x;
+}
 
-
+class RoomMap {
   // Each room take 6x4 but the 6(?) required calls to writeMapRoom per room only
   // handle the top left most 5x3 unless it is the right and/or bottom most room
   static final RoomSizeX: Int = 6;
@@ -252,6 +256,8 @@ abstract class Room extends ActionScreen {
     final str: StringBuf = new StringBuf();
     final length: Int = state.campaign.rooms.length;
 
+    final usedRooms: Map<UnicodeString, UnicodeString> = [];
+
     var anyRows: Bool = false;
     for (flippedY in 0...length) {
       final y = length - flippedY - 1;
@@ -267,22 +273,32 @@ abstract class Room extends ActionScreen {
 
       for (row in 0...RoomSizeY) {
         for (x in 0...length) {
-          final known: Bool = state.visitedRooms.contains(getRoomID(state, x, y));
+          final known: Bool = state.visitedRooms.contains(Room.getRoomID(state, x, y));
+          if (row == 0 && known) {
+            final room: Room = state.campaign.rooms[x][y];
+            final symbol: UnicodeString = room.getMapSymbol();
+            if (symbol != '') {
+              usedRooms[symbol] = room.getName();
+            }
+          }
           writeMapRoom(state, x, y, row, known, str);
         }
       }
     }
 
     str.add('
-P:  Player
-?:  Unvisited
-No: Non existent'
+P: Player
+?: Unvisited'
     );
+
+    for (symbol => name in usedRooms) {
+      str.add('\n$symbol: $name');
+    }
 
     return str.toString();
   }
 
-  static function writeMap(state: Game): Void {
+  public static function writeMap(state: Game): Void {
 #if debuggame
     final file: FileOutput = File.write('map.txt', false);
     file.writeString(createMap(state));

@@ -23,7 +23,8 @@ class TrapRoom extends StatefulRoom<TrapRoomState> {
     new DodgeTrap("Dodge Trap"),
   ];
 
-  function getMapSymbol(): UnicodeString return '⚠';
+  function getName(): UnicodeString return 'Trap';
+  function getMapSymbol(): UnicodeString return '➷';
 }
 
 class TrapRoomState extends RoomState {

@@ -3,6 +3,7 @@ package backend.coregame;
 import backend.coregame.Actions;
 import backend.Game;
 import backend.GameInfo;
+import backend.Room;
 import backend.Screen;
 
 final MainMenuScreen: GameScreen = new CoreGame_MainMenu();
@@ -64,7 +65,7 @@ class CoreGame_PlayerEquipment extends ActionScreen {
 
 final MapScreen: GameScreen = new CoreGame_Map();
 class CoreGame_Map extends ActionScreen {
-  function getBody(state: Game): UnicodeString return Room.createMap(state);
+  function getBody(state: Game): UnicodeString return RoomMap.createMap(state);
 
   function getAllActions(): Array<Action> return [
     new GotoPreviousScreen('Return to Game'),
