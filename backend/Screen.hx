@@ -9,9 +9,6 @@ abstract class Screen {
   public function new() {
   }
 
-  public function hasState(): Bool return false;
-  public function createState(): ScreenState throw ': Screen has no state';
-
   public abstract function getBody(state: Game): UnicodeString;
 }
 
@@ -30,21 +27,5 @@ abstract class ActionScreen extends Screen {
     // TODO: Use this
     // return [for (action in actions) if (action.isVisible(state, this)) action];
     return getAllActions();
-  }
-}
-
-// Keep in sync with StatefulRoom in Room.hx
-@:generic
-abstract class StatefulActionScreen<T : ScreenState & Constructible<Void -> Void>> extends ActionScreen {
-  override function hasState(): Bool return true;
-  override function createState(): T return new T();
-
-  abstract function getStatefulBody(state: Game, screenState: T): UnicodeString;
-
-  function getBody(state: Game): UnicodeString return getStatefulBody(state, state.getScreenState());
-}
-
-abstract class ScreenState {
-  public function new() {
   }
 }

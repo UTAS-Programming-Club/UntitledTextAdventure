@@ -3,6 +3,7 @@ package backend.coregame;
 import backend.coregame.Actions;
 import backend.Game;
 import backend.GameInfo;
+import backend.Room;
 import backend.Screen;
 
 final MainMenuScreen: GameScreen = new CoreGame_MainMenu();
@@ -57,6 +58,16 @@ class CoreGame_PlayerEquipment extends ActionScreen {
     new CycleEquipment(Feet,            'Cycle Feet Item'),
     new CycleEquipment(PrimaryWeapon,   'Cycle Primary Weapon'),
     new CycleEquipment(SecondaryWeapon, 'Cycle Secondary Weapon'),
+    new OpenMap('Open Map'),
+    new GotoPreviousScreen('Return to Game'),
+  ];
+}
+
+final MapScreen: GameScreen = new CoreGame_Map();
+class CoreGame_Map extends ActionScreen {
+  function getBody(state: Game): UnicodeString return RoomMap.createMap(state);
+
+  function getAllActions(): Array<Action> return [
     new GotoPreviousScreen('Return to Game'),
   ];
 }

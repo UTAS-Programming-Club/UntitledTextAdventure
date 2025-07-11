@@ -18,6 +18,7 @@ final CoreGameExt: Extension = {
     GoSouth,
     GoWest,
     CycleEquipment,
+    OpenMap,
   ],
   equipment: [],
   outcomes: [
@@ -33,5 +34,6 @@ final CoreGameExt: Extension = {
     MainMenuScreen,
     LoadScreen,
     PlayerEquipmentScreen,
+    MapScreen,
   ],
 };

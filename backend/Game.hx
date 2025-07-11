@@ -7,6 +7,7 @@ import backend.Campaign;
 import backend.macros.Helpers;
 import backend.GameInfo;
 import backend.Player;
+import backend.Room;
 import backend.Screen;
 
 class Game {
@@ -15,10 +16,10 @@ class Game {
 
   // Only access via getScreen
   private var currentScreen: GameScreen;
+  public var previousRoom(default, null): Int = -1;
   public var previousScreen(default, null): GameScreen;
-    // No screen may store state before the game starts
-  private var screenState: Map<GameScreen, ScreenState> = [];
-  private var roomState: Map<Int, ScreenState> = [];
+  public var visitedRooms(default, null): Array<Int> = [];
+  private var roomState: Map<Int, RoomState> = [];
 
   public function new() {
     campaign = getCampaign();
@@ -59,18 +60,10 @@ class Game {
   }
 
   public function startGame(): Void {
+    visitedRooms = [];
+    roomState = [];
     player.reset(campaign);
     gotoRoom(campaign.initialRoomX, campaign.initialRoomY);
-    screenState = [
-      for (ext in campaign.extensions) {
-        for (screen in ext.screens) {
-          if (screen.hasState()) {
-            screen => screen.createState();
-          }
-        }
-      }
-    ];
-    roomState = [];
   }
 
 
@@ -131,63 +124,18 @@ class Game {
   }
 
 
-  // TODO: Fix "[1] Instance constructor not found: T" when calling generic function from generic function
-  // Constructible appears to be ignored at the second level
-#if false // debuggame
-  @:generic
-#end
-  public function tryGetScreenState<T : ScreenState & Constructible<Campaign -> Void>>(): Null<T> {
-    final screen: Screen = getScreen();
-    final screenState: Null<ScreenState> = screenState[currentScreen];
-    if (!screen.hasState() || screenState == null) {
-      return null;
-    }
-
-#if false // debuggame
-    final stateType: String = Type.getClassName(Type.getClass(screenState));
-    final expectedState: T = new T(campaign);
-    final expectedType: String = Type.getClassName(Type.getClass(expectedState));
-    if (stateType != expectedType) {
-      throw ': Incorrect state type $expectedType provided for screen with type $stateType';
-    }
-#end
-
-    return cast screenState;
-  }
-
-  // TODO: Fix "[1] Instance constructor not found: T" when calling generic function from generic function
-  // Constructible appears to be ignored at the second level
-#if false // debuggame
-  @:generic
-#end
-  public function getScreenState<T : ScreenState & Constructible<Void -> Void>>(): T {
-    final screen: Screen = getScreen();
-    final screenState: Null<ScreenState> = screenState[currentScreen];
-    if (!screen.hasState() || screenState == null) {
-      throw ': Screen $currentScreen does not have any stored state';
-    }
-
-#if false // debuggame
-    final stateType: String = Type.getClassName(Type.getClass(screenState));
-    final expectedState: T = new T(campaign);
-    final expectedType: String = Type.getClassName(Type.getClass(expectedState));
-    if (stateType != expectedType) {
-      throw ': Incorrect state type $expectedType provided for screen with type $stateType';
-    }
-#end
-
-    return cast screenState;
-  }
-
-
   // x and y must be in [0, campaign.rooms.length)
   public function gotoRoom(x: Int, y: Int): Void {
+    previousRoom = Room.getRoomID(this, player.x, player.y);
     player.changeRoom(campaign, x, y);
 
     final room: GameRoom = campaign.rooms[x][y];
     gotoScreen(room);
 
-    final point: Int = x * campaign.rooms.length + y;
+    final point: Int = Room.getRoomID(this, x, y);
+    if (!visitedRooms.contains(point)) {
+      visitedRooms.push(point);
+    }
     if (roomState.exists(point)) {
       return;
     }
@@ -211,7 +159,7 @@ class Game {
       return;
     }
 
-    roomState[point] = room.createState();
+    roomState[point] = cast room.createState();
   }
 
   // x and y must be in [0, campaign.rooms.length)
@@ -220,13 +168,42 @@ class Game {
 #if false // debuggame
   @:generic
 #end
-  public function getRoomState<T : ScreenState & Constructible<Void -> Void>>(?x: Int, ?y: Int): T {
+  public function tryGetRoomState<T : RoomState & Constructible<Void -> Void>>(?x: Int, ?y: Int): Null<T> {
     final xPos: Int = x ?? player.x;
     final yPos: Int = y ?? player.y;
-    final point: Int = xPos * campaign.rooms.length + yPos;
+    final point: Int = Room.getRoomID(this, xPos, yPos);
 
     final room: GameRoom = campaign.rooms[xPos][yPos];
-    final roomState: Null<ScreenState> = roomState[point];
+    final roomState: Null<RoomState> = roomState[point];
+    if (!room.hasState() || roomState == null) {
+      return null;
+    }
+
+#if false // debuggame
+    final stateType: String = Type.getClassName(Type.getClass(roomState));
+    final expectedState: T = new T();
+    final expectedType: String = Type.getClassName(Type.getClass(expectedState));
+    if (stateType != expectedType) {
+      throw ': Incorrect result type $expectedType provided for room with type $stateType';
+    }
+#end
+
+    return cast roomState;
+  }
+
+  // x and y must be in [0, campaign.rooms.length)
+  // TODO: Fix "[0] Instance constructor not found: T" when calling generic function from generic function
+  // Constructible appears to be ignored at the second level
+#if false // debuggame
+  @:generic
+#end
+  public function getRoomState<T : RoomState & Constructible<Void -> Void>>(?x: Int, ?y: Int): T {
+    final xPos: Int = x ?? player.x;
+    final yPos: Int = y ?? player.y;
+    final point: Int = Room.getRoomID(this, xPos, yPos);
+
+    final room: GameRoom = campaign.rooms[xPos][yPos];
+    final roomState: Null<RoomState> = roomState[point];
     if (!room.hasState() || roomState == null) {
       throw ': Room $room at $xPos, $yPos does not have any stored state';
     }
