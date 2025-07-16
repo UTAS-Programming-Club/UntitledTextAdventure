@@ -65,7 +65,7 @@ class EmbeddedFrontend {
   }
 
   static function HandleActionInput(state: Game, screen: ActionScreen): GameOutcome {
-    final actions: Array<Action> = actionScreen.GetActions();
+    final actions: Array<Action> = screen.GetActions();
     final visibleInputs: Array<Action> = [
       for (action in actions) {
         if (action.isVisible(state)) {

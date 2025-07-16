@@ -93,7 +93,7 @@ def PrintActionInputs(state: backend_Game, screen: backend_ActionScreen) -> None
   buttons_start_y = current_y + outer_button_padding
   current_y += 2 * outer_button_padding
 
-  actions: list[backend_ScreenAction] = screen.GetActions(state)
+  actions: list[backend_ScreenAction] = screen.GetActions()
 
   column: int = 0
   for action in actions:

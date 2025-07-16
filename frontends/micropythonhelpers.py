@@ -38,7 +38,7 @@ def PrintString(text: str, end="\n", highlight: bool=False) -> None:
 def PrintActionInputs(state: backend_Game, screen: backend_ActionScreen) -> None:
   print("\n\nUse the numbers below to make a selection.")
 
-  actions: list[backend_ScreenAction] = screen.GetActions(state)
+  actions: list[backend_ScreenAction] = screen.GetActions()
   inputNumber: int = 0
   for action in actions:
     if action.isVisible(state):
