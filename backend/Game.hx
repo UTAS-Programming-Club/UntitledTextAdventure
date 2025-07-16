@@ -79,7 +79,7 @@ class Game {
       return;
     }
 
-    gotoRoom(campaign.initialRoomX, campaign.initialRoomY);
+    gotoRoom(player.x, player.y);
     screenState = [
       for (ext in campaign.extensions) {
         for (screen in ext.screens) {
@@ -101,7 +101,7 @@ class Game {
       final itemString: UnicodeString = Std.string(item).replace('Class<', '').replace('>', '');
       final itemName: Null<UnicodeString> = itemString.split(".").pop();
       if (itemName == null) {
-        throw 'Internal error';
+        throw ': Internal error';
       }
 
       final itemModule: UnicodeString = itemString.substring(0, itemString.length - itemName.length - 1);

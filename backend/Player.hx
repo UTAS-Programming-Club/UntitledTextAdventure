@@ -198,7 +198,7 @@ class Player {
   // x and y must be in [0, campaign.rooms.length)
   public function changeRoom(campaign: Campaign, x: Int, y: Int): Void {
     if (x < 0 || y < 0 || x >= campaign.rooms.length || y >= campaign.rooms.length) {
-      throw 'Room $x, $y is out of bounds';
+      throw ': Room $x, $y is out of bounds';
     }
 
     this.x = x;
@@ -207,20 +207,24 @@ class Player {
 
 
   public function serialise(campaign: Campaign, saveData: SaveData): Void {
-    saveData.health = health;
-    saveData.stamina = stamina;
-    saveData.headIdx = campaign.equipmentOrder.indexOf(head);
-    saveData.upperBodyIdx = campaign.equipmentOrder.indexOf(upperBody);
-    saveData.handsIdx = campaign.equipmentOrder.indexOf(hands);
-    saveData.lowerBodyIdx = campaign.equipmentOrder.indexOf(lowerBody);
-    saveData.feetIdx = campaign.equipmentOrder.indexOf(feet);
-    saveData.primaryWeaponIdx = campaign.equipmentOrder.indexOf(primaryWeapon);
+    saveData.health             = health;
+    saveData.stamina            = stamina;
+    saveData.roomX              = x;
+    saveData.roomY              = y;
+    saveData.headIdx            = campaign.equipmentOrder.indexOf(head);
+    saveData.upperBodyIdx       = campaign.equipmentOrder.indexOf(upperBody);
+    saveData.handsIdx           = campaign.equipmentOrder.indexOf(hands);
+    saveData.lowerBodyIdx       = campaign.equipmentOrder.indexOf(lowerBody);
+    saveData.feetIdx            = campaign.equipmentOrder.indexOf(feet);
+    saveData.primaryWeaponIdx   = campaign.equipmentOrder.indexOf(primaryWeapon);
     saveData.secondaryWeaponIdx = campaign.equipmentOrder.indexOf(secondaryWeapon);
   }
 
   public function deserialise(campaign: Campaign, saveData: SaveData): Void {
     health          = saveData.health;
     stamina         = saveData.stamina;
+    x               = saveData.roomX;
+    y               = saveData.roomY;
     head            = campaign.equipmentOrder[saveData.headIdx];
     upperBody       = campaign.equipmentOrder[saveData.upperBodyIdx];
     hands           = campaign.equipmentOrder[saveData.handsIdx];

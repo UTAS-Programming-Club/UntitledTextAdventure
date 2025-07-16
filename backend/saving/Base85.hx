@@ -30,7 +30,7 @@ class Base85 {
       final value: Int64 = Int64.make(0, bytes.getInt32Safe(i));
 
       final digit4: Int = (value / powers[4]).toInt();
-      final value4: Int = (value - digit4 * powers[4]).toInt();
+      final value4: Int = (value - digit4 * Int64.make(0, powers[4])).toInt();
 
       final digit3: Int = Std.int(value4 / powers[3]);
       final value3: Int = value4 - digit3 * powers[3];

@@ -24,7 +24,7 @@ class ByteHelpers {
     final finalByte: Int = firstByte + Std.int((firstBit + size - 1) / 8);
     final finalBit: Int = (firstBit + size - 1) % 8;
     if (finalByte >= buffer.length) {
-      throw 'Buffer too small to fit data.';
+      throw ': Buffer too small to fit data';
     }
 
     final firstBitCount: Int = Std.int(Math.min(8 - firstBit, size));
@@ -47,7 +47,7 @@ class ByteHelpers {
 
     final finalBitCount: Int = size - previousBitCount;
     if (finalBitCount > 8) {
-      throw 'Unable to store final byte in data buffer.';
+      throw ': Unable to store final byte in data buffer';
     }
 
     if (finalByte != firstByte) {
@@ -65,7 +65,7 @@ class ByteHelpers {
     final firstBit: Int = offset % 8;
     final finalByte: Int = firstByte + Std.int((firstBit + size - 1) / 8);
     if (finalByte >= buffer.length) {
-      throw 'Buffer too small to read data from.';
+      throw ': Buffer too small to read data from';
     }
 
     var val: Int = 0;
@@ -86,7 +86,7 @@ class ByteHelpers {
 
     final finalBitCount: Int = size - previousBitCount;
     if (finalBitCount > 8) {
-      throw 'Unable to read final byte from data buffer.';
+      throw ': Unable to read final byte from data buffer';
     }
 
     final finalBits: Int = buffer.get(finalByte);
