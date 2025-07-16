@@ -3,6 +3,7 @@ package backend;
 import backend.Campaign;
 import backend.Equipment;
 import backend.GameInfo;
+import backend.Save;
 
 // Only import backend.Player from backend.Game
 
@@ -197,10 +198,39 @@ class Player {
   // x and y must be in [0, campaign.rooms.length)
   public function changeRoom(campaign: Campaign, x: Int, y: Int): Void {
     if (x < 0 || y < 0 || x >= campaign.rooms.length || y >= campaign.rooms.length) {
-      throw 'Room $x, $y is out of bounds';
+      throw ': Room $x, $y is out of bounds';
     }
 
     this.x = x;
     this.y = y;
+  }
+
+
+  public function serialise(campaign: Campaign, saveData: SaveData): Void {
+    saveData.health             = health;
+    saveData.stamina            = stamina;
+    saveData.roomX              = x;
+    saveData.roomY              = y;
+    saveData.headIdx            = campaign.equipmentOrder.indexOf(head);
+    saveData.upperBodyIdx       = campaign.equipmentOrder.indexOf(upperBody);
+    saveData.handsIdx           = campaign.equipmentOrder.indexOf(hands);
+    saveData.lowerBodyIdx       = campaign.equipmentOrder.indexOf(lowerBody);
+    saveData.feetIdx            = campaign.equipmentOrder.indexOf(feet);
+    saveData.primaryWeaponIdx   = campaign.equipmentOrder.indexOf(primaryWeapon);
+    saveData.secondaryWeaponIdx = campaign.equipmentOrder.indexOf(secondaryWeapon);
+  }
+
+  public function deserialise(campaign: Campaign, saveData: SaveData): Void {
+    health          = saveData.health;
+    stamina         = saveData.stamina;
+    x               = saveData.roomX;
+    y               = saveData.roomY;
+    head            = campaign.equipmentOrder[saveData.headIdx];
+    upperBody       = campaign.equipmentOrder[saveData.upperBodyIdx];
+    hands           = campaign.equipmentOrder[saveData.handsIdx];
+    lowerBody       = campaign.equipmentOrder[saveData.lowerBodyIdx];
+    feet            = campaign.equipmentOrder[saveData.feetIdx];
+    primaryWeapon   = campaign.equipmentOrder[saveData.primaryWeaponIdx];
+    secondaryWeapon = campaign.equipmentOrder[saveData.secondaryWeaponIdx];
   }
 }

@@ -22,7 +22,7 @@ abstract class Action {
     final outcome: GameOutcome = onTrigger(state);
     if (outcome == Invalid) {
       throw   ': Unhandled action ${Std.string(this).split('.').pop()}'
-            + ' on ${Std.string(state.getScreen()).replace('_', '.').split('.').pop()}';
+            + ' requested for ${Std.string(state.getScreen()).replace('_', '.').split('.').pop()}';
     }
 
     return outcome;

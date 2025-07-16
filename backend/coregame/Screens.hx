@@ -1,8 +1,10 @@
 package backend.coregame;
 
 import backend.coregame.Actions;
+import backend.coregame.Outcomes;
 import backend.Game;
 import backend.GameInfo;
+import backend.Save;
 import backend.Screen;
 
 final MainMenuScreen: GameScreen = new CoreGame_MainMenu();
@@ -16,13 +18,24 @@ class CoreGame_MainMenu extends ActionScreen {
   ];
 }
 
-final LoadScreen: GameScreen = new CoreGame_Load();
-class CoreGame_Load extends ActionScreen {
-  function getBody(Game): UnicodeString return 'Loading is not currently supported';
+
+final SaveScreen: GameScreen = new CoreGame_Save();
+class CoreGame_Save extends ActionScreen {
+  function getBody(state: Game): UnicodeString return 'Here is your password: ' + Save(state);
 
   function getAllActions(): Array<Action> return [
-    new GotoScreen(MainMenuScreen, 'Return to Main Menu'),
+    new Quit('Quit'),
   ];
+}
+
+final LoadScreen: GameScreen = new CoreGame_Load();
+class CoreGame_Load extends TextScreen {
+  function getBody(state: Game): UnicodeString return 'Password';
+
+  function onTextEntry(state:backend.Game, str:UnicodeString): GameOutcome {
+    state.loadGame(str);
+    return GetNextOutput;
+  }
 }
 
 

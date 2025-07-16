@@ -7,6 +7,7 @@ import backend.Campaign;
 import backend.macros.Helpers;
 import backend.GameInfo;
 import backend.Player;
+import backend.Save;
 import backend.Screen;
 
 class Game {
@@ -73,6 +74,24 @@ class Game {
     roomState = [];
   }
 
+  public function loadGame(str: UnicodeString): Void {
+    if (!Load(this, str)) {
+      return;
+    }
+
+    gotoRoom(player.x, player.y);
+    screenState = [
+      for (ext in campaign.extensions) {
+        for (screen in ext.screens) {
+          if (screen.hasState()) {
+            screen => screen.createState();
+          }
+        }
+      }
+    ];
+    roomState = [];
+  }
+
 
 // TODO: Figure out whis this fails with buildstatic.hxml
 #if debuggame
@@ -82,7 +101,7 @@ class Game {
       final itemString: UnicodeString = Std.string(item).replace('Class<', '').replace('>', '');
       final itemName: Null<UnicodeString> = itemString.split(".").pop();
       if (itemName == null) {
-        throw 'Internal error';
+        throw ': Internal error';
       }
 
       final itemModule: UnicodeString = itemString.substring(0, itemString.length - itemName.length - 1);

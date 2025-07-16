@@ -2,6 +2,7 @@
 
 -D dump=pretty
 
+# TODO: Enable StrictThreaded to ensure there are no issues with the Discord bot
 --macro nullSafety("backend", Strict)
 --macro nullSafety("frontends", Strict)
 -dce std

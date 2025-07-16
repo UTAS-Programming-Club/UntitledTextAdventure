@@ -4,6 +4,7 @@ import backend.Extension;
 import extensions.equipment.Equipment;
 import extensions.equipment.Rooms;
 
+// TODO: Move to coregame, player depends on Equipments.hx
 @:nullSafety(Strict)
 final EquipmentExt: Extension = {
   module: 'extensions.equipment',

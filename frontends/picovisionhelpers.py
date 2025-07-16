@@ -94,7 +94,7 @@ def PrintActionInputs(state: backend_Game, screen: backend_ActionScreen) -> None
 
   PrintString("\n\nCycle with X and Y and make a selection with A.")
 
-  actions: list[backend_ScreenAction] = screen.GetActions(state)
+  actions: list[backend_ScreenAction] = screen.GetActions()
 
   input_number: int = 0
   for action in actions:

@@ -38,12 +38,18 @@ def PrintString(text: str, end="\n", highlight: bool=False) -> None:
 def PrintActionInputs(state: backend_Game, screen: backend_ActionScreen) -> None:
   print("\n\nUse the numbers below to make a selection.")
 
-  actions: list[backend_ScreenAction] = screen.GetActions(state)
+  actions: list[backend_ScreenAction] = screen.GetActions()
   inputNumber: int = 0
   for action in actions:
     if action.isVisible(state):
       inputNumber += 1
       print(f"{inputNumber}. {action.title}")
+
+def PrintTextInput() -> Void:
+  print(": ", end="")
+  print("\x1b7") # Backup cursor position
+  print("\nPress Enter to confirm text entry.\nPress Esc to return to the previous screen.")
+  print("\x1b8", end="") # Restore cursor position
 
 
 # Based on https://forum.micropython.org/viewtopic.php?p=42665&sid=422c614f932259441421141222552e56#p42665
@@ -58,3 +64,19 @@ def GetActionInput(input_count: int) -> int:
     inputVal: int = int(inputChar)
     if 1 <= inputVal and inputVal <= 9:
         return inputVal - 1
+
+def GetTextInput() -> str | None:
+  text: str = ''
+
+  while True:
+    inputChar: str = sys.stdin.read(1)
+    if ord(inputChar) == 10: # Enter
+      return text
+    elif ord(inputChar) == 27: # ESC
+      return None
+    elif ord(inputChar) == 127: # Backspace
+      print('\010 \010', end='')
+      text = text[:-1]
+    else:
+      text += inputChar
+      print(inputChar, end='')

@@ -6,6 +6,7 @@ import backend.coregame.Outcomes;
 // TODO: Recreate some merged type that works for switch exhaustion?
 import backend.GameInfo;
 import backend.Screen;
+import haxe.io.Bytes;
 
 class CmdFrontend {
   static final ESC = "\x1B";
@@ -54,34 +55,34 @@ class CmdFrontend {
 
   // Returns input text as a utf-8 string if enter is pressed, "\x1B" on esc
   // being pressed or NULL if buffer allocation failed
-  static function GetTextInput(): String {
-    var bufSize = 16;
-    var bufOffset = 0;
-    var buf = haxe.io.Bytes.alloc(bufSize);
+  static function GetTextInput(): Null<UnicodeString> {
+    var bufSize: Int = 16;
+    var bufOffset: Int = 0;
+    var buf: Bytes = Bytes.alloc(bufSize);
 
     while (true) {
       if (bufOffset == bufSize) {
-        final newBufSize = bufSize * bufSize;
-        var newBuf = haxe.io.Bytes.alloc(newBufSize);
+        final newBufSize: Int = bufSize * bufSize;
+        final newBuf: Bytes = Bytes.alloc(newBufSize);
         newBuf.blit(0, buf, 0, bufSize);
         bufSize = newBufSize;
         buf = newBuf;
       }
 
-      final input = Sys.getChar(false);
-      buf.fill(bufOffset, 1, input);
+      final inputChar: Int = Sys.getChar(false);
+      buf.fill(bufOffset, 1, inputChar);
       // This also detects any key that sends an escape sequence e.g. arrow keys
-      if (input == 0x1B) {
-        return ESC;
+      if (inputChar == 0x1B) {
+        return null;
       }
 
-      if (input == 0x7F && bufOffset >= 1) {
+      if (inputChar == 0x7F && bufOffset >= 1) {
         Sys.print("\010 \010");
         --bufOffset;
-      } else if (input == 9 || (input >= 32 && input <= 126)) {
-        Sys.print(String.fromCharCode(input));
+      } else if (inputChar == 9 || (inputChar >= 32 && inputChar <= 126)) {
+        Sys.print(String.fromCharCode(inputChar));
         ++bufOffset;
-      } else if (input == "\r".code) {
+      } else if (inputChar == "\r".code) {
         return buf.getString(0, bufOffset);
       }
 
@@ -91,9 +92,9 @@ class CmdFrontend {
   }
 
   static function PrintTextInput(): Void {
+    Sys.print(": ");
     Sys.println(ESC + "7"); // Backup cursor position
-    // TODO: Move to backend
-    Sys.println("\nPress Enter to confirm password entry.\nPress Esc to return to the previous screen.");
+    Sys.println("\nPress Enter to confirm text entry.\nPress Esc to return to the previous screen.");
     Sys.print(ESC + "8"); // Restore cursor position
   }
 
@@ -104,12 +105,15 @@ class CmdFrontend {
 
     if (screen is ActionScreen) {
       PrintButtonInputs(state, cast(screen, ActionScreen));
+    } else if (screen is TextScreen) {
+      PrintTextInput();
     } else {
       return false;
     }
 
     return true;
   }
+
 
   static function MapInputIndex(state: Game, actions: Array<Action>, inputIndex: Int): Int {
     var index: Int;
@@ -128,23 +132,37 @@ class CmdFrontend {
     return actions.length;
   }
 
+  static function HandleActionInput(state: Game, screen: ActionScreen): GameOutcome {
+    final actions: Array<Action> = screen.GetActions();
+
+    final inputIndex: Int = GetButtonInput();
+    final actionindex: Int = MapInputIndex(state, actions, inputIndex);
+    if (actionindex >= actions.length) {
+      // This is a recoverable error so just ignore it
+      return GetNextOutput;
+    }
+
+    return actions[actionindex].handleAction(state);
+  }
+
+  static function HandleTextInput(state: Game, screen: TextScreen): GameOutcome {
+    final input: Null<UnicodeString> = GetTextInput();
+    Sys.print("\n\n\n\n\n"); // In case of exceptions
+    return screen.handleInput(state, input);
+  }
+
   static function HandleInput(state: Game): Bool {
     final screen: Screen = state.getScreen();
-    if (!(screen is ActionScreen)) {
+
+    var outcome: GameOutcome;
+    if (screen is ActionScreen) {
+      outcome = HandleActionInput(state, cast(screen, ActionScreen));
+    } else if (screen is TextScreen) {
+      outcome = HandleTextInput(state, cast(screen, TextScreen));
+    } else {
       return false;
     }
 
-    final actionScreen: ActionScreen = cast screen;
-    final actions: Array<Action> = actionScreen.GetActions();
-
-    final inputIndex: Int = GetButtonInput();
-    final index: Int = MapInputIndex(state, actions, inputIndex);
-    if (index >= actions.length) {
-      // This is a recoverable error so just ignore it
-      return true;
-    }
-
-    final outcome: GameOutcome = actions[index].handleAction(state);
     switch (outcome) {
       case GetNextOutput:
         return true;
@@ -156,7 +174,7 @@ class CmdFrontend {
   }
 
 
-  public static function main(): Void {
+  static function main(): Void {
     SetupConsole();
 
     final state = new Game();

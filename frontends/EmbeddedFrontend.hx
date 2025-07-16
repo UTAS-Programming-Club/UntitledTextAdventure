@@ -17,14 +17,16 @@ extern class Native {
 
   static function PrintString(str: UnicodeString, end: UnicodeString = "\n", highlightAction: Bool = false): Void;
   static function PrintActionInputs(state: Game, screen: ActionScreen): Void;
+  static function PrintTextInput(state: Game, screen: Screen): Void;
 
   static function GetActionInput(inputCount: Int): Int;
+  static function GetTextInput(): Null<UnicodeString>;
 }
 
 class EmbeddedFrontend {
   static function PrintOutputBody(body: UnicodeString): Void {
     Native.ClearOutput();
-    Native.PrintString(body);
+    Native.PrintString(body, "");
   }
 
   static function HandleOutput(state: Game): Bool {
@@ -33,6 +35,8 @@ class EmbeddedFrontend {
 
     if (screen is ActionScreen) {
       Native.PrintActionInputs(state, cast(screen, ActionScreen));
+    } else if (screen is TextScreen) {
+      Native.PrintTextInput(state, screen);
     } else {
       return false;
     }
@@ -60,14 +64,8 @@ class EmbeddedFrontend {
     return actions.length;
   }
 
-  static function HandleInput(state: Game): Bool {
-    final screen: Screen = state.getScreen();
-    if (!(screen is ActionScreen)) {
-      return false;
-    }
-
-    final actionScreen: ActionScreen = cast screen;
-    final actions: Array<Action> = actionScreen.GetActions();
+  static function HandleActionInput(state: Game, screen: ActionScreen): GameOutcome {
+    final actions: Array<Action> = screen.GetActions();
     final visibleInputs: Array<Action> = [
       for (action in actions) {
         if (action.isVisible(state)) {
@@ -79,10 +77,32 @@ class EmbeddedFrontend {
     final inputIndex: Int = Native.GetActionInput(visibleInputs.length);
     final actionindex: Int = MapInputIndex(state, actions, inputIndex);
     if (actionindex >= actions.length) {
-      return true;
+      // TODO: Is this still the case?
+      // This is a recoverable error so just ignore it
+      return GetNextOutput;
     }
 
-    final outcome: GameOutcome = actions[actionindex].handleAction(state);
+    return actions[actionindex].handleAction(state);
+  }
+
+  static function HandleTextInput(state: Game, screen: TextScreen): GameOutcome {
+    // // TODO: Get Input
+    final input: Null<UnicodeString> = Native.GetTextInput();
+    return screen.handleInput(state, input);
+  }
+
+  static function HandleInput(state: Game): Bool {
+    final screen: Screen = state.getScreen();
+
+    var outcome: GameOutcome;
+    if (screen is ActionScreen) {
+      outcome = HandleActionInput(state, cast(screen, ActionScreen));
+    } else if (screen is TextScreen) {
+      outcome = HandleTextInput(state, cast(screen, TextScreen));
+    } else {
+      return false;
+    }
+
     switch (outcome) {
       case GetNextOutput:
         Native.current_input = 0;
@@ -90,7 +110,7 @@ class EmbeddedFrontend {
       case QuitGame:
         return false;
       default:
-      throw ': Unknown screen action outcome $outcome received';
+       throw ': Unknown screen action outcome $outcome received';
     }
   }
 

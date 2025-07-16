@@ -1,9 +1,12 @@
 package backend;
 
 import haxe.Constraints;
+using StringTools;
 
 import backend.Action;
+import backend.coregame.Outcomes;
 import backend.Game;
+import backend.GameInfo;
 
 abstract class Screen {
   public function new() {
@@ -42,6 +45,26 @@ abstract class StatefulActionScreen<T : ScreenState & Constructible<Void -> Void
   abstract function getStatefulBody(state: Game, screenState: T): UnicodeString;
 
   function getBody(state: Game): UnicodeString return getStatefulBody(state, state.getScreenState());
+}
+
+// Body is used as the name of the text field
+abstract class TextScreen extends Screen {
+  abstract function onTextEntry(state: Game, str: UnicodeString): GameOutcome;
+
+  public function handleInput(state: Game, str: Null<UnicodeString>): GameOutcome {
+    if (str == null) {
+      state.gotoScreen(state.previousScreen);
+      return GetNextOutput;
+    }
+
+    final outcome: GameOutcome = onTextEntry(state, str);
+    if (outcome == Invalid) {
+      throw ': Unhandled input $str provided for '
+            + Std.string(state.getScreen()).replace('_', '.').split('.').pop();
+    }
+
+    return outcome;
+  }
 }
 
 abstract class ScreenState {
