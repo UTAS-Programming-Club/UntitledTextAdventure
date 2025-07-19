@@ -1,10 +1,14 @@
 package campaigns;
 
 import backend.Campaign;
+import backend.GameInfo;
+
 import backend.coregame.CoreGame;
 import backend.coregame.Screens;
 import backend.coregame.Rooms;
-import backend.GameInfo;
+
+import extensions.combat.CombatExtension;
+import extensions.combat.Rooms;
 import extensions.equipment.Equipment;
 import extensions.equipment.EquipmentExtension;
 import extensions.equipment.Rooms;
@@ -21,7 +25,7 @@ final UntitledTextAdventure: Campaign = {
             + "\n"
             + "Currently unimplemented :(",
 
-  extensions: [CoreGameExt, EquipmentExt, HealingExt, TrapExt],
+  extensions: [CoreGameExt, CombatExt, EquipmentExt, HealingExt, TrapExt],
 
   initialScreen: MainMenuScreen,
 
@@ -34,7 +38,8 @@ final UntitledTextAdventure: Campaign = {
     rooms[1][1] = new EmptyRoom();
     rooms[1][2] = new TrapRoom();
     rooms[1][3] = new ChestRoom(WeaponSword);
-    rooms[2][1] = new HealingRoom();
+    rooms[2][1] = new CombatRoom();
+    rooms[3][1] = new HealingRoom();
     rooms;
   },
   initialRoomX: 0,
