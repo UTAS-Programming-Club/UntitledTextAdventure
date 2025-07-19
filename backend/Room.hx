@@ -312,8 +312,13 @@ abstract class StatefulRoom<T : RoomState & Constructible<Void -> Void>> extends
   override function hasState(): Bool return true;
   override function createState(): T return new T();
 
-  abstract function getStatefulRoomBody(state: Game, roomState: T): UnicodeString;
+  function onStatefulEntry(state: Game, screenState: T): Void {
+  }
+  override function onEntry(state: Game) {
+    onStatefulEntry(state, state.getRoomState());
+  }
 
+  abstract function getStatefulRoomBody(state: Game, roomState: T): UnicodeString;
   function getRoomBody(state: Game): UnicodeString return getStatefulRoomBody(state, state.getRoomState());
 }
 

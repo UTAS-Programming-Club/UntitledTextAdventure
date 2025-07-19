@@ -9,6 +9,9 @@ abstract class Screen {
   public function new() {
   }
 
+  public function onEntry(state: Game): Void {
+  }
+
   public abstract function getBody(state: Game): UnicodeString;
 }
 

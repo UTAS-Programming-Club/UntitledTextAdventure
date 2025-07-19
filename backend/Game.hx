@@ -121,45 +121,42 @@ class Game {
     checkScreen(newScreen);
     previousScreen = currentScreen;
     currentScreen = newScreen;
+    currentScreen.onEntry(this);
   }
 
 
   // x and y must be in [0, campaign.rooms.length)
   public function gotoRoom(x: Int, y: Int): Void {
     previousRoom = Room.getRoomID(this, player.x, player.y);
-    player.changeRoom(campaign, x, y);
-
-    final room: GameRoom = campaign.rooms[x][y];
-    gotoScreen(room);
 
     final point: Int = Room.getRoomID(this, x, y);
     if (!visitedRooms.contains(point)) {
       visitedRooms.push(point);
     }
-    if (roomState.exists(point)) {
-      return;
-    }
 
+    final room: GameRoom = campaign.rooms[x][y];
+    if (!roomState.exists(point)) {
 #if debuggame
-    final type: Class<Room> = Type.getClass(room);
-    var roomExists: Bool = false;
-    for (ext in campaign.extensions) {
-      roomExists = roomExists || ext.rooms.contains(type);
-      if (roomExists) {
-        break;
+      final type: Class<Room> = Type.getClass(room);
+      var roomExists: Bool = false;
+      for (ext in campaign.extensions) {
+        roomExists = roomExists || ext.rooms.contains(type);
+        if (roomExists) {
+          break;
+        }
       }
-    }
 
-    if (!roomExists) {
-      throw ': Invalid room $room';
-    }
+      if (!roomExists) {
+        throw ': Invalid room $room';
+      }
 #end
 
-    if (!room.hasState()) {
-      return;
+      if (room.hasState()) {
+        roomState[point] = cast room.createState();
+      }
     }
-
-    roomState[point] = cast room.createState();
+    player.changeRoom(campaign, x, y);
+    gotoScreen(room);
   }
 
   // x and y must be in [0, campaign.rooms.length)
