@@ -3,6 +3,7 @@ package backend.coregame;
 import backend.Action;
 import backend.coregame.Outcomes;
 import backend.coregame.Rooms;
+import backend.coregame.Screens;
 import backend.Equipment;
 import backend.Game;
 import backend.GameInfo;
@@ -45,7 +46,13 @@ class Quit extends Action {
 
 class GoNorth extends Action {
   override function isVisible(state: Game): Bool {
+    final isPreviousRoom: Bool = state.previousRoom == Room.getRoomID(state, state.player.x, state.player.y + 1);
+    // Room is stateless or need not be completed or is completed
+    final allowMovement: Bool = !state.campaign.rooms[state.player.x][state.player.y].hasState() ||
+                                !state.getRoomState().requireCompleted() ||
+                                state.getRoomState().isCompleted();
     return state.player.y < state.campaign.rooms.length - 1 &&
+           (isPreviousRoom || allowMovement) &&
            !(state.campaign.rooms[state.player.x][state.player.y + 1] is UnusedRoom);
   };
 
@@ -57,19 +64,31 @@ class GoNorth extends Action {
 
 class GoEast extends Action {
   override function isVisible(state: Game): Bool {
-    return state.player.x > 0 &&
-           !(state.campaign.rooms[state.player.x - 1][state.player.y] is UnusedRoom);
+    final isPreviousRoom: Bool = state.previousRoom == Room.getRoomID(state, state.player.x + 1, state.player.y);
+    // Room is stateless or need not be completed or is completed
+    final allowMovement: Bool = !state.campaign.rooms[state.player.x][state.player.y].hasState() ||
+                                !state.getRoomState().requireCompleted() ||
+                                state.getRoomState().isCompleted();
+    return state.player.x < state.campaign.rooms.length - 1 &&
+           (isPreviousRoom || allowMovement) &&
+           !(state.campaign.rooms[state.player.x + 1][state.player.y] is UnusedRoom);
   }
 
   function onTrigger(state: Game): GameOutcome {
-    state.gotoRoom(state.player.x - 1, state.player.y);
+    state.gotoRoom(state.player.x + 1, state.player.y);
     return GetNextOutput;
   }
 }
 
 class GoSouth extends Action {
   override function isVisible(state: Game): Bool {
+    final isPreviousRoom: Bool = state.previousRoom == Room.getRoomID(state, state.player.x, state.player.y - 1);
+    // Room is stateless or need not be completed or is completed
+    final allowMovement: Bool = !state.campaign.rooms[state.player.x][state.player.y].hasState() ||
+                                !state.getRoomState().requireCompleted() ||
+                                state.getRoomState().isCompleted();
     return state.player.y > 0 &&
+           (isPreviousRoom || allowMovement) &&
            !(state.campaign.rooms[state.player.x][state.player.y - 1] is UnusedRoom);
   }
 
@@ -81,12 +100,18 @@ class GoSouth extends Action {
 
 class GoWest extends Action {
   override function isVisible(state: Game): Bool {
-    return state.player.x < state.campaign.rooms.length - 1 &&
-           !(state.campaign.rooms[state.player.x + 1][state.player.y] is UnusedRoom);
+    final isPreviousRoom: Bool = state.previousRoom == Room.getRoomID(state, state.player.x - 1, state.player.y);
+    // Room is stateless or need not be completed or is completed
+    final allowMovement: Bool = !state.campaign.rooms[state.player.x][state.player.y].hasState() ||
+                                !state.getRoomState().requireCompleted() ||
+                                state.getRoomState().isCompleted();
+    return state.player.x > 0 &&
+           (isPreviousRoom || allowMovement) &&
+           !(state.campaign.rooms[state.player.x - 1][state.player.y] is UnusedRoom);
   }
 
   function onTrigger(state: Game): GameOutcome {
-    state.gotoRoom(state.player.x + 1, state.player.y);
+    state.gotoRoom(state.player.x - 1, state.player.y);
     return GetNextOutput;
   }
 }
@@ -102,6 +127,17 @@ class CycleEquipment extends Action {
 
   function onTrigger(state: Game): GameOutcome {
     state.player.cycleItemSlot(slot);
+    return GetNextOutput;
+  }
+}
+
+class OpenMap extends Action {
+  override function isVisible(state: Game): Bool return state.player.hasMap;
+
+  function onTrigger(state: Game): GameOutcome {
+    // TODO: Find better method to avoid loop?
+    state.gotoScreen(state.previousScreen);
+    state.gotoScreen(MapScreen);
     return GetNextOutput;
   }
 }

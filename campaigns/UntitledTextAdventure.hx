@@ -40,6 +40,7 @@ final UntitledTextAdventure: Campaign = {
     rooms[1][3] = new ChestRoom(WeaponSword);
     rooms[2][1] = new CombatRoom();
     rooms[3][1] = new HealingRoom();
+    rooms[4][1] = new EmptyRoom();
     rooms;
   },
   initialRoomX: 0,
