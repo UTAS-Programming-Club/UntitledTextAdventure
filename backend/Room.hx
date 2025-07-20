@@ -45,7 +45,7 @@ abstract class Room extends ActionScreen {
 #if testrooms
       new Quit('Quit Game')
 #else
-      new GotoScreen(MainMenuScreen, 'Return to main menu')
+      new GotoPreviousScreen('Return to main menu')
 #end
     ];
 

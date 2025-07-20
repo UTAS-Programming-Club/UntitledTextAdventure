@@ -32,7 +32,7 @@ class GotoScreen extends Action {
 
 class GotoPreviousScreen extends Action {
   function onTrigger(state: Game): GameOutcome {
-    state.gotoScreen(state.previousScreen);
+    state.gotoPreviousScreen();
     return GetNextOutput;
   }
 }
@@ -135,8 +135,6 @@ class OpenMap extends Action {
   override function isVisible(state: Game): Bool return state.player.hasMap;
 
   function onTrigger(state: Game): GameOutcome {
-    // TODO: Find better method to avoid loop?
-    state.gotoScreen(state.previousScreen);
     state.gotoScreen(MapScreen);
     return GetNextOutput;
   }

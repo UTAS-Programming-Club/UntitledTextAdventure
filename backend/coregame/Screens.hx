@@ -22,7 +22,7 @@ class CoreGame_Load extends ActionScreen {
   function getBody(Game): UnicodeString return 'Loading is not currently supported';
 
   function getAllActions(): Array<Action> return [
-    new GotoScreen(MainMenuScreen, 'Return to Main Menu'),
+    new GotoPreviousScreen('Return to Main Menu'),
   ];
 }
 
@@ -68,6 +68,6 @@ class CoreGame_Map extends ActionScreen {
   function getBody(state: Game): UnicodeString return RoomMap.createMap(state);
 
   function getAllActions(): Array<Action> return [
-    new GotoPreviousScreen('Return to Game'),
+    new GotoPreviousScreen('Back'),
   ];
 }

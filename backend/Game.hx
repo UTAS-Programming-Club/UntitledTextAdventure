@@ -14,10 +14,9 @@ class Game {
   public final campaign: Campaign;
   public final player: Player;
 
-  // Only access via getScreen
-  private var currentScreen: GameScreen;
   public var previousRoom(default, null): Int = -1;
-  public var previousScreen(default, null): GameScreen;
+  // Only access via getScreen, gotoScreen and gotoPreviousScreen
+  public var screens(default, null): Array<GameScreen>;
   public var visitedRooms(default, null): Array<Int> = [];
   private var roomState: Map<Int, RoomState> = [];
 
@@ -25,8 +24,8 @@ class Game {
     campaign = getCampaign();
     player = new Player(campaign);
 
-    currentScreen = campaign.initialScreen;
-    previousScreen = campaign.initialScreen;
+    screens = [];
+    gotoScreen(campaign.initialScreen);
 
 #if debuggame
     // Extension class instance checks
@@ -60,6 +59,7 @@ class Game {
   }
 
   public function startGame(): Void {
+    screens = [];
     visitedRooms = [];
     roomState = [];
     player.reset(campaign);
@@ -90,7 +90,7 @@ class Game {
   }
 #end
 
-  private function checkScreen(screen: GameScreen): Void {
+  private function checkScreen(screen: Null<GameScreen>): Void {
 #if debuggame
     if (screen is GameRoom) {
       final type: Class<Room> = cast Type.getClass(screen);
@@ -113,17 +113,33 @@ class Game {
 
 
   public function getScreen(): Screen {
+    final currentScreen: Null<Screen> = screens[screens.length - 1];
     checkScreen(currentScreen);
     return currentScreen;
   }
 
+  // Do not pass a room unless from gotoRoom
   public function gotoScreen(newScreen: GameScreen): Void {
+    campaign.initialScreen;
+
     checkScreen(newScreen);
-    previousScreen = currentScreen;
-    currentScreen = newScreen;
-    currentScreen.onEntry(this);
+
+    final currentScreen: Null<Screen> = screens[screens.length - 1];
+    if (currentScreen is Room && newScreen is Room) {
+      screens.pop();
+    }
+    screens.push(newScreen);
+
+    newScreen.onEntry(this);
   }
 
+  public function gotoPreviousScreen(): Void {
+    if (screens.length == 1) {
+      screens = [campaign.initialScreen];
+    } else {
+      screens.pop();
+    }
+  }
 
   // x and y must be in [0, campaign.rooms.length)
   public function gotoRoom(x: Int, y: Int): Void {
