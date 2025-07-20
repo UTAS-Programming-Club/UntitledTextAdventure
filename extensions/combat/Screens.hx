@@ -42,7 +42,7 @@ class Combat_Combat extends ActionScreen {
       actions.push(new AttackEnemy(i, 'Attack Enemy ${i + 1}'));
     }
     actions.push(new GotoScreen(PlayerEquipmentScreen, 'Check Inventory'));
-    actions.push(new GotoPreviousScreen('Flee'));
+    actions.push(new FleeCombat('Flee'));
 
     return actions;
   }

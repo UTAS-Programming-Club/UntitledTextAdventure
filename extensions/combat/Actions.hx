@@ -18,3 +18,12 @@ class AttackEnemy extends Action {
 
   function onTrigger(state: Game): GameOutcome return GetNextOutput;
 }
+
+class FleeCombat extends Action {
+  function onTrigger(state: Game): GameOutcome {
+    final previousX = Std.int(state.previousRoom % state.campaign.rooms.length);
+    final previousY = Std.int(state.previousRoom / state.campaign.rooms.length);
+    state.gotoRoom(previousX, previousY);
+    return GetNextOutput;
+  }
+}

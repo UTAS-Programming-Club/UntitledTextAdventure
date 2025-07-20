@@ -7,9 +7,6 @@ import extensions.combat.Screens;
 class CombatRoom extends StatefulRoom<CombatRoomState> {
   override function onStatefulEntry(state: Game, roomState: CombatRoomState): Void {
     if (!roomState.won) {
-      final previousX = Std.int(state.previousRoom % state.campaign.rooms.length);
-      final previousY = Std.int(state.previousRoom / state.campaign.rooms.length);
-      state.gotoRoom(previousX, previousY);
       state.gotoScreen(CombatScreen);
     }
   }
