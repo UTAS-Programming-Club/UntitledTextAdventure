@@ -5,6 +5,7 @@ enum EnemyAttackType {
   Magical;
 }
 
+final MaxEnemyCount: Int = 3;
 @:structInit
 class Enemy {
   public var health: Int = 100;
@@ -21,3 +22,6 @@ final TestEnemy: Enemy = {
 final TestEnemy2: Enemy = {
   type: Magical,
 };
+
+// TODO: Remove
+final TestEnemies: Array<Enemy> = [TestEnemy, TestEnemy2];

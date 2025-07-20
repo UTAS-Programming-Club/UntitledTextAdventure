@@ -99,7 +99,7 @@ class Game {
           return;
         }
       }
-    } else {
+    } else if (screen != null) {
       for (ext in campaign.extensions) {
         if (ext.screens.contains(screen)) {
           return;

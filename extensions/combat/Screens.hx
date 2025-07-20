@@ -8,6 +8,7 @@ import backend.coregame.Screens;
 import backend.Game;
 import backend.GameInfo;
 import backend.Screen;
+import extensions.combat.Actions;
 import extensions.combat.Enemy;
 
 final CombatScreen: GameScreen = new Combat_Combat();
@@ -16,33 +17,33 @@ class Combat_Combat extends ActionScreen {
     var body: UnicodeString =
       'You find yourself surrounded.\n\n' +
       'Health:  ' + CreateStatBar(state.player.health) + '\n' +
-      'Stamina: ' + CreateStatBar(state.player.stamina) + '\n\n';
-
-    // TODO: Remove
-    final enemies: Array<Enemy> = [TestEnemy, TestEnemy2];
+      'Stamina: ' + CreateStatBar(state.player.stamina) + '\n';
 
     var longestTypeLength: Int = 0;
-    for (enemy in enemies) {
+    for (enemy in TestEnemies) {
       final newTypeLength: Int = Std.string(enemy.type).length;
       longestTypeLength = Std.int(Math.max(longestTypeLength, newTypeLength));
     }
 
-    for (i in 0...enemies.length) {
-      final enemy: Enemy = enemies[i];
-      body += Std.string(enemy.type).lpad(' ', longestTypeLength) +
+    for (i in 0...TestEnemies.length) {
+      final enemy: Enemy = TestEnemies[i];
+      body += '\n' + Std.string(enemy.type).lpad(' ', longestTypeLength) +
               ' enemy ${i + 1} health: ' +
               CreateStatBar(enemy.health);
-      if (i != enemies.length - 1) {
-        body += '\n';
-      }
     }
 
     return body;
   };
 
-  function getAllActions(): Array<Action> return [
-    // TODO: Fix getting stuck in loop if two screens away from game screen
-    new GotoScreen(PlayerEquipmentScreen, 'Check Inventory'),
-    new GotoPreviousScreen('Flee'),
-  ];
+  function getAllActions(): Array<Action> {
+    var actions: Array<Action> = [];
+
+    for (i in 0...MaxEnemyCount) {
+      actions.push(new AttackEnemy(i, 'Attack Enemy ${i + 1}'));
+    }
+    actions.push(new GotoScreen(PlayerEquipmentScreen, 'Check Inventory'));
+    actions.push(new GotoPreviousScreen('Flee'));
+
+    return actions;
+  }
 }
