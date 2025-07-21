@@ -8,19 +8,34 @@ enum EnemyAttackType {
 final MaxEnemyCount: Int = 3;
 @:structInit
 class Enemy {
-  public var health: Int = 100;
+  public var health(default, null): Int = 100;
   public final type: EnemyAttackType;
-  // final damage: Int;
+  public final damage: Int;
   // final minDodgeAgility: Int;
   // final maxDodgeAgility: Int;
+
+  // change is clamped to [0, 100]
+  public function modifyHealth(change: Int): Void {
+    var newHealth: Int = health + change;
+    if (newHealth < 0) {
+      newHealth = 0;
+    } else if (newHealth > 100) {
+      newHealth = 100;
+    }
+
+    health = newHealth;
+  }
 }
+
 
 final TestEnemy: Enemy = {
   type: Physical,
+  damage: 5,
 };
 
 final TestEnemy2: Enemy = {
   type: Magical,
+  damage: 3,
 };
 
 // TODO: Remove

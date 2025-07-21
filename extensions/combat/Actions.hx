@@ -18,7 +18,8 @@ class AttackEnemy extends Action {
   override function isVisible(state: Game): Bool return enemyNumber < TestEnemies.length;
 
   function onTrigger(state: Game): GameOutcome {
-    PerformPlayerAttack(state.player.primaryWeapon, enemyNumber);
+    // TODO: Allow using secondary weapon
+    HandleCombat(state, state.player.primaryWeapon, enemyNumber);
     return GetNextOutput;
   }
 }
