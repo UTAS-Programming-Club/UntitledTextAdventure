@@ -24,10 +24,15 @@ enum EquipmentSlot {
 class Equipment {
   public final type: EquipmentType;
   public final name: UnicodeString;
+  // Defense for body items, attack for weapons
+  public final physical: Int;
+  public final magical: Int;
 
-  public function new(type: EquipmentType, name: UnicodeString) {
+  public function new(type: EquipmentType, name: UnicodeString, physical: Int, magical: Int) {
     this.type = type;
     this.name = name;
+    this.physical = physical;
+    this.magical = magical;
   }
 
   public static function getType(slot: EquipmentSlot): EquipmentType return switch(slot) {

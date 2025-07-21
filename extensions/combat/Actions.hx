@@ -5,6 +5,7 @@ import backend.coregame.Outcomes;
 import backend.Game;
 import backend.GameInfo;
 import extensions.combat.Enemy;
+import extensions.combat.Combat;
 
 class AttackEnemy extends Action {
   final enemyNumber: Int;
@@ -16,7 +17,10 @@ class AttackEnemy extends Action {
 
   override function isVisible(state: Game): Bool return enemyNumber < TestEnemies.length;
 
-  function onTrigger(state: Game): GameOutcome return GetNextOutput;
+  function onTrigger(state: Game): GameOutcome {
+    PerformPlayerAttack(state.player.primaryWeapon, enemyNumber);
+    return GetNextOutput;
+  }
 }
 
 class FleeCombat extends Action {
