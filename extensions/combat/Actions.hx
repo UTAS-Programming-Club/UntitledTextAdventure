@@ -22,15 +22,18 @@ class AttackEnemy extends Action {
     final roomState: CombatRoomState = state.getRoomState();
     roomState.phase = PlayerAttack;
     // TODO: Allow using secondary weapon
-    roomState.currentWeapon = state.player.primaryWeapon;
-    roomState.currentEnemyNumber = enemyNumber;
+    roomState.chosenWeapon = state.player.primaryWeapon;
+    roomState.chosenEnemyNumber = enemyNumber;
     return GetNextOutput;
   }
 }
 
 class FleeCombat extends Action {
-  // TODO: Reset enemies to 100% health
   function onTrigger(state: Game): GameOutcome {
+    for (enemy in TestEnemies) {
+      enemy.modifyHealth(100);
+    }
+
     final previousX = Std.int(state.previousRoom % state.campaign.rooms.length);
     final previousY = Std.int(state.previousRoom / state.campaign.rooms.length);
     state.gotoRoom(previousX, previousY);

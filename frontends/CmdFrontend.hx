@@ -102,9 +102,12 @@ class CmdFrontend {
     final screen: Screen = state.getScreen();
 
     PrintOutputBody(screen.getBody(state));
-    while (state.repeatLastOutput) {
+    if (state.repeatLastOutput) {
       Sys.sleep(1);
+    }
+    while (state.repeatLastOutput) {
       PrintOutputBody(screen.getBody(state));
+      Sys.sleep(1);
     }
 
     if (screen is ActionScreen) {

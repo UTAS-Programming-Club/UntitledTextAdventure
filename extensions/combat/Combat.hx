@@ -41,22 +41,24 @@ function PerformEnemyAttack(state: Game, enemy: Enemy): Bool {
 function HandleCombat(state: Game): Void {
   final roomState: CombatRoomState = state.getRoomState();
 #if debuggame
-  if (roomState.currentEnemyNumber >= TestEnemies.length) {
+  if (roomState.chosenEnemyNumber >= TestEnemies.length) {
     throw ': Enemy to damage does not exist';
   }
 #end
 
   switch (roomState.phase) {
     case PlayerAttack:
-      PerformPlayerAttack(roomState.currentWeapon, roomState.currentEnemyNumber);
+      PerformPlayerAttack(roomState.chosenWeapon, roomState.chosenEnemyNumber);
       roomState.phase = EnemyAttacks;
+      roomState.currentEnemyNumber = 0;
       state.repeatLastOutput = true;
     case EnemyAttacks:
-      for (enemy in TestEnemies) {
-        PerformEnemyAttack(state, enemy);
+      PerformEnemyAttack(state, TestEnemies[roomState.currentEnemyNumber]);
+      roomState.currentEnemyNumber++;
+      if (roomState.currentEnemyNumber == TestEnemies.length) {
+        roomState.phase = WaitingForInput;
+        state.repeatLastOutput = false;
       }
-      roomState.phase = WaitingForInput;
-      state.repeatLastOutput = false;
     case WaitingForInput:
   }
 }

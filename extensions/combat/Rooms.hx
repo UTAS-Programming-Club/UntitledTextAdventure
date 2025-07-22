@@ -27,7 +27,12 @@ class CombatRoomState extends RoomState {
   public var won: Bool = false;
 
   public var phase: CombatPhase = WaitingForInput;
-  public var currentWeapon: Equipment = WeaponNone;
+
+  // For phase == PlayerAttack
+  public var chosenWeapon: Equipment = WeaponNone;
+  public var chosenEnemyNumber: Int = -1;
+
+  // For phase == EnemyAttacks
   public var currentEnemyNumber: Int = -1;
 
   function isCompleted(): Bool return won;
