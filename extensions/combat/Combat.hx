@@ -3,6 +3,13 @@ package extensions.combat;
 import backend.Equipment;
 import backend.Game;
 import extensions.combat.Enemy;
+import extensions.combat.Rooms;
+
+enum CombatPhase {
+  WaitingForInput;
+  PlayerAttack;
+  EnemyAttacks;
+}
 
 // TODO: Use return type or remove
 function PerformPlayerAttack(weapon: Equipment, enemyNumber: Int): Bool {
@@ -31,17 +38,25 @@ function PerformEnemyAttack(state: Game, enemy: Enemy): Bool {
   return true;
 }
 
-// TODO: Use return type or remove
-function HandleCombat(state: Game, weapon: Equipment, enemyNumber: Int): Bool {
-    if (enemyNumber >= TestEnemies.length) {
+function HandleCombat(state: Game): Void {
+  final roomState: CombatRoomState = state.getRoomState();
+#if debuggame
+  if (roomState.currentEnemyNumber >= TestEnemies.length) {
     throw ': Enemy to damage does not exist';
   }
+#end
 
-  // TODO: Return after each to redraw
-  PerformPlayerAttack(weapon, enemyNumber);
-  for (enemy in TestEnemies) {
-    PerformEnemyAttack(state, enemy);
+  switch (roomState.phase) {
+    case PlayerAttack:
+      PerformPlayerAttack(roomState.currentWeapon, roomState.currentEnemyNumber);
+      roomState.phase = EnemyAttacks;
+      state.repeatLastOutput = true;
+    case EnemyAttacks:
+      for (enemy in TestEnemies) {
+        PerformEnemyAttack(state, enemy);
+      }
+      roomState.phase = WaitingForInput;
+      state.repeatLastOutput = false;
+    case WaitingForInput:
   }
-
-  return true;
 }

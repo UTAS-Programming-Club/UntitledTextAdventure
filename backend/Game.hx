@@ -1,7 +1,7 @@
 package backend;
 
-using StringTools;
 import haxe.Constraints;
+using StringTools;
 
 import backend.Campaign;
 import backend.macros.Helpers;
@@ -16,15 +16,16 @@ class Game {
 
   public var previousRoom(default, null): Int = -1;
   // Only access via getScreen, gotoScreen and gotoPreviousScreen
-  public var screens(default, null): Array<GameScreen>;
+  public var screens(default, null): Array<GameScreen> = [];
   public var visitedRooms(default, null): Array<Int> = [];
   private var roomState: Map<Int, RoomState> = [];
+
+  public var repeatLastOutput: Bool = false;
 
   public function new() {
     campaign = getCampaign();
     player = new Player(campaign);
 
-    screens = [];
     gotoScreen(campaign.initialScreen);
 
 #if debuggame
@@ -120,8 +121,6 @@ class Game {
 
   // Do not pass a room unless from gotoRoom
   public function gotoScreen(newScreen: GameScreen): Void {
-    campaign.initialScreen;
-
     checkScreen(newScreen);
 
     final currentScreen: Null<Screen> = screens[screens.length - 1];

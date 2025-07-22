@@ -3,17 +3,21 @@ package extensions.combat;
 using StringTools;
 
 import backend.Action;
-import backend.coregame.Actions;
-import backend.coregame.Screens;
 import backend.Game;
 import backend.GameInfo;
 import backend.Screen;
+
+import backend.coregame.Actions;
+import backend.coregame.Screens;
 import extensions.combat.Actions;
+import extensions.combat.Combat;
 import extensions.combat.Enemy;
 
 final CombatScreen: GameScreen = new Combat_Combat();
 class Combat_Combat extends ActionScreen {
   function getBody(state: Game): UnicodeString {
+    HandleCombat(state);
+
     var body: UnicodeString =
       'You find yourself surrounded.\n\n' +
       'Health:  ' + CreateStatBar(state.player.health) + '\n' +

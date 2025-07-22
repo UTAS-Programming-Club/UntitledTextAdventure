@@ -100,7 +100,12 @@ class CmdFrontend {
 
   static function HandleOutput(state: Game): Bool {
     final screen: Screen = state.getScreen();
+
     PrintOutputBody(screen.getBody(state));
+    while (state.repeatLastOutput) {
+      Sys.sleep(1);
+      PrintOutputBody(screen.getBody(state));
+    }
 
     if (screen is ActionScreen) {
       PrintButtonInputs(state, cast(screen, ActionScreen));
