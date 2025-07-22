@@ -8,6 +8,7 @@ import backend.coregame.Screens;
 import backend.coregame.Rooms;
 
 import extensions.combat.CombatExtension;
+import extensions.combat.Enemies;
 import extensions.combat.Rooms;
 import extensions.equipment.Equipment;
 import extensions.equipment.EquipmentExtension;
@@ -39,7 +40,7 @@ final UntitledTextAdventure: Campaign = {
     rooms[1][2] = new TrapRoom();
     rooms[1][3] = new ChestRoom(WeaponSword);
     rooms[1][4] = new EmptyRoom();
-    rooms[2][1] = new CombatRoom();
+    rooms[2][1] = new CombatRoom([TestPhysicalEnemy, TestMagicalEnemy]);
     rooms[3][1] = new HealingRoom();
     rooms[4][1] = new EmptyRoom();
     rooms;

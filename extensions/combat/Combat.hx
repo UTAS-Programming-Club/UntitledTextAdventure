@@ -2,6 +2,7 @@ package extensions.combat;
 
 import backend.Equipment;
 import backend.Game;
+
 import extensions.combat.Enemy;
 import extensions.combat.Rooms;
 
@@ -12,8 +13,7 @@ enum CombatPhase {
 }
 
 // TODO: Use return type or remove
-function PerformPlayerAttack(weapon: Equipment, enemyNumber: Int): Bool {
-  final enemy: Enemy = TestEnemies[enemyNumber];
+function PerformPlayerAttack(weapon: Equipment, enemy: Enemy): Bool {
   if (enemy.health == 0) {
     return false;
   }
@@ -38,24 +38,26 @@ function PerformEnemyAttack(state: Game, enemy: Enemy): Bool {
   return true;
 }
 
-function HandleCombat(state: Game): Void {
+function HandleCombat(state: Game, room: CombatRoom): Void {
   final roomState: CombatRoomState = state.getRoomState();
 #if debuggame
-  if (roomState.chosenEnemyNumber >= TestEnemies.length) {
+  if (roomState.chosenEnemyIdx >= room.enemies.length) {
     throw ': Enemy to damage does not exist';
   }
 #end
 
   switch (roomState.phase) {
     case PlayerAttack:
-      PerformPlayerAttack(roomState.chosenWeapon, roomState.chosenEnemyNumber);
+      final enemy: Enemy = room.enemies[roomState.chosenEnemyIdx];
+      PerformPlayerAttack(roomState.chosenWeapon, enemy);
       roomState.phase = EnemyAttacks;
-      roomState.currentEnemyNumber = 0;
+      roomState.currentEnemyIdx = 0;
       state.repeatLastOutput = true;
     case EnemyAttacks:
-      PerformEnemyAttack(state, TestEnemies[roomState.currentEnemyNumber]);
-      roomState.currentEnemyNumber++;
-      if (roomState.currentEnemyNumber == TestEnemies.length) {
+      final enemy: Enemy = room.enemies[roomState.currentEnemyIdx];
+      PerformEnemyAttack(state, enemy);
+      roomState.currentEnemyIdx++;
+      if (roomState.currentEnemyIdx == room.enemies.length) {
         roomState.phase = WaitingForInput;
         state.repeatLastOutput = false;
       }

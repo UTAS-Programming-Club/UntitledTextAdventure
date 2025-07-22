@@ -26,17 +26,3 @@ class Enemy {
     health = newHealth;
   }
 }
-
-
-final TestEnemy: Enemy = {
-  type: Physical,
-  damage: 5,
-};
-
-final TestEnemy2: Enemy = {
-  type: Magical,
-  damage: 3,
-};
-
-// TODO: Remove
-final TestEnemies: Array<Enemy> = [TestEnemy, TestEnemy2];

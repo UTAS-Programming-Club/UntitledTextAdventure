@@ -6,9 +6,17 @@ import backend.Room;
 
 import extensions.equipment.Equipment;
 import extensions.combat.Combat;
+import extensions.combat.Enemy;
 import extensions.combat.Screens;
 
 class CombatRoom extends StatefulRoom<CombatRoomState> {
+  public final enemies: Array<Enemy>;
+
+  public function new(enemies: Array<Enemy>) {
+    super();
+    this.enemies = enemies;
+  }
+
   override function onStatefulEntry(state: Game, roomState: CombatRoomState): Void {
     if (!roomState.won) {
       roomState.phase = WaitingForInput;
@@ -30,10 +38,10 @@ class CombatRoomState extends RoomState {
 
   // For phase == PlayerAttack
   public var chosenWeapon: Equipment = WeaponNone;
-  public var chosenEnemyNumber: Int = -1;
+  public var chosenEnemyIdx: Int = -1;
 
   // For phase == EnemyAttacks
-  public var currentEnemyNumber: Int = -1;
+  public var currentEnemyIdx: Int = -1;
 
   function isCompleted(): Bool return won;
   function requireCompleted(): Bool return true;

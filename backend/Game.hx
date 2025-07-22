@@ -119,7 +119,14 @@ class Game {
     return currentScreen;
   }
 
-  // Do not pass a room unless from gotoRoom
+  // TODO: Find a way to use type parameter to return a specific room type
+  // Rooms can have parameters to the Constructible trick used for room state can't be used
+  public function getRoom(): GameRoom {
+    return campaign.rooms[player.x][player.y];
+  }
+
+
+  // Do not pass a room unless from calling from gotoRoom
   public function gotoScreen(newScreen: GameScreen): Void {
     checkScreen(newScreen);
 
@@ -173,6 +180,7 @@ class Game {
     player.changeRoom(campaign, x, y);
     gotoScreen(room);
   }
+
 
   // x and y must be in [0, campaign.rooms.length)
   // TODO: Fix "[0] Instance constructor not found: T" when calling generic function from generic function

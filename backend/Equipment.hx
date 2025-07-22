@@ -24,7 +24,7 @@ enum EquipmentSlot {
 class Equipment {
   public final type: EquipmentType;
   public final name: UnicodeString;
-  // Defense for body items, attack for weapons
+  // Defence for body items, attack for weapons
   public final physical: Int;
   public final magical: Int;
 
