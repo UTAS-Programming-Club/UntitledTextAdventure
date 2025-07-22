@@ -31,9 +31,24 @@ function PerformEnemyAttack(state: Game, enemy: Enemy): Bool {
     return false;
   }
 
-  // TODO: Add player agility
-  // TODO: Use physical and magical defence stats
-  state.player.modifyHealth(-enemy.damage);
+  var damage = -enemy.damage;
+
+  // Attempt dodge via agility, damage is scaled by (max - actual) / (max - min)
+  var agility = state.player.agility;
+  agility = Std.int(Math.max(agility, enemy.minDodgeAgility));
+  agility = Std.int(Math.min(agility, enemy.maxDodgeAgility));
+  damage *= enemy.maxDodgeAgility - agility;
+  damage = Std.int(damage / (enemy.maxDodgeAgility - enemy.minDodgeAgility));
+
+  // Absorb damage via armor
+  switch (enemy.type) {
+    case Physical:
+      damage += state.player.physicalDefence;
+    case Magical:
+      damage += state.player.magicalDefence;
+  }
+
+  state.player.modifyHealth(damage);
 
   return true;
 }

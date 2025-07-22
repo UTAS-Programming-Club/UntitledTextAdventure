@@ -3,6 +3,8 @@ package backend;
 import backend.Extension;
 import backend.GameInfo;
 
+// Only import backend.Game, backend/macros/Helpers.hx and frontends.*Campaign
+
 typedef Campaign = {
   final mainMenu: UnicodeString;
 

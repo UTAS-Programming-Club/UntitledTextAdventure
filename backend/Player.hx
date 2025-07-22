@@ -1,14 +1,20 @@
 package backend;
 
-import backend.Campaign;
 import backend.Equipment;
+import backend.Game;
 import backend.GameInfo;
 
-// Only import backend.Player from backend.Game
+// Only import from backend.Game
 
 class Player {
   public var health(default, null): Int = 0;  // Must be in [0, 100]
   public var stamina(default, null): Int = 0; // Must be in [0, 100]
+  // TODO: Set this based on equipment stats
+  public var agility(default, null): Int = 20; // Must be in [0, 100]
+
+  // TODO: Set these based on equipment stats
+  public final physicalDefence: Int = 2; // Must be in [0, 100]
+  public final magicalDefence: Int = 3;  // Must be in [0, 100]
 
   // For some reason ++ and possibly -- works despite disabling public assignment
   public var x(default, null): Int = 0; // Must be in [0, campaign.rooms.length)
@@ -27,45 +33,45 @@ class Player {
 
   public var hasMap(default, null): Bool = true;
 
-  public function new(campaign: Campaign) {
-    head = campaign.initialHead;
-    upperBody = campaign.initialUpperBody;
-    hands = campaign.initialHands;
-    lowerBody = campaign.initialLowerBody;
-    feet = campaign.initialFeet;
-    primaryWeapon = campaign.initialPrimaryWeapon;
-    secondaryWeapon = campaign.initialSecondaryWeapon;
+  public function new(state: Game) {
+    head = state.campaign.initialHead;
+    upperBody = state.campaign.initialUpperBody;
+    hands = state.campaign.initialHands;
+    lowerBody = state.campaign.initialLowerBody;
+    feet = state.campaign.initialFeet;
+    primaryWeapon = state.campaign.initialPrimaryWeapon;
+    secondaryWeapon = state.campaign.initialSecondaryWeapon;
   }
 
-  public function reset(campaign: Campaign): Void {
+  public function reset(state: Game): Void {
     health = 100;
     stamina = 100;
 
-    changeRoom(campaign, campaign.initialRoomX, campaign.initialRoomY);
+    changeRoom(state, state.campaign.initialRoomX, state.campaign.initialRoomY);
 
     unlockedItems = [];
-    unlockItem(campaign, campaign.initialHead);
-    unlockItem(campaign, campaign.initialUpperBody);
-    unlockItem(campaign, campaign.initialHands);
-    unlockItem(campaign, campaign.initialLowerBody);
-    unlockItem(campaign, campaign.initialFeet);
-    unlockItem(campaign, campaign.initialPrimaryWeapon);
-    unlockItem(campaign, campaign.initialSecondaryWeapon);
+    unlockItem(state, state.campaign.initialHead);
+    unlockItem(state, state.campaign.initialUpperBody);
+    unlockItem(state, state.campaign.initialHands);
+    unlockItem(state, state.campaign.initialLowerBody);
+    unlockItem(state, state.campaign.initialFeet);
+    unlockItem(state, state.campaign.initialPrimaryWeapon);
+    unlockItem(state, state.campaign.initialSecondaryWeapon);
 
-    equipItem(campaign.initialHead, Head);
-    equipItem(campaign.initialUpperBody, UpperBody);
-    equipItem(campaign.initialHands, Hands);
-    equipItem(campaign.initialLowerBody, LowerBody);
-    equipItem(campaign.initialFeet, Feet);
-    equipItem(campaign.initialPrimaryWeapon, PrimaryWeapon);
-    equipItem(campaign.initialSecondaryWeapon, SecondaryWeapon);
+    equipItem(state.campaign.initialHead, Head);
+    equipItem(state.campaign.initialUpperBody, UpperBody);
+    equipItem(state.campaign.initialHands, Hands);
+    equipItem(state.campaign.initialLowerBody, LowerBody);
+    equipItem(state.campaign.initialFeet, Feet);
+    equipItem(state.campaign.initialPrimaryWeapon, PrimaryWeapon);
+    equipItem(state.campaign.initialSecondaryWeapon, SecondaryWeapon);
   }
 
 
-  public function unlockItem(campaign: Campaign, item: GameEquipment): Void {
+  public function unlockItem(state: Game, item: GameEquipment): Void {
 #if debuggame
     // Assumes extension equipment declarations and equipmentOrder are valid, both are handled in Game.hx
-    if (!campaign.equipmentOrder.contains(item)) {
+    if (!state.campaign.equipmentOrder.contains(item)) {
       throw ': Invalid equipment ${item.type}:${item.name}';
     }
 #end
@@ -196,9 +202,9 @@ class Player {
   }
 
 
-  // x and y must be in [0, campaign.rooms.length)
-  public function changeRoom(campaign: Campaign, x: Int, y: Int): Void {
-    if (x < 0 || y < 0 || x >= campaign.rooms.length || y >= campaign.rooms.length) {
+  // x and y must be in [0, state.campaign.rooms.length)
+  public function changeRoom(state: Game, x: Int, y: Int): Void {
+    if (x < 0 || y < 0 || x >= state.campaign.rooms.length || y >= state.campaign.rooms.length) {
       throw 'Room $x, $y is out of bounds';
     }
 

@@ -9,6 +9,8 @@ import extensions.equipment.EquipmentExtension;
 import extensions.test.Rooms;
 import extensions.test.TestExtension;
 
+// Do not import this file
+
 @:nullSafety(Strict)
 final TestCampaign: Campaign = {
   mainMenu:   "A campaign example\n"

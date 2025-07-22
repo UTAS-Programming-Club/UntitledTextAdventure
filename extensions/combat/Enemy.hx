@@ -11,8 +11,8 @@ class Enemy {
   public var health(default, null): Int = 100;
   public final type: EnemyAttackType;
   public final damage: Int;
-  // final minDodgeAgility: Int;
-  // final maxDodgeAgility: Int;
+  public final minDodgeAgility: Int;
+  public final maxDodgeAgility: Int;
 
   // change is clamped to [0, 100]
   public function modifyHealth(change: Int): Void {

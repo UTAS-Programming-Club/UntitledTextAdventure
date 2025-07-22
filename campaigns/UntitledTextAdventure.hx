@@ -18,6 +18,8 @@ import extensions.healing.Rooms;
 import extensions.trap.Rooms;
 import extensions.trap.TrapExtension;
 
+// Do not import this file
+
 @:nullSafety(Strict)
 final UntitledTextAdventure: Campaign = {
   mainMenu:   "Untitled text adventure game\n"

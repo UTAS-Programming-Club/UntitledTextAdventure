@@ -26,7 +26,7 @@ class OpenChest extends Action {
     }
 
     roomState.opened = true;
-    state.player.unlockItem(state.campaign, room.item);
+    state.player.unlockItem(state, room.item);
 
     return GetNextOutput;
   }

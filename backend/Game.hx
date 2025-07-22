@@ -24,7 +24,7 @@ class Game {
 
   public function new() {
     campaign = getCampaign();
-    player = new Player(campaign);
+    player = new Player(this);
 
     gotoScreen(campaign.initialScreen);
 
@@ -63,7 +63,7 @@ class Game {
     screens = [];
     visitedRooms = [];
     roomState = [];
-    player.reset(campaign);
+    player.reset(this);
     gotoRoom(campaign.initialRoomX, campaign.initialRoomY);
   }
 
@@ -177,7 +177,7 @@ class Game {
         roomState[point] = cast room.createState();
       }
     }
-    player.changeRoom(campaign, x, y);
+    player.changeRoom(this, x, y);
     gotoScreen(room);
   }
 
