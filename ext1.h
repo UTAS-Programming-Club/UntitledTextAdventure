@@ -3,7 +3,7 @@
 
 #include <stddef.h>  // for size_t
 
-extern const size_t Ext1ScreenCount;
-extern const struct Screen *const Ext1Screens[];
+extern const size_t Ext1RoomCount;
+extern const struct Room *const Ext1Rooms[];
 
 #endif // UTA_EXT1_H

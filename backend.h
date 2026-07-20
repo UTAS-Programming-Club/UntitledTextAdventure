@@ -2,15 +2,15 @@
 #define UTA_BACKEND_H
 
 #include <stdbool.h>  // for bool
-#include <stddef.h>   // for size_t
+#include <stddef.h>   // for size_t, NULL
 #include <stdint.h>   // for uint8_t
 
 struct GameInfo {
-  // Backend only, do not change outside backend_setup, backend_register_extension and backend_cleanup
+  // Backend only, do not modify outside backend_setup, backend_register_extension and backend_cleanup
   uint8_t mapSizeX, mapSizeY;
-  const struct Screen **map; // const struct Screen *map[maxSizeX * maxSizeY]
+  const struct Room **map; // const struct Room *map[maxSizeX * maxSizeY]
 
-  // Frontend & Backend, do not change from frontend
+  // Frontend & Backend, do not modify from frontend
   const struct Screen *screen;
   uint8_t x, y;
   bool quit;
@@ -20,11 +20,11 @@ struct GameInfo {
 #define NEW_ACTION(title, visibility_checker, trigger_handler) { title, visibility_checker, trigger_handler }
 #define NEW_EXT_ACTION(title, visibility_checker, trigger_handler, ...) { NEW_ACTION(title, visibility_checker, trigger_handler), __VA_ARGS__ }
 struct Action {
-  // Frontend & Backend, do not change
+  // Frontend & Backend, do not modify
   const char *title;
   bool (*visibility_checker)(const struct GameInfo *info, const struct Action *action);
 
-  // Backend only, do not change
+  // Backend only, do not modify
   bool (*trigger_handler)(struct GameInfo *info, const struct Action *action);
 };
 
@@ -32,15 +32,22 @@ struct Action {
 #define VA_ARGS_ARR(T, ...) (T[]){ __VA_ARGS__ }
 #define VA_ARGS_ARR_COUNT(T, ...) ARR_COUNT(VA_ARGS_ARR(T, __VA_ARGS__))
 
-#define NEW_SCREEN(x, y, body, ...) {                    \
-  x, y, body,                                            \
+#define NEW_SCREEN(body, ...) {                          \
+  body, backend_default_screen_body_generator,           \
+  VA_ARGS_ARR_COUNT(const struct Action *, __VA_ARGS__), \
+  VA_ARGS_ARR(const struct Action *, __VA_ARGS__)        \
+}
+#define NEW_VAR_SCREEN(body_generator, ...) {            \
+  NULL, body_generator,                                  \
   VA_ARGS_ARR_COUNT(const struct Action *, __VA_ARGS__), \
   VA_ARGS_ARR(const struct Action *, __VA_ARGS__)        \
 }
 struct Screen {
-  uint8_t x, y;
-
+  // Backend only, do not modify
   const char *body;
+
+  // Frontend & Backend, do not modify
+  const char *(*body_generator)(const struct GameInfo *info);
 
   size_t actionCount;
   const struct Action *const *actions;
@@ -48,12 +55,21 @@ struct Screen {
 
 #define USE_ACTION(action) (const struct Action *)&action
 
+# define NEW_ROOM(x, y, body) {x, y, body}
+struct Room {
+  // Backend only, do not change
+  uint8_t x, y;
+  const char *body;
+};
+
 bool backend_default_action_visibility_checker(const struct GameInfo *info, const struct Action *action);
 bool backend_default_action_trigger_handler(struct GameInfo *info, const struct Action *action);
 
-bool backend_register_extension(struct GameInfo *info, size_t screenCount, const struct Screen *const screens[static screenCount]);
+const char *backend_default_screen_body_generator(const struct GameInfo *info);
 
-const struct Screen *backend_get_map_screen(const struct GameInfo *, uint8_t x, uint8_t y);
+bool backend_register_extension(struct GameInfo *info, size_t roomCount, const struct Room *const rooms[static roomCount]);
+
+const struct Room *backend_get_map_room(const struct GameInfo *info, uint8_t x, uint8_t y);
 
 // Frontend interface
 bool backend_setup(struct GameInfo *info);

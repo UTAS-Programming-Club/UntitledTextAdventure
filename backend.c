@@ -1,32 +1,35 @@
 #include <stdlib.h>    // for calloc, free
 
 #include "backend.h"
-#include "coregame.h"  // for CoreScreenCount, CoreScreens, CoreTestScreen, MapSizeX, MapSizeY
+#include "coregame.h"  // for CoreMainMenuScreen, CoreRoomCount, CoreRooms, MapSizeX, MapSizeY
+
+const char *backend_default_screen_body_generator(const struct GameInfo *info) {
+  return info->screen->body;
+}
 
 bool backend_default_action_visibility_checker(const struct GameInfo *info, const struct Action *action) {
   return true;
 }
-
 
 bool backend_default_action_trigger_handler(struct GameInfo *info, const struct Action *action) {
   return true;
 }
 
 
-bool backend_register_extension(struct GameInfo *info, size_t screenCount, const struct Screen *const screens[static screenCount]) {
-  for (size_t i = 0; i < screenCount; ++i) {
-    const struct Screen *screen = screens[i];
-    if (NULL == screen || screen->x >= info->mapSizeX || screen->y >= info->mapSizeY || NULL != backend_get_map_screen(info, screen->x, screen->y)) {
+bool backend_register_extension(struct GameInfo *info, size_t roomCount, const struct Room *const rooms[static roomCount]) {
+  for (size_t i = 0; i < roomCount; ++i) {
+    const struct Room *room = rooms[i];
+    if (NULL == room || room->x >= info->mapSizeX || room->y >= info->mapSizeY || NULL != backend_get_map_room(info, room->x, room->y)) {
       return false;
     }
 
-    info->map[screen->y * info->mapSizeX + screen->x] = screen;
+    info->map[room->y * info->mapSizeX + room->x] = room;
   }
 
   return true;
 }
 
-const struct Screen *backend_get_map_screen(const struct GameInfo *info, uint8_t x, uint8_t y) {
+const struct Room *backend_get_map_room(const struct GameInfo *info, uint8_t x, uint8_t y) {
   if (x >= info->mapSizeX || y >= info->mapSizeY) {
     return NULL;
   }
@@ -44,10 +47,10 @@ bool backend_setup(struct GameInfo *info) {
   info->mapSizeY = MapSizeY;
   info->map = calloc(info->mapSizeX * info->mapSizeY, sizeof *info->map);
 
-  info->screen = &CoreTestScreen;
+  info->screen = &CoreMainMenuScreen;
   info->quit = false;
 
-  return backend_register_extension(info, CoreScreenCount, CoreScreens);
+  return backend_register_extension(info, CoreRoomCount, CoreRooms);
 }
 
 bool backend_input(struct GameInfo *info, uint8_t actionId) {

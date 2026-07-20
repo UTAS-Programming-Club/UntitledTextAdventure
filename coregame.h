@@ -13,22 +13,22 @@ enum ScreenDirection {
   West
 };
 
+struct GotoScreenAction {
+  struct Action base;
+
+  const struct Screen *screen;
+};
+
 struct GoDirectionAction {
   struct Action base;
 
   enum ScreenDirection direction;
 };
 
-extern const struct Action CoreQuitAction;
-extern const struct GoDirectionAction CoreGoNorthAction;
-extern const struct GoDirectionAction CoreGoEastAction;
-extern const struct GoDirectionAction CoreGoSouthAction;
-extern const struct GoDirectionAction CoreGoWestAction;
+extern const struct Screen CoreMainMenuScreen;
 
-extern const struct Screen CoreTestScreen;
-
-extern const size_t CoreScreenCount;
-extern const struct Screen *const CoreScreens[];
+extern const size_t CoreRoomCount;
+extern const struct Room *const CoreRooms[];
 
 extern const uint8_t MapSizeX;
 extern const uint8_t MapSizeY;
