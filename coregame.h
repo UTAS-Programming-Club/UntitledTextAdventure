@@ -1,9 +1,10 @@
 #ifndef UTA_COREGAME_H
 #define UTA_COREGAME_H
 
-#include <stdint.h>
+#include <stddef.h>   // for size_t
+#include <stdint.h>   // for uint8_t
 
-#include "backend.h"
+#include "backend.h"  // for Action
 
 enum ScreenDirection {
   North,

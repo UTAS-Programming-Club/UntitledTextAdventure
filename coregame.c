@@ -1,33 +1,61 @@
-#include <stdint.h>
+#include <stdbool.h>  // for true, bool, false
+#include <stdint.h>   // for uint8_t
 
-#include "backend.h"
-#include "coregame.h"
+#include "backend.h"  // for GameInfo, backend_get_map_screen, USE_ACTION, NEW_EXT_ACTION, backend_default_action_visibility_checker, ARR_COUNT, Action, NEW_ACTION, NEW_SCREEN, Screen
 
-static bool CoreGameQuitActionHandler(struct GameInfo *info, const struct Action *action) {
+static bool core_go_direction_visibility_checker(const struct GameInfo *info, const struct Action *action) {
+  const struct GoDirectionAction *this = (const struct GoDirectionAction *)action;
+  switch (this->direction) {
+    case North:
+      if (NULL != backend_get_map_screen(info, info->x, info->y + 1)) {
+        return true;
+      }
+      break;
+    case East:
+      if (NULL != backend_get_map_screen(info, info->x + 1, info->y)) {
+        return true;
+      }
+      break;
+    case South:
+      if (NULL != backend_get_map_screen(info, info->x, info->y - 1)) {
+        return true;
+      }
+      break;
+    case West:
+      if (NULL != backend_get_map_screen(info, info->x - 1, info->y)) {
+        return true;
+      }
+      break;
+  }
+
+  return false;
+}
+
+static bool core_quit_action_handler(struct GameInfo *info, const struct Action *action) {
   info->quit = true;
   return true;
 }
 
-static bool CoreGoDirectionActionHandler(struct GameInfo *info, const struct Action *action) {
+static bool core_go_direction_action_handler(struct GameInfo *info, const struct Action *action) {
   const struct GoDirectionAction *this = (const struct GoDirectionAction *)action;
   switch (this->direction) {
     case North:
-      if (nullptr != backend_get_map_screen(info, info->x, info->y + 1)) {
+      if (NULL != backend_get_map_screen(info, info->x, info->y + 1)) {
         ++info->y;
       }
       break;
     case East:
-      if (nullptr != backend_get_map_screen(info, info->x + 1, info->y)) {
+      if (NULL != backend_get_map_screen(info, info->x + 1, info->y)) {
         ++info->x;
       }
       break;
     case South:
-      if (nullptr != backend_get_map_screen(info, info->x, info->y - 1)) {
+      if (NULL != backend_get_map_screen(info, info->x, info->y - 1)) {
         --info->y;
       }
       break;
     case West:
-      if (nullptr != backend_get_map_screen(info, info->x - 1, info->y)) {
+      if (NULL != backend_get_map_screen(info, info->x - 1, info->y)) {
         --info->x;
       }
       break;
@@ -38,11 +66,11 @@ static bool CoreGoDirectionActionHandler(struct GameInfo *info, const struct Act
 }
 
 
-const struct Action CoreQuitAction = NEW_ACTION("Quit Game", CoreGameQuitActionHandler);
-const struct GoDirectionAction CoreGoNorthAction = NEW_EXT_ACTION("Go North", CoreGoDirectionActionHandler, North);
-const struct GoDirectionAction CoreGoEastAction = NEW_EXT_ACTION("Go East", CoreGoDirectionActionHandler, East);
-const struct GoDirectionAction CoreGoSouthAction = NEW_EXT_ACTION("Go South", CoreGoDirectionActionHandler, South);
-const struct GoDirectionAction CoreGoWestAction = NEW_EXT_ACTION("Go West", CoreGoDirectionActionHandler, West);
+const struct Action CoreQuitAction = NEW_ACTION("Quit Game", backend_default_action_visibility_checker, core_quit_action_handler);
+const struct GoDirectionAction CoreGoNorthAction = NEW_EXT_ACTION("Go North", core_go_direction_visibility_checker, core_go_direction_action_handler, North);
+const struct GoDirectionAction CoreGoEastAction = NEW_EXT_ACTION("Go East", core_go_direction_visibility_checker, core_go_direction_action_handler, East);
+const struct GoDirectionAction CoreGoSouthAction = NEW_EXT_ACTION("Go South", core_go_direction_visibility_checker, core_go_direction_action_handler, South);
+const struct GoDirectionAction CoreGoWestAction = NEW_EXT_ACTION("Go West", core_go_direction_visibility_checker, core_go_direction_action_handler, West);
 
 const struct Screen CoreTestScreen = NEW_SCREEN(0, 0, "This is a test: 1", 
                                                  USE_ACTION(CoreQuitAction),

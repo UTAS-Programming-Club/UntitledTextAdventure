@@ -1,10 +1,8 @@
-#include <stdint.h>
-
-#include "backend.h"
-#include "coregame.h"
+#include "backend.h"   // for USE_ACTION, ARR_COUNT, NEW_SCREEN, Screen
+#include "coregame.h"  // for CoreGoEastAction, CoreGoNorthAction, CoreGoSouthAction, CoreGoWestAction
 #include "ext1.h"
 
-const struct Screen Ext1TestScreen = NEW_SCREEN(0, 1, "Extension Screen!", 
+const struct Screen Ext1TestScreen = NEW_SCREEN(1, 0, "Extension Screen!", 
                                                 USE_ACTION(CoreGoNorthAction), USE_ACTION(CoreGoEastAction), USE_ACTION(CoreGoSouthAction), USE_ACTION(CoreGoWestAction)
 );
 

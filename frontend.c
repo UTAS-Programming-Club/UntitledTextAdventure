@@ -1,11 +1,11 @@
-#include <inttypes.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <inttypes.h>  // for uint8_t, SCNu8
+#include <stdio.h>     // for fputs, stderr, putchar, printf, puts, scanf, size_t
+#include <stdlib.h>    // for EXIT_FAILURE, EXIT_SUCCESS
 
-#include "backend.h"
-#include "ext1.h"
+#include "backend.h"   // for GameInfo, Screen, backend_cleanup, Action, backend_input, backend_register_extension, backend_setup
+#include "ext1.h"      // for Ext1ScreenCount, Ext1Screens
 
-int main() {
+int main(void) {
   int result = EXIT_SUCCESS;
   struct GameInfo game;
   if (!backend_setup(&game)) {
@@ -24,8 +24,14 @@ int main() {
     puts(game.screen->body);
     putchar('\n');
 
+    uint8_t id = 0;
     for (size_t i = 0; i < game.screen->actionCount; ++i) {
-      printf("%zu: %s\n", i + 1, game.screen->actions[i]->title);
+      const struct Action *action = game.screen->actions[i];
+      if (!action->visibility_checker(&game, action)) {
+        continue;
+      }
+      printf("%zu: %s\n", id + 1, action->title);
+      ++id;
     }
 
     uint8_t input;
