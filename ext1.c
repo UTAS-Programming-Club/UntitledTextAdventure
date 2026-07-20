@@ -1,4 +1,4 @@
-#include "backend.h"   // for for ARR_COUNT, NEW_ROOM, Room
+#include "backend.h"   // for ARR_COUNT, NEW_ROOM, Room
 #include "ext1.h"
 
 const struct Room Ext1TestRoom = NEW_ROOM(1, 0, "Extension Room!");

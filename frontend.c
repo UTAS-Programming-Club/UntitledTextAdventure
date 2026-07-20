@@ -37,7 +37,7 @@ int main(void) {
       if (!action->visibility_checker(&game, action)) {
         continue;
       }
-      printf("%zu: %s\n", id + 1, action->title);
+      printf("%i: %s\n", id + 1, action->title);
       ++id;
     }
 
