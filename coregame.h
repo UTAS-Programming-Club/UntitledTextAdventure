@@ -1,0 +1,35 @@
+#ifndef UTA_COREGAME_H
+#define UTA_COREGAME_H
+
+#include <stdint.h>
+
+#include "backend.h"
+
+enum ScreenDirection {
+  North,
+  East,
+  South,
+  West
+};
+
+struct GoDirectionAction {
+  struct Action base;
+
+  enum ScreenDirection direction;
+};
+
+extern const struct Action CoreQuitAction;
+extern const struct GoDirectionAction CoreGoNorthAction;
+extern const struct GoDirectionAction CoreGoEastAction;
+extern const struct GoDirectionAction CoreGoSouthAction;
+extern const struct GoDirectionAction CoreGoWestAction;
+
+extern const struct Screen CoreTestScreen;
+
+extern const size_t CoreScreenCount;
+extern const struct Screen *const CoreScreens[];
+
+extern const uint8_t MapSizeX;
+extern const uint8_t MapSizeY;
+
+#endif // UTA_COREGAME_H

@@ -1,0 +1,16 @@
+clang-22 -O3 -Wall -Wformat -Wformat=2 -Wconversion -Wimplicit-fallthrough \
+-Werror=format-security \
+-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 \
+-D_GLIBCXX_ASSERTIONS \
+-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_FAST \
+-fstrict-flex-arrays=3 \
+-fstack-clash-protection -fstack-protector-strong \
+-Wl,-z,nodlopen -Wl,-z,noexecstack \
+-Wl,-z,relro -Wl,-z,now \
+-Wl,--as-needed -Wl,--no-copy-dt-needed-entries \
+-fPIE -pie \
+-fcf-protection=full \
+-fno-delete-null-pointer-checks -fno-strict-overflow -fno-strict-aliasing -ftrivial-auto-var-init=zero \
+-Werror=implicit -Werror=incompatible-pointer-types -Werror=int-conversion \
+-Werror -pedantic \
+-std=c23 frontend.c backend.c coregame.c ext1.c -o utatest2026
