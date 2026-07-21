@@ -1,8 +1,8 @@
 #ifndef UTA_COREGAME_H
+#ifndef UTA_IN_BACKEND_H
 #define UTA_COREGAME_H
 
-#include <stddef.h>   // for size_t
-#include <stdint.h>   // for uint8_t
+#include "smalllib.h"
 
 #include "backend.h"  // for Action
 
@@ -29,8 +29,9 @@ extern const struct Screen CoreMainMenuScreen;
 
 extern const size_t CoreRoomCount;
 extern const struct Room *const CoreRooms[];
+#endif
 
-extern const uint8_t MapSizeX;
-extern const uint8_t MapSizeY;
+#define MapSizeX (uint8_t)3
+#define MapSizeY (uint8_t)2
 
 #endif // UTA_COREGAME_H

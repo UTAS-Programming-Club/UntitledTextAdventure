@@ -1,4 +1,4 @@
-#include <stdlib.h>    // for calloc, free
+#include "smalllib.h"
 
 #include "backend.h"
 #include "coregame.h"  // for CoreMainMenuScreen, CoreRoomCount, CoreRooms, MapSizeX, MapSizeY
@@ -49,7 +49,7 @@ bool backend_setup(struct GameInfo *info) {
 
   info->mapSizeX = MapSizeX;
   info->mapSizeY = MapSizeY;
-  info->map = calloc(info->mapSizeX * info->mapSizeY, sizeof *info->map);
+  memset(info->map, 0, sizeof info->map);
 
   info->screen = &CoreMainMenuScreen;
   info->x = info->y = 0;
@@ -80,8 +80,6 @@ void backend_cleanup(struct GameInfo *info) {
   }
 
   info->mapSizeX = info->mapSizeY = 0;
-  free((void *)info->map);
-  info->map = NULL;
 
   info->screen = NULL;
   info->x = info->y = 0;

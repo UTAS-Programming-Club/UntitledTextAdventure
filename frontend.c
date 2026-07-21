@@ -1,7 +1,3 @@
-#include <inttypes.h>  // for uint8_t, SCNu8
-#include <stdio.h>     // for fputs, stderr, putchar, NULL, printf, puts, scanf, size_t
-#include <stdlib.h>    // for EXIT_FAILURE, EXIT_SUCCESS
-
 #include "backend.h"   // for GameInfo, Screen, backend_cleanup, Action, backend_input, backend_register_extension, backend_setup
 #include "ext1.h"      // for Ext1RoomCount, Ext1Rooms
 
@@ -37,15 +33,23 @@ int main(void) {
       if (!action->visibility_checker(&game, action)) {
         continue;
       }
-      printf("%i: %s\n", id + 1, action->title);
+
+      putchar('1' + id);
+      fputs(": ", stdout);
+      puts(action->title);
       ++id;
     }
 
-    uint8_t input;
-    if (scanf("%" SCNu8, &input) != 1) {
-      fputs("Error in scanf\n", stderr);
-      result = EXIT_FAILURE;
-      break;
+    uint8_t input = 0;
+    while (input < 1 || input > 9) {
+      char inputChar;
+      if (scant(sizeof(uint8_t), &inputChar) != 1) {
+        fputs("Error in scanf\n", stderr);
+        result = EXIT_FAILURE;
+        break;
+      }
+
+      input = inputChar - '0';
     }
 
     if (!backend_input(&game, input - 1)) {
@@ -60,4 +64,18 @@ int main(void) {
   backend_cleanup(&game);
 
   return result;
+}
+
+void _start(void) {
+	int out = main();
+
+	// exit
+	__asm__ (
+		"movq %0, %%rdi\n\t" // value
+		"movq $60, %%rax\n\t" // exit
+		"syscall"
+		: /* no out */
+		: "g" ((unsigned long long int)out)
+		: "%rdi", "%rax"
+	);
 }

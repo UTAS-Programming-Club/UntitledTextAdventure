@@ -1,6 +1,3 @@
-#include <stdbool.h>  // for true, bool, false
-#include <stdint.h>   // for uint8_t
-
 #include "backend.h"  // for GameInfo, backend_default_action_visibility_checker, backend_get_map_room, USE_ACTION, NEW_EXT_ACTION, Screen, Room, ARR_COUNT, Action, NEW_ACTION, NEW_ROOM, NEW_SCREEN, NEW_VAR_SCREEN
 #include "coregame.h"
 
@@ -113,6 +110,3 @@ static const struct Room CoreFirstRoom = NEW_ROOM(0, 0, "First Room!");
 
 const struct Room *const CoreRooms[] = { &CoreFirstRoom };
 const size_t CoreRoomCount = ARR_COUNT(CoreRooms);
-
-const uint8_t MapSizeX = 3;
-const uint8_t MapSizeY = 2;

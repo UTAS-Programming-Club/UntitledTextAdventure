@@ -1,14 +1,16 @@
 #ifndef UTA_BACKEND_H
 #define UTA_BACKEND_H
 
-#include <stdbool.h>  // for bool
-#include <stddef.h>   // for size_t, NULL
-#include <stdint.h>   // for uint8_t
+#include "smalllib.h"
+
+#define UTA_IN_BACKEND_H
+#include "coregame.h"
+#undef UTA_IN_BACKEND_H
 
 struct GameInfo {
   // Backend only, do not modify outside backend_setup, backend_register_extension and backend_cleanup
   uint8_t mapSizeX, mapSizeY;
-  const struct Room **map; // const struct Room *map[maxSizeX * maxSizeY]
+  const struct Room *map[MapSizeX * MapSizeY]; // const struct Room *map[maxSizeX * maxSizeY]
 
   // Frontend & Backend, do not modify from frontend
   const struct Screen *screen;
