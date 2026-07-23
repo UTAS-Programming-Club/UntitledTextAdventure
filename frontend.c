@@ -3,7 +3,7 @@
 #include <stdlib.h>    // for EXIT_FAILURE, EXIT_SUCCESS
 
 #include "backend.h"   // for GameInfo, Screen, backend_cleanup, Action, backend_input, backend_register_extension, backend_setup
-#include "ext1.h"      // for Ext1RoomCount, Ext1Rooms
+#include "gen/ext1.h"  // for Ext1RoomCount, Ext1Rooms
 
 int main(void) {
   int result = EXIT_SUCCESS;
@@ -14,7 +14,7 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
-  if (!backend_register_extension(&game, Ext1RoomCount, Ext1Rooms)) {
+  if (!backend_register_extension(&game, Ext1_RoomCount, Ext1_Rooms)) {
     fputs("Error in backend_register_extension\n", stderr);
     backend_cleanup(&game);
     return EXIT_FAILURE;
