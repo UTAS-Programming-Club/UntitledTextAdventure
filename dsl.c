@@ -9,6 +9,35 @@
 #include <uchar.h>     // for char8_t
 #include <unistd.h>    // for close
 
+
+#define DYN_ARRAY(typeName, baseTypeName, varName) struct typeName {                      \
+  baseTypeName *varName ## s;                                                             \
+  size_t count;                                                                           \
+  size_t length;                                                                          \
+};                                                                                        \
+                                                                                          \
+static bool add_ ## varName(struct typeName *varName ## s, const baseTypeName *varName) { \
+if (varName ## s->count + 1 >= varName ## s->length) {                                    \
+    size_t newLen = 2 * varName ## s->count;                                              \
+    if (0 == newLen) {                                                                    \
+      newLen = 8;                                                                         \
+    }                                                                                     \
+                                                                                          \
+    baseTypeName *newArr = realloc(varName ## s->varName ## s, newLen * sizeof *varName); \
+    if (nullptr == newArr) {                                                              \
+      return false;                                                                       \
+    }                                                                                     \
+                                                                                          \
+    varName ## s->length = newLen;                                                        \
+    varName ## s->varName ## s = newArr;                                                  \
+  }                                                                                       \
+                                                                                          \
+  memcpy(varName ## s->varName ## s + varName ## s->count, varName, sizeof *varName);     \
+  ++varName ## s->count;                                                                  \
+  return true;                                                                            \
+}
+
+
 enum TokenType {
   IntegerLiteralToken,
   StringLiteralToken,
@@ -37,32 +66,7 @@ struct Token {
   };
 };
 
-struct TokenInfo {
-  struct Token *tokens;
-  size_t count;  // Stored tokens count in items
-  size_t length; // Dynamic array length in items
-};
-
-static bool add_token(struct TokenInfo *tokens, const struct Token *token) {
-  if (tokens->count + 1 >= tokens->length) {
-    size_t newLength = 2 * tokens->count;
-    if (0 == newLength) {
-      newLength = 8;
-    }
-
-    struct Token *newTokens = realloc(tokens->tokens, newLength * sizeof *tokens->tokens);
-    if (nullptr == newTokens) {
-      return false;
-    }
-
-    tokens->length = newLength;
-    tokens->tokens = newTokens;
-  }
-
-  memcpy(tokens->tokens + tokens->count, token, sizeof *token);
-  ++tokens->count;
-  return true;
-}
+DYN_ARRAY(TokenInfo, struct Token, token)
 
 
 enum ExpressionType {
@@ -86,32 +90,7 @@ struct Expression {
   };
 };
 
-struct ExpressionInfo {
-  struct Expression *exprs;
-  size_t count;  // Stored exprs count in items
-  size_t length; // Dynamic array length in items
-};
-
-static bool add_expr(struct ExpressionInfo *exprs, const struct Expression *expr) {
-  if (exprs->count + 1 >= exprs->length) {
-    size_t newLength = 2 * exprs->count;
-    if (0 == newLength) {
-      newLength = 8;
-    }
-
-    struct Expression *newExprs = realloc(exprs->exprs, newLength * sizeof *exprs->exprs);
-    if (nullptr == newExprs) {
-      return false;
-    }
-
-    exprs->length = newLength;
-    exprs->exprs = newExprs;
-  }
-
-  memcpy(exprs->exprs + exprs->count, expr, sizeof *expr);
-  ++exprs->count;
-  return true;
-}
+DYN_ARRAY(ExpressionInfo, struct Expression, expr)
 
 
 static bool lex_int(const char8_t *str, const char8_t *expectedEnd, uint64_t *value) {
@@ -525,31 +504,10 @@ struct String {
   size_t strLen;
 };
 
-static bool add_string(struct String **strings, size_t *count, size_t *length, const struct String *string) {
-  if (*count + 1 >= *length) {
-    size_t newLength = 2 * *count;
-    if (0 == newLength) {
-      newLength = 8;
-    }
-
-    struct String *newStrings = realloc(*strings, newLength * sizeof *strings);
-    if (nullptr == newStrings) {
-      return false;
-    }
-
-    *length = newLength;
-    *strings = newStrings;
-  }
-
-  memcpy(*strings + *count, string, sizeof *string);
-  ++*count;
-  return true;
-}
+DYN_ARRAY(StringInfo, struct String, string)
 
 static bool codegen(const struct ExpressionInfo *exprs) {
-  struct String *rooms = nullptr;
-  size_t count = 0;
-  size_t length = 0;
+  struct StringInfo rooms = {};
 
   FILE *fh = fopen("gen/ext1.h", "wb");
   if (nullptr == fh) {
@@ -588,7 +546,7 @@ extern const struct Room *const Ext1_Rooms[];\n\
         break;
       case RoomDefinitionExpression:
         struct String room = { expr->room.identifier->string.str,  expr->room.identifier->string.strLen };
-        if (!add_string(&rooms, &count, &length, &room)) {
+        if (!add_string(&rooms, &room)) {
           fclose(fc);
           return false;
         }
@@ -602,8 +560,8 @@ extern const struct Room *const Ext1_Rooms[];\n\
   }
 
   fprintf(fc, "\nconst struct Room *const Ext1_Rooms[] = { ");
-  for (size_t i = 0; i < count; ++i) {
-    const struct String *room = rooms + i;
+  for (size_t i = 0; i < rooms.count; ++i) {
+    const struct String *room = rooms.strings + i;
     if (i > 0) {
       fputs(", ", fc);
     }
@@ -636,18 +594,8 @@ int main() {
   struct TokenInfo tokens = {};
   status = status && lex(file, &tokens);
 
-  /*if (status) {
-    printTokens(&tokens);
-    putchar('\n');
-  }*/
-
   struct ExpressionInfo exprs = {};
   status = status && parse(&tokens, &exprs);
-
-  /*if (status) {
-    printExpressions(&exprs);
-    putchar('\n');
-  }*/
 
   status = status && codegen(&exprs);
 
