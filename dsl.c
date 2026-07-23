@@ -229,6 +229,19 @@ static bool lex(const char8_t *str, struct TokenInfo *tokens) {
 }
 
 
+#define SINGLE_PARSE_ALLOW(tokenType) \
+  ++token;                            \
+  if (token > end) {                  \
+    return false;                     \
+  }                                   \
+                                      \
+  switch (token->type) {              \
+    case tokenType: break;            \
+    default: return false;            \
+  }                                   \
+                                      \
+  token
+
 static bool parse(const struct TokenInfo *tokens, struct ExpressionInfo *exprs) {
   const struct Token *token = tokens->tokens;
   const struct Token *end = token + tokens->count;
@@ -241,61 +254,12 @@ static bool parse(const struct TokenInfo *tokens, struct ExpressionInfo *exprs) 
     }
 
 action:
-    ++token;
-    if (token > end) {
-      return false;
-    }
-    const struct Token *identifier = token;
-    switch (token->type) {
-      case IdentifierToken: break;
-      default: return false;
-    }
-
-    ++token;
-    if (token > end) {
-      return false;
-    }
-    switch (token->type) {
-      case EqualsToken: break;
-      default: return false;
-    }
-
-    ++token;
-    if (token > end) {
-      return false;
-    }
-    switch (token->type) {
-      case ActionTypeToken: break;
-      default: return false;
-    }
-
-    ++token;
-    if (token > end) {
-      return false;
-    }
-    switch (token->type) {
-      case OpenParenToken: break;
-      default: return false;
-    }
-
-    ++token;
-    if (token > end) {
-      return false;
-    }
-    const struct Token *string = token;
-    switch (token->type) {
-      case StringLiteralToken: break;
-      default: return false;
-    }
-
-    ++token;
-    if (token > end) {
-      return false;
-    }
-    switch (token->type) {
-      case CloseParenToken: break;
-      default: return false;
-    }
+    const struct Token *identifier = SINGLE_PARSE_ALLOW(IdentifierToken);
+    SINGLE_PARSE_ALLOW(EqualsToken);
+    SINGLE_PARSE_ALLOW(ActionTypeToken);
+    SINGLE_PARSE_ALLOW(OpenParenToken);
+    const struct Token *string = SINGLE_PARSE_ALLOW(StringLiteralToken);
+    SINGLE_PARSE_ALLOW(CloseParenToken);
 
     ++token;
     if (token > end) {
@@ -313,99 +277,16 @@ action:
     }
 
 room:
-    ++token;
-    if (token > end) {
-      return false;
-    }
-    identifier = token;
-    switch (token->type) {
-      case IdentifierToken: break;
-      default: return false;
-    }
-
-    ++token;
-    if (token > end) {
-      return false;
-    }
-    switch (token->type) {
-      case EqualsToken: break;
-      default: return false;
-    }
-
-    ++token;
-    if (token > end) {
-      return false;
-    }
-    switch (token->type) {
-      case RoomTypeToken: break;
-      default: return false;
-    }
-
-    ++token;
-    if (token > end) {
-      return false;
-    }
-    switch (token->type) {
-      case OpenParenToken: break;
-      default: return false;
-    }
-
-    ++token;
-    if (token > end) {
-      return false;
-    }
-    const struct Token *integer1 = token;
-    switch (token->type) {
-      case IntegerLiteralToken: break;
-      default: return false;
-    }
-
-    ++token;
-    if (token > end) {
-      return false;
-    }
-    switch (token->type) {
-      case CommaToken: break;
-      default: return false;
-    }
-
-    ++token;
-    if (token > end) {
-      return false;
-    }
-    const struct Token *integer2 = token;
-    switch (token->type) {
-      case IntegerLiteralToken: break;
-      default: return false;
-    }
-
-    ++token;
-    if (token > end) {
-      return false;
-    }
-    switch (token->type) {
-      case CommaToken: break;
-      default: return false;
-    }
-
-    ++token;
-    if (token > end) {
-      return false;
-    }
-    string = token;
-    switch (token->type) {
-      case StringLiteralToken: break;
-      default: return false;
-    }
-
-    ++token;
-    if (token > end) {
-      return false;
-    }
-    switch (token->type) {
-      case CloseParenToken: break;
-      default: return false;
-    }
+    identifier = SINGLE_PARSE_ALLOW(IdentifierToken);
+    SINGLE_PARSE_ALLOW(EqualsToken);
+    SINGLE_PARSE_ALLOW(RoomTypeToken);
+    SINGLE_PARSE_ALLOW(OpenParenToken);
+    const struct Token *integer1 = SINGLE_PARSE_ALLOW(IntegerLiteralToken);
+    SINGLE_PARSE_ALLOW(CommaToken);
+    const struct Token *integer2 = SINGLE_PARSE_ALLOW(IntegerLiteralToken);
+    SINGLE_PARSE_ALLOW(CommaToken);
+    string = SINGLE_PARSE_ALLOW(StringLiteralToken);
+    SINGLE_PARSE_ALLOW(CloseParenToken);
 
     ++token;
     if (token > end) {
@@ -423,61 +304,12 @@ room:
     }
 
 screen:
-    ++token;
-    if (token > end) {
-      return false;
-    }
-    identifier = token;
-    switch (token->type) {
-      case IdentifierToken: break;
-      default: return false;
-    }
-
-    ++token;
-    if (token > end) {
-      return false;
-    }
-    switch (token->type) {
-      case EqualsToken: break;
-      default: return false;
-    }
-
-    ++token;
-    if (token > end) {
-      return false;
-    }
-    switch (token->type) {
-      case ScreenTypeToken: break;
-      default: return false;
-    }
-
-    ++token;
-    if (token > end) {
-      return false;
-    }
-    switch (token->type) {
-      case OpenParenToken: break;
-      default: return false;
-    }
-
-    ++token;
-    if (token > end) {
-      return false;
-    }
-    string = token;
-    switch (token->type) {
-      case StringLiteralToken: break;
-      default: return false;
-    }
-
-    ++token;
-    if (token > end) {
-      return false;
-    }
-    switch (token->type) {
-      case CloseParenToken: break;
-      default: return false;
-    }
+    identifier = SINGLE_PARSE_ALLOW(IdentifierToken);
+    SINGLE_PARSE_ALLOW(EqualsToken);
+    SINGLE_PARSE_ALLOW(ScreenTypeToken);
+    SINGLE_PARSE_ALLOW(OpenParenToken);
+    string = SINGLE_PARSE_ALLOW(StringLiteralToken);
+    SINGLE_PARSE_ALLOW(CloseParenToken);
 
     ++token;
     if (token > end) {
