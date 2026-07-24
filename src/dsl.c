@@ -72,6 +72,25 @@ struct Token {
 
 DYN_ARRAY(TokenInfo, struct Token, token)
 
+static const char *get_token_string(enum TokenType token) {
+  switch (token) {
+    case IntegerLiteralToken: return "IntegerLiteralToken";
+    case StringLiteralToken: return "StringLiteralToken";
+
+    case ActionTypeToken: return "ActionTypeToken";
+    case RoomTypeToken: return "RoomTypeToken";
+    case ScreenTypeToken: return "ScreenTypeToken";
+
+    case OpenParenToken: return "OpenParenToken";
+    case CloseParenToken: return "CloseParenToken";
+    case SemicolonToken: return "SemicolonToken";
+    case EqualsToken: return "EqualsToken";
+    case CommaToken: return "CommaToken";
+
+    case IdentifierToken: return "IdentifierToken";
+  }
+}
+
 
 enum ExpressionType {
   ActionDefintionExpression,
@@ -81,15 +100,16 @@ enum ExpressionType {
 
 struct Expression {
   enum ExpressionType type;
+  const struct Token *idName;
   union {
     struct {
-      const struct Token *identifier, *string;
+      const struct Token *strTitle, *idVisiblityCheckerFunc, *idTriggerHandlerFunc;
     } action;
     struct {
-      const struct Token *identifier, *integer1, *integer2, *string;
+      const struct Token *intX, *intY, *strBody;
     } room;
     struct {
-      const struct Token *identifier, *string;
+      const struct Token *strBody;
     } screen;
   };
 };
@@ -249,7 +269,7 @@ DYN_ARRAY(ExpressionInfo, struct Expression, expr)
 
 
 #define ADDITIONAL_TOKENS_ERROR() EMIT_ERROR("Additional token(s) were expected")
-#define UNEXPECTED_TOKEN_ERROR()  EMIT_ERROR("An unxpected token was encountered")
+#define UNEXPECTED_TOKEN_ERROR()  EMIT_ERROR("An unxpected token %s was encountered", get_token_string(token->type))
 #define SINGLE_PARSE_ALLOW(tokenType) \
   ++token;                            \
   if (token > end) {                  \
@@ -279,12 +299,17 @@ DYN_ARRAY(ExpressionInfo, struct Expression, expr)
         return false;
     }
 
+  // Action idName = Action(strTitle, idVisiblityCheckerFunc, idTriggerHandlerFunc);
 action:
-    const struct Token *identifier = SINGLE_PARSE_ALLOW(IdentifierToken);
+    const struct Token *idName = SINGLE_PARSE_ALLOW(IdentifierToken);
     SINGLE_PARSE_ALLOW(EqualsToken);
     SINGLE_PARSE_ALLOW(ActionTypeToken);
     SINGLE_PARSE_ALLOW(OpenParenToken);
-    const struct Token *string = SINGLE_PARSE_ALLOW(StringLiteralToken);
+    const struct Token *strTitle = SINGLE_PARSE_ALLOW(StringLiteralToken);
+    SINGLE_PARSE_ALLOW(CommaToken);
+    const struct Token *idVisiblityCheckerFunc = SINGLE_PARSE_ALLOW(IdentifierToken);
+    SINGLE_PARSE_ALLOW(CommaToken);
+    const struct Token *idTriggerHandlerFunc = SINGLE_PARSE_ALLOW(IdentifierToken);
     SINGLE_PARSE_ALLOW(CloseParenToken);
 
     ++token;
@@ -295,8 +320,8 @@ action:
     switch (token->type) {
       case SemicolonToken:
         struct Expression expr = {
-          ActionDefintionExpression,
-          .action = { identifier, string }
+          ActionDefintionExpression, idName,
+          .action = { strTitle, idVisiblityCheckerFunc, idTriggerHandlerFunc }
         };
         if (!add_expr(exprs, &expr)) {
           return false;
@@ -307,16 +332,17 @@ action:
         return false;
     }
 
+  // Room idName = Room(intX, intY, stringBody);
 room:
-    identifier = SINGLE_PARSE_ALLOW(IdentifierToken);
+    idName = SINGLE_PARSE_ALLOW(IdentifierToken);
     SINGLE_PARSE_ALLOW(EqualsToken);
     SINGLE_PARSE_ALLOW(RoomTypeToken);
     SINGLE_PARSE_ALLOW(OpenParenToken);
-    const struct Token *integer1 = SINGLE_PARSE_ALLOW(IntegerLiteralToken);
+    const struct Token *intX = SINGLE_PARSE_ALLOW(IntegerLiteralToken);
     SINGLE_PARSE_ALLOW(CommaToken);
-    const struct Token *integer2 = SINGLE_PARSE_ALLOW(IntegerLiteralToken);
+    const struct Token *intY = SINGLE_PARSE_ALLOW(IntegerLiteralToken);
     SINGLE_PARSE_ALLOW(CommaToken);
-    string = SINGLE_PARSE_ALLOW(StringLiteralToken);
+    const struct Token *strBody = SINGLE_PARSE_ALLOW(StringLiteralToken);
     SINGLE_PARSE_ALLOW(CloseParenToken);
 
     ++token;
@@ -327,8 +353,8 @@ room:
     switch (token->type) {
       case SemicolonToken:
         struct Expression expr = {
-          RoomDefinitionExpression,
-          .room = { identifier, integer1, integer2, string }
+          RoomDefinitionExpression, idName,
+          .room = { intX, intY, strBody }
         };
         if (!add_expr(exprs, &expr)) {
           return false;
@@ -339,12 +365,13 @@ room:
         return false;
     }
 
+  // Screen idName = Screen(strBody);
 screen:
-    identifier = SINGLE_PARSE_ALLOW(IdentifierToken);
+    idName = SINGLE_PARSE_ALLOW(IdentifierToken);
     SINGLE_PARSE_ALLOW(EqualsToken);
     SINGLE_PARSE_ALLOW(ScreenTypeToken);
     SINGLE_PARSE_ALLOW(OpenParenToken);
-    string = SINGLE_PARSE_ALLOW(StringLiteralToken);
+    strBody = SINGLE_PARSE_ALLOW(StringLiteralToken);
     SINGLE_PARSE_ALLOW(CloseParenToken);
 
     ++token;
@@ -355,8 +382,8 @@ screen:
     switch (token->type) {
       case SemicolonToken:
         struct Expression expr = {
-          ScreenDefinitionExpression,
-          .screen = { identifier, string }
+          ScreenDefinitionExpression, idName,
+          .screen = { strBody }
         };
         if (!add_expr(exprs, &expr)) {
           return false;
@@ -393,17 +420,12 @@ static bool codegen(const struct ExpressionInfo *const exprs, const char *const 
 #define UTA_GEN_%s_H\n\
 \n\
 #include <stddef.h>\n\
-\n\
-extern const size_t %s_RoomCount;\n\
-extern const struct Room *const %s_Rooms[];\n\
-\n\
-#endif // UTA_GEN_%s_H\n", extensionName, extensionName, extensionName, extensionName, extensionName);
-
-  fclose(fh);
+\n", extensionName, extensionName, extensionName);
 
   FILE *const fc = fopen(sourcePath, "wb");
   if (nullptr == fc) {
     EMIT_ERROR("unable to open %s", sourcePath);
+    fclose(fh);
     return false;
   }
 
@@ -411,32 +433,51 @@ extern const struct Room *const %s_Rooms[];\n\
 #include <stddef.h>\n\
 \n\
 #include \"backend.h\"\n\
+#include \"coregame2.h\"\n\
 #include \"%s\"\n\n", headerPath);
 
   for (size_t i = 0; i < exprs->count; ++i) {
     const struct Expression *const expr = exprs->exprs + i;
     switch (expr->type) {
       case ActionDefintionExpression:
-      case ScreenDefinitionExpression:
+        fprintf(fh, "extern const struct Action %s_%.*s;\n\n",
+          extensionName,
+          (int)expr->idName->string.strLen, expr->idName->string.str
+        );
+        fprintf(fc, "const struct Action %s_%.*s = NEW_ACTION(%.*s, %.*s, %.*s);\n\n",
+          extensionName,
+          (int)expr->idName->string.strLen, expr->idName->string.str,
+          (int)expr->action.strTitle->string.strLen, expr->action.strTitle->string.str,
+          (int)expr->action.idVisiblityCheckerFunc->string.strLen, expr->action.idVisiblityCheckerFunc->string.str,
+          (int)expr->action.idTriggerHandlerFunc->string.strLen, expr->action.idTriggerHandlerFunc->string.str
+        );
         break;
       case RoomDefinitionExpression:
-        struct String room = { expr->room.identifier->string.str, expr->room.identifier->string.strLen };
+        struct String room = { expr->idName->string.str, expr->idName->string.strLen };
         if (!add_string(&rooms, &room)) {
-          fclose(fc);
           free(rooms.strings);
+          fclose(fc);
+          fclose(fh);
           return false;
         }
-        fprintf(fc, "const struct Room %s_%.*s = NEW_ROOM(%" PRIu64", %" PRIu64", %.*s);\n",
+        fprintf(fh, "extern const struct Room %s_%.*s;\n\n",
           extensionName,
-          (int)expr->room.identifier->string.strLen, expr->room.identifier->string.str,
-          expr->room.integer1->integer, expr->room.integer2->integer,
-          (int)expr->room.string->string.strLen, expr->room.string->string.str
+          (int)expr->idName->string.strLen, expr->idName->string.str
         );
+        fprintf(fc, "const struct Room %s_%.*s = NEW_ROOM(%" PRIu64", %" PRIu64", %.*s);\n\n",
+          extensionName,
+          (int)expr->idName->string.strLen, expr->idName->string.str,
+          expr->room.intX->integer, expr->room.intY->integer,
+          (int)expr->room.strBody->string.strLen, expr->room.strBody->string.str
+        );
+        break;
+      case ScreenDefinitionExpression:
+        EMIT_ERROR("Screen defintions are not currently supported");
         break;
     }
   }
 
-  fprintf(fc, "\nconst struct Room *const %s_Rooms[] = { ", extensionName);
+  fprintf(fc, "const struct Room *const %s_Rooms[] = { ", extensionName);
   for (size_t i = 0; i < rooms.count; ++i) {
     const struct String *const room = rooms.strings + i;
     if (i > 0) {
@@ -447,8 +488,15 @@ extern const struct Room *const %s_Rooms[];\n\
   fputs(" };\n", fc);
   fprintf(fc, "const size_t %s_RoomCount = ARR_COUNT(%s_Rooms);\n", extensionName, extensionName);
 
-  fclose(fc);
+  fprintf(fh, "\
+extern const size_t %s_RoomCount;\n\
+extern const struct Room *const %s_Rooms[];\n\
+\n\
+#endif // UTA_GEN_%s_H\n", extensionName, extensionName, extensionName);
+
   free(rooms.strings);
+  fclose(fc);
+  fclose(fh);
   return true;
 }
 
