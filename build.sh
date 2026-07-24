@@ -28,7 +28,8 @@ clang-22 -O3 -Wall -Wformat -Wformat=2 -Wconversion -Wimplicit-fallthrough \
 $UTA_C_FLAGS -pedantic \
 -std=c23 gen/dsl.gen.c -o bin/utatest2026-dsl
 
-./bin/utatest2026-dsl src/ext1.uta gen/ext1.h gen/ext1.c
+./bin/utatest2026-dsl src/coregame.uta gen/coregame.h gen/coregame.c Core
+./bin/utatest2026-dsl src/ext1.uta gen/ext1.h gen/ext1.c Ext1
 
 clang-22 -O3 -Wall -Wformat -Wformat=2 -Wconversion -Wimplicit-fallthrough \
 -Werror=format-security \
@@ -45,4 +46,4 @@ clang-22 -O3 -Wall -Wformat -Wformat=2 -Wconversion -Wimplicit-fallthrough \
 -fno-delete-null-pointer-checks -fno-strict-overflow -fno-strict-aliasing -ftrivial-auto-var-init=zero \
 -Werror=implicit -Werror=incompatible-pointer-types -Werror=int-conversion \
 $UTA_C_FLAGS -pedantic -I . -I src/ \
--std=c23 src/frontend.c src/backend.c src/coregame.c gen/ext1.c -o bin/utatest2026
+-std=c23 src/frontend.c src/backend.c src/coregame2.c gen/coregame.c gen/ext1.c -o bin/utatest2026

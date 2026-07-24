@@ -1,8 +1,9 @@
 #include <stdbool.h>  // for true, bool, false
+#include <stddef.h>   // for NULL
 #include <stdint.h>   // for uint8_t
 
 #include "backend.h"  // for GameInfo, backend_default_action_visibility_checker, backend_get_map_room, USE_ACTION, NEW_EXT_ACTION, Screen, Room, ARR_COUNT, Action, NEW_ACTION, NEW_ROOM, NEW_SCREEN, NEW_VAR_SCREEN
-#include "coregame.h"
+#include "coregame2.h"
 
 static bool core_go_direction_visibility_checker(const struct GameInfo *info, const struct Action *action) {
   const struct GoDirectionAction *this = (const struct GoDirectionAction *)action;
@@ -108,11 +109,6 @@ static const struct Screen CoreRoomScreen = NEW_VAR_SCREEN(core_room_screen_body
                                                            USE_ACTION(CoreGoNorthAction), USE_ACTION(CoreGoEastAction), USE_ACTION(CoreGoSouthAction), USE_ACTION(CoreGoWestAction),
                                                            USE_ACTION(CoreGotoMainMenuAction)
 );
-
-static const struct Room CoreFirstRoom = NEW_ROOM(0, 0, "First Room!");
-
-const struct Room *const CoreRooms[] = { &CoreFirstRoom };
-const size_t CoreRoomCount = ARR_COUNT(CoreRooms);
 
 const uint8_t MapSizeX = 3;
 const uint8_t MapSizeY = 2;

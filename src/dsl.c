@@ -1,7 +1,7 @@
 #include <errno.h>     // for ERANGE, errno
 #include <fcntl.h>     // for O_RDONLY, open
 #include <inttypes.h>  // for uint64_t, PRIu64
-#include <stdio.h>     // for stderr, fputs, size_t, fprintf, fclose, FILE, fopen, printf
+#include <stdio.h>     // for fprintf, stderr, size_t, fclose, FILE, fopen, fputs, printf
 #include <stdlib.h>    // for EXIT_FAILURE, free, realloc, EXIT_SUCCESS, strtoull
 #include <string.h>    // for memcpy, strstr, strcmp
 #include <sys/mman.h>  // for MAP_FAILED, MAP_PRIVATE, PROT_READ, mmap, munmap
@@ -9,32 +9,36 @@
 #include <uchar.h>     // for char8_t
 #include <unistd.h>    // for close
 
-#define DYN_ARRAY(typeName, baseTypeName, varName) struct typeName {                                  \
-  baseTypeName *varName ## s;                                                                         \
-  size_t count;                                                                                       \
-  size_t length;                                                                                      \
-};                                                                                                    \
-                                                                                                      \
-static bool add_ ## varName(struct typeName *const varName ## s, const baseTypeName *const varName) { \
-if (varName ## s->count + 1 >= varName ## s->length) {                                                \
-    size_t newLen = 2 * varName ## s->count;                                                          \
-    if (0 == newLen) {                                                                                \
-      newLen = 8;                                                                                     \
-    }                                                                                                 \
-                                                                                                      \
-    baseTypeName *newArr = realloc(varName ## s->varName ## s, newLen * sizeof *varName);             \
-    if (nullptr == newArr) {                                                                          \
-      fputs("Error: An unrecoverable error occurred\n", stderr);                                      \
-      return false;                                                                                   \
-    }                                                                                                 \
-                                                                                                      \
-    varName ## s->length = newLen;                                                                    \
-    varName ## s->varName ## s = newArr;                                                              \
-  }                                                                                                   \
-                                                                                                      \
-  memcpy(varName ## s->varName ## s + varName ## s->count, varName, sizeof *varName);                 \
-  ++varName ## s->count;                                                                              \
-  return true;                                                                                        \
+static const char *programName;
+#define EMIT_ERROR(error, ...) \
+  fprintf(stderr, "%s: \u001b[0;31merror\u001b[0m: " error "\n", programName __VA_OPT__(,) __VA_ARGS__)
+
+#define DYN_ARRAY(typeName, baseTypeName, varName) struct typeName {                                                \
+  baseTypeName *varName ## s;                                                                                       \
+  size_t count;                                                                                                     \
+  size_t length;                                                                                                    \
+};                                                                                                                  \
+                                                                                                                    \
+[[nodiscard]] static bool add_ ## varName(struct typeName *const varName ## s, const baseTypeName *const varName) { \
+if (varName ## s->count + 1 >= varName ## s->length) {                                                              \
+    size_t newLen = 2 * varName ## s->count;                                                                        \
+    if (0 == newLen) {                                                                                              \
+      newLen = 8;                                                                                                   \
+    }                                                                                                               \
+                                                                                                                    \
+    baseTypeName *newArr = realloc(varName ## s->varName ## s, newLen * sizeof *varName ## s->varName ## s);        \
+    if (nullptr == newArr) {                                                                                        \
+      EMIT_ERROR("An unrecoverable error occurred");                                                                \
+      return false;                                                                                                 \
+    }                                                                                                               \
+                                                                                                                    \
+    varName ## s->length = newLen;                                                                                  \
+    varName ## s->varName ## s = newArr;                                                                            \
+  }                                                                                                                 \
+                                                                                                                    \
+  memcpy(varName ## s->varName ## s + varName ## s->count, varName, sizeof *varName);                               \
+  ++varName ## s->count;                                                                                            \
+  return true;                                                                                                      \
 }
 
 
@@ -93,11 +97,11 @@ struct Expression {
 DYN_ARRAY(ExpressionInfo, struct Expression, expr)
 
 
-static bool lex_int(const char8_t *str, const char8_t *const expectedEnd, uint64_t *const value) {
+[[nodiscard]] static bool lex_int(const char8_t *str, const char8_t *const expectedEnd, uint64_t *const value) {
   char *end = nullptr;
   *value = strtoull((const char *)str, &end, 10);
   if (ERANGE == errno || (0 == *value && str[0] != '0')) {
-    fputs("Error: An unexpected character was encountered in integer literal\n", stderr);
+    EMIT_ERROR("An unexpected character was encountered in integer literal");
     return false;
   }
 
@@ -105,7 +109,7 @@ static bool lex_int(const char8_t *str, const char8_t *const expectedEnd, uint64
   return str == expectedEnd;
 }
 
-static bool lex(const char8_t *str, struct TokenInfo *const tokens) {
+[[nodiscard]] static bool lex(const char8_t *str, struct TokenInfo *const tokens) {
   uint64_t intValue;
   const char8_t *marker = str;
   while (true) {
@@ -120,7 +124,7 @@ static bool lex(const char8_t *str, struct TokenInfo *const tokens) {
         end = "\x00";
 
         *   {
-          fputs("Error: An unxpected character was encountered\n", stderr);
+          EMIT_ERROR("An unxpected character was encountered");
           return false;
         }
         end {
@@ -143,7 +147,9 @@ static bool lex(const char8_t *str, struct TokenInfo *const tokens) {
             IntegerLiteralToken,
             .integer = intValue
           };
-          add_token(tokens, &token);
+          if (!add_token(tokens, &token)) {
+            return false;
+          }
           continue;
         }
 
@@ -157,51 +163,69 @@ static bool lex(const char8_t *str, struct TokenInfo *const tokens) {
               (size_t)(str - previous)
             }
           };
-          add_token(tokens, &token);
+          if (!add_token(tokens, &token)) {
+            return false;
+          }
           continue;
         }
 
         // Types
         "Action" {
           struct Token token = { ActionTypeToken };
-          add_token(tokens, &token);
+          if (!add_token(tokens, &token)) {
+            return false;
+          }
           continue;
         }
         "Room"   {
           struct Token token = { RoomTypeToken };
-          add_token(tokens, &token);
+          if (!add_token(tokens, &token)) {
+            return false;
+          }
           continue;
         }
         "Screen" {
           struct Token token = { ScreenTypeToken };
-          add_token(tokens, &token);
+          if (!add_token(tokens, &token)) {
+            return false;
+          }
           continue;
         }
 
         // Symbols
         "(" {
           struct Token token = { OpenParenToken };
-          add_token(tokens, &token);
+          if (!add_token(tokens, &token)) {
+            return false;
+          }
           continue;
         }
         ")" {
           struct Token token = { CloseParenToken };
-          add_token(tokens, &token);
+          if (!add_token(tokens, &token)) {
+            return false;
+          }
           continue;
         }
         ";" {
           struct Token token = { SemicolonToken };
-          add_token(tokens, &token);
+          if (!add_token(tokens, &token)) {
+            return false;
+          }
           continue;
         }
         "=" {
           struct Token token = { EqualsToken };
-          add_token(tokens, &token);
+          if (!add_token(tokens, &token)) {
+            return false;
+          }
           continue;
         }
         "," {
           struct Token token = { CommaToken };
-          add_token(tokens, &token);
+          if (!add_token(tokens, &token)) {
+            return false;
+          }
           continue;
         }
 
@@ -212,7 +236,9 @@ static bool lex(const char8_t *str, struct TokenInfo *const tokens) {
             IdentifierToken,
             .string = { previous, (size_t)(str - previous) }
           };
-          add_token(tokens, &token);
+          if (!add_token(tokens, &token)) {
+            return false;
+          }
           continue;
         }
 
@@ -222,8 +248,8 @@ static bool lex(const char8_t *str, struct TokenInfo *const tokens) {
 }
 
 
-#define ADDITIONAL_TOKENS_ERROR() fputs("Error: Additional tokens were expected\n", stderr)
-#define UNEXPECTED_TOKEN_ERROR()  fputs("Error: An unxpected token was encountered\n", stderr)
+#define ADDITIONAL_TOKENS_ERROR() EMIT_ERROR("Additional token(s) were expected")
+#define UNEXPECTED_TOKEN_ERROR()  EMIT_ERROR("An unxpected token was encountered")
 #define SINGLE_PARSE_ALLOW(tokenType) \
   ++token;                            \
   if (token > end) {                  \
@@ -240,7 +266,7 @@ static bool lex(const char8_t *str, struct TokenInfo *const tokens) {
                                       \
   token
 
-static bool parse(const struct TokenInfo *const tokens, struct ExpressionInfo *const exprs) {
+[[nodiscard]] static bool parse(const struct TokenInfo *const tokens, struct ExpressionInfo *const exprs) {
   const struct Token *token = tokens->tokens;
   const struct Token *const end = token + tokens->count;
   for (; token < end; ++token) {
@@ -272,7 +298,9 @@ action:
           ActionDefintionExpression,
           .action = { identifier, string }
         };
-        add_expr(exprs, &expr);
+        if (!add_expr(exprs, &expr)) {
+          return false;
+        }
         continue;
       default:
         UNEXPECTED_TOKEN_ERROR();
@@ -302,7 +330,9 @@ room:
           RoomDefinitionExpression,
           .room = { identifier, integer1, integer2, string }
         };
-        add_expr(exprs, &expr);
+        if (!add_expr(exprs, &expr)) {
+          return false;
+        }
         continue;
       default:
         UNEXPECTED_TOKEN_ERROR();
@@ -328,7 +358,9 @@ screen:
           ScreenDefinitionExpression,
           .screen = { identifier, string }
         };
-        add_expr(exprs, &expr);
+        if (!add_expr(exprs, &expr)) {
+          return false;
+        }
         continue;
       default:
         UNEXPECTED_TOKEN_ERROR();
@@ -347,31 +379,31 @@ struct String {
 
 DYN_ARRAY(StringInfo, struct String, string)
 
-static bool codegen(const struct ExpressionInfo *const exprs, const char *const headerPath, const char *const sourcePath) {
+static bool codegen(const struct ExpressionInfo *const exprs, const char *const headerPath, const char *const sourcePath, const char *const extensionName) {
   struct StringInfo rooms = {};
 
   FILE *const fh = fopen(headerPath, "wb");
   if (nullptr == fh) {
-    fprintf(stderr, "Error: unable to open %s\n", headerPath);
+    EMIT_ERROR("unable to open %s", headerPath);
     return false;
   }
 
-  fputs("\
-#ifndef UTA_EXT1_H\n\
-#define UTA_EXT1_H\n\
+  fprintf(fh, "\
+#ifndef UTA_GEN_%s_H\n\
+#define UTA_GEN_%s_H\n\
 \n\
 #include <stddef.h>\n\
 \n\
-extern const size_t Ext1_RoomCount;\n\
-extern const struct Room *const Ext1_Rooms[];\n\
+extern const size_t %s_RoomCount;\n\
+extern const struct Room *const %s_Rooms[];\n\
 \n\
-#endif // UTA_EXT1_H\n", fh);
+#endif // UTA_GEN_%s_H\n", extensionName, extensionName, extensionName, extensionName, extensionName);
 
   fclose(fh);
 
   FILE *const fc = fopen(sourcePath, "wb");
   if (nullptr == fc) {
-    fprintf(stderr, "Error: unable to open %s\n", sourcePath);
+    EMIT_ERROR("unable to open %s", sourcePath);
     return false;
   }
 
@@ -388,31 +420,32 @@ extern const struct Room *const Ext1_Rooms[];\n\
       case ScreenDefinitionExpression:
         break;
       case RoomDefinitionExpression:
-        struct String room = { expr->room.identifier->string.str,  expr->room.identifier->string.strLen };
+        struct String room = { expr->room.identifier->string.str, expr->room.identifier->string.strLen };
         if (!add_string(&rooms, &room)) {
           fclose(fc);
           free(rooms.strings);
           return false;
         }
-        fprintf(fc, "const struct Room Ext1_%.*s = NEW_ROOM(%" PRIu64", %" PRIu64", %.*s);\n",
-          expr->room.identifier->string.strLen, expr->room.identifier->string.str,
+        fprintf(fc, "const struct Room %s_%.*s = NEW_ROOM(%" PRIu64", %" PRIu64", %.*s);\n",
+          extensionName,
+          (int)expr->room.identifier->string.strLen, expr->room.identifier->string.str,
           expr->room.integer1->integer, expr->room.integer2->integer,
-          expr->room.string->string.strLen, expr->room.string->string.str
+          (int)expr->room.string->string.strLen, expr->room.string->string.str
         );
         break;
     }
   }
 
-  fprintf(fc, "\nconst struct Room *const Ext1_Rooms[] = { ");
+  fprintf(fc, "\nconst struct Room *const %s_Rooms[] = { ", extensionName);
   for (size_t i = 0; i < rooms.count; ++i) {
     const struct String *const room = rooms.strings + i;
     if (i > 0) {
       fputs(", ", fc);
     }
-    fprintf(fc, "&Ext1_%.*s", room->strLen, room->str);
+    fprintf(fc, "&%s_%.*s", extensionName, (int)room->strLen, room->str);
   }
   fputs(" };\n", fc);
-  fputs("const size_t Ext1_RoomCount = ARR_COUNT(Ext1_Rooms);\n", fc);
+  fprintf(fc, "const size_t %s_RoomCount = ARR_COUNT(%s_Rooms);\n", extensionName, extensionName);
 
   fclose(fc);
   free(rooms.strings);
@@ -420,24 +453,26 @@ extern const struct Room *const Ext1_Rooms[];\n\
 }
 
 
-#define USAGE "Usage: %s input output_header output_source\n"
+#define USAGE "Usage: %s input output_header output_source extension_name\n"
 #define PATH_CHECK(name, idx, expectedExt, error)                             \
   const char *const name = argv[idx];                                         \
   ext = strstr(name, expectedExt);                                            \
   if (nullptr == ext || name == ext || '\0' != ext[sizeof expectedExt - 1]) { \
     fprintf(stderr, USAGE, argv[0]);                                          \
-    fputs("Error: " error "\n", stderr);                                      \
+    EMIT_ERROR(error);                                                        \
     return EXIT_FAILURE;                                                      \
   }
 
 int main(const int argc, const char *const argv[argc]) {
+  programName = argv[0];
+
   bool status = true;
   if (1 == argc || (2 == argc && 0 == strcmp(argv[1], "-h"))) {
     printf(USAGE, argv[0]);
     return EXIT_SUCCESS;
   }
 
-  if (4 != argc) {
+  if (5 != argc) {
     fprintf(stderr, USAGE, argv[0]);
     return EXIT_FAILURE;
   }
@@ -447,20 +482,25 @@ int main(const int argc, const char *const argv[argc]) {
   PATH_CHECK(outputHPath, 2,   ".h", "output header must be a c header file");
   PATH_CHECK(outputCPath, 3,   ".c", "output source must be a c source file");
 
+  const char *const extensionName = argv[4];
+
   int fd = open(inputPath, O_RDONLY);
   if (-1 == fd) {
-    fprintf(stderr, "Error: unable to open %s\n", inputPath);
+    EMIT_ERROR("unable to open %s", inputPath);
     return EXIT_FAILURE;
   }
 
   struct stat st;
   if (-1 == fstat(fd, &st)) {
-    fprintf(stderr, "Error: unable to process %s\n", inputPath);
+    EMIT_ERROR("unable to process %s", inputPath);
     return EXIT_FAILURE;
   }
 
-  void *file =  mmap(nullptr, (size_t)st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+  void *file = mmap(nullptr, (size_t)st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
   status &= MAP_FAILED != file;
+  if (!status) {
+    EMIT_ERROR("unable to read from %s", inputPath);
+  }
 
   struct TokenInfo tokens = {};
   status = status && lex(file, &tokens);
@@ -468,7 +508,7 @@ int main(const int argc, const char *const argv[argc]) {
   struct ExpressionInfo exprs = {};
   status = status && parse(&tokens, &exprs);
 
-  status = status && codegen(&exprs, outputHPath, outputCPath);
+  status = status && codegen(&exprs, outputHPath, outputCPath, extensionName);
 
   free(exprs.exprs);
   free(tokens.tokens);

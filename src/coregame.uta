@@ -1,0 +1,1 @@
+Room FirstRoom = Room(0, 0, "First Room!");

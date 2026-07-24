@@ -1,7 +1,8 @@
-#include <stdlib.h>    // for calloc, free
+#include <stdlib.h>        // for calloc, free
 
 #include "backend.h"
-#include "coregame.h"  // for CoreMainMenuScreen, CoreRoomCount, CoreRooms, MapSizeX, MapSizeY
+#include "coregame2.h"     // for CoreMainMenuScreen, MapSizeX, MapSizeY
+#include "gen/coregame.h"  // for Core_RoomCount, Core_Rooms
 
 const char *backend_default_screen_body_generator(const struct GameInfo *info) {
   if (NULL == info || NULL == info->screen) {
@@ -55,7 +56,7 @@ bool backend_setup(struct GameInfo *info) {
   info->x = info->y = 0;
   info->quit = false;
 
-  return backend_register_extension(info, CoreRoomCount, CoreRooms);
+  return backend_register_extension(info, Core_RoomCount, Core_Rooms);
 }
 
 bool backend_input(struct GameInfo *info, uint8_t actionId) {
