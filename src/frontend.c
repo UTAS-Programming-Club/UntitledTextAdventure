@@ -3,7 +3,7 @@
 #include <stdlib.h>    // for EXIT_FAILURE, EXIT_SUCCESS
 
 #include "backend.h"   // for GameInfo, Screen, backend_cleanup, Action, backend_input, backend_register_extension, backend_setup
-#include "gen/ext1.h"  // for Ext1RoomCount, Ext1Rooms
+#include "gen/ext1.h"  // for Ext1_RoomCount, Ext1_Rooms
 
 int main(void) {
   int result = EXIT_SUCCESS;

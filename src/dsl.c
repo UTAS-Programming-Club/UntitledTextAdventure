@@ -1,14 +1,13 @@
 #include <errno.h>     // for ERANGE, errno
 #include <fcntl.h>     // for O_RDONLY, open
 #include <inttypes.h>  // for uint64_t, PRIu64
-#include <stdio.h>     // for size_t, fputs, fclose, fprintf, FILE, fopen
-#include <stdlib.h>    // for EXIT_FAILURE, realloc, free, EXIT_SUCCESS, strtoull
-#include <string.h>    // for memcpy
+#include <stdio.h>     // for stderr, fputs, size_t, fprintf, fclose, FILE, fopen, printf
+#include <stdlib.h>    // for EXIT_FAILURE, free, realloc, EXIT_SUCCESS, strtoull
+#include <string.h>    // for memcpy, strstr, strcmp
 #include <sys/mman.h>  // for MAP_FAILED, MAP_PRIVATE, PROT_READ, mmap, munmap
 #include <sys/stat.h>  // for stat, fstat
 #include <uchar.h>     // for char8_t
 #include <unistd.h>    // for close
-
 
 #define DYN_ARRAY(typeName, baseTypeName, varName) struct typeName {                                  \
   baseTypeName *varName ## s;                                                                         \
