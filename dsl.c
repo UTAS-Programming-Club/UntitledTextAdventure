@@ -120,14 +120,12 @@ static bool lex(const char8_t *str, struct TokenInfo *tokens) {
 
         *   { return false; }
         end {
-          // fprintf(stderr, "\n");
           return true;
         }
 
         // White space
         wsp = [ \t\v\n\r]+;
         wsp {
-          // fprintf(stderr, "White space: '%.*s'\n", (int)(str - previous), previous);
           continue;
         }
 
@@ -140,7 +138,6 @@ static bool lex(const char8_t *str, struct TokenInfo *tokens) {
             .integer = intValue
           };
           add_token(tokens, &token);
-          // fprintf(stderr, "Integer literal: '" PRIu64 "'\n", token.integer);
           continue;
         }
 
@@ -155,7 +152,6 @@ static bool lex(const char8_t *str, struct TokenInfo *tokens) {
             }
           };
           add_token(tokens, &token);
-          // fprintf(stderr, "String literal: '%.*s'\n", token.string.strLen, token.string.str);
           continue;
         }
 
@@ -163,19 +159,16 @@ static bool lex(const char8_t *str, struct TokenInfo *tokens) {
         "Action" {
           struct Token token = { ActionTypeToken };
           add_token(tokens, &token);
-          // fprintf(stderr, "Action type: 'Action'\n");
           continue;
         }
         "Room"   {
           struct Token token = { RoomTypeToken };
           add_token(tokens, &token);
-          // fprintf(stderr, "Room type: 'Room'\n");
           continue;
         }
         "Screen" {
           struct Token token = { ScreenTypeToken };
           add_token(tokens, &token);
-          // fprintf(stderr, "Screen type: 'Screen'\n");
           continue;
         }
 
@@ -183,31 +176,26 @@ static bool lex(const char8_t *str, struct TokenInfo *tokens) {
         "(" {
           struct Token token = { OpenParenToken };
           add_token(tokens, &token);
-          //fprintf(stderr, "Open paren: '('\n");
           continue;
         }
         ")" {
           struct Token token = { CloseParenToken };
           add_token(tokens, &token);
-          //fprintf(stderr, "Close paren: ')'\n");
           continue;
         }
         ";" {
           struct Token token = { SemicolonToken };
           add_token(tokens, &token);
-          //fprintf(stderr, "Semicolon: ';'\n");
           continue;
         }
         "=" {
           struct Token token = { EqualsToken };
           add_token(tokens, &token);
-          //fprintf(stderr, "Equals: '='\n");
           continue;
         }
         "," {
           struct Token token = { CommaToken };
           add_token(tokens, &token);
-          //fprintf(stderr, "Comma: ','\n");
           continue;
         }
 
@@ -219,7 +207,6 @@ static bool lex(const char8_t *str, struct TokenInfo *tokens) {
             .string = { previous, (size_t)(str - previous) }
           };
           add_token(tokens, &token);
-          // fprintf(stderr, "Identifier: '%.*s'\n", token.string.strLen, token.string.str);
           continue;
         }
 
@@ -380,6 +367,7 @@ extern const struct Room *const Ext1_Rooms[];\n\
         struct String room = { expr->room.identifier->string.str,  expr->room.identifier->string.strLen };
         if (!add_string(&rooms, &room)) {
           fclose(fc);
+          free(rooms.strings);
           return false;
         }
         fprintf(fc, "const struct Room Ext1_%.*s = NEW_ROOM(%" PRIu64", %" PRIu64", %.*s);\n",
@@ -403,6 +391,7 @@ extern const struct Room *const Ext1_Rooms[];\n\
   fputs("const size_t Ext1_RoomCount = ARR_COUNT(Ext1_Rooms);\n", fc);
 
   fclose(fc);
+  free(rooms.strings);
   return true;
 }
 
