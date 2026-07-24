@@ -10,31 +10,32 @@
 #include <unistd.h>    // for close
 
 
-#define DYN_ARRAY(typeName, baseTypeName, varName) struct typeName {                      \
-  baseTypeName *varName ## s;                                                             \
-  size_t count;                                                                           \
-  size_t length;                                                                          \
-};                                                                                        \
-                                                                                          \
-static bool add_ ## varName(struct typeName *varName ## s, const baseTypeName *varName) { \
-if (varName ## s->count + 1 >= varName ## s->length) {                                    \
-    size_t newLen = 2 * varName ## s->count;                                              \
-    if (0 == newLen) {                                                                    \
-      newLen = 8;                                                                         \
-    }                                                                                     \
-                                                                                          \
-    baseTypeName *newArr = realloc(varName ## s->varName ## s, newLen * sizeof *varName); \
-    if (nullptr == newArr) {                                                              \
-      return false;                                                                       \
-    }                                                                                     \
-                                                                                          \
-    varName ## s->length = newLen;                                                        \
-    varName ## s->varName ## s = newArr;                                                  \
-  }                                                                                       \
-                                                                                          \
-  memcpy(varName ## s->varName ## s + varName ## s->count, varName, sizeof *varName);     \
-  ++varName ## s->count;                                                                  \
-  return true;                                                                            \
+#define DYN_ARRAY(typeName, baseTypeName, varName) struct typeName {                                  \
+  baseTypeName *varName ## s;                                                                         \
+  size_t count;                                                                                       \
+  size_t length;                                                                                      \
+};                                                                                                    \
+                                                                                                      \
+static bool add_ ## varName(struct typeName *const varName ## s, const baseTypeName *const varName) { \
+if (varName ## s->count + 1 >= varName ## s->length) {                                                \
+    size_t newLen = 2 * varName ## s->count;                                                          \
+    if (0 == newLen) {                                                                                \
+      newLen = 8;                                                                                     \
+    }                                                                                                 \
+                                                                                                      \
+    baseTypeName *newArr = realloc(varName ## s->varName ## s, newLen * sizeof *varName);             \
+    if (nullptr == newArr) {                                                                          \
+      fputs("Error: An unrecoverable error occurred\n", stderr);                                      \
+      return false;                                                                                   \
+    }                                                                                                 \
+                                                                                                      \
+    varName ## s->length = newLen;                                                                    \
+    varName ## s->varName ## s = newArr;                                                              \
+  }                                                                                                   \
+                                                                                                      \
+  memcpy(varName ## s->varName ## s + varName ## s->count, varName, sizeof *varName);                 \
+  ++varName ## s->count;                                                                              \
+  return true;                                                                                        \
 }
 
 
@@ -93,10 +94,11 @@ struct Expression {
 DYN_ARRAY(ExpressionInfo, struct Expression, expr)
 
 
-static bool lex_int(const char8_t *str, const char8_t *expectedEnd, uint64_t *value) {
+static bool lex_int(const char8_t *str, const char8_t *const expectedEnd, uint64_t *const value) {
   char *end = nullptr;
   *value = strtoull((const char *)str, &end, 10);
   if (ERANGE == errno || (0 == *value && str[0] != '0')) {
+    fputs("Error: An unexpected character was encountered in integer literal\n", stderr);
     return false;
   }
 
@@ -104,7 +106,7 @@ static bool lex_int(const char8_t *str, const char8_t *expectedEnd, uint64_t *va
   return str == expectedEnd;
 }
 
-static bool lex(const char8_t *str, struct TokenInfo *tokens) {
+static bool lex(const char8_t *str, struct TokenInfo *const tokens) {
   uint64_t intValue;
   const char8_t *marker = str;
   while (true) {
@@ -118,7 +120,10 @@ static bool lex(const char8_t *str, struct TokenInfo *tokens) {
 
         end = "\x00";
 
-        *   { return false; }
+        *   {
+          fputs("Error: An unxpected character was encountered\n", stderr);
+          return false;
+        }
         end {
           return true;
         }
@@ -132,7 +137,9 @@ static bool lex(const char8_t *str, struct TokenInfo *tokens) {
         // Integer literal
         int = [0-9]*;
         int {
-          if (!lex_int(previous, str, &intValue)) return false;
+          if (!lex_int(previous, str, &intValue)) {
+            return false;
+          }
           struct Token token = {
             IntegerLiteralToken,
             .integer = intValue
@@ -216,28 +223,35 @@ static bool lex(const char8_t *str, struct TokenInfo *tokens) {
 }
 
 
+#define ADDITIONAL_TOKENS_ERROR() fputs("Error: Additional tokens were expected\n", stderr)
+#define UNEXPECTED_TOKEN_ERROR()  fputs("Error: An unxpected token was encountered\n", stderr)
 #define SINGLE_PARSE_ALLOW(tokenType) \
   ++token;                            \
   if (token > end) {                  \
+    ADDITIONAL_TOKENS_ERROR();        \
     return false;                     \
   }                                   \
                                       \
   switch (token->type) {              \
     case tokenType: break;            \
-    default: return false;            \
+    default:                          \
+      UNEXPECTED_TOKEN_ERROR();       \
+      return false;                   \
   }                                   \
                                       \
   token
 
-static bool parse(const struct TokenInfo *tokens, struct ExpressionInfo *exprs) {
+static bool parse(const struct TokenInfo *const tokens, struct ExpressionInfo *const exprs) {
   const struct Token *token = tokens->tokens;
-  const struct Token *end = token + tokens->count;
+  const struct Token *const end = token + tokens->count;
   for (; token < end; ++token) {
     switch (token->type) {
       case ActionTypeToken: goto action;
       case RoomTypeToken: goto room;
       case ScreenTypeToken: goto screen;
-      default: return false;
+      default:
+        UNEXPECTED_TOKEN_ERROR();
+        return false;
     }
 
 action:
@@ -250,6 +264,7 @@ action:
 
     ++token;
     if (token > end) {
+      ADDITIONAL_TOKENS_ERROR();
       return false;
     }
     switch (token->type) {
@@ -260,7 +275,9 @@ action:
         };
         add_expr(exprs, &expr);
         continue;
-      default: return false;
+      default:
+        UNEXPECTED_TOKEN_ERROR();
+        return false;
     }
 
 room:
@@ -277,6 +294,7 @@ room:
 
     ++token;
     if (token > end) {
+      ADDITIONAL_TOKENS_ERROR();
       return false;
     }
     switch (token->type) {
@@ -287,7 +305,9 @@ room:
         };
         add_expr(exprs, &expr);
         continue;
-      default: return false;
+      default:
+        UNEXPECTED_TOKEN_ERROR();
+        return false;
     }
 
 screen:
@@ -300,6 +320,7 @@ screen:
 
     ++token;
     if (token > end) {
+      ADDITIONAL_TOKENS_ERROR();
       return false;
     }
     switch (token->type) {
@@ -310,7 +331,9 @@ screen:
         };
         add_expr(exprs, &expr);
         continue;
-      default: return false;
+      default:
+        UNEXPECTED_TOKEN_ERROR();
+        return false;
     }
   }
 
@@ -325,11 +348,12 @@ struct String {
 
 DYN_ARRAY(StringInfo, struct String, string)
 
-static bool codegen(const struct ExpressionInfo *exprs) {
+static bool codegen(const struct ExpressionInfo *const exprs, const char *const headerPath, const char *const sourcePath) {
   struct StringInfo rooms = {};
 
-  FILE *fh = fopen("gen/ext1.h", "wb");
+  FILE *const fh = fopen(headerPath, "wb");
   if (nullptr == fh) {
+    fprintf(stderr, "Error: unable to open %s\n", headerPath);
     return false;
   }
 
@@ -346,19 +370,20 @@ extern const struct Room *const Ext1_Rooms[];\n\
 
   fclose(fh);
 
-  FILE *fc = fopen("gen/ext1.c", "wb");
+  FILE *const fc = fopen(sourcePath, "wb");
   if (nullptr == fc) {
+    fprintf(stderr, "Error: unable to open %s\n", sourcePath);
     return false;
   }
 
-  fputs("\
+  fprintf(fc, "\
 #include <stddef.h>\n\
 \n\
-#include \"../backend.h\"\n\
-#include \"ext1.h\"\n\n", fc);
+#include \"backend.h\"\n\
+#include \"%s\"\n\n", headerPath);
 
   for (size_t i = 0; i < exprs->count; ++i) {
-    const struct Expression *expr = exprs->exprs + i;
+    const struct Expression *const expr = exprs->exprs + i;
     switch (expr->type) {
       case ActionDefintionExpression:
       case ScreenDefinitionExpression:
@@ -381,7 +406,7 @@ extern const struct Room *const Ext1_Rooms[];\n\
 
   fprintf(fc, "\nconst struct Room *const Ext1_Rooms[] = { ");
   for (size_t i = 0; i < rooms.count; ++i) {
-    const struct String *room = rooms.strings + i;
+    const struct String *const room = rooms.strings + i;
     if (i > 0) {
       fputs(", ", fc);
     }
@@ -396,16 +421,42 @@ extern const struct Room *const Ext1_Rooms[];\n\
 }
 
 
-int main() {
+#define USAGE "Usage: %s input output_header output_source\n"
+#define PATH_CHECK(name, idx, expectedExt, error)                             \
+  const char *const name = argv[idx];                                         \
+  ext = strstr(name, expectedExt);                                            \
+  if (nullptr == ext || name == ext || '\0' != ext[sizeof expectedExt - 1]) { \
+    fprintf(stderr, USAGE, argv[0]);                                          \
+    fputs("Error: " error "\n", stderr);                                      \
+    return EXIT_FAILURE;                                                      \
+  }
+
+int main(const int argc, const char *const argv[argc]) {
   bool status = true;
-  const char path[] = "ext1.uta";
-  int fd = open(path, O_RDONLY);
+  if (1 == argc || (2 == argc && 0 == strcmp(argv[1], "-h"))) {
+    printf(USAGE, argv[0]);
+    return EXIT_SUCCESS;
+  }
+
+  if (4 != argc) {
+    fprintf(stderr, USAGE, argv[0]);
+    return EXIT_FAILURE;
+  }
+
+  const char *ext;
+  PATH_CHECK(inputPath,   1, ".uta", "input must be a uta source file");
+  PATH_CHECK(outputHPath, 2,   ".h", "output header must be a c header file");
+  PATH_CHECK(outputCPath, 3,   ".c", "output source must be a c source file");
+
+  int fd = open(inputPath, O_RDONLY);
   if (-1 == fd) {
+    fprintf(stderr, "Error: unable to open %s\n", inputPath);
     return EXIT_FAILURE;
   }
 
   struct stat st;
   if (-1 == fstat(fd, &st)) {
+    fprintf(stderr, "Error: unable to process %s\n", inputPath);
     return EXIT_FAILURE;
   }
 
@@ -418,7 +469,7 @@ int main() {
   struct ExpressionInfo exprs = {};
   status = status && parse(&tokens, &exprs);
 
-  status = status && codegen(&exprs);
+  status = status && codegen(&exprs, outputHPath, outputCPath);
 
   free(exprs.exprs);
   free(tokens.tokens);
