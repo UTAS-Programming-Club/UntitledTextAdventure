@@ -7,9 +7,9 @@ Untitled text adventure game\n
 ----------------------------\n
 By the UTAS Programming Club\n
 \n
-Currently unimplemented :(",
-  { CoreStartAction, Core_QuitAction }
-);
+Currently unimplemented :(", {
+  CoreStartAction, Core_QuitAction
+});
 
 Screen RoomScreen = Screen(core_room_screen_body_generator, {
                            CoreGoNorthAction, CoreGoEastAction, CoreGoSouthAction, CoreGoWestAction,

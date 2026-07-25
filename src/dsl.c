@@ -15,6 +15,17 @@ static const char *inputPath;
   fprintf(stderr, "%s: \u001b[0;31merror\u001b[0m: " error "\n", programName __VA_OPT__(,) __VA_ARGS__)
 #define EMIT_SRC_ERROR(error, ...) \
   fprintf(stderr, "%s: \u001b[0;31merror\u001b[0m: " error "\n", inputPath __VA_OPT__(,) __VA_ARGS__)
+#define EMIT_PARSE_ERROR(token, error, ...) {                                       \
+  fprintf(stderr, "%s:%w16u:%w16u: \u001b[0;31merror\u001b[0m: " error "\n",        \
+    inputPath, token->lineNum + 1, token->colNum + 1 __VA_OPT__(,) __VA_ARGS__      \
+  );                                                                                \
+  const char *str = (const char *)token->line;                                      \
+  const char *end = strchr(str, '\n');                                              \
+  const int strLen = nullptr == end ? (int)strlen(str) : (int)(end - str);          \
+  fprintf(stderr, " %4zu | %.*s\n", token->lineNum + 1, strLen, token->line);       \
+  fprintf(stderr, "      |%*c\u001b[0;32m^\u001b[0;31m\n", token->colNum + 1, ' '); \
+}
+
 
 #define DYN_ARRAY(typeName, baseTypeName, varName) struct typeName {                                                \
   baseTypeName *varName ## s;                                                                                       \
@@ -72,8 +83,11 @@ enum TokenType {
   IdentifierToken
 };
 
+#define NEW_TOKEN(type, ...) {type, lineNum, (uint16_t)(previous - line), line, __VA_ARGS__}
 struct Token {
   enum TokenType type;
+  uint16_t lineNum, colNum;
+  const char8_t *const line;
   union {
     uint64_t integer;     // IntegerLiteralToken
     struct String string; // StringLiteralToken, IdentifierToken
@@ -146,6 +160,10 @@ DYN_ARRAY(ExpressionInfo, struct Expression, expr)
 [[nodiscard]] static bool lex(const char8_t *restrict str, struct TokenInfo *const restrict tokens) {
   uint64_t intValue;
   const char8_t *marker = str;
+
+  const char8_t *line = str;
+  uint16_t lineNum = 0;
+
   while (true) {
     const char8_t *previous = str;
     /*!re2c
@@ -166,8 +184,13 @@ DYN_ARRAY(ExpressionInfo, struct Expression, expr)
         }
 
         // White space
-        wsp = [ \t\v\n\r]+;
-        wsp {
+        wsp = [ \t\v\r]+;
+        wsp  {
+          continue;
+        }
+        "\n" {
+          line = str;
+          ++lineNum;
           continue;
         }
 
@@ -177,10 +200,10 @@ DYN_ARRAY(ExpressionInfo, struct Expression, expr)
           if (!lex_int(previous, str, &intValue)) {
             return false;
           }
-          struct Token token = {
+          struct Token token = NEW_TOKEN(
             IntegerLiteralToken,
             .integer = intValue
-          };
+          );
           if (!add_token(tokens, &token)) {
             return false;
           }
@@ -190,13 +213,13 @@ DYN_ARRAY(ExpressionInfo, struct Expression, expr)
         // String literal
         str = "\"" [^\x00"]* "\"";
         str {
-          struct Token token = {
+          struct Token token = NEW_TOKEN(
             StringLiteralToken,
             .string = {
               previous,
               (size_t)(str - previous)
             }
-          };
+          );
           if (!add_token(tokens, &token)) {
             return false;
           }
@@ -205,21 +228,21 @@ DYN_ARRAY(ExpressionInfo, struct Expression, expr)
 
         // Types
         "Action" {
-          struct Token token = { ActionTypeToken };
+          struct Token token = NEW_TOKEN(ActionTypeToken);
           if (!add_token(tokens, &token)) {
             return false;
           }
           continue;
         }
         "Room"   {
-          struct Token token = { RoomTypeToken };
+          struct Token token = NEW_TOKEN(RoomTypeToken);
           if (!add_token(tokens, &token)) {
             return false;
           }
           continue;
         }
         "Screen" {
-          struct Token token = { ScreenTypeToken };
+          struct Token token = NEW_TOKEN(ScreenTypeToken);
           if (!add_token(tokens, &token)) {
             return false;
           }
@@ -228,49 +251,49 @@ DYN_ARRAY(ExpressionInfo, struct Expression, expr)
 
         // Symbols
         "{" {
-          struct Token token = { OpenBraceToken };
+          struct Token token = NEW_TOKEN(OpenBraceToken);
           if (!add_token(tokens, &token)) {
             return false;
           }
           continue;
         }
         "}" {
-          struct Token token = { CloseBraceToken };
+          struct Token token = NEW_TOKEN(CloseBraceToken);
           if (!add_token(tokens, &token)) {
             return false;
           }
           continue;
         }
         "(" {
-          struct Token token = { OpenParenToken };
+          struct Token token = NEW_TOKEN(OpenParenToken);
           if (!add_token(tokens, &token)) {
             return false;
           }
           continue;
         }
         ")" {
-          struct Token token = { CloseParenToken };
+          struct Token token = NEW_TOKEN(CloseParenToken);
           if (!add_token(tokens, &token)) {
             return false;
           }
           continue;
         }
         ";" {
-          struct Token token = { SemicolonToken };
+          struct Token token = NEW_TOKEN(SemicolonToken);
           if (!add_token(tokens, &token)) {
             return false;
           }
           continue;
         }
         "=" {
-          struct Token token = { EqualsToken };
+          struct Token token = NEW_TOKEN(EqualsToken);
           if (!add_token(tokens, &token)) {
             return false;
           }
           continue;
         }
         "," {
-          struct Token token = { CommaToken };
+          struct Token token = NEW_TOKEN(CommaToken);
           if (!add_token(tokens, &token)) {
             return false;
           }
@@ -280,10 +303,10 @@ DYN_ARRAY(ExpressionInfo, struct Expression, expr)
         // Identifier
         id = [^\x00 \t\v\n\r"{}()=,]+;
         id {
-          struct Token token = {
+          struct Token token = NEW_TOKEN(
             IdentifierToken,
             .string = { previous, (size_t)(str - previous) }
-          };
+          );
           if (!add_token(tokens, &token)) {
             return false;
           }
@@ -294,8 +317,8 @@ DYN_ARRAY(ExpressionInfo, struct Expression, expr)
 }
 
 
-#define ADDITIONAL_TOKENS_ERROR() EMIT_SRC_ERROR("Additional token(s) were expected")
-#define UNEXPECTED_TOKEN_ERROR()  EMIT_SRC_ERROR("An unxpected token %s was encountered", get_token_string(token->type))
+#define ADDITIONAL_TOKENS_ERROR() EMIT_PARSE_ERROR(token, "Additional token(s) were expected")
+#define UNEXPECTED_TOKEN_ERROR()  EMIT_PARSE_ERROR(token, "An unxpected token %s was encountered", get_token_string(token->type))
 #define SINGLE_PARSE_ALLOW(tokenType) \
   ++token;                            \
   if (token > end) {                  \
@@ -483,7 +506,7 @@ static void write_str(FILE *const restrict f, const size_t strLen, const char8_t
   }
 }
 
-static bool codegen(const struct ExpressionInfo *const restrict exprs, const char *const restrict headerPath, const char *const restrict sourcePath, const char *const restrict extensionName) {
+[[nodiscard]] static bool codegen(const struct ExpressionInfo *const restrict exprs, const char *const restrict headerPath, const char *const restrict sourcePath, const char *const restrict extensionName) {
   struct StringInfo rooms = {};
 
   FILE *const fh = fopen(headerPath, "wb");
@@ -543,7 +566,7 @@ static bool codegen(const struct ExpressionInfo *const restrict exprs, const cha
           extensionName,
           (int)expr->idName->string.strLen, expr->idName->string.str
         );
-        fprintf(fc, "const struct Room %s_%.*s = NEW_ROOM(%" PRIu64 ", %" PRIu64 ", ",
+        fprintf(fc, "const struct Room %s_%.*s = NEW_ROOM(%w64u, %w64u, ",
           extensionName,
           (int)expr->idName->string.strLen, expr->idName->string.str,
           expr->room.intX->integer, expr->room.intY->integer,
