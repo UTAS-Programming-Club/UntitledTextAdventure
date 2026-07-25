@@ -1,9 +1,9 @@
 #include <errno.h>     // for ERANGE, errno
 #include <fcntl.h>     // for O_RDONLY, open
-#include <inttypes.h>  // for uint64_t, PRIu64
-#include <stdio.h>     // for fprintf, stderr, size_t, fclose, FILE, fopen, fputs, printf
+#include <inttypes.h>  // for uint16_t, uint64_t
+#include <stdio.h>     // for fprintf, stderr, size_t, fputs, fclose, FILE, fopen, fputc, printf
 #include <stdlib.h>    // for EXIT_FAILURE, free, realloc, EXIT_SUCCESS, strtoull
-#include <string.h>    // for memcpy, strstr, strcmp
+#include <string.h>    // for strchr, strlen, memcpy, strstr, strcmp
 #include <sys/mman.h>  // for MAP_FAILED, MAP_PRIVATE, PROT_READ, mmap, munmap
 #include <sys/stat.h>  // for stat, fstat
 #include <uchar.h>     // for char8_t
@@ -16,13 +16,13 @@ static const char *inputPath;
 #define EMIT_SRC_ERROR(error, ...) \
   fprintf(stderr, "%s: \u001b[0;31merror\u001b[0m: " error "\n", inputPath __VA_OPT__(,) __VA_ARGS__)
 #define EMIT_PARSE_ERROR(token, error, ...) {                                       \
-  fprintf(stderr, "%s:%w16u:%w16u: \u001b[0;31merror\u001b[0m: " error "\n",        \
-    inputPath, token->lineNum + 1, token->colNum + 1 __VA_OPT__(,) __VA_ARGS__      \
-  );                                                                                \
   const char *str = (const char *)token->line;                                      \
   const char *end = strchr(str, '\n');                                              \
   const int strLen = nullptr == end ? (int)strlen(str) : (int)(end - str);          \
-  fprintf(stderr, " %4zu | %.*s\n", token->lineNum + 1, strLen, token->line);       \
+  fprintf(stderr, "%s:%w16u:%w16u: \u001b[0;31merror\u001b[0m: " error "\n",        \
+    inputPath, token->lineNum + 1, token->colNum + 1 __VA_OPT__(,) __VA_ARGS__      \
+  );                                                                                \
+  fprintf(stderr, " %4w16u | %.*s\n", token->lineNum + 1, strLen, str);             \
   fprintf(stderr, "      |%*c\u001b[0;32m^\u001b[0;31m\n", token->colNum + 1, ' '); \
 }
 

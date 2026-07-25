@@ -2,9 +2,9 @@
 #include <stddef.h>   // for NULL
 #include <stdint.h>   // for uint8_t
 
-#include "backend.h"  // for GameInfo, backend_get_map_room, backend_default_action_visibility_checker, USE_ACTION, NEW_EXT_ACTION, Action (ptr only), Screen, NEW_SCREEN, NEW_VAR_SCREEN, Room
+#include "backend.h"       // for GameInfo, backend_get_map_room, backend_default_action_visibility_checker, NEW_EXT_ACTION, Action (ptr only), Room
 #include "coregame2.h"
-#include "gen/coregame.h" // for Core_QuitAction
+#include "gen/coregame.h"  // for Core_MainMenuScreen, Core_RoomScreen
 
 static bool core_go_direction_visibility_checker(const struct GameInfo *info, const struct Action *action) {
   const struct GoDirectionAction *this = (const struct GoDirectionAction *)action;
