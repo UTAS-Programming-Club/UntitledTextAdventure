@@ -25,7 +25,8 @@ struct GoDirectionAction {
   enum ScreenDirection direction;
 };
 
-extern const struct Screen CoreMainMenuScreen;
+extern const struct GotoScreenAction CoreStartAction;
+extern const struct Screen CoreRoomScreen;
 
 extern const uint8_t MapSizeX;
 extern const uint8_t MapSizeY;

@@ -52,7 +52,7 @@ bool backend_setup(struct GameInfo *info) {
   info->mapSizeY = MapSizeY;
   info->map = calloc(info->mapSizeX * info->mapSizeY, sizeof *info->map);
 
-  info->screen = &CoreMainMenuScreen;
+  info->screen = &Core_MainMenuScreen;
   info->x = info->y = 0;
   info->quit = false;
 

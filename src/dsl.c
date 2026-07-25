@@ -10,8 +10,11 @@
 #include <unistd.h>    // for close
 
 static const char *programName;
-#define EMIT_ERROR(error, ...) \
+static const char *inputPath;
+#define EMIT_PROG_ERROR(error, ...) \
   fprintf(stderr, "%s: \u001b[0;31merror\u001b[0m: " error "\n", programName __VA_OPT__(,) __VA_ARGS__)
+#define EMIT_SRC_ERROR(error, ...) \
+  fprintf(stderr, "%s: \u001b[0;31merror\u001b[0m: " error "\n", inputPath __VA_OPT__(,) __VA_ARGS__)
 
 #define DYN_ARRAY(typeName, baseTypeName, varName) struct typeName {                                                \
   baseTypeName *varName ## s;                                                                                       \
@@ -28,7 +31,7 @@ if (varName ## s->count + 1 >= varName ## s->length) {                          
                                                                                                                     \
     baseTypeName *newArr = realloc(varName ## s->varName ## s, newLen * sizeof *varName ## s->varName ## s);        \
     if (nullptr == newArr) {                                                                                        \
-      EMIT_ERROR("An unrecoverable error occurred");                                                                \
+      EMIT_PROG_ERROR("An unrecoverable error occurred");                                                           \
       return false;                                                                                                 \
     }                                                                                                               \
                                                                                                                     \
@@ -50,6 +53,8 @@ enum TokenType {
   RoomTypeToken,
   ScreenTypeToken,
 
+  OpenBraceToken,
+  CloseBraceToken,
   OpenParenToken,
   CloseParenToken,
   SemicolonToken,
@@ -81,6 +86,8 @@ static const char *get_token_string(enum TokenType token) {
     case RoomTypeToken: return "RoomTypeToken";
     case ScreenTypeToken: return "ScreenTypeToken";
 
+    case OpenBraceToken: return "OpenBraceToken";
+    case CloseBraceToken: return "CloseBraceToken";
     case OpenParenToken: return "OpenParenToken";
     case CloseParenToken: return "CloseParenToken";
     case SemicolonToken: return "SemicolonToken";
@@ -110,6 +117,7 @@ struct Expression {
     } room;
     struct {
       const struct Token *strBody;
+      const struct TokenInfo actions;
     } screen;
   };
 };
@@ -117,11 +125,19 @@ struct Expression {
 DYN_ARRAY(ExpressionInfo, struct Expression, expr)
 
 
+struct String {
+  const char8_t *str;
+  size_t strLen;
+};
+
+DYN_ARRAY(StringInfo, struct String, string)
+
+
 [[nodiscard]] static bool lex_int(const char8_t *str, const char8_t *const expectedEnd, uint64_t *const value) {
   char *end = nullptr;
   *value = strtoull((const char *)str, &end, 10);
-  if (ERANGE == errno || (0 == *value && str[0] != '0')) {
-    EMIT_ERROR("An unexpected character was encountered in integer literal");
+  if (ERANGE == errno || (0 == *value && str[0] != u8'0')) {
+    EMIT_SRC_ERROR("An unexpected character was encountered in integer literal");
     return false;
   }
 
@@ -144,7 +160,7 @@ DYN_ARRAY(ExpressionInfo, struct Expression, expr)
         end = "\x00";
 
         *   {
-          EMIT_ERROR("An unxpected character was encountered");
+          EMIT_SRC_ERROR("An unxpected character was encountered: %c", *previous);
           return false;
         }
         end {
@@ -213,6 +229,20 @@ DYN_ARRAY(ExpressionInfo, struct Expression, expr)
         }
 
         // Symbols
+        "{" {
+          struct Token token = { OpenBraceToken };
+          if (!add_token(tokens, &token)) {
+            return false;
+          }
+          continue;
+        }
+        "}" {
+          struct Token token = { CloseBraceToken };
+          if (!add_token(tokens, &token)) {
+            return false;
+          }
+          continue;
+        }
         "(" {
           struct Token token = { OpenParenToken };
           if (!add_token(tokens, &token)) {
@@ -250,7 +280,7 @@ DYN_ARRAY(ExpressionInfo, struct Expression, expr)
         }
 
         // Identifier
-        id = [^\x00 \t\v\n\r"()=,]+;
+        id = [^\x00 \t\v\n\r"{}()=,]+;
         id {
           struct Token token = {
             IdentifierToken,
@@ -261,15 +291,13 @@ DYN_ARRAY(ExpressionInfo, struct Expression, expr)
           }
           continue;
         }
-
-        // [^=(),"\x00]+ { return TextToken; }
     */
   }
 }
 
 
-#define ADDITIONAL_TOKENS_ERROR() EMIT_ERROR("Additional token(s) were expected")
-#define UNEXPECTED_TOKEN_ERROR()  EMIT_ERROR("An unxpected token %s was encountered", get_token_string(token->type))
+#define ADDITIONAL_TOKENS_ERROR() EMIT_SRC_ERROR("Additional token(s) were expected")
+#define UNEXPECTED_TOKEN_ERROR()  EMIT_SRC_ERROR("An unxpected token %s was encountered", get_token_string(token->type))
 #define SINGLE_PARSE_ALLOW(tokenType) \
   ++token;                            \
   if (token > end) {                  \
@@ -365,13 +393,40 @@ room:
         return false;
     }
 
-  // Screen idName = Screen(strBody);
+  // Screen idName = Screen(strBody, array<Action>);
 screen:
     idName = SINGLE_PARSE_ALLOW(IdentifierToken);
     SINGLE_PARSE_ALLOW(EqualsToken);
     SINGLE_PARSE_ALLOW(ScreenTypeToken);
     SINGLE_PARSE_ALLOW(OpenParenToken);
     strBody = SINGLE_PARSE_ALLOW(StringLiteralToken);
+    SINGLE_PARSE_ALLOW(CommaToken);
+    SINGLE_PARSE_ALLOW(OpenBraceToken);
+
+    struct TokenInfo actions = {};
+    while (true) {
+      const struct Token *const action = SINGLE_PARSE_ALLOW(IdentifierToken);
+      if (!add_token(&actions, action)) {
+        return false;
+      }
+
+      if (token >= end) {
+        ADDITIONAL_TOKENS_ERROR();
+        return false;
+      }
+
+      if (CloseBraceToken == token[1].type) {
+        break;
+      } else if (CommaToken == token[1].type) {
+        ++token;
+        continue;
+      }
+
+      UNEXPECTED_TOKEN_ERROR();
+      return false;
+    }
+
+    SINGLE_PARSE_ALLOW(CloseBraceToken);
     SINGLE_PARSE_ALLOW(CloseParenToken);
 
     ++token;
@@ -383,7 +438,7 @@ screen:
       case SemicolonToken:
         struct Expression expr = {
           ScreenDefinitionExpression, idName,
-          .screen = { strBody }
+          .screen = { strBody, actions }
         };
         if (!add_expr(exprs, &expr)) {
           return false;
@@ -399,19 +454,24 @@ screen:
 }
 
 
-struct String {
-  const char8_t *str;
-  size_t strLen;
-};
 
-DYN_ARRAY(StringInfo, struct String, string)
+static void write_str(FILE *const f, const size_t strLen, const char8_t str[static strLen]) {
+  for (size_t i = 0; i < strLen; ++i) {
+    const char8_t chr = str[i];
+    if (u8'\n' == chr) {
+      fputs("\\", f);
+    }
+
+    fputc(chr, f);
+  }
+}
 
 static bool codegen(const struct ExpressionInfo *const exprs, const char *const headerPath, const char *const sourcePath, const char *const extensionName) {
   struct StringInfo rooms = {};
 
   FILE *const fh = fopen(headerPath, "wb");
   if (nullptr == fh) {
-    EMIT_ERROR("unable to open %s", headerPath);
+    EMIT_PROG_ERROR("unable to open %s", headerPath);
     return false;
   }
 
@@ -420,11 +480,11 @@ static bool codegen(const struct ExpressionInfo *const exprs, const char *const 
 #define UTA_GEN_%s_H\n\
 \n\
 #include <stddef.h>\n\
-\n", extensionName, extensionName, extensionName);
+\n", extensionName, extensionName);
 
   FILE *const fc = fopen(sourcePath, "wb");
   if (nullptr == fc) {
-    EMIT_ERROR("unable to open %s", sourcePath);
+    EMIT_PROG_ERROR("unable to open %s", sourcePath);
     fclose(fh);
     return false;
   }
@@ -444,10 +504,12 @@ static bool codegen(const struct ExpressionInfo *const exprs, const char *const 
           extensionName,
           (int)expr->idName->string.strLen, expr->idName->string.str
         );
-        fprintf(fc, "const struct Action %s_%.*s = NEW_ACTION(%.*s, %.*s, %.*s);\n\n",
+        fprintf(fc, "const struct Action %s_%.*s = NEW_ACTION(",
           extensionName,
-          (int)expr->idName->string.strLen, expr->idName->string.str,
-          (int)expr->action.strTitle->string.strLen, expr->action.strTitle->string.str,
+          (int)expr->idName->string.strLen, expr->idName->string.str
+        );
+        write_str(fc, expr->action.strTitle->string.strLen, expr->action.strTitle->string.str);
+        fprintf(fc, ", %.*s, %.*s);\n\n",
           (int)expr->action.idVisiblityCheckerFunc->string.strLen, expr->action.idVisiblityCheckerFunc->string.str,
           (int)expr->action.idTriggerHandlerFunc->string.strLen, expr->action.idTriggerHandlerFunc->string.str
         );
@@ -464,15 +526,31 @@ static bool codegen(const struct ExpressionInfo *const exprs, const char *const 
           extensionName,
           (int)expr->idName->string.strLen, expr->idName->string.str
         );
-        fprintf(fc, "const struct Room %s_%.*s = NEW_ROOM(%" PRIu64", %" PRIu64", %.*s);\n\n",
+        fprintf(fc, "const struct Room %s_%.*s = NEW_ROOM(%" PRIu64 ", %" PRIu64 ", ",
           extensionName,
           (int)expr->idName->string.strLen, expr->idName->string.str,
           expr->room.intX->integer, expr->room.intY->integer,
           (int)expr->room.strBody->string.strLen, expr->room.strBody->string.str
         );
+        write_str(fc, expr->room.strBody->string.strLen, expr->room.strBody->string.str);
+        fputs(");\n\n", fc);
         break;
       case ScreenDefinitionExpression:
-        EMIT_ERROR("Screen defintions are not currently supported");
+        fprintf(fh, "extern const struct Screen %s_%.*s;\n\n",
+          extensionName,
+          (int)expr->idName->string.strLen, expr->idName->string.str
+        );
+        fprintf(fc, "const struct Screen %s_%.*s = NEW_SCREEN(",
+          extensionName,
+          (int)expr->idName->string.strLen, expr->idName->string.str,
+          (int)expr->screen.strBody->string.strLen, expr->screen.strBody->string.str
+        );
+        write_str(fc, expr->screen.strBody->string.strLen, expr->screen.strBody->string.str);
+        for (size_t i = 0; i < expr->screen.actions.count; ++i) {
+          const struct Token *const token = expr->screen.actions.tokens + i;
+          fprintf(fc, ", USE_ACTION(%.*s)", (int)token->string.strLen, token->string.str);
+        }
+        fputs(");\n\n", fc);
         break;
     }
   }
@@ -502,16 +580,16 @@ extern const struct Room *const %s_Rooms[];\n\
 
 
 #define USAGE "Usage: %s input output_header output_source extension_name\n"
-#define PATH_CHECK(name, idx, expectedExt, error)                             \
-  const char *const name = argv[idx];                                         \
-  ext = strstr(name, expectedExt);                                            \
-  if (nullptr == ext || name == ext || '\0' != ext[sizeof expectedExt - 1]) { \
+#define PATH_CHECK(idx, expectedExt, error)                                   \
+  path = argv[idx];                                                           \
+  ext = strstr(path, expectedExt);                                            \
+  if (nullptr == ext || path == ext || '\0' != ext[sizeof expectedExt - 1]) { \
+    EMIT_PROG_ERROR(error);                                                   \
     fprintf(stderr, USAGE, argv[0]);                                          \
-    EMIT_ERROR(error);                                                        \
     return EXIT_FAILURE;                                                      \
   }
 
-int main(const int argc, const char *const argv[argc]) {
+int main(const int argc, const char *const argv[static argc]) {
   programName = argv[0];
 
   bool status = true;
@@ -525,29 +603,31 @@ int main(const int argc, const char *const argv[argc]) {
     return EXIT_FAILURE;
   }
 
-  const char *ext;
-  PATH_CHECK(inputPath,   1, ".uta", "input must be a uta source file");
-  PATH_CHECK(outputHPath, 2,   ".h", "output header must be a c header file");
-  PATH_CHECK(outputCPath, 3,   ".c", "output source must be a c source file");
-
+  const char *path, *ext;
+  inputPath                     = PATH_CHECK(1, ".uta", "input must be a uta source file");
+  const char *const outputHPath = PATH_CHECK(2,   ".h", "output header must be a c header file");
+  const char *const outputCPath = PATH_CHECK(3,   ".c", "output source must be a c source file");
   const char *const extensionName = argv[4];
 
   int fd = open(inputPath, O_RDONLY);
   if (-1 == fd) {
-    EMIT_ERROR("unable to open %s", inputPath);
+    EMIT_PROG_ERROR("unable to open %s", inputPath);
     return EXIT_FAILURE;
   }
 
   struct stat st;
   if (-1 == fstat(fd, &st)) {
-    EMIT_ERROR("unable to process %s", inputPath);
-    return EXIT_FAILURE;
+    status = false;
+    EMIT_PROG_ERROR("unable to process %s", inputPath);
   }
 
-  void *file = mmap(nullptr, (size_t)st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
-  status &= MAP_FAILED != file;
-  if (!status) {
-    EMIT_ERROR("unable to read from %s", inputPath);
+  void *file = MAP_FAILED;
+  if (status) {
+    file = mmap(nullptr, (size_t)st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+    if (MAP_FAILED == file) {
+      status = false;
+      EMIT_PROG_ERROR("unable to read from %s", inputPath);
+    }
   }
 
   struct TokenInfo tokens = {};

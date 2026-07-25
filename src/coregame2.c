@@ -85,29 +85,16 @@ static const char *core_room_screen_body_generator(const struct GameInfo *info) 
   return room->body;
 }
 
-
-static const struct Screen CoreRoomScreen;
-
-static const struct GotoScreenAction CoreStartAction = NEW_EXT_ACTION("Start Game", backend_default_action_visibility_checker, core_goto_screen_action_handler, &CoreRoomScreen);
+const struct GotoScreenAction CoreStartAction = NEW_EXT_ACTION("Start Game", backend_default_action_visibility_checker, core_goto_screen_action_handler, &CoreRoomScreen);
 static const struct GoDirectionAction CoreGoNorthAction = NEW_EXT_ACTION("Go North", core_go_direction_visibility_checker, core_go_direction_action_handler, North);
 static const struct GoDirectionAction CoreGoEastAction = NEW_EXT_ACTION("Go East", core_go_direction_visibility_checker, core_go_direction_action_handler, East);
 static const struct GoDirectionAction CoreGoSouthAction = NEW_EXT_ACTION("Go South", core_go_direction_visibility_checker, core_go_direction_action_handler, South);
 static const struct GoDirectionAction CoreGoWestAction = NEW_EXT_ACTION("Go West", core_go_direction_visibility_checker, core_go_direction_action_handler, West);
-static const struct GotoScreenAction CoreGotoMainMenuAction = NEW_EXT_ACTION("Quit", backend_default_action_visibility_checker, core_goto_screen_action_handler, &CoreMainMenuScreen);
+static const struct GotoScreenAction CoreGotoMainMenuAction = NEW_EXT_ACTION("Quit", backend_default_action_visibility_checker, core_goto_screen_action_handler, &Core_MainMenuScreen);
 
-
-const struct Screen CoreMainMenuScreen = NEW_SCREEN("\
-Untitled text adventure game\n\
-----------------------------\n\
-By the UTAS Programming Club\n\
-\n\
-Currently unimplemented :(",
-  USE_ACTION(CoreStartAction), USE_ACTION(Core_QuitAction)
-);
-
-static const struct Screen CoreRoomScreen = NEW_VAR_SCREEN(core_room_screen_body_generator,
-                                                           USE_ACTION(CoreGoNorthAction), USE_ACTION(CoreGoEastAction), USE_ACTION(CoreGoSouthAction), USE_ACTION(CoreGoWestAction),
-                                                           USE_ACTION(CoreGotoMainMenuAction)
+const struct Screen CoreRoomScreen = NEW_VAR_SCREEN(core_room_screen_body_generator,
+                                                    USE_ACTION(CoreGoNorthAction), USE_ACTION(CoreGoEastAction), USE_ACTION(CoreGoSouthAction), USE_ACTION(CoreGoWestAction),
+                                                    USE_ACTION(CoreGotoMainMenuAction)
 );
 
 const uint8_t MapSizeX = 3;
