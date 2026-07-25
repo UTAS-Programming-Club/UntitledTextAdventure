@@ -45,6 +45,14 @@ if (varName ## s->count + 1 >= varName ## s->length) {                          
 }
 
 
+struct String {
+  const char8_t *str;
+  size_t strLen;
+};
+
+DYN_ARRAY(StringInfo, struct String, string)
+
+
 enum TokenType {
   IntegerLiteralToken,
   StringLiteralToken,
@@ -68,10 +76,7 @@ struct Token {
   enum TokenType type;
   union {
     uint64_t integer;     // IntegerLiteralToken
-    struct {
-      const char8_t *str;
-      size_t strLen;
-    } string;             // StringLiteralToken, IdentifierToken
+    struct String string; // StringLiteralToken, IdentifierToken
   };
 };
 
@@ -116,7 +121,8 @@ struct Expression {
       const struct Token *intX, *intY, *strBody;
     } room;
     struct {
-      const struct Token *strBody;
+      bool isBodyFunc;
+      const struct Token *strBody; // Also idBodyFunc
       const struct TokenInfo actions;
     } screen;
   };
@@ -125,15 +131,7 @@ struct Expression {
 DYN_ARRAY(ExpressionInfo, struct Expression, expr)
 
 
-struct String {
-  const char8_t *str;
-  size_t strLen;
-};
-
-DYN_ARRAY(StringInfo, struct String, string)
-
-
-[[nodiscard]] static bool lex_int(const char8_t *str, const char8_t *const expectedEnd, uint64_t *const value) {
+[[nodiscard]] static bool lex_int(const char8_t *str, const char8_t *const expectedEnd, uint64_t *const restrict value) {
   char *end = nullptr;
   *value = strtoull((const char *)str, &end, 10);
   if (ERANGE == errno || (0 == *value && str[0] != u8'0')) {
@@ -145,7 +143,7 @@ DYN_ARRAY(StringInfo, struct String, string)
   return str == expectedEnd;
 }
 
-[[nodiscard]] static bool lex(const char8_t *str, struct TokenInfo *const tokens) {
+[[nodiscard]] static bool lex(const char8_t *restrict str, struct TokenInfo *const restrict tokens) {
   uint64_t intValue;
   const char8_t *marker = str;
   while (true) {
@@ -314,7 +312,7 @@ DYN_ARRAY(StringInfo, struct String, string)
                                       \
   token
 
-[[nodiscard]] static bool parse(const struct TokenInfo *const tokens, struct ExpressionInfo *const exprs) {
+[[nodiscard]] static bool parse(const struct TokenInfo *const restrict tokens, struct ExpressionInfo *const restrict exprs) {
   const struct Token *token = tokens->tokens;
   const struct Token *const end = token + tokens->count;
   for (; token < end; ++token) {
@@ -394,12 +392,32 @@ room:
     }
 
   // Screen idName = Screen(strBody, array<Action>);
+  // Screen idName = Screen(idBodyFunc, array<Action>);
 screen:
     idName = SINGLE_PARSE_ALLOW(IdentifierToken);
     SINGLE_PARSE_ALLOW(EqualsToken);
     SINGLE_PARSE_ALLOW(ScreenTypeToken);
     SINGLE_PARSE_ALLOW(OpenParenToken);
-    strBody = SINGLE_PARSE_ALLOW(StringLiteralToken);
+
+    ++token;
+    if (token > end) {
+      ADDITIONAL_TOKENS_ERROR();
+      return false;
+    }
+
+    bool isBodyFunc = true;
+    switch (token->type) {
+      case StringLiteralToken:
+        isBodyFunc = false;
+        [[fallthrough]];
+      case IdentifierToken:
+        strBody = token;
+        break;
+      default:
+        UNEXPECTED_TOKEN_ERROR();
+        return false;
+    }
+
     SINGLE_PARSE_ALLOW(CommaToken);
     SINGLE_PARSE_ALLOW(OpenBraceToken);
 
@@ -438,7 +456,7 @@ screen:
       case SemicolonToken:
         struct Expression expr = {
           ScreenDefinitionExpression, idName,
-          .screen = { strBody, actions }
+          .screen = { isBodyFunc, strBody, actions }
         };
         if (!add_expr(exprs, &expr)) {
           return false;
@@ -454,8 +472,7 @@ screen:
 }
 
 
-
-static void write_str(FILE *const f, const size_t strLen, const char8_t str[static strLen]) {
+static void write_str(FILE *const restrict f, const size_t strLen, const char8_t str[const restrict static strLen]) {
   for (size_t i = 0; i < strLen; ++i) {
     const char8_t chr = str[i];
     if (u8'\n' == chr) {
@@ -466,7 +483,7 @@ static void write_str(FILE *const f, const size_t strLen, const char8_t str[stat
   }
 }
 
-static bool codegen(const struct ExpressionInfo *const exprs, const char *const headerPath, const char *const sourcePath, const char *const extensionName) {
+static bool codegen(const struct ExpressionInfo *const restrict exprs, const char *const restrict headerPath, const char *const restrict sourcePath, const char *const restrict extensionName) {
   struct StringInfo rooms = {};
 
   FILE *const fh = fopen(headerPath, "wb");
@@ -540,11 +557,15 @@ static bool codegen(const struct ExpressionInfo *const exprs, const char *const 
           extensionName,
           (int)expr->idName->string.strLen, expr->idName->string.str
         );
-        fprintf(fc, "const struct Screen %s_%.*s = NEW_SCREEN(",
+        fprintf(fc, "const struct Screen %s_%.*s = NEW_",
           extensionName,
           (int)expr->idName->string.strLen, expr->idName->string.str,
           (int)expr->screen.strBody->string.strLen, expr->screen.strBody->string.str
         );
+        if (expr->screen.isBodyFunc) {
+          fputs("VAR_", fc);
+        }
+        fputs("SCREEN(", fc);
         write_str(fc, expr->screen.strBody->string.strLen, expr->screen.strBody->string.str);
         for (size_t i = 0; i < expr->screen.actions.count; ++i) {
           const struct Token *const token = expr->screen.actions.tokens + i;
@@ -589,7 +610,7 @@ extern const struct Room *const %s_Rooms[];\n\
     return EXIT_FAILURE;                                                      \
   }
 
-int main(const int argc, const char *const argv[static argc]) {
+int main(const int argc, const char *const argv[const restrict static argc]) {
   programName = argv[0];
 
   bool status = true;
@@ -637,6 +658,15 @@ int main(const int argc, const char *const argv[static argc]) {
   status = status && parse(&tokens, &exprs);
 
   status = status && codegen(&exprs, outputHPath, outputCPath, extensionName);
+
+  for (size_t i = 0; i < exprs.count; ++i) {
+    const struct Expression *const expr = exprs.exprs + i;
+    if (ScreenDefinitionExpression != expr->type) {
+      continue;
+    }
+
+    free(expr->screen.actions.tokens);
+  }
 
   free(exprs.exprs);
   free(tokens.tokens);
