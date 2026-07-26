@@ -57,7 +57,6 @@ enum TokenType {
   IntegerLiteralToken,
   StringLiteralToken,
 
-  ActionTypeToken,
   RoomTypeToken,
   ScreenTypeToken,
 
@@ -99,6 +98,8 @@ struct Expression {
   union {
     struct {
       const struct Token *strTitle, *idVisiblityCheckerFunc, *idTriggerHandlerFunc;
+      const struct String *idTypeName;
+      bool isDerivedType;
     } action;
     struct {
       const struct Token *intX, *intY, *strBody;

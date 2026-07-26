@@ -96,13 +96,6 @@ DYN_ARRAY_IMPL(TokenInfo, struct Token, token)
         }
 
         // Types
-        "Action" {
-          struct Token token = NEW_TOKEN(ActionTypeToken);
-          if (!add_token(tokens, &token)) {
-            return false;
-          }
-          continue;
-        }
         "Room"   {
           struct Token token = NEW_TOKEN(RoomTypeToken);
           if (!add_token(tokens, &token)) {

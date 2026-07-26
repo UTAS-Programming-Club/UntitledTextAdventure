@@ -28,7 +28,7 @@ clang-22 -O3 -Wall -Wformat -Wformat=2 -Wconversion -Wimplicit-fallthrough \
 -Werror=implicit -Werror=incompatible-pointer-types -Werror=int-conversion \
 -std=c23 -pedantic -I src \
 $UTA_C_FLAGS \
-src/dsl/codegen.c src/dsl/dsl.c gen/lexer.gen.c src/dsl/parser.c -o bin/utatest2026-dsl
+gen/lexer.gen.c src/dsl/parser.c src/dsl/codegen.c src/dsl/dsl.c -o bin/utatest2026-dsl
 
 ./bin/utatest2026-dsl src/coregame.uta gen/coregame.h gen/coregame.c Core
 ./bin/utatest2026-dsl src/ext1.uta gen/ext1.h gen/ext1.c Ext1

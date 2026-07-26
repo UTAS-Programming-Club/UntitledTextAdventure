@@ -53,14 +53,20 @@ static void write_str(FILE *const restrict f, const size_t strLen, const char8_t
     const struct Expression *const expr = exprs->exprs + i;
     switch (expr->type) {
       case ActionDefintionExpression:
-        fprintf(fh, "extern const struct Action %s_%.*s;\n\n",
+        fprintf(fh, "extern const struct %.*s %s_%.*s;\n\n",
+          (int)expr->action.idTypeName->strLen, expr->action.idTypeName->str,
           extensionName,
           (int)expr->idName->string.strLen, expr->idName->string.str
         );
-        fprintf(fc, "const struct Action %s_%.*s = NEW_ACTION(",
+        fprintf(fc, "const struct %.*s %s_%.*s = NEW_",
+          (int)expr->action.idTypeName->strLen, expr->action.idTypeName->str,
           extensionName,
           (int)expr->idName->string.strLen, expr->idName->string.str
         );
+        if (expr->action.isDerivedType) {
+          fputs("EXT_", fc);
+        }
+        fputs("ACTION(", fc);
         write_str(fc, expr->action.strTitle->string.strLen, expr->action.strTitle->string.str);
         fprintf(fc, ", %.*s, %.*s);\n\n",
           (int)expr->action.idVisiblityCheckerFunc->string.strLen, expr->action.idVisiblityCheckerFunc->string.str,
