@@ -147,6 +147,13 @@ DYN_ARRAY_IMPL(TokenInfo, struct Token, token)
           }
           continue;
         }
+        ":" {
+          struct Token token = NEW_TOKEN(ColonToken);
+          if (!add_token(tokens, &token)) {
+            return false;
+          }
+          continue;
+        }
         "=" {
           struct Token token = NEW_TOKEN(EqualsToken);
           if (!add_token(tokens, &token)) {
@@ -163,7 +170,7 @@ DYN_ARRAY_IMPL(TokenInfo, struct Token, token)
         }
 
         // Identifier
-        id = [^\x00 \t\v\n\r"{}()=,]+;
+        id = [^\x00 \t\v\n\r"{}();:=,]+;
         id {
           struct Token token = NEW_TOKEN(
             IdentifierToken,

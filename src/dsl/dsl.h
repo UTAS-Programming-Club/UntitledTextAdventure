@@ -51,6 +51,7 @@ struct String {
   const char8_t *str;
   size_t strLen;
 };
+DYN_ARRAY_DEF(StringInfo, struct String, string)
 
 
 enum TokenType {
@@ -65,6 +66,7 @@ enum TokenType {
   OpenParenToken,
   CloseParenToken,
   SemicolonToken,
+  ColonToken,
   EqualsToken,
   CommaToken,
 
@@ -87,15 +89,20 @@ DYN_ARRAY_DEF(TokenInfo, struct Token, token)
 
 
 enum ExpressionType {
-  ActionDefintionExpression,
+  ActionTypeDeclarationExpression,
+
+  ActionDefinitionExpression,
   RoomDefinitionExpression,
   ScreenDefinitionExpression
 };
 
 struct Expression {
   enum ExpressionType type;
-  const struct Token *idName;
+  const struct Token *idName; // Also idBaseTypeName if type == ActionTypeDeclerationExpression
   union {
+    struct {
+      const struct String *idChildTypeName;
+    } actionType;
     struct {
       const struct Token *strTitle, *idVisiblityCheckerFunc, *idTriggerHandlerFunc;
       const struct String *idTypeName;
@@ -106,7 +113,7 @@ struct Expression {
     } room;
     struct {
       bool isBodyFunc;
-      const struct Token *strBody; // Also idBodyFunc
+      const struct Token *strBody; // Also idBodyFunc if isBodyFunc == true
       const struct TokenInfo actions;
     } screen;
   };

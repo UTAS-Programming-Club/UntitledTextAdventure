@@ -4,7 +4,6 @@
 
 #include "dsl/dsl.h"  // IWYU pragma: associated
 
-DYN_ARRAY_DEF(StringInfo, struct String, string)
 DYN_ARRAY_IMPL(StringInfo, struct String, string)
 
 
@@ -52,7 +51,10 @@ static void write_str(FILE *const restrict f, const size_t strLen, const char8_t
   for (size_t i = 0; i < exprs->count; ++i) {
     const struct Expression *const expr = exprs->exprs + i;
     switch (expr->type) {
-      case ActionDefintionExpression:
+      // TODO: Add type to header
+      case ActionTypeDeclarationExpression:
+        break;
+      case ActionDefinitionExpression:
         fprintf(fh, "extern const struct %.*s %s_%.*s;\n\n",
           (int)expr->action.idTypeName->strLen, expr->action.idTypeName->str,
           extensionName,

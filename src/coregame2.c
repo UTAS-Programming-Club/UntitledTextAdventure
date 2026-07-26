@@ -75,6 +75,10 @@ static bool core_go_direction_action_handler(struct GameInfo *info, const struct
   return true;
 }
 
+bool core_test_action_handler(struct GameInfo *info, const struct Action *action) {
+  info->quit = true;
+  return true;
+}
 
 const char *core_room_screen_body_generator(const struct GameInfo *info) {
   const struct Room *room = backend_get_map_room(info, info->x, info->y);

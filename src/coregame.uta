@@ -1,3 +1,6 @@
+TestAction : Action;
+
+TestAction TestAction = TestAction("Test Action", backend_default_action_visibility_checker, core_test_action_handler);
 Action QuitAction = Action("Quit Game", backend_default_action_visibility_checker, core_quit_game_action_handler);
 
 Room FirstRoom = Room(0, 0, "First Room!");
@@ -13,5 +16,5 @@ Currently unimplemented :(", {
 
 Screen RoomScreen = Screen(core_room_screen_body_generator, {
                            CoreGoNorthAction, CoreGoEastAction, CoreGoSouthAction, CoreGoWestAction,
-                           CoreGotoMainMenuAction
+                           Core_TestAction, CoreGotoMainMenuAction
 });
