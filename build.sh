@@ -9,7 +9,7 @@ if [ ! -f third_party/re2c/re2c ]; then
 fi
 
 mkdir -p gen/
-./third_party/re2c/re2c src/dsl.c -o gen/dsl.gen.c
+./third_party/re2c/re2c src/dsl/lexer.c -o gen/lexer.gen.c
 
 mkdir -p bin/
 clang-22 -O3 -Wall -Wformat -Wformat=2 -Wconversion -Wimplicit-fallthrough \
@@ -22,11 +22,13 @@ clang-22 -O3 -Wall -Wformat -Wformat=2 -Wconversion -Wimplicit-fallthrough \
 -Wl,-z,nodlopen -Wl,-z,noexecstack \
 -Wl,-z,relro -Wl,-z,now \
 -Wl,--as-needed -Wl,--no-copy-dt-needed-entries \
+-fPIE -pie \
 -fcf-protection=full \
 -fno-delete-null-pointer-checks -fno-strict-overflow -fno-strict-aliasing -ftrivial-auto-var-init=zero \
 -Werror=implicit -Werror=incompatible-pointer-types -Werror=int-conversion \
-$UTA_C_FLAGS -pedantic \
--std=c23 gen/dsl.gen.c -o bin/utatest2026-dsl
+-std=c23 -pedantic -I src \
+$UTA_C_FLAGS \
+src/dsl/codegen.c src/dsl/dsl.c gen/lexer.gen.c src/dsl/parser.c -o bin/utatest2026-dsl
 
 ./bin/utatest2026-dsl src/coregame.uta gen/coregame.h gen/coregame.c Core
 ./bin/utatest2026-dsl src/ext1.uta gen/ext1.h gen/ext1.c Ext1
@@ -45,5 +47,6 @@ clang-22 -O3 -Wall -Wformat -Wformat=2 -Wconversion -Wimplicit-fallthrough \
 -fcf-protection=full \
 -fno-delete-null-pointer-checks -fno-strict-overflow -fno-strict-aliasing -ftrivial-auto-var-init=zero \
 -Werror=implicit -Werror=incompatible-pointer-types -Werror=int-conversion \
-$UTA_C_FLAGS -pedantic -I . -I src/ \
--std=c23 src/frontend.c src/backend.c src/coregame2.c gen/coregame.c gen/ext1.c -o bin/utatest2026
+-std=c23 -pedantic -I . -I src/ \
+$UTA_C_FLAGS \
+src/frontend.c src/backend.c src/coregame2.c gen/coregame.c gen/ext1.c -o bin/utatest2026

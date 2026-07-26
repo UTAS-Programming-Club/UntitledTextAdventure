@@ -1,6 +1,6 @@
-#include <stdbool.h>  // for true, bool, false
-#include <stddef.h>   // for NULL
-#include <stdint.h>   // for uint8_t
+#include <stdbool.h>       // for true, bool, false
+#include <stddef.h>        // for NULL
+#include <stdint.h>        // for uint8_t
 
 #include "backend.h"       // for GameInfo, backend_get_map_room, backend_default_action_visibility_checker, NEW_EXT_ACTION, Action (ptr only), Room
 #include "coregame2.h"
