@@ -4,6 +4,8 @@
 
 #include "dsl/dsl.h"  // IWYU pragma: associated
 
+#define FSTRING(string) (int)(string)->strLen, (string)->str
+
 DYN_ARRAY_IMPL(StringInfo, struct String, string)
 
 
@@ -51,19 +53,17 @@ static void write_str(FILE *const restrict f, const size_t strLen, const char8_t
   for (size_t i = 0; i < exprs->count; ++i) {
     const struct Expression *const expr = exprs->exprs + i;
     switch (expr->type) {
-      // TODO: Add type to header
       case ActionTypeDeclarationExpression:
+        fprintf(fh, "struct %.*s {\n  struct %.*s base;\n};\n\n",
+          FSTRING(expr->actionType.idChildTypeName), FSTRING(&expr->idName->string)
+        );
         break;
       case ActionDefinitionExpression:
         fprintf(fh, "extern const struct %.*s %s_%.*s;\n\n",
-          (int)expr->action.idTypeName->strLen, expr->action.idTypeName->str,
-          extensionName,
-          (int)expr->idName->string.strLen, expr->idName->string.str
+          FSTRING(expr->action.idTypeName), extensionName, FSTRING(&expr->idName->string)
         );
         fprintf(fc, "const struct %.*s %s_%.*s = NEW_",
-          (int)expr->action.idTypeName->strLen, expr->action.idTypeName->str,
-          extensionName,
-          (int)expr->idName->string.strLen, expr->idName->string.str
+          FSTRING(expr->action.idTypeName), extensionName, FSTRING(&expr->idName->string)
         );
         if (expr->action.isDerivedType) {
           fputs("EXT_", fc);
@@ -71,8 +71,8 @@ static void write_str(FILE *const restrict f, const size_t strLen, const char8_t
         fputs("ACTION(", fc);
         write_str(fc, expr->action.strTitle->string.strLen, expr->action.strTitle->string.str);
         fprintf(fc, ", %.*s, %.*s);\n\n",
-          (int)expr->action.idVisiblityCheckerFunc->string.strLen, expr->action.idVisiblityCheckerFunc->string.str,
-          (int)expr->action.idTriggerHandlerFunc->string.strLen, expr->action.idTriggerHandlerFunc->string.str
+          FSTRING(&expr->action.idVisiblityCheckerFunc->string),
+          FSTRING(&expr->action.idTriggerHandlerFunc->string)
         );
         break;
       case RoomDefinitionExpression:
@@ -84,27 +84,23 @@ static void write_str(FILE *const restrict f, const size_t strLen, const char8_t
           return false;
         }
         fprintf(fh, "extern const struct Room %s_%.*s;\n\n",
-          extensionName,
-          (int)expr->idName->string.strLen, expr->idName->string.str
+          extensionName, FSTRING(&expr->idName->string)
         );
         fprintf(fc, "const struct Room %s_%.*s = NEW_ROOM(%w64u, %w64u, ",
           extensionName,
-          (int)expr->idName->string.strLen, expr->idName->string.str,
+          FSTRING(&expr->idName->string),
           expr->room.intX->integer, expr->room.intY->integer,
-          (int)expr->room.strBody->string.strLen, expr->room.strBody->string.str
+          FSTRING(&expr->room.strBody->string)
         );
         write_str(fc, expr->room.strBody->string.strLen, expr->room.strBody->string.str);
         fputs(");\n\n", fc);
         break;
       case ScreenDefinitionExpression:
         fprintf(fh, "extern const struct Screen %s_%.*s;\n\n",
-          extensionName,
-          (int)expr->idName->string.strLen, expr->idName->string.str
+          extensionName, FSTRING(&expr->idName->string)
         );
         fprintf(fc, "const struct Screen %s_%.*s = NEW_",
-          extensionName,
-          (int)expr->idName->string.strLen, expr->idName->string.str,
-          (int)expr->screen.strBody->string.strLen, expr->screen.strBody->string.str
+          extensionName, FSTRING(&expr->idName->string), FSTRING(&expr->room.strBody->string)
         );
         if (expr->screen.isBodyFunc) {
           fputs("VAR_", fc);
@@ -126,7 +122,7 @@ static void write_str(FILE *const restrict f, const size_t strLen, const char8_t
     if (i > 0) {
       fputs(", ", fc);
     }
-    fprintf(fc, "&%s_%.*s", extensionName, (int)room->strLen, room->str);
+    fprintf(fc, "&%s_%.*s", extensionName, FSTRING(room));
   }
   fputs(" };\n", fc);
   fprintf(fc, "const size_t %s_RoomCount = ARR_COUNT(%s_Rooms);\n", extensionName, extensionName);

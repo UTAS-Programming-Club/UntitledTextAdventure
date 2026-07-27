@@ -25,10 +25,6 @@ struct GoDirectionAction {
   enum ScreenDirection direction;
 };
 
-struct TestAction {
-  struct Action base;
-};
-
 extern const struct GotoScreenAction CoreStartAction;
 extern const struct GoDirectionAction CoreGoNorthAction;
 extern const struct GoDirectionAction CoreGoEastAction;

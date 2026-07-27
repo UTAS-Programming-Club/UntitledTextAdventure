@@ -4,7 +4,7 @@
 #include "dsl/dsl.h"  // IWYU pragma: associated
 
 #define EMIT_PARSE_ERROR(token, error, ...) {                                    \
-  const char *str = (const char *)token->line;                                   \
+  const char *const str = (typeof(str))token->line;                              \
   const char *end = strchr(str, '\n');                                           \
   const int strLen = nullptr == end ? (int)strlen(str) : (int)(end - str);       \
   fprintf(stderr, "%s:%w16u:%w16u: \u001b[0;31merror:\u001b[0m " error "\n",     \
@@ -16,14 +16,18 @@
 
 #define ADDITIONAL_TOKENS_ERROR() EMIT_PARSE_ERROR((*token), "Additional token(s) were expected")
 #define UNEXPECTED_TOKEN_ERROR()  EMIT_PARSE_ERROR((*token), "An unxpected token %s was encountered", get_token_string((*token)->type))
+
+#define PARSE_BLOCK            \
+  ++(*token);                  \
+  if (*token > end) {          \
+    ADDITIONAL_TOKENS_ERROR(); \
+    return false;              \
+  }                            \
+                               \
+  switch ((*token)->type)
+
 #define SINGLE_PARSE_ALLOW(tokenType) \
-  ++*token;                           \
-  if (*token > end) {                 \
-    ADDITIONAL_TOKENS_ERROR();        \
-    return false;                     \
-  }                                   \
-                                      \
-  switch ((*token)->type) {           \
+  PARSE_BLOCK {                       \
     case tokenType: break;            \
     default:                          \
       UNEXPECTED_TOKEN_ERROR();       \
@@ -62,9 +66,17 @@ static const char *get_token_string(enum TokenType token) {
   }
 }
 
+static bool string_equals(const struct String *const restrict str1, const struct String * const restrict str2) {
+  if (str1->strLen != str2->strLen) {
+    return false;
+  }
+
+  return 0 == strncmp((const char *)str1->str, (const char *)str2->str, str1->strLen);
+}
+
 static bool is_action_type_name_known(const struct String *restrict const name) {
   for (size_t i = 0; i < actionTypeNames.count; ++i) {
-    if (actionTypeNames.strings[i].strLen == name->strLen && 0 == strncmp((const char *)actionTypeNames.strings[i].str, (const char *)name->str, name->strLen)) {
+    if (string_equals(actionTypeNames.strings + i, name)) {
       return true;
     }
   }
@@ -79,17 +91,12 @@ static bool is_action_type_name_known(const struct String *restrict const name) 
 
   SINGLE_PARSE_ALLOW(ColonToken);
   const struct Token *const idBaseTypeName = SINGLE_PARSE_ALLOW(IdentifierToken);
-  if (!is_action_type_name_known(&idBaseTypeName->string)) {
+  if (!string_equals(&actionTypeName, &idBaseTypeName->string)) {
+    UNEXPECTED_TOKEN_ERROR();
     return false;
   }
 
-  ++(*token);
-  if (*token > end) {
-    ADDITIONAL_TOKENS_ERROR();
-    return false;
-  }
-
-  switch ((*token)->type) {
+  PARSE_BLOCK {
     case SemicolonToken:
       if (!add_string(&actionTypeNames, idNewTypeName)) {
         return false;
@@ -113,7 +120,7 @@ static bool is_action_type_name_known(const struct String *restrict const name) 
   const struct Token *const idName = SINGLE_PARSE_ALLOW(IdentifierToken);
   SINGLE_PARSE_ALLOW(EqualsToken);
   SINGLE_PARSE_ALLOW(IdentifierToken);
-  if (idTypeName->strLen == (*token)->string.strLen && 0 != strncmp((const char *)idTypeName->str, (const char *)(*token)->string.str, (*token)->string.strLen)) {
+  if (!string_equals(idTypeName, &(*token)->string)) {
     UNEXPECTED_TOKEN_ERROR();
     return false;
   }
@@ -126,15 +133,9 @@ static bool is_action_type_name_known(const struct String *restrict const name) 
   const struct Token *const idTriggerHandlerFunc = SINGLE_PARSE_ALLOW(IdentifierToken);
   SINGLE_PARSE_ALLOW(CloseParenToken);
 
-  ++(*token);
-  if (*token > end) {
-    ADDITIONAL_TOKENS_ERROR();
-    return false;
-  }
-
-  switch ((*token)->type) {
+  PARSE_BLOCK {
     case SemicolonToken:
-      const bool isDerivedType = 0 != actionTypeName.strLen == idTypeName->strLen && strncmp((const char *)actionTypeName.str, (const char *)idTypeName->str, idTypeName->strLen);
+      const bool isDerivedType = !string_equals(&actionTypeName, idTypeName);
       const struct Expression expr = {
         ActionDefinitionExpression, idName,
         .action = {
@@ -163,13 +164,7 @@ static bool is_action_type_name_known(const struct String *restrict const name) 
   const struct Token *const strBody = SINGLE_PARSE_ALLOW(StringLiteralToken);
   SINGLE_PARSE_ALLOW(CloseParenToken);
 
-  ++(*token);
-  if (*token > end) {
-    ADDITIONAL_TOKENS_ERROR();
-    return false;
-  }
-
-  switch ((*token)->type) {
+  PARSE_BLOCK {
     case SemicolonToken:
       const struct Expression expr = {
         RoomDefinitionExpression, idName,
@@ -190,15 +185,9 @@ static bool is_action_type_name_known(const struct String *restrict const name) 
   SINGLE_PARSE_ALLOW(ScreenTypeToken);
   SINGLE_PARSE_ALLOW(OpenParenToken);
 
-  ++(*token);
-  if (*token > end) {
-    ADDITIONAL_TOKENS_ERROR();
-    return false;
-  }
-
   bool isBodyFunc = true;
   const struct Token *strBody;
-  switch ((*token)->type) {
+  PARSE_BLOCK {
     case StringLiteralToken:
       isBodyFunc = false;
       [[fallthrough]];
@@ -239,13 +228,7 @@ static bool is_action_type_name_known(const struct String *restrict const name) 
   SINGLE_PARSE_ALLOW(CloseBraceToken);
   SINGLE_PARSE_ALLOW(CloseParenToken);
 
-  ++(*token);
-  if (*token > end) {
-    ADDITIONAL_TOKENS_ERROR();
-    return false;
-  }
-
-  switch ((*token)->type) {
+  PARSE_BLOCK {
     case SemicolonToken:
       const struct Expression expr = {
         ScreenDefinitionExpression, idName,
