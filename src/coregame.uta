@@ -1,7 +1,112 @@
+/*enum ScreenDirection {
+  North,
+  East,
+  South,
+  West
+}
+
+
+Action GotoScreenAction {
+  Screen screen;
+
+  override bool ActionHandler(GameInfo info) {
+    info.screen = this.screen;
+    return true;
+  }
+}
+
+Action GoDirectionAction {
+  enum ScreenDirection direction;
+
+  override bool VisibilityHandler(GameInfo info) {
+    switch (this.direction) {
+      case North:
+        if (NULL != backend_get_map_room(info, info.x, info.y + 1)) {
+          return true;
+        }
+        break;
+      case East:
+        if (NULL != backend_get_map_room(info, info.x + 1, info.y)) {
+          return true;
+        }
+        break;
+      case South:
+        if (NULL != backend_get_map_room(info, info.x, info.y - 1)) {
+          return true;
+        }
+        break;
+      case West:
+        if (NULL != backend_get_map_room(info, info.x - 1, info.y)) {
+          return true;
+        }
+        break;
+    }
+
+    return false;
+  }
+
+  override bool ActionHandler(GameInfo info) {
+    switch (this.direction) {
+      case North:
+        if (NULL != backend_get_map_room(info, info.x, info.y + 1)) {
+          ++info.y;
+        }
+        break;
+      case East:
+        if (NULL != backend_get_map_room(info, info.x + 1, info.y)) {
+          ++info.x;
+        }
+        break;
+      case South:
+        if (NULL != backend_get_map_room(info, info.x, info.y - 1)) {
+          --info.y;
+        }
+        break;
+      case West:
+        if (NULL != backend_get_map_room(info, info.x - 1, info.y)) {
+          --info.x;
+        }
+        break;
+    }
+
+    return true;
+  }
+}
+
+Action QuitGameAction {
+  override bool ActionHandler(GameInfo info) {
+    info.quit = true;
+    return true;
+  }
+}
+
+
+Screen RoomScreen {
+  override string BodyGenerator(GameInfo info) {
+    Room room = info.GetRoom(info.x, info.y);
+    if (NULL == room) {
+      return NULL:
+    }
+
+    return room.body;
+  }
+}*/
+
 TestAction : Action;
 
+
+// Screen CoreMainMenuScreen;
+// Screen CoreRoomScreen;
+
 TestAction TestAction = TestAction("Test Action", backend_default_action_visibility_checker, core_test_action_handler);
+// Action StartAction = GotoScreenAction("Start Game", CoreRoomScreen);
+// Action QuitAction = QuitGameAction("Quit Game");
 Action QuitAction = Action("Quit Game", backend_default_action_visibility_checker, core_quit_game_action_handler);
+/*Action GoNorthAction = GoDirectionAction("Go North", North);
+Action GoEastAction = GoDirectionAction("Go East", East);
+Action GoSouthAction = GoDirectionAction("Go South", South);
+Action GoWestAction = GoDirectionAction("Go West", West);
+Action GotoMainMenuAction = GotoScreenAction("Quit", CoreMainMenuScreen);*/
 
 Room FirstRoom = Room(0, 0, "First Room!");
 
@@ -11,10 +116,12 @@ Untitled text adventure game\n
 By the UTAS Programming Club\n
 \n
 Currently unimplemented :(", {
+  // CoreStartAction, CoreQuitAction
   CoreStartAction, Core_QuitAction
 });
 
 Screen RoomScreen = Screen(core_room_screen_body_generator, {
                            CoreGoNorthAction, CoreGoEastAction, CoreGoSouthAction, CoreGoWestAction,
+                           // CoreGotoMainMenuAction
                            Core_TestAction, CoreGotoMainMenuAction
 });

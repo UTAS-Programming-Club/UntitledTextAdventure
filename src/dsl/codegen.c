@@ -6,6 +6,7 @@
 
 #define FSTRING(string) (int)(string)->strLen, (string)->str
 
+
 DYN_ARRAY_IMPL(StringInfo, struct String, string)
 
 

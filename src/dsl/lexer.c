@@ -26,6 +26,7 @@ DYN_ARRAY_IMPL(TokenInfo, struct Token, token)
   return str == expectedEnd;
 }
 
+// Based on the re2e c++98 demo https://re2c.org/playground/?example=c/real_world/cxx98.re
 [[nodiscard]] bool lex(const char8_t *restrict str, struct TokenInfo *const restrict tokens) {
   uint64_t intValue;
   const char8_t *marker = str;
@@ -53,7 +54,9 @@ DYN_ARRAY_IMPL(TokenInfo, struct Token, token)
         }
 
         // White space
-        wsp = [ \t\v\r]+;
+        mcm = "/*" ([^\x00*] | ("*" [^\x00/]))* "*""/";
+        scm = "//" [^\x00\n]* "\n";
+        wsp = ([ \t\v\r] | mcm | scm)+;
         wsp  {
           continue;
         }
