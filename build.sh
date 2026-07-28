@@ -11,10 +11,13 @@ fi
 mkdir -p gen/
 ./third_party/re2c/re2c src/dsl/lexer.c -o gen/lexer.gen.c
 
+
+# Save for release builds, causes clang to ignore printf argument related warnings
+# -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3
+
 mkdir -p bin/
 clang-22 -O3 -Wall -Wformat -Wformat=2 -Wconversion -Wimplicit-fallthrough \
 -Werror=format-security \
--U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 \
 -D_GLIBCXX_ASSERTIONS \
 -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_FAST \
 -fstrict-flex-arrays=3 \
@@ -35,7 +38,6 @@ gen/lexer.gen.c src/dsl/parser.c src/dsl/codegen.c src/dsl/dsl.c -o bin/utatest2
 
 clang-22 -O3 -Wall -Wformat -Wformat=2 -Wconversion -Wimplicit-fallthrough \
 -Werror=format-security \
--U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 \
 -D_GLIBCXX_ASSERTIONS \
 -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_FAST \
 -fstrict-flex-arrays=3 \

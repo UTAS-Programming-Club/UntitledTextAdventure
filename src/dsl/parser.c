@@ -1,29 +1,35 @@
-#include <stdio.h>    // for fprintf, stderr, size_t
-#include <string.h>   // for strchr, strlen, strncmp
+#include <inttypes.h>  // for PRIu16
+#include <stdio.h>     // for fprintf, stderr, size_t
+#include <string.h>    // for strchr, strlen, strncmp
 
-#include "dsl/dsl.h"  // IWYU pragma: associated
+#include "dsl/dsl.h"   // IWYU pragma: associated
 
-#define EMIT_PARSE_ERROR(token, error, ...) {                                    \
-  const char *const str = (typeof(str))token->line;                              \
-  const char *end = strchr(str, '\n');                                           \
-  const int strLen = nullptr == end ? (int)strlen(str) : (int)(end - str);       \
-  fprintf(stderr, "%s:%w16u:%w16u: \u001b[0;31merror:\u001b[0m " error "\n",     \
-    inputPath, token->lineNum + 1, token->colNum + 1 __VA_OPT__(,) __VA_ARGS__   \
-  );                                                                             \
-  fprintf(stderr, " %4w16u | %.*s\n", token->lineNum + 1, strLen, str);          \
-  fprintf(stderr, "      |%*c\u001b[0;32m^\u001b[0m\n", token->colNum + 1, ' '); \
+#define EMIT_PARSE_ERROR(token, error, ...) {                                            \
+  const char *const str = (typeof(str))token->line;                                      \
+  const char *end = strchr(str, '\n');                                                   \
+  const int strLen = nullptr == end ? (int)strlen(str) : (int)(end - str);               \
+  fprintf(stderr, "%s:%" PRIu16 ":%" PRIu16 ": \u001b[0;31merror:\u001b[0m " error "\n", \
+    inputPath, token->lineNum + 1, token->colNum + 1 __VA_OPT__(,) __VA_ARGS__           \
+  );                                                                                     \
+  fprintf(stderr, " %4" PRIu16 " | %.*s\n", token->lineNum + 1, strLen, str);            \
+  fprintf(stderr, "      |%*c\u001b[0;32m^\u001b[0m\n", token->colNum + 1, ' ');         \
 }
 
 #define ADDITIONAL_TOKENS_ERROR() EMIT_PARSE_ERROR((*token), "Additional token(s) were expected")
 #define UNEXPECTED_TOKEN_ERROR()  EMIT_PARSE_ERROR((*token), "An unxpected token %s was encountered", get_token_string((*token)->type))
 
-#define PARSE_BLOCK            \
-  ++(*token);                  \
-  if (*token > end) {          \
-    ADDITIONAL_TOKENS_ERROR(); \
-    return false;              \
-  }                            \
-                               \
+#define PARSE_BLOCK                                     \
+  ++(*token);                                           \
+  if (*token > end) {                                   \
+    EMIT_PROG_ERROR("An unrecoverable error occurred"); \
+    return false;                                       \
+  }                                                     \
+  if (*token == end) {                                  \
+    --(*token);                                         \
+    ADDITIONAL_TOKENS_ERROR();                          \
+    return false;                                       \
+  }                                                     \
+                                                        \
   switch ((*token)->type)
 
 #define SINGLE_PARSE_ALLOW(tokenType) \
@@ -32,9 +38,7 @@
     default:                          \
       UNEXPECTED_TOKEN_ERROR();       \
       return false;                   \
-  }                                   \
-                                      \
-  *token
+  }
 
 
 DYN_ARRAY_IMPL(ExpressionInfo, struct Expression, expr)
@@ -42,7 +46,11 @@ DYN_ARRAY_IMPL(ExpressionInfo, struct Expression, expr)
 
 // TODO: Move these to params?
 static const struct String actionTypeName = { u8"Action", 6 };
+static const struct String roomTypeName = { u8"Room", 4 };
+static const struct String screenTypeName = { u8"Screen", 6 };
 static struct StringInfo actionTypeNames = {};
+static struct StringInfo roomTypeNames = {};
+static struct StringInfo screenTypeNames = {};
 
 
 static const char *get_token_string(enum TokenType token) {
@@ -50,8 +58,9 @@ static const char *get_token_string(enum TokenType token) {
     case IntegerLiteralToken: return "IntegerLiteralToken";
     case StringLiteralToken:  return "StringLiteralToken";
 
-    case RoomTypeToken:   return "RoomTypeToken";
-    case ScreenTypeToken: return "ScreenTypeToken";
+    // case ActionTypeToken:   return "ActionTypeToken";
+    // case RoomTypeToken:   return "RoomTypeToken";
+    // case ScreenTypeToken: return "ScreenTypeToken";
 
     case OpenBraceToken:  return "OpenBraceToken";
     case CloseBraceToken: return "CloseBraceToken";
@@ -74,9 +83,9 @@ static bool string_equals(const struct String *const restrict str1, const struct
   return 0 == strncmp((const char *)str1->str, (const char *)str2->str, str1->strLen);
 }
 
-static bool is_action_type_name_known(const struct String *restrict const name) {
-  for (size_t i = 0; i < actionTypeNames.count; ++i) {
-    if (string_equals(actionTypeNames.strings + i, name)) {
+static bool is_type_name_known(const struct StringInfo *const restrict typeNames, const struct String *const restrict name) {
+  for (size_t i = 0; i < typeNames->count; ++i) {
+    if (string_equals(typeNames->strings + i, name)) {
       return true;
     }
   }
@@ -85,26 +94,33 @@ static bool is_action_type_name_known(const struct String *restrict const name) 
 }
 
 
-// idNewTypeName : idBaseTypeName;
+// idChildTypeName : idBaseTypeName;
 [[nodiscard]] static bool parse_typedec(const struct Token *restrict *const restrict token, const struct Token *const restrict end, struct ExpressionInfo *const restrict exprs) {
-  const struct String *const idNewTypeName = &(*token)->string;
+  const struct String *const idChildTypeName = &(*token)->string;
 
   SINGLE_PARSE_ALLOW(ColonToken);
   const struct Token *const idBaseTypeName = SINGLE_PARSE_ALLOW(IdentifierToken);
-  if (!string_equals(&actionTypeName, &idBaseTypeName->string)) {
+  struct StringInfo *existingTypeNames;
+  if (string_equals(&actionTypeName, &idBaseTypeName->string)) {
+    existingTypeNames = &actionTypeNames;
+  } else if (string_equals(&roomTypeName, &idBaseTypeName->string)) {
+    existingTypeNames = &roomTypeNames;
+  } else if (string_equals(&screenTypeName, &idBaseTypeName->string)) {
+    existingTypeNames = &screenTypeNames;
+  } else {
     UNEXPECTED_TOKEN_ERROR();
     return false;
   }
 
   PARSE_BLOCK {
     case SemicolonToken:
-      if (!add_string(&actionTypeNames, idNewTypeName)) {
+      if (!add_string(existingTypeNames, idChildTypeName)) {
         return false;
       }
 
       const struct Expression expr = {
-        ActionTypeDeclarationExpression, idBaseTypeName,
-        .actionType = { idNewTypeName }
+        TypeDeclarationExpression, idBaseTypeName,
+        .typeDeclaration = { idChildTypeName }
       };
       return add_expr(exprs, &expr);
     default:
@@ -153,9 +169,16 @@ static bool is_action_type_name_known(const struct String *restrict const name) 
 
 // Room idName = Room(intX, intY, stringBody);
 [[nodiscard]] static bool parse_room(const struct Token *restrict *const restrict token, const struct Token *const restrict end, struct ExpressionInfo *const restrict exprs) {
+  const struct String *const idTypeName = &(*token)->string;
+
   const struct Token *const idName = SINGLE_PARSE_ALLOW(IdentifierToken);
   SINGLE_PARSE_ALLOW(EqualsToken);
-  SINGLE_PARSE_ALLOW(RoomTypeToken);
+  SINGLE_PARSE_ALLOW(IdentifierToken);
+  if (!string_equals(idTypeName, &(*token)->string)) {
+    UNEXPECTED_TOKEN_ERROR();
+    return false;
+  }
+
   SINGLE_PARSE_ALLOW(OpenParenToken);
   const struct Token *const intX = SINGLE_PARSE_ALLOW(IntegerLiteralToken);
   SINGLE_PARSE_ALLOW(CommaToken);
@@ -180,9 +203,16 @@ static bool is_action_type_name_known(const struct String *restrict const name) 
 // Screen idName = Screen(strBody, array<Action>);
 // Screen idName = Screen(idBodyFunc, array<Action>);
 [[nodiscard]] static bool parse_screen(const struct Token *restrict *const restrict token, const struct Token *const restrict end, struct ExpressionInfo *const restrict exprs) {
+  const struct String *const idTypeName = &(*token)->string;
+
   const struct Token *const idName = SINGLE_PARSE_ALLOW(IdentifierToken);
   SINGLE_PARSE_ALLOW(EqualsToken);
-  SINGLE_PARSE_ALLOW(ScreenTypeToken);
+  SINGLE_PARSE_ALLOW(IdentifierToken);
+  if (!string_equals(idTypeName, &(*token)->string)) {
+    UNEXPECTED_TOKEN_ERROR();
+    return false;
+  }
+
   SINGLE_PARSE_ALLOW(OpenParenToken);
 
   bool isBodyFunc = true;
@@ -242,7 +272,9 @@ static bool is_action_type_name_known(const struct String *restrict const name) 
 }
 
 [[nodiscard]] bool parse(const struct TokenInfo *const restrict tokens, struct ExpressionInfo *const restrict exprs) {
-  if (!add_string(&actionTypeNames, &actionTypeName)) {
+  if (!add_string(&actionTypeNames, &actionTypeName) ||
+      !add_string(&roomTypeNames, &roomTypeName)     ||
+      !add_string(&screenTypeNames, &screenTypeName)) {
     return false;
   }
 
@@ -250,19 +282,17 @@ static bool is_action_type_name_known(const struct String *restrict const name) 
   const struct Token *const end = token + tokens->count;
   for (; token < end; ++token) {
     switch (token->type) {
-      case RoomTypeToken:
-        if (!parse_room(&token, end, exprs)) {
-          return false;
-        }
-        continue;
-      case ScreenTypeToken:
-        if (!parse_screen(&token, end, exprs)) {
-          return false;
-        }
-        continue;
       case IdentifierToken:
-        if (is_action_type_name_known(&token->string)) {
+        if (is_type_name_known(&actionTypeNames, &token->string)) {
           if (!parse_action(&token, end, exprs)) {
+            return false;
+          }
+        } else if (is_type_name_known(&roomTypeNames, &token->string)) {
+          if (!parse_room(&token, end, exprs)) {
+            return false;
+          }
+        } else if (is_type_name_known(&screenTypeNames, &token->string)) {
+          if (!parse_screen(&token, end, exprs)) {
             return false;
           }
         } else if (!parse_typedec(&token, end, exprs)) {

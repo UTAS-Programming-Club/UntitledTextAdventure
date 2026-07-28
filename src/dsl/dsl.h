@@ -58,8 +58,9 @@ enum TokenType {
   IntegerLiteralToken,
   StringLiteralToken,
 
-  RoomTypeToken,
-  ScreenTypeToken,
+  // ActionTypeToken,
+  // RoomTypeToken,
+  // ScreenTypeToken,
 
   OpenBraceToken,
   CloseBraceToken,
@@ -89,7 +90,7 @@ DYN_ARRAY_DEF(TokenInfo, struct Token, token)
 
 
 enum ExpressionType {
-  ActionTypeDeclarationExpression,
+  TypeDeclarationExpression,
 
   ActionDefinitionExpression,
   RoomDefinitionExpression,
@@ -98,11 +99,11 @@ enum ExpressionType {
 
 struct Expression {
   enum ExpressionType type;
-  const struct Token *idName; // Also idBaseTypeName if type == ActionTypeDeclerationExpression
+  const struct Token *idName; // Also idBaseTypeName if type == *TypeDeclerationExpression
   union {
     struct {
       const struct String *idChildTypeName;
-    } actionType;
+    } typeDeclaration;
     struct {
       const struct Token *strTitle, *idVisiblityCheckerFunc, *idTriggerHandlerFunc;
       const struct String *idTypeName;

@@ -1,8 +1,9 @@
-#include <stdio.h>    // for fprintf, fputs, fclose, size_t, FILE, fopen, fputc
-#include <stdlib.h>   // for free
-#include <uchar.h>    // for char8_t
+#include <inttypes.h>  // for PRIu64
+#include <stdio.h>     // for fprintf, fputs, fclose, size_t, FILE, fopen, fputc
+#include <stdlib.h>    // for free
+#include <uchar.h>     // for char8_t
 
-#include "dsl/dsl.h"  // IWYU pragma: associated
+#include "dsl/dsl.h"   // IWYU pragma: associated
 
 #define FSTRING(string) (int)(string)->strLen, (string)->str
 
@@ -54,9 +55,9 @@ static void write_str(FILE *const restrict f, const size_t strLen, const char8_t
   for (size_t i = 0; i < exprs->count; ++i) {
     const struct Expression *const expr = exprs->exprs + i;
     switch (expr->type) {
-      case ActionTypeDeclarationExpression:
+      case TypeDeclarationExpression:
         fprintf(fh, "struct %.*s {\n  struct %.*s base;\n};\n\n",
-          FSTRING(expr->actionType.idChildTypeName), FSTRING(&expr->idName->string)
+          FSTRING(expr->typeDeclaration.idChildTypeName), FSTRING(&expr->idName->string)
         );
         break;
       case ActionDefinitionExpression:
@@ -87,11 +88,10 @@ static void write_str(FILE *const restrict f, const size_t strLen, const char8_t
         fprintf(fh, "extern const struct Room %s_%.*s;\n\n",
           extensionName, FSTRING(&expr->idName->string)
         );
-        fprintf(fc, "const struct Room %s_%.*s = NEW_ROOM(%w64u, %w64u, ",
+        fprintf(fc, "const struct Room %s_%.*s = NEW_ROOM(%" PRIu64 ", %" PRIu64 ", ",
           extensionName,
           FSTRING(&expr->idName->string),
-          expr->room.intX->integer, expr->room.intY->integer,
-          FSTRING(&expr->room.strBody->string)
+          expr->room.intX->integer, expr->room.intY->integer
         );
         write_str(fc, expr->room.strBody->string.strLen, expr->room.strBody->string.str);
         fputs(");\n\n", fc);
@@ -101,7 +101,7 @@ static void write_str(FILE *const restrict f, const size_t strLen, const char8_t
           extensionName, FSTRING(&expr->idName->string)
         );
         fprintf(fc, "const struct Screen %s_%.*s = NEW_",
-          extensionName, FSTRING(&expr->idName->string), FSTRING(&expr->room.strBody->string)
+          extensionName, FSTRING(&expr->idName->string)
         );
         if (expr->screen.isBodyFunc) {
           fputs("VAR_", fc);

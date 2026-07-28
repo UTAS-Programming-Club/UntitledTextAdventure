@@ -28,7 +28,7 @@ int main(const int argc, const char *const argv[const restrict static argc]) {
   bool status = true;
   if (1 == argc || (2 == argc && 0 == strcmp(argv[1], "-h"))) {
     printf(USAGE, argv[0]);
-    return EXIT_SUCCESS;
+    return 1 == argc ? EXIT_FAILURE : EXIT_SUCCESS;
   }
 
   if (5 != argc) {
