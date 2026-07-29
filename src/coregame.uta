@@ -92,7 +92,8 @@ Screen RoomScreen {
   }
 }*/
 
-// TestAction : Action;
+Action TestAction {
+}
 
 
 // Screen CoreMainMenuScreen;
