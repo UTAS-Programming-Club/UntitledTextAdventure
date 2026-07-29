@@ -98,18 +98,21 @@ struct Expression {
   union {
     struct {
       const struct String *idChildTypeName;
+      // const struct Token *strFields;
     } typeDeclaration;
     struct {
-      const struct Token *strTitle, *idVisiblityCheckerFunc, *idTriggerHandlerFunc;
-      const struct String *idTypeName;
+      const struct Token *strTitle, *idVisiblityCheckerFunc, *idTriggerHandlerFunc, *idTypeName;
       bool isDerivedType;
     } action;
     struct {
-      const struct Token *intX, *intY, *strBody;
+      const struct Token *intX, *intY, *strBody, *idTypeName;
+      bool isDerivedType;
     } room;
     struct {
       bool isBodyFunc;
       const struct Token *strBody; // Also idBodyFunc if isBodyFunc == true
+      const struct Token *idTypeName;
+      bool isDerivedType;
       const struct TokenInfo actions;
     } screen;
   };

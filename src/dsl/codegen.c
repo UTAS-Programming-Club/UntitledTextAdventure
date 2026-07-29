@@ -6,6 +6,7 @@
 #include "dsl/dsl.h"   // IWYU pragma: associated
 
 #define FSTRING(string) (int)(string)->strLen, (string)->str
+#define FTOKEN(idString) FSTRING(&idString->string) // Only use for IdentifierToken
 
 
 DYN_ARRAY_IMPL(StringInfo, struct String, string)
@@ -57,15 +58,16 @@ static void write_str(FILE *const restrict f, const size_t strLen, const char8_t
     switch (expr->type) {
       case TypeDeclarationExpression:
         fprintf(fh, "struct %.*s {\n  struct %.*s base;\n};\n\n",
-          FSTRING(expr->typeDeclaration.idChildTypeName), FSTRING(&expr->idName->string)
+          FSTRING(expr->typeDeclaration.idChildTypeName), FTOKEN(expr->idName)
         );
         break;
       case ActionDefinitionExpression:
         fprintf(fh, "extern const struct %.*s %s_%.*s;\n\n",
-          FSTRING(expr->action.idTypeName), extensionName, FSTRING(&expr->idName->string)
+          FTOKEN(expr->action.idTypeName), extensionName, FTOKEN(expr->idName)
         );
+
         fprintf(fc, "const struct %.*s %s_%.*s = NEW_",
-          FSTRING(expr->action.idTypeName), extensionName, FSTRING(&expr->idName->string)
+          FTOKEN(expr->action.idTypeName), extensionName, FTOKEN(expr->idName)
         );
         if (expr->action.isDerivedType) {
           fputs("EXT_", fc);
@@ -73,8 +75,8 @@ static void write_str(FILE *const restrict f, const size_t strLen, const char8_t
         fputs("ACTION(", fc);
         write_str(fc, expr->action.strTitle->string.strLen, expr->action.strTitle->string.str);
         fprintf(fc, ", %.*s, %.*s);\n\n",
-          FSTRING(&expr->action.idVisiblityCheckerFunc->string),
-          FSTRING(&expr->action.idTriggerHandlerFunc->string)
+          FTOKEN(expr->action.idVisiblityCheckerFunc),
+          FTOKEN(expr->action.idTriggerHandlerFunc)
         );
         break;
       case RoomDefinitionExpression:
@@ -85,34 +87,56 @@ static void write_str(FILE *const restrict f, const size_t strLen, const char8_t
           fclose(fh);
           return false;
         }
-        fprintf(fh, "extern const struct Room %s_%.*s;\n\n",
-          extensionName, FSTRING(&expr->idName->string)
+        fprintf(fh, "extern const struct %.*s %s_%.*s;\n\n",
+          FTOKEN(expr->room.idTypeName), extensionName, FTOKEN(expr->idName)
         );
-        fprintf(fc, "const struct Room %s_%.*s = NEW_ROOM(%" PRIu64 ", %" PRIu64 ", ",
-          extensionName,
-          FSTRING(&expr->idName->string),
+
+        fprintf(fc, "const struct %.*s %s_%.*s = NEW_",
+          FTOKEN(expr->room.idTypeName), extensionName, FTOKEN(expr->idName)
+        );
+        if (expr->room.isDerivedType) {
+          fputs("EXT_", fc);
+        }
+        fprintf(fc, "ROOM(%" PRIu64 ", %" PRIu64 ", ",
           expr->room.intX->integer, expr->room.intY->integer
         );
         write_str(fc, expr->room.strBody->string.strLen, expr->room.strBody->string.str);
         fputs(");\n\n", fc);
         break;
       case ScreenDefinitionExpression:
-        fprintf(fh, "extern const struct Screen %s_%.*s;\n\n",
-          extensionName, FSTRING(&expr->idName->string)
+        fprintf(fh, "extern const struct %.*s %s_%.*s;\n\n",
+          FTOKEN(expr->screen.idTypeName), extensionName, FTOKEN(expr->idName)
         );
-        fprintf(fc, "const struct Screen %s_%.*s = NEW_",
-          extensionName, FSTRING(&expr->idName->string)
+
+        fprintf(fc, "static const struct Action *const %s_%.*s_Actions[] = { ",
+          extensionName, FTOKEN(expr->idName)
         );
-        if (expr->screen.isBodyFunc) {
-          fputs("VAR_", fc);
+        for (size_t i = 0; i < expr->screen.actions.count; ++i) {
+          if (0 != i) {
+            fputs(", ", fc);
+          }
+          const struct Token *const token = expr->screen.actions.tokens + i;
+          fprintf(fc, "USE_ACTION(%.*s)", (int)token->string.strLen, token->string.str);
+        }
+        fputs(" };\n", fc);
+
+        fprintf(fc, "const struct %.*s %s_%.*s = NEW_",
+          FTOKEN(expr->screen.idTypeName), extensionName, FTOKEN(expr->idName)
+        );
+        if (expr->screen.isDerivedType) {
+          fputs("EXT_", fc);
         }
         fputs("SCREEN(", fc);
-        write_str(fc, expr->screen.strBody->string.strLen, expr->screen.strBody->string.str);
-        for (size_t i = 0; i < expr->screen.actions.count; ++i) {
-          const struct Token *const token = expr->screen.actions.tokens + i;
-          fprintf(fc, ", USE_ACTION(%.*s)", (int)token->string.strLen, token->string.str);
+        if (expr->screen.isBodyFunc) {
+          fputs("NULL, ", fc);
         }
-        fputs(");\n\n", fc);
+        write_str(fc, expr->screen.strBody->string.strLen, expr->screen.strBody->string.str);
+        if (!expr->screen.isBodyFunc) {
+          fputs(", backend_default_screen_body_generator", fc);
+        }
+        fprintf(fc, ", %s_%.*s_Actions);\n\n",
+          extensionName, FTOKEN(expr->idName)
+        );
         break;
     }
   }
@@ -123,7 +147,7 @@ static void write_str(FILE *const restrict f, const size_t strLen, const char8_t
     if (i > 0) {
       fputs(", ", fc);
     }
-    fprintf(fc, "&%s_%.*s", extensionName, FSTRING(room));
+    fprintf(fc, "USE_ROOM(%s_%.*s)", extensionName, FSTRING(room));
   }
   fputs(" };\n", fc);
   fprintf(fc, "const size_t %s_RoomCount = ARR_COUNT(%s_Rooms);\n", extensionName, extensionName);

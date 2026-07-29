@@ -3,20 +3,20 @@
   East,
   South,
   West
-}
+}*/
 
 
-Action GotoScreenAction {
-  Screen screen;
+Action GotoScreenAction2 {
+  /*Screen screen;
 
   override bool ActionHandler(GameInfo info) {
     info.screen = this.screen;
     return true;
-  }
+  }*/
 }
 
-Action GoDirectionAction {
-  enum ScreenDirection direction;
+Action GoDirectionAction2 {
+  /*enum ScreenDirection direction;
 
   override bool VisibilityHandler(GameInfo info) {
     switch (this.direction) {
@@ -70,29 +70,31 @@ Action GoDirectionAction {
     }
 
     return true;
-  }
+  }*/
 }
 
-Action QuitGameAction {
-  override bool ActionHandler(GameInfo info) {
+Action QuitGameAction2 {
+  /*override bool ActionHandler(GameInfo info) {
     info.quit = true;
     return true;
-  }
+  }*/
 }
 
 
-Screen RoomScreen {
-  override string BodyGenerator(GameInfo info) {
+Screen RoomScreen2 {
+  /*override string BodyGenerator(GameInfo info) {
     Room room = info.GetRoom(info.x, info.y);
     if (NULL == room) {
       return NULL:
     }
 
     return room.body;
-  }
-}*/
+  }*/
+}
 
 Action TestAction {
+  uint16_t a;
+  int32_t b;
 }
 
 

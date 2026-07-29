@@ -84,9 +84,9 @@ static bool string_equals(const struct String *const restrict str1, const struct
   return 0 == strncmp((const char *)str1->str, (const char *)str2->str, str1->strLen);
 }
 
-static bool is_type_name_known(const struct StringInfo *const restrict typeNames, const struct String *const restrict name) {
+static bool is_type_name_known(const struct StringInfo *const restrict typeNames, const struct Token *const restrict idTypeName) {
   for (size_t i = 0; i < typeNames->count; ++i) {
-    if (string_equals(typeNames->strings + i, name)) {
+    if (string_equals(typeNames->strings + i, &idTypeName->string)) {
       return true;
     }
   }
@@ -99,9 +99,9 @@ static bool is_type_name_known(const struct StringInfo *const restrict typeNames
 [[nodiscard]] static bool parse_typedec(const struct TokenInfo *const restrict tokens, size_t *const restrict idx, struct ExpressionInfo *const restrict exprs,
                                         const struct Token *const restrict idBaseTypeName, struct StringInfo *const restrict existingTypeNames,
                                         const struct Token *const restrict idChildTypeName) {
-  if (is_type_name_known(&actionTypeNames, &idChildTypeName->string) ||
-      is_type_name_known(&roomTypeNames,   &idChildTypeName->string) ||
-      is_type_name_known(&screenTypeNames, &idChildTypeName->string)) {
+  if (is_type_name_known(&actionTypeNames, idChildTypeName) ||
+      is_type_name_known(&roomTypeNames,   idChildTypeName) ||
+      is_type_name_known(&screenTypeNames, idChildTypeName)) {
       UNEXPECTED_TOKEN_ERROR();
       return false;
   }
@@ -157,7 +157,7 @@ static bool is_type_name_known(const struct StringInfo *const restrict typeNames
         .action = {
           strTitle,
           idVisiblityCheckerFunc, idTriggerHandlerFunc,
-          &idTypeName->string, isDerivedType
+          idTypeName, isDerivedType
         }
       };
       return add_expr(exprs, &expr);
@@ -195,9 +195,13 @@ static bool is_type_name_known(const struct StringInfo *const restrict typeNames
 
   PARSE_BLOCK {
     case SemicolonToken:
+      const bool isDerivedType = !string_equals(&roomTypeName, &idTypeName->string);
       const struct Expression expr = {
         RoomDefinitionExpression, idName,
-        .room = { intX, intY, strBody }
+        .room = {
+          intX, intY, strBody,
+          idTypeName, isDerivedType
+        }
       };
       return add_expr(exprs, &expr);
     DEFAULT_PARSE_ERROR();
@@ -269,9 +273,14 @@ static bool is_type_name_known(const struct StringInfo *const restrict typeNames
 
   PARSE_BLOCK {
     case SemicolonToken:
+      const bool isDerivedType = !string_equals(&screenTypeName, &idTypeName->string);
       const struct Expression expr = {
         ScreenDefinitionExpression, idName,
-        .screen = { isBodyFunc, strBody, actions }
+        .screen = {
+          isBodyFunc, strBody,
+          idTypeName, isDerivedType,
+          actions
+        }
       };
       return add_expr(exprs, &expr);
     DEFAULT_PARSE_ERROR();
@@ -291,15 +300,15 @@ static bool is_type_name_known(const struct StringInfo *const restrict typeNames
     const struct Token *const token = tokens->tokens + i;
     switch (token->type) {
       case IdentifierToken:
-        if (is_type_name_known(&actionTypeNames, &token->string)) {
+        if (is_type_name_known(&actionTypeNames, token)) {
           if (!parse_action(tokens, idx, exprs, token)) {
             return false;
           }
-        } else if (is_type_name_known(&roomTypeNames, &token->string)) {
+        } else if (is_type_name_known(&roomTypeNames, token)) {
           if (!parse_room(tokens, idx, exprs, token)) {
             return false;
           }
-        } else if (is_type_name_known(&screenTypeNames, &token->string)) {
+        } else if (is_type_name_known(&screenTypeNames, token)) {
           if (!parse_screen(tokens, idx, exprs, token)) {
             return false;
           }
