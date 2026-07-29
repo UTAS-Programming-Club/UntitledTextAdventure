@@ -92,13 +92,13 @@ Screen RoomScreen {
   }
 }*/
 
-TestAction : Action;
+// TestAction : Action;
 
 
 // Screen CoreMainMenuScreen;
 // Screen CoreRoomScreen;
 
-TestAction TestAction = TestAction("Test Action", backend_default_action_visibility_checker, core_test_action_handler);
+Action TestAction = Action("Test Action", backend_default_action_visibility_checker, core_test_action_handler);
 // Action StartAction = GotoScreenAction("Start Game", CoreRoomScreen);
 // Action QuitAction = QuitGameAction("Quit Game");
 Action QuitAction = Action("Quit Game", backend_default_action_visibility_checker, core_quit_game_action_handler);

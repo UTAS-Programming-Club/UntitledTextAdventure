@@ -58,16 +58,11 @@ enum TokenType {
   IntegerLiteralToken,
   StringLiteralToken,
 
-  // ActionTypeToken,
-  // RoomTypeToken,
-  // ScreenTypeToken,
-
   OpenBraceToken,
   CloseBraceToken,
   OpenParenToken,
   CloseParenToken,
   SemicolonToken,
-  ColonToken,
   EqualsToken,
   CommaToken,
 
@@ -99,7 +94,7 @@ enum ExpressionType {
 
 struct Expression {
   enum ExpressionType type;
-  const struct Token *idName; // Also idBaseTypeName if type == *TypeDeclerationExpression
+  const struct Token *idName; // Also idBaseTypeName if type == TypeDeclerationExpression
   union {
     struct {
       const struct String *idChildTypeName;

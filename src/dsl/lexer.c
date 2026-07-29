@@ -8,7 +8,7 @@
 #define EMIT_SRC_ERROR(error, ...) \
   fprintf(stderr, "%s: \u001b[0;31merror\u001b[0m: " error "\n", inputPath __VA_OPT__(,) __VA_ARGS__)
 
-#define NEW_TOKEN(type, ...) {type, lineNum, (uint16_t)(previous - line), line, __VA_ARGS__}
+#define NEW_TOKEN(type, ...) {type, lineNum, (uint16_t)(start - line), line, __VA_ARGS__}
 
 
 DYN_ARRAY_IMPL(TokenInfo, struct Token, token)
@@ -35,7 +35,7 @@ DYN_ARRAY_IMPL(TokenInfo, struct Token, token)
   uint16_t lineNum = 0;
 
   while (true) {
-    const char8_t *previous = str;
+    const char8_t *start = str;
     /*!re2c
         re2c:yyfill:enable = 0;
         re2c:sentinel = 0;
@@ -46,7 +46,7 @@ DYN_ARRAY_IMPL(TokenInfo, struct Token, token)
         end = "\x00";
 
         *   {
-          EMIT_SRC_ERROR("An unxpected character was encountered: %c", *previous);
+          EMIT_SRC_ERROR("An unxpected character was encountered: %c", *start);
           return false;
         }
         end {
@@ -55,8 +55,17 @@ DYN_ARRAY_IMPL(TokenInfo, struct Token, token)
 
         // White space
         mcm = "/*" ([^\x00*] | ("*" [^\x00/]))* "*""/";
-        scm = "//" [^\x00\n]* "\n";
-        wsp = ([ \t\v\r] | mcm | scm)+;
+        scm = "//" [^\x00\n]*;
+        wsp = ([ \t\v\r] | scm)+;
+        mcm+  {
+          for (const char8_t *chr = start; chr < str; ++chr) {
+            if (u8'\n' == *chr) {
+              line = chr + 1;
+              ++lineNum;
+            }
+          }
+          continue;
+        }
         wsp  {
           continue;
         }
@@ -69,10 +78,10 @@ DYN_ARRAY_IMPL(TokenInfo, struct Token, token)
         // Integer literal
         int = [0-9]*;
         int {
-          if (!lex_int(previous, str, &intValue)) {
+          if (!lex_int(start, str, &intValue)) {
             return false;
           }
-          struct Token token = NEW_TOKEN(
+          const struct Token token = NEW_TOKEN(
             IntegerLiteralToken,
             .integer = intValue
           );
@@ -85,94 +94,69 @@ DYN_ARRAY_IMPL(TokenInfo, struct Token, token)
         // String literal
         str = "\"" [^\x00"]* "\"";
         str {
-          struct Token token = NEW_TOKEN(
+          const struct Token token = NEW_TOKEN(
             StringLiteralToken,
-            .string = {
-              previous,
-              (size_t)(str - previous)
-            }
+            .string = { start, (size_t)(str - start) }
           );
           if (!add_token(tokens, &token)) {
             return false;
           }
-          continue;
-        }
 
-        // Types
-        /*"Action" {
-          struct Token token = NEW_TOKEN(ActionTypeToken);
-          if (!add_token(tokens, &token)) {
-            return false;
+          for (const char8_t *chr = start; chr < str; ++chr) {
+            if (u8'\n' == *chr) {
+              line = chr + 1;
+              ++lineNum;
+            }
           }
+
           continue;
         }
-        "Room"   {
-          struct Token token = NEW_TOKEN(RoomTypeToken);
-          if (!add_token(tokens, &token)) {
-            return false;
-          }
-          continue;
-        }
-        "Screen" {
-          struct Token token = NEW_TOKEN(ScreenTypeToken);
-          if (!add_token(tokens, &token)) {
-            return false;
-          }
-          continue;
-        }*/
 
         // Symbols
         "{" {
-          struct Token token = NEW_TOKEN(OpenBraceToken);
+          const struct Token token = NEW_TOKEN(OpenBraceToken);
           if (!add_token(tokens, &token)) {
             return false;
           }
           continue;
         }
         "}" {
-          struct Token token = NEW_TOKEN(CloseBraceToken);
+          const struct Token token = NEW_TOKEN(CloseBraceToken);
           if (!add_token(tokens, &token)) {
             return false;
           }
           continue;
         }
         "(" {
-          struct Token token = NEW_TOKEN(OpenParenToken);
+          const struct Token token = NEW_TOKEN(OpenParenToken);
           if (!add_token(tokens, &token)) {
             return false;
           }
           continue;
         }
         ")" {
-          struct Token token = NEW_TOKEN(CloseParenToken);
+          const struct Token token = NEW_TOKEN(CloseParenToken);
           if (!add_token(tokens, &token)) {
             return false;
           }
           continue;
         }
         ";" {
-          struct Token token = NEW_TOKEN(SemicolonToken);
-          if (!add_token(tokens, &token)) {
-            return false;
-          }
-          continue;
-        }
-        ":" {
-          struct Token token = NEW_TOKEN(ColonToken);
+          const struct Token token = NEW_TOKEN(SemicolonToken);
           if (!add_token(tokens, &token)) {
             return false;
           }
           continue;
         }
         "=" {
-          struct Token token = NEW_TOKEN(EqualsToken);
+          const struct Token token = NEW_TOKEN(EqualsToken);
           if (!add_token(tokens, &token)) {
             return false;
           }
           continue;
         }
         "," {
-          struct Token token = NEW_TOKEN(CommaToken);
+          const struct Token token = NEW_TOKEN(CommaToken);
           if (!add_token(tokens, &token)) {
             return false;
           }
@@ -182,9 +166,9 @@ DYN_ARRAY_IMPL(TokenInfo, struct Token, token)
         // Identifier
         id = [^\x00 \t\v\n\r"{}();:=,]+;
         id {
-          struct Token token = NEW_TOKEN(
+          const struct Token token = NEW_TOKEN(
             IdentifierToken,
-            .string = { previous, (size_t)(str - previous) }
+            .string = { start, (size_t)(str - start) }
           );
           if (!add_token(tokens, &token)) {
             return false;
