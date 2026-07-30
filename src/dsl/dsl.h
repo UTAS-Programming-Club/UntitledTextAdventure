@@ -98,7 +98,7 @@ struct Expression {
   union {
     struct {
       const struct String *idChildTypeName;
-      const struct TokenInfo idFields;
+      const struct String idFields;
     } typeDeclaration;
     struct {
       const struct Token *strTitle, *idVisiblityCheckerFunc, *idTriggerHandlerFunc, *idTypeName;

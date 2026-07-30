@@ -12,17 +12,18 @@ enum ScreenDirection {
   South,
   West
 };
+typedef const enum ScreenDirection ScreenDirection;
 
 struct GotoScreenAction {
-  struct Action base;
+  const struct Action base;
 
-  const struct Screen *screen;
+  Screen screen;
 };
 
 struct GoDirectionAction {
-  struct Action base;
+  const struct Action base;
 
-  enum ScreenDirection direction;
+  ScreenDirection direction;
 };
 
 extern const struct GotoScreenAction CoreStartAction;

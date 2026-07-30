@@ -22,6 +22,7 @@ struct GameInfo {
 #define NEW_EXT_ACTION(title, visibility_checker, trigger_handler, ...) \
   { NEW_ACTION(title, visibility_checker, trigger_handler), __VA_ARGS__ }
 #define USE_ACTION(action) (const struct Action *)&action
+typedef const struct Action *const Action;
 struct Action {
   // Frontend & Backend, do not modify
   const char *title;
@@ -34,6 +35,7 @@ struct Action {
 #define NEW_ROOM(x, y, body) {x, y, body}
 #define NEW_EXT_ROOM(x, y, body, ...) { NEW_ROOM(x, y, body), __VA_ARGS__ }
 #define USE_ROOM(room) (const struct Room*)&room
+typedef const struct Room *const Room;
 struct Room {
   // Backend only, do not change
   uint8_t x, y;
@@ -45,6 +47,7 @@ struct Room {
 #define NEW_SCREEN(body, body_generator,  actions) { body, body_generator, ARR_COUNT(actions), actions }
 #define NEW_EXT_SCREEN(body, body_generator, actions, ...)   \
   { NEW_SCREEN(body, body_generator, actions), __VA_ARGS__ }
+typedef const struct Screen *const Screen;
 struct Screen {
   // Backend only, do not modify
   const char *body;

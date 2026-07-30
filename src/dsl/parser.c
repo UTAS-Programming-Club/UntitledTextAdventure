@@ -25,16 +25,11 @@
 
 #define PARSE_BLOCK                                     \
   tokens->tokens + *idx + 1;                            \
-  ++(*idx);                                             \
-  if (*idx >= tokens->count) {                          \
-    EMIT_PROG_ERROR("An unrecoverable error occurred"); \
-    return false;                                       \
-  }                                                     \
-  if (*idx >= tokens->count) {                          \
-    --(*idx);                                           \
+  if (*idx + 1 >= tokens->count) {                      \
     ADDITIONAL_TOKENS_ERROR();                          \
     return false;                                       \
   }                                                     \
+  ++(*idx);                                             \
                                                         \
   switch (tokens->tokens[*idx].type)
 
@@ -95,7 +90,11 @@ static bool is_type_name_known(const struct StringInfo *const restrict typeNames
 }
 
 
-// idBaseTypeName idChildTypeName { }
+/* idBaseTypeName idChildTypeName {
+ *   type name;
+ *   ...
+ *  }
+ */
 [[nodiscard]] static bool parse_typedec(const struct TokenInfo *const restrict tokens, size_t *const restrict idx, struct ExpressionInfo *const restrict exprs,
                                         const struct Token *const restrict idBaseTypeName, struct StringInfo *const restrict existingTypeNames,
                                         const struct Token *const restrict idChildTypeName) {
@@ -106,7 +105,7 @@ static bool is_type_name_known(const struct StringInfo *const restrict typeNames
       return false;
   }
 
-  struct TokenInfo actions = {};
+  struct String fields = {};
   while (true) {
     if (*idx >= tokens->count) {
       ADDITIONAL_TOKENS_ERROR();
@@ -117,17 +116,19 @@ static bool is_type_name_known(const struct StringInfo *const restrict typeNames
       break;
     }
 
-    const struct Token *const idVariableTypeName = SINGLE_PARSE_ALLOW(IdentifierToken);
-    if (!add_token(&actions, idVariableTypeName)) {
+    const struct Token *const idVariableTypeNameStart = SINGLE_PARSE_ALLOW(IdentifierToken);
+    for (; *idx < tokens->count && SemicolonToken != GET_TOKEN()->type; ++*idx) {
+    }
+    if (*idx >= tokens->count) {
+      ADDITIONAL_TOKENS_ERROR();
       return false;
     }
 
-    const struct Token *const idVariableName = SINGLE_PARSE_ALLOW(IdentifierToken);
-    if (!add_token(&actions, idVariableName)) {
-      return false;
+    const struct Token *const idEndOfField = GET_TOKEN();
+    if (0 == fields.strLen) {
+      fields.str = idVariableTypeNameStart->string.str;
     }
-
-    SINGLE_PARSE_ALLOW(SemicolonToken);
+    fields.strLen = (size_t)(idEndOfField->line + idEndOfField->colNum + 1 - fields.str);
   }
 
   PARSE_BLOCK {
@@ -138,7 +139,7 @@ static bool is_type_name_known(const struct StringInfo *const restrict typeNames
 
       const struct Expression expr = {
         TypeDeclarationExpression, idBaseTypeName,
-        .typeDeclaration = { &idChildTypeName->string, actions }
+        .typeDeclaration = { &idChildTypeName->string, fields }
       };
       return add_expr(exprs, &expr);
     DEFAULT_PARSE_ERROR();

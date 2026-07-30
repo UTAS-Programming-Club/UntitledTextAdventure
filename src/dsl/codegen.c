@@ -57,14 +57,16 @@ static void write_str(FILE *const restrict f, const size_t strLen, const char8_t
     const struct Expression *const expr = exprs->exprs + i;
     switch (expr->type) {
       case TypeDeclarationExpression:
-        fprintf(fh, "struct %.*s {\n  struct %.*s base;\n\n",
-          FSTRING(expr->typeDeclaration.idChildTypeName), FTOKEN(expr->idName)
+        fprintf(fh, "struct %.*s {\n"
+                    "  const struct %.*s base;\n\n"
+                    "  %.*s\n"
+                    "};\n"
+                    "typedef const struct %.*s *const %.*s;\n\n",
+          FSTRING(expr->typeDeclaration.idChildTypeName), FTOKEN(expr->idName),
+          FSTRING(&expr->typeDeclaration.idFields),
+          FSTRING(expr->typeDeclaration.idChildTypeName),
+          FSTRING(expr->typeDeclaration.idChildTypeName)
         );
-        for (size_t i = 0; i < expr->typeDeclaration.idFields.count; i += 2) {
-          const struct Token *const token = expr->typeDeclaration.idFields.tokens + i;
-          fprintf(fh, "  %.*s %.*s;\n", FTOKEN(token), FTOKEN(token + 1));
-        }
-        fputs("};\n\n", fh);
         break;
       case ActionDefinitionExpression:
         fprintf(fh, "extern const struct %.*s %s_%.*s;\n\n",

@@ -7,18 +7,18 @@
 
 
 Action GotoScreenAction2 {
-  /*Screen screen;
+  Screen screen;
 
-  override bool ActionHandler(GameInfo info) {
+  /*override bool ActionHandler(GameInfo info) {
     info.screen = this.screen;
     return true;
   }*/
 }
 
 Action GoDirectionAction2 {
-  /*enum ScreenDirection direction;
+  ScreenDirection direction;
 
-  override bool VisibilityHandler(GameInfo info) {
+  /*override bool VisibilityHandler(GameInfo info) {
     switch (this.direction) {
       case North:
         if (NULL != backend_get_map_room(info, info.x, info.y + 1)) {
