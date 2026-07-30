@@ -6,7 +6,7 @@
 #include "dsl/dsl.h"   // IWYU pragma: associated
 
 #define FSTRING(string) (int)(string)->strLen, (string)->str
-#define FTOKEN(idString) FSTRING(&idString->string) // Only use for IdentifierToken
+#define FTOKEN(idString) FSTRING(&(idString)->string) // Only use for IdentifierToken
 
 
 DYN_ARRAY_IMPL(StringInfo, struct String, string)
@@ -57,9 +57,14 @@ static void write_str(FILE *const restrict f, const size_t strLen, const char8_t
     const struct Expression *const expr = exprs->exprs + i;
     switch (expr->type) {
       case TypeDeclarationExpression:
-        fprintf(fh, "struct %.*s {\n  struct %.*s base;\n};\n\n",
+        fprintf(fh, "struct %.*s {\n  struct %.*s base;\n\n",
           FSTRING(expr->typeDeclaration.idChildTypeName), FTOKEN(expr->idName)
         );
+        for (size_t i = 0; i < expr->typeDeclaration.idFields.count; i += 2) {
+          const struct Token *const token = expr->typeDeclaration.idFields.tokens + i;
+          fprintf(fh, "  %.*s %.*s;\n", FTOKEN(token), FTOKEN(token + 1));
+        }
+        fputs("};\n\n", fh);
         break;
       case ActionDefinitionExpression:
         fprintf(fh, "extern const struct %.*s %s_%.*s;\n\n",
@@ -87,6 +92,7 @@ static void write_str(FILE *const restrict f, const size_t strLen, const char8_t
           fclose(fh);
           return false;
         }
+
         fprintf(fh, "extern const struct %.*s %s_%.*s;\n\n",
           FTOKEN(expr->room.idTypeName), extensionName, FTOKEN(expr->idName)
         );
@@ -111,12 +117,12 @@ static void write_str(FILE *const restrict f, const size_t strLen, const char8_t
         fprintf(fc, "static const struct Action *const %s_%.*s_Actions[] = { ",
           extensionName, FTOKEN(expr->idName)
         );
-        for (size_t i = 0; i < expr->screen.actions.count; ++i) {
+        for (size_t i = 0; i < expr->screen.idActions.count; ++i) {
           if (0 != i) {
             fputs(", ", fc);
           }
-          const struct Token *const token = expr->screen.actions.tokens + i;
-          fprintf(fc, "USE_ACTION(%.*s)", (int)token->string.strLen, token->string.str);
+          const struct Token *const token = expr->screen.idActions.tokens + i;
+          fprintf(fc, "USE_ACTION(%.*s)", FTOKEN(token));
         }
         fputs(" };\n", fc);
 

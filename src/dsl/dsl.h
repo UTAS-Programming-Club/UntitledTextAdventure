@@ -98,7 +98,7 @@ struct Expression {
   union {
     struct {
       const struct String *idChildTypeName;
-      // const struct Token *strFields;
+      const struct TokenInfo idFields;
     } typeDeclaration;
     struct {
       const struct Token *strTitle, *idVisiblityCheckerFunc, *idTriggerHandlerFunc, *idTypeName;
@@ -113,7 +113,7 @@ struct Expression {
       const struct Token *strBody; // Also idBodyFunc if isBodyFunc == true
       const struct Token *idTypeName;
       bool isDerivedType;
-      const struct TokenInfo actions;
+      const struct TokenInfo idActions;
     } screen;
   };
 };
