@@ -6,8 +6,7 @@ enum ScreenDirection {
 }
 
 
-//Action GotoScreenAction {
-Action GotoScreenAction2 {
+Action GotoScreenAction {
   Screen screen;
 
   /*override bool ActionHandler(GameInfo info) {
@@ -16,8 +15,7 @@ Action GotoScreenAction2 {
   }*/
 }
 
-// Action GoDirectionAction {
-Action GoDirectionAction2 {
+Action GoDirectionAction {
   ScreenDirection direction;
 
   /*override bool VisibilityHandler(GameInfo info) {
@@ -75,8 +73,7 @@ Action GoDirectionAction2 {
   }*/
 }
 
-// Action QuitGameAction {
-Action QuitGameAction2 {
+Action QuitGameAction {
   /*override bool ActionHandler(GameInfo info) {
     info.quit = true;
     return true;
@@ -84,8 +81,7 @@ Action QuitGameAction2 {
 }
 
 
-// Screen RoomScreen {
-Screen RoomScreen2 {
+Screen RoomScreen {
   /*override string BodyGenerator(GameInfo info) {
     Room room = info.GetRoom(info.x, info.y);
     if (NULL == room) {
@@ -113,10 +109,10 @@ Action QuitAction = Action("Quit Game", backend_default_action_visibility_checke
 Action GoEastAction = GoDirectionAction("Go East", ScreenDirection.East);
 Action GoSouthAction = GoDirectionAction("Go South", ScreenDirection.South);
 Action GoWestAction = GoDirectionAction("Go West", ScreenDirection.West);*/
-Action GoNorthAction = GoDirectionAction2("Go North", core_go_direction_visibility_checker, core_go_direction_action_handler, ScreenDirection_North);
-Action GoEastAction = GoDirectionAction2("Go East", core_go_direction_visibility_checker, core_go_direction_action_handler, ScreenDirection_East);
-Action GoSouthAction = GoDirectionAction2("Go South", core_go_direction_visibility_checker, core_go_direction_action_handler, ScreenDirection_South);
-Action GoWestAction = GoDirectionAction2("Go West", core_go_direction_visibility_checker, core_go_direction_action_handler, ScreenDirection_West);
+Action GoNorthAction = GoDirectionAction("Go North", core_go_direction_visibility_checker, core_go_direction_action_handler, ScreenDirection_North);
+Action GoEastAction = GoDirectionAction("Go East", core_go_direction_visibility_checker, core_go_direction_action_handler, ScreenDirection_East);
+Action GoSouthAction = GoDirectionAction("Go South", core_go_direction_visibility_checker, core_go_direction_action_handler, ScreenDirection_South);
+Action GoWestAction = GoDirectionAction("Go West", core_go_direction_visibility_checker, core_go_direction_action_handler, ScreenDirection_West);
 // Action GotoMainMenuAction = GotoScreenAction("Quit", MainMenuScreen);
 
 Room FirstRoom = Room(0, 0, "First Room!");

@@ -7,23 +7,7 @@
 #include "backend.h"  // for Action, GameInfo (ptr only)
 #include "gen/coregame.h"
 
-struct GotoScreenAction {
-  const struct Action base;
-
-  Screen screen;
-};
-
-struct GoDirectionAction {
-  const struct Action base;
-
-  ScreenDirection direction;
-};
-
 extern const struct GotoScreenAction CoreStartAction;
-extern const struct GoDirectionAction CoreGoNorthAction;
-extern const struct GoDirectionAction CoreGoEastAction;
-extern const struct GoDirectionAction CoreGoSouthAction;
-extern const struct GoDirectionAction CoreGoWestAction;
 extern const struct GotoScreenAction CoreGotoMainMenuAction;
 
 extern const uint8_t MapSizeX;
