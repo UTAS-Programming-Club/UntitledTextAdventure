@@ -56,16 +56,27 @@ static void write_str(FILE *const restrict f, const size_t strLen, const char8_t
   for (size_t i = 0; i < exprs->count; ++i) {
     const struct Expression *const expr = exprs->exprs + i;
     switch (expr->type) {
-      case TypeDeclarationExpression:
+      case EnumDefinitionExpression:
+        fprintf(fh, "enum %.*s {\n", FTOKEN(expr->idName));
+        for (size_t i = 0; i < expr->idValues.count; ++i) {
+          const struct Token *const idValue = expr->idValues.tokens + i;
+          fprintf(fh, "  %.*s_%.*s,\n", FTOKEN(expr->idName), FTOKEN(idValue));
+        }
+        fprintf(fh, "};\n"
+                    "typedef const enum %.*s %.*s;\n\n",
+          FTOKEN(expr->idName), FTOKEN(expr->idName)
+        );
+        break;
+      case TypeDefinitionExpression:
         fprintf(fh, "struct %.*s {\n"
                     "  const struct %.*s base;\n\n"
                     "  %.*s\n"
                     "};\n"
                     "typedef const struct %.*s *const %.*s;\n\n",
-          FSTRING(expr->typeDeclaration.idChildTypeName), FTOKEN(expr->idName),
-          FSTRING(&expr->typeDeclaration.idFields),
-          FSTRING(expr->typeDeclaration.idChildTypeName),
-          FSTRING(expr->typeDeclaration.idChildTypeName)
+          FSTRING(expr->typeDefinition.idChildTypeName), FTOKEN(expr->idName),
+          FSTRING(&expr->typeDefinition.idFields),
+          FSTRING(expr->typeDefinition.idChildTypeName),
+          FSTRING(expr->typeDefinition.idChildTypeName)
         );
         break;
       case ActionDefinitionExpression:

@@ -58,6 +58,8 @@ enum TokenType {
   IntegerLiteralToken,
   StringLiteralToken,
 
+  EnumKeywordToken,
+
   OpenBraceToken,
   CloseBraceToken,
   OpenParenToken,
@@ -85,7 +87,8 @@ DYN_ARRAY_DEF(TokenInfo, struct Token, token)
 
 
 enum ExpressionType {
-  TypeDeclarationExpression,
+  EnumDefinitionExpression,
+  TypeDefinitionExpression,
 
   ActionDefinitionExpression,
   RoomDefinitionExpression,
@@ -94,12 +97,13 @@ enum ExpressionType {
 
 struct Expression {
   enum ExpressionType type;
-  const struct Token *idName; // Also idBaseTypeName if type == TypeDeclerationExpression
+  const struct Token *idName; // Also idBaseTypeName if type == TypeDefinitionExpression
   union {
+    const struct TokenInfo idValues; // For EnumDefinitionExpression
     struct {
       const struct String *idChildTypeName;
       const struct String idFields;
-    } typeDeclaration;
+    } typeDefinition;
     struct {
       const struct Token *strTitle, *idVisiblityCheckerFunc, *idTriggerHandlerFunc, *idTypeName;
       bool isDerivedType;

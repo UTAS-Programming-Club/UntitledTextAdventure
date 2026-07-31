@@ -59,6 +59,8 @@ static const char *get_token_string(enum TokenType token) {
     case IntegerLiteralToken: return "IntegerLiteralToken";
     case StringLiteralToken:  return "StringLiteralToken";
 
+    case EnumKeywordToken: return "EnumKeywordToken";
+
     case OpenBraceToken:  return "OpenBraceToken";
     case CloseBraceToken: return "CloseBraceToken";
     case OpenParenToken:  return "OpenParenToken";
@@ -70,6 +72,7 @@ static const char *get_token_string(enum TokenType token) {
     case IdentifierToken: return "IdentifierToken";
   }
 }
+
 
 static bool string_equals(const struct String *const restrict str1, const struct String * const restrict str2) {
   if (str1->strLen != str2->strLen) {
@@ -90,12 +93,51 @@ static bool is_type_name_known(const struct StringInfo *const restrict typeNames
 }
 
 
+/* enum idEnumName {
+ *   value;
+ *   ...
+ * }
+ */
+[[nodiscard]] static bool parse_enumdef(const struct TokenInfo *const restrict tokens, size_t *const restrict idx, struct ExpressionInfo *const restrict exprs) {
+  const struct Token *const idEnumName = SINGLE_PARSE_ALLOW(IdentifierToken);
+  SINGLE_PARSE_ALLOW(OpenBraceToken);
+
+  struct TokenInfo idValues = {};
+  while (true) {
+    if (*idx >= tokens->count) {
+      ADDITIONAL_TOKENS_ERROR();
+      return false;
+    }
+
+    if (CloseBraceToken == GET_TOKEN(1)->type) {
+      break;
+    }
+
+    const struct Token *const idValue = SINGLE_PARSE_ALLOW(IdentifierToken);
+    if (!add_token(&idValues, idValue)) {
+      return false;
+    }
+
+    SINGLE_PARSE_ALLOW(CommaToken);
+  }
+
+  PARSE_BLOCK {
+    case CloseBraceToken:
+      const struct Expression expr = {
+        EnumDefinitionExpression, idEnumName,
+        .idValues = idValues
+      };
+      return add_expr(exprs, &expr);
+    DEFAULT_PARSE_ERROR();
+  }
+}
+
 /* idBaseTypeName idChildTypeName {
  *   type name;
  *   ...
  *  }
  */
-[[nodiscard]] static bool parse_typedec(const struct TokenInfo *const restrict tokens, size_t *const restrict idx, struct ExpressionInfo *const restrict exprs,
+[[nodiscard]] static bool parse_typedef(const struct TokenInfo *const restrict tokens, size_t *const restrict idx, struct ExpressionInfo *const restrict exprs,
                                         const struct Token *const restrict idBaseTypeName, struct StringInfo *const restrict existingTypeNames,
                                         const struct Token *const restrict idChildTypeName) {
   if (is_type_name_known(&actionTypeNames, idChildTypeName) ||
@@ -105,7 +147,7 @@ static bool is_type_name_known(const struct StringInfo *const restrict typeNames
       return false;
   }
 
-  struct String fields = {};
+  struct String idVields = {};
   while (true) {
     if (*idx >= tokens->count) {
       ADDITIONAL_TOKENS_ERROR();
@@ -125,10 +167,10 @@ static bool is_type_name_known(const struct StringInfo *const restrict typeNames
     }
 
     const struct Token *const idEndOfField = GET_TOKEN();
-    if (0 == fields.strLen) {
-      fields.str = idVariableTypeNameStart->string.str;
+    if (0 == idVields.strLen) {
+      idVields.str = idVariableTypeNameStart->string.str;
     }
-    fields.strLen = (size_t)(idEndOfField->line + idEndOfField->colNum + 1 - fields.str);
+    idVields.strLen = (size_t)(idEndOfField->line + idEndOfField->colNum + 1 - idVields.str);
   }
 
   PARSE_BLOCK {
@@ -138,8 +180,8 @@ static bool is_type_name_known(const struct StringInfo *const restrict typeNames
       }
 
       const struct Expression expr = {
-        TypeDeclarationExpression, idBaseTypeName,
-        .typeDeclaration = { &idChildTypeName->string, fields }
+        TypeDefinitionExpression, idBaseTypeName,
+        .typeDefinition = { &idChildTypeName->string, idVields }
       };
       return add_expr(exprs, &expr);
     DEFAULT_PARSE_ERROR();
@@ -154,7 +196,7 @@ static bool is_type_name_known(const struct StringInfo *const restrict typeNames
 
   PARSE_BLOCK {
     case OpenBraceToken:
-      return parse_typedec(tokens, idx, exprs, idTypeName, &actionTypeNames, idName);
+      return parse_typedef(tokens, idx, exprs, idTypeName, &actionTypeNames, idName);
     case EqualsToken:
       break;
     DEFAULT_PARSE_ERROR();
@@ -198,7 +240,7 @@ static bool is_type_name_known(const struct StringInfo *const restrict typeNames
 
   PARSE_BLOCK {
     case OpenBraceToken:
-      return parse_typedec(tokens, idx, exprs, idTypeName, &roomTypeNames, idName);
+      return parse_typedef(tokens, idx, exprs, idTypeName, &roomTypeNames, idName);
     case EqualsToken:
       break;
     DEFAULT_PARSE_ERROR();
@@ -242,7 +284,7 @@ static bool is_type_name_known(const struct StringInfo *const restrict typeNames
 
   PARSE_BLOCK {
     case OpenBraceToken:
-      return parse_typedec(tokens, idx, exprs, idTypeName, &screenTypeNames, idName);
+      return parse_typedef(tokens, idx, exprs, idTypeName, &screenTypeNames, idName);
     case EqualsToken:
       break;
     DEFAULT_PARSE_ERROR();
@@ -324,6 +366,11 @@ static bool is_type_name_known(const struct StringInfo *const restrict typeNames
   for (i = 0; i < tokens->count; ++i) {
     const struct Token *const token = tokens->tokens + i;
     switch (token->type) {
+      case EnumKeywordToken:
+        if (!parse_enumdef(tokens, idx, exprs)) {
+          return false;
+        }
+        break;
       case IdentifierToken:
         if (is_type_name_known(&actionTypeNames, token)) {
           if (!parse_action(tokens, idx, exprs, token)) {
@@ -342,7 +389,7 @@ static bool is_type_name_known(const struct StringInfo *const restrict typeNames
           return false;
         }
 
-        continue;
+        break;
       DEFAULT_PARSE_ERROR();
     }
   }

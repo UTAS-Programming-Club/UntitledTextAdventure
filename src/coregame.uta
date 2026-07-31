@@ -1,9 +1,10 @@
-/*enum ScreenDirection {
+enum ScreenDirection {
   North,
   East,
   South,
-  West
-}*/
+  // TODO: Make final comma optional
+  West,
+}
 
 
 Action GotoScreenAction2 {

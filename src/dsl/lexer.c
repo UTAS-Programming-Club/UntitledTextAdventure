@@ -112,6 +112,15 @@ DYN_ARRAY_IMPL(TokenInfo, struct Token, token)
           continue;
         }
 
+        // Keywords
+        "enum" {
+          struct Token token = NEW_TOKEN(EnumKeywordToken);
+          if (!add_token(tokens, &token)) {
+            return false;
+          }
+          continue;
+        }
+
         // Symbols
         "{" {
           const struct Token token = NEW_TOKEN(OpenBraceToken);

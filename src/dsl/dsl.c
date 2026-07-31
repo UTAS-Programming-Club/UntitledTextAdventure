@@ -73,8 +73,15 @@ int main(const int argc, const char *const argv[const restrict static argc]) {
 
   for (size_t i = 0; i < exprs.count; ++i) {
     const struct Expression *const expr = exprs.exprs + i;
-    if (ScreenDefinitionExpression == expr->type) {
-      free(expr->screen.idActions.tokens);
+    switch (expr->type) {
+      case EnumDefinitionExpression:
+        free(expr->idValues.tokens);
+        break;
+      case ScreenDefinitionExpression:
+        free(expr->screen.idActions.tokens);
+        break;
+      default:
+        break;
     }
   }
 

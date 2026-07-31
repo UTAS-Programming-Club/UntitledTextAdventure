@@ -5,14 +5,7 @@
 #include <stdint.h>   // for uint8_t
 
 #include "backend.h"  // for Action, GameInfo (ptr only)
-
-enum ScreenDirection {
-  North,
-  East,
-  South,
-  West
-};
-typedef const enum ScreenDirection ScreenDirection;
+#include "gen/coregame.h"
 
 struct GotoScreenAction {
   const struct Action base;
