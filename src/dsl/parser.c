@@ -103,7 +103,19 @@ static bool is_type_name_known(const struct StringInfo *const restrict typeNames
   SINGLE_PARSE_ALLOW(OpenBraceToken);
 
   struct TokenInfo idValues = {};
+  const struct Token *const idValue = SINGLE_PARSE_ALLOW(IdentifierToken);
+  if (!add_token(&idValues, idValue)) {
+    return false;
+  }
+
   while (true) {
+    SINGLE_PARSE_ALLOW(CommaToken);
+
+    const struct Token *const idValue = SINGLE_PARSE_ALLOW(IdentifierToken);
+    if (!add_token(&idValues, idValue)) {
+      return false;
+    }
+
     if (*idx >= tokens->count) {
       ADDITIONAL_TOKENS_ERROR();
       return false;
@@ -112,13 +124,6 @@ static bool is_type_name_known(const struct StringInfo *const restrict typeNames
     if (CloseBraceToken == GET_TOKEN(1)->type) {
       break;
     }
-
-    const struct Token *const idValue = SINGLE_PARSE_ALLOW(IdentifierToken);
-    if (!add_token(&idValues, idValue)) {
-      return false;
-    }
-
-    SINGLE_PARSE_ALLOW(CommaToken);
   }
 
   PARSE_BLOCK {
