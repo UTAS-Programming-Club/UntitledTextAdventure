@@ -113,8 +113,29 @@ DYN_ARRAY_IMPL(TokenInfo, struct Token, token)
         }
 
         // Keywords
+        "Action" {
+          struct Token token = NEW_TOKEN(ActionKeywordToken);
+          if (!add_token(tokens, &token)) {
+            return false;
+          }
+          continue;
+        }
         "enum" {
           struct Token token = NEW_TOKEN(EnumKeywordToken);
+          if (!add_token(tokens, &token)) {
+            return false;
+          }
+          continue;
+        }
+        "Room" {
+          struct Token token = NEW_TOKEN(RoomKeywordToken);
+          if (!add_token(tokens, &token)) {
+            return false;
+          }
+          continue;
+        }
+        "Screen" {
+          struct Token token = NEW_TOKEN(ScreenKeywordToken);
           if (!add_token(tokens, &token)) {
             return false;
           }

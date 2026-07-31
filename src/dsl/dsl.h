@@ -58,7 +58,10 @@ enum TokenType {
   IntegerLiteralToken,
   StringLiteralToken,
 
+  ActionKeywordToken,
   EnumKeywordToken,
+  RoomKeywordToken,
+  ScreenKeywordToken,
 
   OpenBraceToken,
   CloseBraceToken,
@@ -97,26 +100,28 @@ enum ExpressionType {
 
 struct Expression {
   enum ExpressionType type;
-  const struct Token *idName; // Also idBaseTypeName if type == TypeDefinitionExpression
+  const struct Token *idName; // Also idChildTypeName if type == TypeDefinitionExpression
   union {
     const struct TokenInfo idValues; // For EnumDefinitionExpression
     struct {
-      const struct String *idChildTypeName;
+      const struct String *idBaseTypeName;
       const struct String idFields;
     } typeDefinition;
     struct {
-      const struct Token *strTitle, *idVisiblityCheckerFunc, *idTriggerHandlerFunc, *idTypeName;
+      const struct Token *strTitle, *idVisiblityCheckerFunc, *idTriggerHandlerFunc;
+      const struct String *idTypeName;
       bool isDerivedType;
       struct TokenInfo idParams;
     } action;
     struct {
-      const struct Token *intX, *intY, *strBody, *idTypeName;
+      const struct Token *intX, *intY, *strBody;
+      const struct String *idTypeName;
       bool isDerivedType;
     } room;
     struct {
       bool isBodyFunc;
       const struct Token *strBody; // Also idBodyFunc if isBodyFunc == true
-      const struct Token *idTypeName;
+      const struct String *idTypeName;
       bool isDerivedType;
       const struct TokenInfo idActions;
     } screen;

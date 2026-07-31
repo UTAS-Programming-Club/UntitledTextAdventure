@@ -73,19 +73,19 @@ static void write_str(FILE *const restrict f, const size_t strLen, const char8_t
                     "  %.*s\n"
                     "};\n"
                     "typedef const struct %.*s *const %.*s;\n\n",
-          FSTRING(expr->typeDefinition.idChildTypeName), FTOKEN(expr->idName),
+          FTOKEN(expr->idName),
+          FSTRING(expr->typeDefinition.idBaseTypeName),
           FSTRING(&expr->typeDefinition.idFields),
-          FSTRING(expr->typeDefinition.idChildTypeName),
-          FSTRING(expr->typeDefinition.idChildTypeName)
+          FTOKEN(expr->idName), FTOKEN(expr->idName)
         );
         break;
       case ActionDefinitionExpression:
         fprintf(fh, "extern const struct %.*s %s_%.*s;\n\n",
-          FTOKEN(expr->action.idTypeName), extensionName, FTOKEN(expr->idName)
+          FSTRING(expr->action.idTypeName), extensionName, FTOKEN(expr->idName)
         );
 
         fprintf(fc, "const struct %.*s %s_%.*s = NEW_",
-          FTOKEN(expr->action.idTypeName), extensionName, FTOKEN(expr->idName)
+          FSTRING(expr->action.idTypeName), extensionName, FTOKEN(expr->idName)
         );
         if (expr->action.isDerivedType) {
           fputs("EXT_", fc);
@@ -112,11 +112,11 @@ static void write_str(FILE *const restrict f, const size_t strLen, const char8_t
         }
 
         fprintf(fh, "extern const struct %.*s %s_%.*s;\n\n",
-          FTOKEN(expr->room.idTypeName), extensionName, FTOKEN(expr->idName)
+          FSTRING(expr->room.idTypeName), extensionName, FTOKEN(expr->idName)
         );
 
         fprintf(fc, "const struct %.*s %s_%.*s = NEW_",
-          FTOKEN(expr->room.idTypeName), extensionName, FTOKEN(expr->idName)
+          FSTRING(expr->room.idTypeName), extensionName, FTOKEN(expr->idName)
         );
         if (expr->room.isDerivedType) {
           fputs("EXT_", fc);
@@ -129,7 +129,7 @@ static void write_str(FILE *const restrict f, const size_t strLen, const char8_t
         break;
       case ScreenDefinitionExpression:
         fprintf(fh, "extern const struct %.*s %s_%.*s;\n\n",
-          FTOKEN(expr->screen.idTypeName), extensionName, FTOKEN(expr->idName)
+          FSTRING(expr->screen.idTypeName), extensionName, FTOKEN(expr->idName)
         );
 
         fprintf(fc, "static const struct Action *const %s_%.*s_Actions[] = { ",
@@ -145,7 +145,7 @@ static void write_str(FILE *const restrict f, const size_t strLen, const char8_t
         fputs(" };\n", fc);
 
         fprintf(fc, "const struct %.*s %s_%.*s = NEW_",
-          FTOKEN(expr->screen.idTypeName), extensionName, FTOKEN(expr->idName)
+          FSTRING(expr->screen.idTypeName), extensionName, FTOKEN(expr->idName)
         );
         if (expr->screen.isDerivedType) {
           fputs("EXT_", fc);
