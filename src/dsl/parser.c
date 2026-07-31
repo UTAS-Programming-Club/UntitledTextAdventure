@@ -214,6 +214,26 @@ static bool is_type_name_known(const struct StringInfo *const restrict typeNames
   const struct Token *const idVisiblityCheckerFunc = SINGLE_PARSE_ALLOW(IdentifierToken);
   SINGLE_PARSE_ALLOW(CommaToken);
   const struct Token *const idTriggerHandlerFunc = SINGLE_PARSE_ALLOW(IdentifierToken);
+
+  struct TokenInfo idParams = {};
+  while (true) {
+    if (*idx >= tokens->count) {
+      ADDITIONAL_TOKENS_ERROR();
+      return false;
+    }
+
+    if (CloseParenToken == GET_TOKEN(1)->type) {
+      break;
+    }
+
+    SINGLE_PARSE_ALLOW(CommaToken);
+
+    const struct Token *const idParam = SINGLE_PARSE_ALLOW(IdentifierToken);
+    if (!add_token(&idParams, idParam)) {
+      return false;
+    }
+  }
+
   SINGLE_PARSE_ALLOW(CloseParenToken);
 
   PARSE_BLOCK {
@@ -224,7 +244,8 @@ static bool is_type_name_known(const struct StringInfo *const restrict typeNames
         .action = {
           strTitle,
           idVisiblityCheckerFunc, idTriggerHandlerFunc,
-          idTypeName, isDerivedType
+          idTypeName, isDerivedType,
+          idParams
         }
       };
       return add_expr(exprs, &expr);

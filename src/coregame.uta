@@ -99,18 +99,22 @@ Action TestAction {
 }
 
 
-// Screen CoreMainMenuScreen;
-// Screen CoreRoomScreen;
+// Screen MainMenuScreen;
+// Screen RoomScreen;
 
 TestAction TestAction = TestAction("Test Action", backend_default_action_visibility_checker, core_test_action_handler);
-// Action StartAction = GotoScreenAction("Start Game", CoreRoomScreen);
+// Action StartAction = GotoScreenAction("Start Game", RoomScreen);
 // Action QuitAction = QuitGameAction("Quit Game");
 Action QuitAction = Action("Quit Game", backend_default_action_visibility_checker, core_quit_game_action_handler);
-/*Action GoNorthAction = GoDirectionAction("Go North", North);
-Action GoEastAction = GoDirectionAction("Go East", East);
-Action GoSouthAction = GoDirectionAction("Go South", South);
-Action GoWestAction = GoDirectionAction("Go West", West);
-Action GotoMainMenuAction = GotoScreenAction("Quit", CoreMainMenuScreen);*/
+/*Action GoNorthAction = GoDirectionAction("Go North", ScreenDirection.North);
+Action GoEastAction = GoDirectionAction("Go East", ScreenDirection.East);
+Action GoSouthAction = GoDirectionAction("Go South", ScreenDirection.South);
+Action GoWestAction = GoDirectionAction("Go West", ScreenDirection.West);*/
+GoDirectionAction2 GoNorthAction = GoDirectionAction2("Go North", core_go_direction_visibility_checker, core_go_direction_action_handler, ScreenDirection_North);
+GoDirectionAction2 GoEastAction = GoDirectionAction2("Go East", core_go_direction_visibility_checker, core_go_direction_action_handler, ScreenDirection_East);
+GoDirectionAction2 GoSouthAction = GoDirectionAction2("Go South", core_go_direction_visibility_checker, core_go_direction_action_handler, ScreenDirection_South);
+GoDirectionAction2 GoWestAction = GoDirectionAction2("Go West", core_go_direction_visibility_checker, core_go_direction_action_handler, ScreenDirection_West);
+// Action GotoMainMenuAction = GotoScreenAction("Quit", MainMenuScreen);
 
 Room FirstRoom = Room(0, 0, "First Room!");
 
@@ -120,12 +124,13 @@ Untitled text adventure game\n
 By the UTAS Programming Club\n
 \n
 Currently unimplemented :(", {
-  // CoreStartAction, CoreQuitAction
+  // StartAction, QuitAction
   CoreStartAction, Core_QuitAction
 });
 
 Screen RoomScreen = Screen(core_room_screen_body_generator, {
-                           CoreGoNorthAction, CoreGoEastAction, CoreGoSouthAction, CoreGoWestAction,
-                           // CoreGotoMainMenuAction
+                           // GoNorthAction, GoEastAction, GoSouthAction, GoWestAction,
+                           Core_GoNorthAction, Core_GoEastAction, Core_GoSouthAction, Core_GoWestAction,
+                           // GotoMainMenuAction
                            Core_TestAction, CoreGotoMainMenuAction
 });

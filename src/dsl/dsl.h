@@ -107,6 +107,7 @@ struct Expression {
     struct {
       const struct Token *strTitle, *idVisiblityCheckerFunc, *idTriggerHandlerFunc, *idTypeName;
       bool isDerivedType;
+      struct TokenInfo idParams;
     } action;
     struct {
       const struct Token *intX, *intY, *strBody, *idTypeName;

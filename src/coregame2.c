@@ -6,8 +6,8 @@
 #include "coregame2.h"
 #include "gen/coregame.h"  // for Core_MainMenuScreen, Core_RoomScreen
 
-static bool core_go_direction_visibility_checker(const struct GameInfo *info, const struct Action *action) {
-  const struct GoDirectionAction *this = (const struct GoDirectionAction *)action;
+bool core_go_direction_visibility_checker(const struct GameInfo *const info, const struct Action *const action) {
+  const struct GoDirectionAction *const this = (const struct GoDirectionAction *const )action;
   switch (this->direction) {
     case ScreenDirection_North:
       if (NULL != backend_get_map_room(info, info->x, info->y + 1)) {
@@ -35,19 +35,19 @@ static bool core_go_direction_visibility_checker(const struct GameInfo *info, co
 }
 
 
-static bool core_goto_screen_action_handler(struct GameInfo *info, const struct Action *action) {
-  const struct GotoScreenAction *this = (const struct GotoScreenAction *)action;
+static bool core_goto_screen_action_handler(struct GameInfo *const info, const struct Action *const action) {
+  const struct GotoScreenAction *const this = (const struct GotoScreenAction *const )action;
   info->screen = this->screen;
   return true;
 }
 
-bool core_quit_game_action_handler(struct GameInfo *info, const struct Action *action) {
+bool core_quit_game_action_handler(struct GameInfo *const info, const struct Action *const action) {
   info->quit = true;
   return true;
 }
 
-static bool core_go_direction_action_handler(struct GameInfo *info, const struct Action *action) {
-  const struct GoDirectionAction *this = (const struct GoDirectionAction *)action;
+bool core_go_direction_action_handler(struct GameInfo *const info, const struct Action *const action) {
+  const struct GoDirectionAction *const this = (const struct GoDirectionAction *const )action;
   switch (this->direction) {
     case ScreenDirection_North:
       if (NULL != backend_get_map_room(info, info->x, info->y + 1)) {
@@ -74,13 +74,13 @@ static bool core_go_direction_action_handler(struct GameInfo *info, const struct
   return true;
 }
 
-bool core_test_action_handler(struct GameInfo *info, const struct Action *action) {
+bool core_test_action_handler(struct GameInfo *const info, const struct Action *const action) {
   info->quit = true;
   return true;
 }
 
-const char *core_room_screen_body_generator(const struct GameInfo *info) {
-  const struct Room *room = backend_get_map_room(info, info->x, info->y);
+const char *core_room_screen_body_generator(const struct GameInfo *const info) {
+  const struct Room *const room = backend_get_map_room(info, info->x, info->y);
   if (NULL == room) {
     return NULL;
   }
@@ -89,10 +89,6 @@ const char *core_room_screen_body_generator(const struct GameInfo *info) {
 }
 
 const struct GotoScreenAction CoreStartAction = NEW_EXT_ACTION("Start Game", backend_default_action_visibility_checker, core_goto_screen_action_handler, &Core_RoomScreen);
-const struct GoDirectionAction CoreGoNorthAction = NEW_EXT_ACTION("Go North", core_go_direction_visibility_checker, core_go_direction_action_handler, ScreenDirection_North);
-const struct GoDirectionAction CoreGoEastAction = NEW_EXT_ACTION("Go East", core_go_direction_visibility_checker, core_go_direction_action_handler, ScreenDirection_East);
-const struct GoDirectionAction CoreGoSouthAction = NEW_EXT_ACTION("Go South", core_go_direction_visibility_checker, core_go_direction_action_handler, ScreenDirection_South);
-const struct GoDirectionAction CoreGoWestAction = NEW_EXT_ACTION("Go West", core_go_direction_visibility_checker, core_go_direction_action_handler, ScreenDirection_West);
 const struct GotoScreenAction CoreGotoMainMenuAction = NEW_EXT_ACTION("Quit", backend_default_action_visibility_checker, core_goto_screen_action_handler, &Core_MainMenuScreen);
 
 const uint8_t MapSizeX = 3;

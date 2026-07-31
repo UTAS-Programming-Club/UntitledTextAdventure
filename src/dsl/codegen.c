@@ -92,10 +92,15 @@ static void write_str(FILE *const restrict f, const size_t strLen, const char8_t
         }
         fputs("ACTION(", fc);
         write_str(fc, expr->action.strTitle->string.strLen, expr->action.strTitle->string.str);
-        fprintf(fc, ", %.*s, %.*s);\n\n",
+        fprintf(fc, ", %.*s, %.*s",
           FTOKEN(expr->action.idVisiblityCheckerFunc),
           FTOKEN(expr->action.idTriggerHandlerFunc)
         );
+        for (size_t i = 0; i < expr->action.idParams.count; ++i) {
+          const struct Token *const idValue = expr->action.idParams.tokens + i;
+          fprintf(fc, ", %.*s", FTOKEN(idValue));
+        }
+        fputs(");\n\n", fc);
         break;
       case RoomDefinitionExpression:
         struct String room = { expr->idName->string.str, expr->idName->string.strLen };
