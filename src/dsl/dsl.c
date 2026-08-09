@@ -128,11 +128,37 @@ static void (process_identifier)(const char8_t *restrict *const restrict file) {
 // TODO: Fix error with PRIu16
 #define EMIT_LEX_ERROR() EMIT_PROG_ERROR("%s:%hu:%td: Unexpected character: %c", inputPath, lineNum + 1, file - exprStart + 1, *file)
 
+#define FSTRING(string) (int)(string)->strLen, (string)->str
+
 // TODO: Restore single- and multi-line comments
 // BaseType = Action | Room | Screen
 // BaseType name = Type();
 bool transpile(const char8_t *restrict file, const char *const restrict hPath, const char *const restrict cPath, const char *const restrict extensionName) {
+  bool status = false;
   uint16_t lineNum = 0;
+
+
+  FILE *const fh = fopen(hPath, "wb");
+  if (nullptr == fh) {
+    EMIT_PROG_ERROR("unable to open %s", hPath);
+    return false;
+  }
+
+  FILE *const fc = fopen(cPath, "wb");
+  if (nullptr == fc) {
+    EMIT_PROG_ERROR("unable to open %s", cPath);
+    fclose(fh);
+    return false;
+  }
+
+  fprintf(fh, "\
+#ifndef UTA_GEN_%s_H\n\
+#define UTA_GEN_%s_H\n\
+\n", extensionName, extensionName);
+
+    fprintf(fc, "\
+#include \"%s\"\n\n", hPath);
+
 
   for (; u8'\0' != *file; ++file) {
     const char8_t *const exprStart = file;
@@ -142,15 +168,19 @@ bool transpile(const char8_t *restrict file, const char *const restrict hPath, c
 
     tokenStart = file;
     const struct TypeArray *types;
+    const char8_t *capital_name;
     if (process_match(u8"Action")) {
       types = &ActionTypes;
+      capital_name = u8"ACTION";
     } else if (process_match(u8"Room")) {
       types = &RoomTypes;
+      capital_name = u8"ROOM";
     } else if (process_match(u8"Screen")) {
       types = &ScreenTypes;
+      capital_name = u8"SCREEN";
     } else {
       EMIT_LEX_ERROR();
-      return false;
+      goto cleanup;
     }
     const struct String baseType = NEW_TOKEN_STRING();
 
@@ -164,7 +194,7 @@ bool transpile(const char8_t *restrict file, const char *const restrict hPath, c
     process_spaces();
     if (!process_match(u8"=")) {
       EMIT_LEX_ERROR();
-      return false;
+      goto cleanup;
     }
 
     process_spaces();
@@ -174,34 +204,43 @@ bool transpile(const char8_t *restrict file, const char *const restrict hPath, c
     const struct String type = NEW_TOKEN_STRING();
     if (!is_type_name_known(types, &type)) {
       // TODO: Add error
-      return false;
+      goto cleanup;
     }
 
     process_spaces();
     if (!process_match(u8"(")) {
       EMIT_LEX_ERROR();
-      return false;
+      goto cleanup;
     }
 
     process_spaces();
     if (!process_match(u8")")) {
       EMIT_LEX_ERROR();
-      return false;
+      goto cleanup;
     }
     
     process_spaces();
     if (!process_match(u8";")) {
       EMIT_LEX_ERROR();
-      return false;
+      goto cleanup;
     }
 
-    printf("%zu, %.*s\n", baseType.strLen, (int)baseType.strLen, baseType.str);
-    printf("%zu, %.*s\n", name.strLen, (int)name.strLen, name.str);
+
+    fprintf(fh, "extern const struct %.*s %.*s;\n\n", FSTRING(&baseType), FSTRING(&name));
+    fprintf(fc, "const struct %.*s %.*s = NEW_%s();\n\n", FSTRING(&baseType), FSTRING(&name), capital_name);
+
     printf("%zu, %.*s\n", type.strLen, (int)type.strLen, type.str);
     putchar('\n');
   }
 
-  return true;
+  status = true;
+
+  fprintf(fh, "#endif // UTA_GEN_%s_H\n", extensionName);
+
+cleanup:
+  fclose(fc);
+  fclose(fh);
+  return status;
 }
 
 
