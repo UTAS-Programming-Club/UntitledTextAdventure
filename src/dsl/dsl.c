@@ -15,16 +15,82 @@ const char *inputPath;
 #define EMIT_PROG_ERROR(error, ...) \
   fprintf(stderr, "%s: \u001b[0;31merror\u001b[0m: " error "\n", programName __VA_OPT__(,) __VA_ARGS__)
 
+#define DYN_ARRAY_DEF(typeName, baseTypeName, varName) struct typeName {                                     \
+  baseTypeName *varName ## s;                                                                                \
+  size_t count;                                                                                              \
+  size_t length;                                                                                             \
+};                                                                                                           \
+                                                                                                             \
+[[nodiscard]] bool add_ ## varName(struct typeName *const varName ## s, const baseTypeName *const varName) { \
+if (varName ## s->count + 1 >= varName ## s->length) {                                                       \
+    size_t newLen = 2 * varName ## s->count;                                                                 \
+    if (0 == newLen) {                                                                                       \
+      newLen = 8;                                                                                            \
+    }                                                                                                        \
+                                                                                                             \
+    baseTypeName *newArr = realloc(varName ## s->varName ## s, newLen * sizeof *varName ## s->varName ## s); \
+    if (nullptr == newArr) {                                                                                 \
+      EMIT_PROG_ERROR("An unrecoverable error occurred");                                                    \
+      return false;                                                                                          \
+    }                                                                                                        \
+                                                                                                             \
+    varName ## s->length = newLen;                                                                           \
+    varName ## s->varName ## s = newArr;                                                                     \
+  }                                                                                                          \
+                                                                                                             \
+  memcpy(varName ## s->varName ## s + varName ## s->count, varName, sizeof *varName);                        \
+  ++varName ## s->count;                                                                                     \
+  return true;                                                                                               \
+}
+
+
+#define NEW_STATIC_STRING(str) { str, sizeof str - 1 }
 #define NEW_TOKEN_STRING() { tokenStart, (size_t)(file - tokenStart) }
 struct String {
   const char8_t *str;
   size_t strLen;
 };
 
+struct Type {
+  struct String name;
+};
+DYN_ARRAY_DEF(TypeArray, struct Type, type)
+
+static struct Type ActionType = { NEW_STATIC_STRING(u8"Action") };
+static struct Type RoomType   = { NEW_STATIC_STRING(u8"Room")   };
+static struct Type ScreenType = { NEW_STATIC_STRING(u8"Screen") };
+static struct TypeArray ActionTypes = {};
+static struct TypeArray RoomTypes = {};
+static struct TypeArray ScreenTypes = {};
+
+static bool setup_type_arrays() {
+ return add_type(&ActionTypes, &ActionType) &&
+        add_type(&RoomTypes,   &RoomType)   &&
+        add_type(&ScreenTypes, &ScreenType);
+}
+
+static bool string_equals(const struct String *const restrict str1, const struct String *const restrict str2) {
+  if (str1->strLen != str2->strLen) {
+    return false;
+  }
+
+  return 0 == strncmp((const char *)str1->str, (const char *)str2->str, str1->strLen);
+}
+
+static bool is_type_name_known(const struct TypeArray *const restrict typeNames, const struct String *const restrict typeName) {
+  for (size_t i = 0; i < typeNames->count; ++i) {
+    if (string_equals(&typeNames->types[i].name, typeName)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 
 // TODO: Ensure this supports unicode
 #define process_match(match) process_match(&file, sizeof match - 1, match)
-[[nodiscard]] bool (process_match)(const char8_t *restrict *const restrict file, size_t strLen, const char8_t match[const restrict static strLen]) {
+[[nodiscard]] static bool (process_match)(const char8_t *restrict *const restrict file, size_t strLen, const char8_t match[const restrict static strLen]) {
   if (0 != strncmp((const char *)*file, (const char *)match, strLen)) {
     return false;
   }
@@ -35,7 +101,7 @@ struct String {
 
 // TODO: Support unicode?
 #define process_spaces() process_spaces(&file, &lineNum)
-void (process_spaces)(const char8_t *restrict *const restrict file, uint16_t *const lineNum) {
+static void (process_spaces)(const char8_t *restrict *const restrict file, uint16_t *const lineNum) {
   for (; u8'\0' != **file; ++*file) {
     if (u8'\n' == **file) {
       ++*lineNum;
@@ -49,7 +115,7 @@ void (process_spaces)(const char8_t *restrict *const restrict file, uint16_t *co
 
 // TODO: Support unicode
 #define process_identifier() process_identifier(&file)
-void (process_identifier)(const char8_t *restrict *const restrict file) {
+static void (process_identifier)(const char8_t *restrict *const restrict file) {
   for (; u8'\0' != **file; ++*file) {
     if (!isalnum(**file)) {
       break;
@@ -68,7 +134,6 @@ void (process_identifier)(const char8_t *restrict *const restrict file) {
 bool transpile(const char8_t *restrict file, const char *const restrict hPath, const char *const restrict cPath, const char *const restrict extensionName) {
   uint16_t lineNum = 0;
 
-
   for (; u8'\0' != *file; ++file) {
     const char8_t *const exprStart = file;
     const char8_t *tokenStart = file;
@@ -76,7 +141,14 @@ bool transpile(const char8_t *restrict file, const char *const restrict hPath, c
     process_spaces();
 
     tokenStart = file;
-    if (!process_match(u8"Action") && !process_match(u8"Room") && !process_match(u8"Screen")) {
+    const struct TypeArray *types;
+    if (process_match(u8"Action")) {
+      types = &ActionTypes;
+    } else if (process_match(u8"Room")) {
+      types = &RoomTypes;
+    } else if (process_match(u8"Screen")) {
+      types = &ScreenTypes;
+    } else {
       EMIT_LEX_ERROR();
       return false;
     }
@@ -100,6 +172,10 @@ bool transpile(const char8_t *restrict file, const char *const restrict hPath, c
     tokenStart = file;
     process_identifier();
     const struct String type = NEW_TOKEN_STRING();
+    if (!is_type_name_known(types, &type)) {
+      // TODO: Add error
+      return false;
+    }
 
     process_spaces();
     if (!process_match(u8"(")) {
@@ -180,7 +256,18 @@ int main(const int argc, const char *const argv[const static argc]) {
     }
   }
 
+  status = status && setup_type_arrays();
   status = status && transpile(file, outputHPath, outputCPath, extensionName);
+
+  if (nullptr != ActionTypes.types) {
+    free(ActionTypes.types);
+  }
+  if (nullptr != RoomTypes.types) {
+    free(RoomTypes.types);
+  }
+  if (nullptr != ScreenTypes.types) {
+    free(ScreenTypes.types);
+  }
 
   munmap(file, (size_t)st.st_size);
   close(fd);
