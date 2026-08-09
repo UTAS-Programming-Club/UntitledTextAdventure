@@ -57,6 +57,7 @@ struct String {
 DYN_ARRAY_DEF(StringArray, struct String, string)
 
 enum FieldType {
+  Integer,
   String
 };
 
@@ -75,6 +76,8 @@ static struct Type ActionType = { NEW_STATIC_STRING(u8"Action") };
 static struct TypeArray ActionTypes = {};
 
 static struct Type RoomType   = { NEW_STATIC_STRING(u8"Room")   };
+static struct Field RoomField1 = { Integer };
+static struct Field RoomField2 = { Integer };
 static struct TypeArray RoomTypes = {};
 
 static struct Type ScreenType = { NEW_STATIC_STRING(u8"Screen") };
@@ -83,7 +86,8 @@ static struct TypeArray ScreenTypes = {};
 
 static bool setup_type_arrays() {
  return add_type(&ActionTypes, &ActionType) &&
-        add_type(&RoomTypes,   &RoomType)   &&
+        add_field(&RoomType.fields, &RoomField1) && add_field(&RoomType.fields, &RoomField2) &&
+        add_type(&RoomTypes, &RoomType) &&
         add_field(&ScreenType.fields, &ScreenField1) && add_type(&ScreenTypes, &ScreenType);
 }
 
@@ -143,22 +147,23 @@ static void (process_identifier)(const char8_t *restrict *const restrict file) {
 }
 
 // TODO: Improve file, pFile mess
-#define process_string() process_string(&file, lineNum, exprStart)
-[[nodiscard]] static bool (process_string)(const char8_t *restrict *const restrict pFile, uint16_t lineNum, const char8_t *const restrict exprStart) {
+#define process_string() process_string(&file)
+[[nodiscard]] static bool (process_string)(const char8_t *restrict *const restrict pFile) {
   const char8_t *file = *pFile;
 
   if (!process_match(u8"\"")) {
-    EMIT_LEX_ERROR();
     return false;
   }
   *pFile = file;
 
-  for (; u8'"' != **pFile && u8'\0' != **pFile; ++*pFile) {
+  for (; u8'\0' != **pFile; ++*pFile) {
+    if (u8'"' == **pFile) {
+      break;
+    }
   }
 
   file = *pFile;
   if (!process_match(u8"\"")) {
-    EMIT_LEX_ERROR();
     return false;
   }
   *pFile = file;
@@ -166,6 +171,19 @@ static void (process_identifier)(const char8_t *restrict *const restrict file) {
   return true;
 }
 
+#define process_integer() process_integer(&file)
+[[nodiscard]] static bool (process_integer)(const char8_t *restrict *const restrict file) {
+  bool ranOnce = false;
+  for (; u8'\0' != **file; ++*file) {
+    if (!isdigit(**file)) {
+      return ranOnce;
+    }
+
+    ranOnce = true;
+  }
+
+  return false;
+}
 
 #define FSTRING(string) (int)(string)->strLen, (string)->str
 
@@ -199,11 +217,9 @@ bool transpile(const char8_t *restrict file, const char *const restrict hPath, c
 #include \"%s\"\n\n", hPath);
 
 
-  for (; u8'\0' != *file; ++file) {
+  for (process_spaces(); u8'\0' != *file; process_spaces()) {
     const char8_t *const exprStart = file;
     const char8_t *tokenStart = file;
-
-    process_spaces();
 
     tokenStart = file;
     const struct TypeArray *types;
@@ -269,17 +285,24 @@ bool transpile(const char8_t *restrict file, const char *const restrict hPath, c
 
       tokenStart = file;
       switch (field->type) {
-        case String:
-          if (!process_string()) {
-            goto cleanup;
-          }
-
-          const struct String string = NEW_TOKEN_STRING();
-          if (!add_string(&args, &string)) {
+        case Integer:
+          if (!process_integer()) {
             EMIT_LEX_ERROR();
             goto cleanup;
           }
           break;
+        case String:
+          if (!process_string()) {
+            EMIT_LEX_ERROR();
+            goto cleanup;
+          }
+          break;
+      }
+
+      const struct String string = NEW_TOKEN_STRING();
+      if (!add_string(&args, &string)) {
+        EMIT_LEX_ERROR();
+        goto cleanup;
       }
     }
 
