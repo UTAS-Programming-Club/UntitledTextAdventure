@@ -1,9 +1,9 @@
 #include <ctype.h>     // for isalnum, isspace
 #include <fcntl.h>     // for O_RDONLY, open
 #include <stdint.h>    // for uint16_t
-#include <stdio.h>     // for fprintf, stderr, size_t, printf, putchar
-#include <stdlib.h>    // for EXIT_FAILURE, EXIT_SUCCESS
-#include <string.h>    // for strstr, strcmp, strncmp
+#include <stdio.h>     // for fprintf, stderr, size_t, fclose, FILE, fopen, fputs, printf
+#include <stdlib.h>    // for EXIT_FAILURE, free, realloc, EXIT_SUCCESS
+#include <string.h>    // for memcpy, strstr, strncmp, strcmp
 #include <sys/mman.h>  // for MAP_FAILED, MAP_PRIVATE, PROT_READ, mmap, munmap
 #include <sys/stat.h>  // for stat, fstat
 #include <uchar.h>     // for char8_t
@@ -15,33 +15,37 @@ const char *inputPath;
 #define EMIT_PROG_ERROR(error, ...) \
   fprintf(stderr, "%s: \u001b[0;31merror\u001b[0m: " error "\n", programName __VA_OPT__(,) __VA_ARGS__)
 
-#define DYN_ARRAY_DEF(typeName, baseTypeName, varName) struct typeName {                                     \
-  baseTypeName *varName ## s;                                                                                \
-  size_t count;                                                                                              \
-  size_t length;                                                                                             \
-};                                                                                                           \
-                                                                                                             \
-[[nodiscard]] bool add_ ## varName(struct typeName *const varName ## s, const baseTypeName *const varName) { \
-if (varName ## s->count + 1 >= varName ## s->length) {                                                       \
-    size_t newLen = 2 * varName ## s->count;                                                                 \
-    if (0 == newLen) {                                                                                       \
-      newLen = 8;                                                                                            \
-    }                                                                                                        \
-                                                                                                             \
-    baseTypeName *newArr = realloc(varName ## s->varName ## s, newLen * sizeof *varName ## s->varName ## s); \
-    if (nullptr == newArr) {                                                                                 \
-      EMIT_PROG_ERROR("An unrecoverable error occurred");                                                    \
-      return false;                                                                                          \
-    }                                                                                                        \
-                                                                                                             \
-    varName ## s->length = newLen;                                                                           \
-    varName ## s->varName ## s = newArr;                                                                     \
-  }                                                                                                          \
-                                                                                                             \
-  memcpy(varName ## s->varName ## s + varName ## s->count, varName, sizeof *varName);                        \
-  ++varName ## s->count;                                                                                     \
-  return true;                                                                                               \
+#define DYN_ARRAY_DEF(typeName, baseTypeName, varName) struct typeName {                                            \
+  baseTypeName *varName ## s;                                                                                       \
+  size_t count;                                                                                                     \
+  size_t length;                                                                                                    \
+};                                                                                                                  \
+                                                                                                                    \
+[[nodiscard]] static bool add_ ## varName(struct typeName *const varName ## s, const baseTypeName *const varName) { \
+if (varName ## s->count + 1 >= varName ## s->length) {                                                              \
+    size_t newLen = 2 * varName ## s->count;                                                                        \
+    if (0 == newLen) {                                                                                              \
+      newLen = 8;                                                                                                   \
+    }                                                                                                               \
+                                                                                                                    \
+    baseTypeName *newArr = realloc(varName ## s->varName ## s, newLen * sizeof *varName ## s->varName ## s);        \
+    if (nullptr == newArr) {                                                                                        \
+      EMIT_PROG_ERROR("An unrecoverable error occurred");                                                           \
+      return false;                                                                                                 \
+    }                                                                                                               \
+                                                                                                                    \
+    varName ## s->length = newLen;                                                                                  \
+    varName ## s->varName ## s = newArr;                                                                            \
+  }                                                                                                                 \
+                                                                                                                    \
+  memcpy(varName ## s->varName ## s + varName ## s->count, varName, sizeof *varName);                               \
+  ++varName ## s->count;                                                                                            \
+  return true;                                                                                                      \
 }
+
+// TODO: Restore full error line reporting, also make sure unicode prints then (doesn't now unless only 1 byte)
+// TODO: Fix error with PRIu16
+#define EMIT_LEX_ERROR() EMIT_PROG_ERROR("%s:%hu:%td: Unexpected character: %c", inputPath, lineNum + 1, file - exprStart + 1, *file)
 
 
 #define NEW_STATIC_STRING(str) { str, sizeof str - 1 }
@@ -50,23 +54,37 @@ struct String {
   const char8_t *str;
   size_t strLen;
 };
+DYN_ARRAY_DEF(StringArray, struct String, string)
+
+enum FieldType {
+  String
+};
+
+struct Field {
+  enum FieldType type;
+};
+DYN_ARRAY_DEF(FieldArray, struct Field, field)
 
 struct Type {
   struct String name;
+  struct FieldArray fields;
 };
 DYN_ARRAY_DEF(TypeArray, struct Type, type)
 
 static struct Type ActionType = { NEW_STATIC_STRING(u8"Action") };
-static struct Type RoomType   = { NEW_STATIC_STRING(u8"Room")   };
-static struct Type ScreenType = { NEW_STATIC_STRING(u8"Screen") };
 static struct TypeArray ActionTypes = {};
+
+static struct Type RoomType   = { NEW_STATIC_STRING(u8"Room")   };
 static struct TypeArray RoomTypes = {};
+
+static struct Type ScreenType = { NEW_STATIC_STRING(u8"Screen") };
+static struct Field ScreenField1 = { String };
 static struct TypeArray ScreenTypes = {};
 
 static bool setup_type_arrays() {
  return add_type(&ActionTypes, &ActionType) &&
         add_type(&RoomTypes,   &RoomType)   &&
-        add_type(&ScreenTypes, &ScreenType);
+        add_field(&ScreenType.fields, &ScreenField1) && add_type(&ScreenTypes, &ScreenType);
 }
 
 static bool string_equals(const struct String *const restrict str1, const struct String *const restrict str2) {
@@ -77,14 +95,15 @@ static bool string_equals(const struct String *const restrict str1, const struct
   return 0 == strncmp((const char *)str1->str, (const char *)str2->str, str1->strLen);
 }
 
-static bool is_type_name_known(const struct TypeArray *const restrict typeNames, const struct String *const restrict typeName) {
-  for (size_t i = 0; i < typeNames->count; ++i) {
-    if (string_equals(&typeNames->types[i].name, typeName)) {
-      return true;
+static const struct Type *get_type(const struct TypeArray *const restrict types, const struct String *const restrict typeName) {
+  for (size_t i = 0; i < types->count; ++i) {
+    const struct Type *type = types->types + i;
+    if (string_equals(&type->name, typeName)) {
+      return type;
     }
   }
 
-  return false;
+  return nullptr;
 }
 
 
@@ -101,7 +120,7 @@ static bool is_type_name_known(const struct TypeArray *const restrict typeNames,
 
 // TODO: Support unicode?
 #define process_spaces() process_spaces(&file, &lineNum)
-static void (process_spaces)(const char8_t *restrict *const restrict file, uint16_t *const lineNum) {
+static void (process_spaces)(const char8_t *restrict *const restrict file, uint16_t *const restrict lineNum) {
   for (; u8'\0' != **file; ++*file) {
     if (u8'\n' == **file) {
       ++*lineNum;
@@ -123,10 +142,30 @@ static void (process_identifier)(const char8_t *restrict *const restrict file) {
   }
 }
 
+// TODO: Improve file, pFile mess
+#define process_string() process_string(&file, lineNum, exprStart)
+[[nodiscard]] static bool (process_string)(const char8_t *restrict *const restrict pFile, uint16_t lineNum, const char8_t *const restrict exprStart) {
+  const char8_t *file = *pFile;
 
-// TODO: Restore full error line reporting, also make sure unicode prints then (doesn't now unless only 1 byte)
-// TODO: Fix error with PRIu16
-#define EMIT_LEX_ERROR() EMIT_PROG_ERROR("%s:%hu:%td: Unexpected character: %c", inputPath, lineNum + 1, file - exprStart + 1, *file)
+  if (!process_match(u8"\"")) {
+    EMIT_LEX_ERROR();
+    return false;
+  }
+  *pFile = file;
+
+  for (; u8'"' != **pFile && u8'\0' != **pFile; ++*pFile) {
+  }
+
+  file = *pFile;
+  if (!process_match(u8"\"")) {
+    EMIT_LEX_ERROR();
+    return false;
+  }
+  *pFile = file;
+
+  return true;
+}
+
 
 #define FSTRING(string) (int)(string)->strLen, (string)->str
 
@@ -201,8 +240,9 @@ bool transpile(const char8_t *restrict file, const char *const restrict hPath, c
 
     tokenStart = file;
     process_identifier();
-    const struct String type = NEW_TOKEN_STRING();
-    if (!is_type_name_known(types, &type)) {
+    const struct String typeName = NEW_TOKEN_STRING();
+    const struct Type *type = get_type(types, &typeName);
+    if (nullptr == type) {
       // TODO: Add error
       goto cleanup;
     }
@@ -211,6 +251,36 @@ bool transpile(const char8_t *restrict file, const char *const restrict hPath, c
     if (!process_match(u8"(")) {
       EMIT_LEX_ERROR();
       goto cleanup;
+    }
+
+    struct StringArray args = {};
+    for (size_t i = 0; i < type->fields.count; ++i) {
+      const struct Field *field = type->fields.fields + i;
+
+      process_spaces();
+
+      if (i != 0) {
+        if (!process_match(u8",")) {
+          EMIT_LEX_ERROR();
+          goto cleanup;
+        }
+        process_spaces();
+      }
+
+      tokenStart = file;
+      switch (field->type) {
+        case String:
+          if (!process_string()) {
+            goto cleanup;
+          }
+
+          const struct String string = NEW_TOKEN_STRING();
+          if (!add_string(&args, &string)) {
+            EMIT_LEX_ERROR();
+            goto cleanup;
+          }
+          break;
+      }
     }
 
     process_spaces();
@@ -225,12 +295,17 @@ bool transpile(const char8_t *restrict file, const char *const restrict hPath, c
       goto cleanup;
     }
 
-
     fprintf(fh, "extern const struct %.*s %.*s;\n\n", FSTRING(&baseType), FSTRING(&name));
-    fprintf(fc, "const struct %.*s %.*s = NEW_%s();\n\n", FSTRING(&baseType), FSTRING(&name), capital_name);
 
-    printf("%zu, %.*s\n", type.strLen, (int)type.strLen, type.str);
-    putchar('\n');
+    fprintf(fc, "const struct %.*s %.*s = NEW_%s(", FSTRING(&baseType), FSTRING(&name), capital_name);
+    for (size_t i = 0; i < args.count; ++i) {
+      if (i != 0) {
+        fputs(", ", fc);
+      }
+
+      fprintf(fc, "%.*s", FSTRING(args.strings + i));
+    }
+    fputs(");\n\n", fc);
   }
 
   status = true;
