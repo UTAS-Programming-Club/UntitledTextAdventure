@@ -1,15 +1,132 @@
+#include <ctype.h>     // for isalnum, isspace
 #include <fcntl.h>     // for O_RDONLY, open
-#include <stdio.h>     // for fprintf, stderr, size_t, printf
-#include <stdlib.h>    // for EXIT_FAILURE, free, EXIT_SUCCESS
-#include <string.h>    // for strstr, strcmp
+#include <stdint.h>    // for uint16_t
+#include <stdio.h>     // for fprintf, stderr, size_t, printf, putchar
+#include <stdlib.h>    // for EXIT_FAILURE, EXIT_SUCCESS
+#include <string.h>    // for strstr, strcmp, strncmp
 #include <sys/mman.h>  // for MAP_FAILED, MAP_PRIVATE, PROT_READ, mmap, munmap
 #include <sys/stat.h>  // for stat, fstat
+#include <uchar.h>     // for char8_t
 #include <unistd.h>    // for close
-
-#include "dsl/dsl.h"   // IWYU pragma: associated
 
 const char *programName;
 const char *inputPath;
+
+#define EMIT_PROG_ERROR(error, ...) \
+  fprintf(stderr, "%s: \u001b[0;31merror\u001b[0m: " error "\n", programName __VA_OPT__(,) __VA_ARGS__)
+
+#define NEW_TOKEN_STRING() { tokenStart, (size_t)(file - tokenStart) }
+struct String {
+  const char8_t *str;
+  size_t strLen;
+};
+
+
+// TODO: Ensure this supports unicode
+#define process_match(match) process_match(&file, sizeof match - 1, match)
+[[nodiscard]] bool (process_match)(const char8_t *restrict *const restrict file, size_t strLen, const char8_t match[const restrict static strLen]) {
+  if (0 != strncmp((const char *)*file, (const char *)match, strLen)) {
+    return false;
+  }
+
+  *file += strLen;
+  return true;
+}
+
+// TODO: Support unicode?
+#define process_spaces() process_spaces(&file, &lineNum)
+void (process_spaces)(const char8_t *restrict *const restrict file, uint16_t *const lineNum) {
+  for (; u8'\0' != **file; ++*file) {
+    if (u8'\n' == **file) {
+      ++*lineNum;
+    }
+
+    if (!isspace(**file)) {
+        break;
+    }
+  }
+}
+
+// TODO: Support unicode
+#define process_identifier() process_identifier(&file)
+void (process_identifier)(const char8_t *restrict *const restrict file) {
+  for (; u8'\0' != **file; ++*file) {
+    if (!isalnum(**file)) {
+      break;
+    }
+  }
+}
+
+
+// TODO: Restore full error line reporting, also make sure unicode prints then (doesn't now unless only 1 byte)
+// TODO: Fix error with PRIu16
+#define EMIT_LEX_ERROR() EMIT_PROG_ERROR("%s:%hu:%td: Unexpected character: %c", inputPath, lineNum + 1, file - exprStart + 1, *file)
+
+// TODO: Restore single- and multi-line comments
+// BaseType = Action | Room | Screen
+// BaseType name = Type();
+bool transpile(const char8_t *restrict file, const char *const restrict hPath, const char *const restrict cPath, const char *const restrict extensionName) {
+  uint16_t lineNum = 0;
+
+
+  for (; u8'\0' != *file; ++file) {
+    const char8_t *const exprStart = file;
+    const char8_t *tokenStart = file;
+
+    process_spaces();
+
+    tokenStart = file;
+    if (!process_match(u8"Action") && !process_match(u8"Room") && !process_match(u8"Screen")) {
+      EMIT_LEX_ERROR();
+      return false;
+    }
+    const struct String baseType = NEW_TOKEN_STRING();
+
+    // TODO: Require at least one
+    process_spaces();
+
+    tokenStart = file;
+    process_identifier();
+    const struct String name = NEW_TOKEN_STRING();
+
+    process_spaces();
+    if (!process_match(u8"=")) {
+      EMIT_LEX_ERROR();
+      return false;
+    }
+
+    process_spaces();
+
+    tokenStart = file;
+    process_identifier();
+    const struct String type = NEW_TOKEN_STRING();
+
+    process_spaces();
+    if (!process_match(u8"(")) {
+      EMIT_LEX_ERROR();
+      return false;
+    }
+
+    process_spaces();
+    if (!process_match(u8")")) {
+      EMIT_LEX_ERROR();
+      return false;
+    }
+    
+    process_spaces();
+    if (!process_match(u8";")) {
+      EMIT_LEX_ERROR();
+      return false;
+    }
+
+    printf("%zu, %.*s\n", baseType.strLen, (int)baseType.strLen, baseType.str);
+    printf("%zu, %.*s\n", name.strLen, (int)name.strLen, name.str);
+    printf("%zu, %.*s\n", type.strLen, (int)type.strLen, type.str);
+    putchar('\n');
+  }
+
+  return true;
+}
 
 
 #define USAGE "Usage: %s input output_header output_source extension_name\n"
@@ -22,7 +139,7 @@ const char *inputPath;
     return EXIT_FAILURE;                                                      \
   }
 
-int main(const int argc, const char *const argv[const restrict static argc]) {
+int main(const int argc, const char *const argv[const static argc]) {
   programName = argv[0];
 
   bool status = true;
@@ -63,30 +180,7 @@ int main(const int argc, const char *const argv[const restrict static argc]) {
     }
   }
 
-  struct TokenInfo tokens = {};
-  status = status && lex(file, &tokens);
-
-  struct ExpressionInfo exprs = {};
-  status = status && parse(&tokens, &exprs);
-
-  status = status && codegen(&exprs, outputHPath, outputCPath, extensionName);
-
-  for (size_t i = 0; i < exprs.count; ++i) {
-    const struct Expression *const expr = exprs.exprs + i;
-    switch (expr->type) {
-      case EnumDefinitionExpression:
-        free(expr->idValues.tokens);
-        break;
-      case ScreenDefinitionExpression:
-        free(expr->screen.idActions.tokens);
-        break;
-      default:
-        break;
-    }
-  }
-
-  free(exprs.exprs);
-  free(tokens.tokens);
+  status = status && transpile(file, outputHPath, outputCPath, extensionName);
 
   munmap(file, (size_t)st.st_size);
   close(fd);

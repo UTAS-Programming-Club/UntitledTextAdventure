@@ -1,8 +1,6 @@
 #!/usr/bin/env sh
 set -e
 
-./build.sh
-
 test_dsl_src()
 (
   ../C/include-what-you-use/build/bin/include-what-you-use -O3 -Wall -Wformat -Wformat=2 -Wconversion -Wimplicit-fallthrough \
@@ -47,13 +45,7 @@ test_game_src()
   $1
 )
 
-test_dsl_src src/dsl/codegen.c
-read IGNORE
 test_dsl_src src/dsl/dsl.c
-read IGNORE
-test_dsl_src gen/lexer.gen.c
-read IGNORE
-test_dsl_src src/dsl/parser.c
 read IGNORE
 
 test_game_src src/backend.c
