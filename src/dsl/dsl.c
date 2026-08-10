@@ -45,11 +45,11 @@ if (varName ## s->count + 1 >= varName ## s->length) {                          
 
 // TODO: Restore full error line reporting, also make sure unicode prints then (doesn't now unless only 1 byte)
 // TODO: Fix error with PRIu16
-#define EMIT_LEX_ERROR() EMIT_PROG_ERROR("%s:%hu:%td: Unexpected character: %c", inputPath, lineNum + 1, file - exprStart + 1, *file)
+#define EMIT_LEX_ERROR() EMIT_PROG_ERROR("%s:%hu:%td: Unexpected character: %c", inputPath, *lineNum + 1, *file - exprStart + 1, **file)
 
 
 #define NEW_STATIC_STRING(str) { str, sizeof str - 1 }
-#define NEW_TOKEN_STRING() { tokenStart, (size_t)(file - tokenStart) }
+#define NEW_TOKEN_STRING() { tokenStart, (size_t)(*file - tokenStart) }
 struct String {
   const char8_t *str;
   size_t strLen;
@@ -114,7 +114,7 @@ static const struct Type *get_type(const struct TypeArray *const restrict types,
 
 
 // TODO: Ensure this supports unicode
-#define process_match(match) process_match(&file, sizeof match - 1, match)
+#define process_match(match) process_match(file, sizeof match - 1, match)
 [[nodiscard]] static bool (process_match)(const char8_t *restrict *const restrict file, size_t strLen, const char8_t match[const restrict static strLen]) {
   if (0 != strncmp((const char *)*file, (const char *)match, strLen)) {
     return false;
@@ -125,7 +125,7 @@ static const struct Type *get_type(const struct TypeArray *const restrict types,
 }
 
 // TODO: Support unicode?
-#define process_spaces() process_spaces(&file, &lineNum)
+#define process_spaces() process_spaces(file, lineNum)
 static void (process_spaces)(const char8_t *restrict *const restrict file, uint16_t *const restrict lineNum) {
   for (; u8'\0' != **file; ++*file) {
     if (u8'\n' == **file) {
@@ -139,7 +139,7 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 }
 
 // TODO: Support unicode
-#define process_identifier() process_identifier(&file)
+#define process_identifier() process_identifier(file)
 static void (process_identifier)(const char8_t *restrict *const restrict file) {
   for (; u8'\0' != **file; ++*file) {
     if (!isalnum(**file)) {
@@ -148,32 +148,26 @@ static void (process_identifier)(const char8_t *restrict *const restrict file) {
   }
 }
 
-// TODO: Improve file, pFile mess
-#define process_string() process_string(&file)
-[[nodiscard]] static bool (process_string)(const char8_t *restrict *const restrict pFile) {
-  const char8_t *file = *pFile;
-
+#define process_string() process_string(file)
+[[nodiscard]] static bool (process_string)(const char8_t *restrict *const restrict file) {
   if (!process_match(u8"\"")) {
     return false;
   }
-  *pFile = file;
 
-  for (; u8'\0' != **pFile; ++*pFile) {
-    if (u8'"' == **pFile) {
+  for (; u8'\0' != **file; ++*file) {
+    if (u8'"' == **file) {
       break;
     }
   }
 
-  file = *pFile;
   if (!process_match(u8"\"")) {
     return false;
   }
-  *pFile = file;
 
   return true;
 }
 
-#define process_integer() process_integer(&file)
+#define process_integer() process_integer(file)
 [[nodiscard]] static bool (process_integer)(const char8_t *restrict *const restrict file) {
   bool ranOnce = false;
   for (; u8'\0' != **file; ++*file) {
@@ -189,13 +183,107 @@ static void (process_identifier)(const char8_t *restrict *const restrict file) {
 
 #define FSTRING(string) (int)(string)->strLen, (string)->str
 
-// TODO: Restore single- and multi-line comments
+
+// BaseType = Action | Room | Screen
+/* BaseType name {
+ * }
+ */
+[[nodiscard]] static bool transpile_type(const char8_t *restrict *restrict file, FILE *const restrict fh, FILE *const restrict fc, uint16_t *const restrict lineNum,
+                                         const struct TypeArray *const restrict types, const char8_t *const restrict capital_name,
+                                         const struct String *const restrict baseType, const struct String *const restrict name) {
+  process_spaces();
+  if (!process_match(u8"}")) {
+    return false;
+  }
+
+  return true;
+}
+
 // BaseType = Action | Room | Screen
 // BaseType name = Type([... [, ...[...]]]);
-bool transpile(const char8_t *restrict file, const char *const restrict hPath, const char *const restrict cPath, const char *const restrict extensionName) {
-  bool status = false;
-  uint16_t lineNum = 0;
+static bool transpile_variable(const char8_t *restrict *restrict file, FILE *const restrict fh, FILE *const restrict fc, uint16_t *const restrict lineNum,
+                               const struct TypeArray *const restrict types, const char8_t *const restrict capital_name,
+                               const struct String *const restrict baseType, const struct String *const restrict name) {
+  process_spaces();
 
+  const char8_t *tokenStart = *file;
+  process_identifier();
+  const struct String typeName = NEW_TOKEN_STRING();
+  const struct Type *type = get_type(types, &typeName);
+  if (nullptr == type) {
+    // TODO: Add error
+    return false;
+  }
+
+   process_spaces();
+   if (!process_match(u8"(")) {
+     return false;
+   }
+
+  struct StringArray args = {};
+  for (size_t i = 0; i < type->fields.count; ++i) {
+    const struct Field *field = type->fields.fields + i;
+
+    process_spaces();
+
+    if (i != 0) {
+      if (!process_match(u8",")) {
+        return false;
+      }
+      process_spaces();
+    }
+
+    tokenStart = *file;
+    switch (field->type) {
+      case Integer:
+        if (!process_integer()) {
+          return false;
+        }
+        break;
+      case String:
+        if (!process_string()) {
+          return false;
+        }
+        break;
+    }
+
+    const struct String string = NEW_TOKEN_STRING();
+    if (!add_string(&args, &string)) {
+      return false;
+    }
+  }
+
+  process_spaces();
+  if (!process_match(u8")")) {
+    return false;
+  }
+
+  process_spaces();
+  if (!process_match(u8";")) {
+    return false;
+  }
+
+  fprintf(fh, "extern const struct %.*s %.*s;\n\n", FSTRING(baseType), FSTRING(name));
+
+  fprintf(fc, "const struct %.*s %.*s = NEW_%s(", FSTRING(baseType), FSTRING(name), capital_name);
+  for (size_t i = 0; i < args.count; ++i) {
+    if (i != 0) {
+      fputs(", ", fc);
+    }
+
+    fprintf(fc, "%.*s", FSTRING(args.strings + i));
+  }
+  fputs(");\n\n", fc);
+
+  return true;
+}
+
+// TODO: Restore single- and multi-line comments
+static bool transpile(const char8_t *restrict file_, const char *const restrict hPath, const char *const restrict cPath, const char *const restrict extensionName) {
+  bool status = false;
+  uint16_t lineNum_ = 0;
+  uint16_t *const lineNum = &lineNum_;
+  const char8_t *restrict *const file = &file_;
 
   FILE *const fh = fopen(hPath, "wb");
   if (nullptr == fh) {
@@ -219,11 +307,10 @@ bool transpile(const char8_t *restrict file, const char *const restrict hPath, c
 #include \"%s\"\n\n", hPath);
 
 
-  for (process_spaces(); u8'\0' != *file; process_spaces()) {
-    const char8_t *const exprStart = file;
-    const char8_t *tokenStart = file;
+  for (process_spaces(); u8'\0' != **file; process_spaces()) {
+    const char8_t *const exprStart = *file;
+    const char8_t *tokenStart = *file;
 
-    tokenStart = file;
     const struct TypeArray *types;
     const char8_t *capital_name;
     if (process_match(u8"Action")) {
@@ -244,93 +331,23 @@ bool transpile(const char8_t *restrict file, const char *const restrict hPath, c
     // TODO: Require at least one
     process_spaces();
 
-    tokenStart = file;
+    tokenStart = *file;
     process_identifier();
     const struct String name = NEW_TOKEN_STRING();
 
     process_spaces();
-    if (!process_match(u8"=")) {
-      EMIT_LEX_ERROR();
-      goto cleanup;
-    }
-
-    process_spaces();
-
-    tokenStart = file;
-    process_identifier();
-    const struct String typeName = NEW_TOKEN_STRING();
-    const struct Type *type = get_type(types, &typeName);
-    if (nullptr == type) {
-      // TODO: Add error
-      goto cleanup;
-    }
-
-    process_spaces();
-    if (!process_match(u8"(")) {
-      EMIT_LEX_ERROR();
-      goto cleanup;
-    }
-
-    struct StringArray args = {};
-    for (size_t i = 0; i < type->fields.count; ++i) {
-      const struct Field *field = type->fields.fields + i;
-
-      process_spaces();
-
-      if (i != 0) {
-        if (!process_match(u8",")) {
-          EMIT_LEX_ERROR();
-          goto cleanup;
-        }
-        process_spaces();
+    if (process_match(u8"{")) {
+      if (transpile_type(file, fh, fc, lineNum, types, capital_name, &baseType, &name)) {
+        continue;
       }
-
-      tokenStart = file;
-      switch (field->type) {
-        case Integer:
-          if (!process_integer()) {
-            EMIT_LEX_ERROR();
-            goto cleanup;
-          }
-          break;
-        case String:
-          if (!process_string()) {
-            EMIT_LEX_ERROR();
-            goto cleanup;
-          }
-          break;
+    } else if (process_match(u8"=")) {
+      if (transpile_variable(file, fh, fc, lineNum, types, capital_name, &baseType, &name)) {
+        continue;
       }
-
-      const struct String string = NEW_TOKEN_STRING();
-      if (!add_string(&args, &string)) {
-        EMIT_LEX_ERROR();
-        goto cleanup;
-      }
-    }
-
-    process_spaces();
-    if (!process_match(u8")")) {
-      EMIT_LEX_ERROR();
-      goto cleanup;
     }
     
-    process_spaces();
-    if (!process_match(u8";")) {
-      EMIT_LEX_ERROR();
-      goto cleanup;
-    }
-
-    fprintf(fh, "extern const struct %.*s %.*s;\n\n", FSTRING(&baseType), FSTRING(&name));
-
-    fprintf(fc, "const struct %.*s %.*s = NEW_%s(", FSTRING(&baseType), FSTRING(&name), capital_name);
-    for (size_t i = 0; i < args.count; ++i) {
-      if (i != 0) {
-        fputs(", ", fc);
-      }
-
-      fprintf(fc, "%.*s", FSTRING(args.strings + i));
-    }
-    fputs(");\n\n", fc);
+    EMIT_LEX_ERROR();
+    goto cleanup;
   }
 
   status = true;
