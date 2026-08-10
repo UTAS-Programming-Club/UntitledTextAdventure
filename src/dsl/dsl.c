@@ -1,7 +1,7 @@
-#include <ctype.h>     // for isalnum, isspace
+#include <ctype.h>     // for isalnum, isdigit, isspace
 #include <fcntl.h>     // for O_RDONLY, open
 #include <stdint.h>    // for uint16_t
-#include <stdio.h>     // for fprintf, stderr, size_t, fclose, FILE, fopen, fputs, printf
+#include <stdio.h>     // for fprintf, size_t, stderr, FILE, fclose, fopen, fputs, printf
 #include <stdlib.h>    // for EXIT_FAILURE, free, realloc, EXIT_SUCCESS
 #include <string.h>    // for memcpy, strstr, strncmp, strcmp
 #include <sys/mman.h>  // for MAP_FAILED, MAP_PRIVATE, PROT_READ, mmap, munmap
@@ -201,9 +201,9 @@ static void (process_identifier)(const char8_t *restrict *const restrict file) {
 
 // BaseType = Action | Room | Screen
 // BaseType name = Type([... [, ...[...]]]);
-static bool transpile_variable(const char8_t *restrict *restrict file, FILE *const restrict fh, FILE *const restrict fc, uint16_t *const restrict lineNum,
-                               const struct TypeArray *const restrict types, const char8_t *const restrict capital_name,
-                               const struct String *const restrict baseType, const struct String *const restrict name) {
+[[nodiscard]] static bool transpile_variable(const char8_t *restrict *restrict file, FILE *const restrict fh, FILE *const restrict fc, uint16_t *const restrict lineNum,
+                                             const struct TypeArray *const restrict types, const char8_t *const restrict capital_name,
+                                             const struct String *const restrict baseType, const struct String *const restrict name) {
   process_spaces();
 
   const char8_t *tokenStart = *file;
