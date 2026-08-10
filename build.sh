@@ -4,7 +4,7 @@ set -e
 CORES=$(($(nproc) + 1))
 
 if [ ! -f third_party/re2c/re2c ]; then
-    (cd third_party/re2c/ && ./configure --disable-shared)
+    (cd third_party/re2c/ && autoreconf -i -W all && ./configure --disable-shared)
     make -C ./third_party/re2c/ CFLAGS="-D _DEFAULT_SOURCE" -j"$CORES"
 fi
 
