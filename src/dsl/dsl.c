@@ -57,12 +57,14 @@ struct String {
 DYN_ARRAY_DEF(StringArray, struct String, string)
 
 enum FieldType {
-  Integer,
-  String
+  IntegerField,
+  StringField
 };
 
 struct Field {
   enum FieldType type;
+  struct String typeName;
+  struct String fieldName;
 };
 DYN_ARRAY_DEF(FieldArray, struct Field, field)
 
@@ -73,27 +75,33 @@ struct Type {
 DYN_ARRAY_DEF(TypeArray, struct Type, type)
 
 static struct Type ActionType = { NEW_STATIC_STRING(u8"Action") };
-static struct Field ActionField1 = { String };
+static struct Field ActionField1 = { StringField };
 static struct TypeArray ActionTypes = {};
 
 static struct Type RoomType   = { NEW_STATIC_STRING(u8"Room")   };
-static struct Field RoomField1 = { Integer };
-static struct Field RoomField2 = { Integer };
-static struct Field RoomField3 = { String };
+static struct Field RoomField1 = { IntegerField };
+static struct Field RoomField2 = { IntegerField };
+static struct Field RoomField3 = { StringField };
 static struct TypeArray RoomTypes = {};
 
 static struct Type ScreenType = { NEW_STATIC_STRING(u8"Screen") };
-static struct Field ScreenField1 = { String };
+static struct Field ScreenField1 = { StringField };
 static struct TypeArray ScreenTypes = {};
 
-static bool setup_type_arrays() {
+static const struct String IntegerTypes[] = {
+  NEW_STATIC_STRING(u8"int8_t"),  NEW_STATIC_STRING(u8"int16_t"),  NEW_STATIC_STRING(u8"int32_t"),
+  NEW_STATIC_STRING(u8"uint8_t"), NEW_STATIC_STRING(u8"uint16_t"), NEW_STATIC_STRING(u8"uint32_t")
+};
+static const size_t IntegerTypeCount = sizeof IntegerTypes / sizeof *IntegerTypes;
+
+[[nodiscard]] static bool setup_type_arrays() {
  return add_field(&ActionType.fields, &ActionField1) && add_type(&ActionTypes, &ActionType) &&
         add_field(&RoomType.fields, &RoomField1) && add_field(&RoomType.fields, &RoomField2) &&
         add_field(&RoomType.fields, &RoomField3) && add_type(&RoomTypes, &RoomType) &&
         add_field(&ScreenType.fields, &ScreenField1) && add_type(&ScreenTypes, &ScreenType);
 }
 
-static bool string_equals(const struct String *const restrict str1, const struct String *const restrict str2) {
+[[nodiscard]] static bool string_equals(const struct String *const restrict str1, const struct String *const restrict str2) {
   if (str1->strLen != str2->strLen) {
     return false;
   }
@@ -110,6 +118,16 @@ static const struct Type *get_type(const struct TypeArray *const restrict types,
   }
 
   return nullptr;
+}
+
+[[nodiscard]] static bool type_is_integer(const struct String *type) {
+  for (size_t i = 0; i < IntegerTypeCount; ++i) {
+    if (string_equals(IntegerTypes + i, type)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 
@@ -140,12 +158,17 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 
 // TODO: Support unicode
 #define process_identifier() process_identifier(file)
-static void (process_identifier)(const char8_t *restrict *const restrict file) {
+[[nodiscard]] static bool (process_identifier)(const char8_t *restrict *const restrict file) {
+  bool ranOnce = false;
   for (; u8'\0' != **file; ++*file) {
-    if (!isalnum(**file)) {
+    if (u8'_' != **file && !isalnum(**file)) {
       break;
     }
+
+    ranOnce = true;
   }
+
+  return ranOnce;
 }
 
 #define process_string() process_string(file)
@@ -172,13 +195,13 @@ static void (process_identifier)(const char8_t *restrict *const restrict file) {
   bool ranOnce = false;
   for (; u8'\0' != **file; ++*file) {
     if (!isdigit(**file)) {
-      return ranOnce;
+      break;
     }
 
     ranOnce = true;
   }
 
-  return false;
+  return ranOnce;
 }
 
 #define FSTRING(string) (int)(string)->strLen, (string)->str
@@ -186,15 +209,70 @@ static void (process_identifier)(const char8_t *restrict *const restrict file) {
 
 // BaseType = Action | Room | Screen
 /* BaseType name {
+     FieldTypeName FieldName;
+     ...
  * }
  */
 [[nodiscard]] static bool transpile_type(const char8_t *restrict *restrict file, FILE *const restrict fh, FILE *const restrict fc, uint16_t *const restrict lineNum,
-                                         const struct TypeArray *const restrict types, const char8_t *const restrict capital_name,
-                                         const struct String *const restrict baseType, const struct String *const restrict name) {
+                                         struct TypeArray *const restrict types, const char8_t *const restrict capital_name,
+                                         const struct String *const restrict baseTypeName, const struct String *const restrict name) {
+  struct FieldArray fields = {};
+  for (process_spaces(); u8'\0' != **file; process_spaces()) {
+    const char8_t *tokenStart = *file;
+    if (!process_identifier()) {
+      break;
+    }
+    const struct String fieldTypeName = NEW_TOKEN_STRING();
+
+    if (!type_is_integer(&fieldTypeName)) {
+      return false;
+    }
+
+    process_spaces();
+
+    tokenStart = *file;
+    if (!process_identifier()) {
+      return false;
+    }
+    const struct String fieldName = NEW_TOKEN_STRING();
+
+    process_spaces();
+    if (!process_match(u8";")) {
+      return false;
+    }
+
+    struct Field field = { IntegerField, fieldTypeName, fieldName };
+    if (!add_field(&fields, &field)) {
+      return false;
+    }
+  }
+
   process_spaces();
   if (!process_match(u8"}")) {
     return false;
   }
+
+  struct Type type = { *name, fields };
+  if (!add_type(types, &type)) {
+    return false;
+  }
+
+  fprintf(fh, "struct %.*s {\n"
+              "  const struct %.*s base;\n\n",
+          FSTRING(name),
+          FSTRING(baseTypeName)
+  );
+
+  for (size_t i = 0; i < fields.count; ++i) {
+    const struct Field *const field = fields.fields + i;
+    fprintf(fh, "  %.*s %.*s;\n",
+            FSTRING(&field->typeName),
+            FSTRING(&field->fieldName)
+           );
+  }
+
+  fputs("};\n\n", fh);
+  // TODO: Add typedef?
 
   return true;
 }
@@ -207,7 +285,9 @@ static void (process_identifier)(const char8_t *restrict *const restrict file) {
   process_spaces();
 
   const char8_t *tokenStart = *file;
-  process_identifier();
+    if (!process_identifier()) {
+    return false;
+  }
   const struct String typeName = NEW_TOKEN_STRING();
   const struct Type *type = get_type(types, &typeName);
   if (nullptr == type) {
@@ -235,12 +315,12 @@ static void (process_identifier)(const char8_t *restrict *const restrict file) {
 
     tokenStart = *file;
     switch (field->type) {
-      case Integer:
+      case IntegerField:
         if (!process_integer()) {
           return false;
         }
         break;
-      case String:
+      case StringField:
         if (!process_string()) {
           return false;
         }
@@ -301,6 +381,8 @@ static bool transpile(const char8_t *restrict file_, const char *const restrict 
   fprintf(fh, "\
 #ifndef UTA_GEN_%s_H\n\
 #define UTA_GEN_%s_H\n\
+\n\
+#include <stdint.h>\n\
 \n", extensionName, extensionName);
 
     fprintf(fc, "\
@@ -311,7 +393,7 @@ static bool transpile(const char8_t *restrict file_, const char *const restrict 
     const char8_t *const exprStart = *file;
     const char8_t *tokenStart = *file;
 
-    const struct TypeArray *types;
+    struct TypeArray *types;
     const char8_t *capital_name;
     if (process_match(u8"Action")) {
       types = &ActionTypes;
@@ -332,7 +414,9 @@ static bool transpile(const char8_t *restrict file_, const char *const restrict 
     process_spaces();
 
     tokenStart = *file;
-    process_identifier();
+    if (!process_identifier()) {
+      return false;
+    }
     const struct String name = NEW_TOKEN_STRING();
 
     process_spaces();

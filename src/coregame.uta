@@ -1,4 +1,5 @@
 Action TestAction {
+  uint8_t test;
 }
 
 Action a = Action("Test Action");
