@@ -73,11 +73,13 @@ struct Type {
 DYN_ARRAY_DEF(TypeArray, struct Type, type)
 
 static struct Type ActionType = { NEW_STATIC_STRING(u8"Action") };
+static struct Field ActionField1 = { String };
 static struct TypeArray ActionTypes = {};
 
 static struct Type RoomType   = { NEW_STATIC_STRING(u8"Room")   };
 static struct Field RoomField1 = { Integer };
 static struct Field RoomField2 = { Integer };
+static struct Field RoomField3 = { String };
 static struct TypeArray RoomTypes = {};
 
 static struct Type ScreenType = { NEW_STATIC_STRING(u8"Screen") };
@@ -85,9 +87,9 @@ static struct Field ScreenField1 = { String };
 static struct TypeArray ScreenTypes = {};
 
 static bool setup_type_arrays() {
- return add_type(&ActionTypes, &ActionType) &&
+ return add_field(&ActionType.fields, &ActionField1) && add_type(&ActionTypes, &ActionType) &&
         add_field(&RoomType.fields, &RoomField1) && add_field(&RoomType.fields, &RoomField2) &&
-        add_type(&RoomTypes, &RoomType) &&
+        add_field(&RoomType.fields, &RoomField3) && add_type(&RoomTypes, &RoomType) &&
         add_field(&ScreenType.fields, &ScreenField1) && add_type(&ScreenTypes, &ScreenType);
 }
 
@@ -189,7 +191,7 @@ static void (process_identifier)(const char8_t *restrict *const restrict file) {
 
 // TODO: Restore single- and multi-line comments
 // BaseType = Action | Room | Screen
-// BaseType name = Type();
+// BaseType name = Type([... [, ...[...]]]);
 bool transpile(const char8_t *restrict file, const char *const restrict hPath, const char *const restrict cPath, const char *const restrict extensionName) {
   bool status = false;
   uint16_t lineNum = 0;
