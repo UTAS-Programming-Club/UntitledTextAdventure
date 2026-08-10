@@ -2,6 +2,6 @@ Action TestAction {
   uint8_t test;
 }
 
-Action a = Action("Test Action");
+Action a = TestAction("Test Action", 2);
 Room   b = Room(1, 2, "Test Room");
 Screen c = Screen("This is a test");

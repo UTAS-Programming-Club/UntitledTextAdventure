@@ -70,6 +70,7 @@ DYN_ARRAY_DEF(FieldArray, struct Field, field)
 
 struct Type {
   struct String name;
+  bool isDerivedType;
   struct FieldArray fields;
 };
 DYN_ARRAY_DEF(TypeArray, struct Type, type)
@@ -78,7 +79,7 @@ static struct Type ActionType = { NEW_STATIC_STRING(u8"Action") };
 static struct Field ActionField1 = { StringField };
 static struct TypeArray ActionTypes = {};
 
-static struct Type RoomType   = { NEW_STATIC_STRING(u8"Room")   };
+static struct Type RoomType = { NEW_STATIC_STRING(u8"Room") };
 static struct Field RoomField1 = { IntegerField };
 static struct Field RoomField2 = { IntegerField };
 static struct Field RoomField3 = { StringField };
@@ -109,7 +110,7 @@ static const size_t IntegerTypeCount = sizeof IntegerTypes / sizeof *IntegerType
   return 0 == strncmp((const char *)str1->str, (const char *)str2->str, str1->strLen);
 }
 
-static const struct Type *get_type(const struct TypeArray *const restrict types, const struct String *const restrict typeName) {
+[[nodiscard]] static const struct Type *get_type(const struct TypeArray *const restrict types, const struct String *const restrict typeName) {
   for (size_t i = 0; i < types->count; ++i) {
     const struct Type *type = types->types + i;
     if (string_equals(&type->name, typeName)) {
@@ -216,6 +217,11 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 [[nodiscard]] static bool transpile_type(const char8_t *restrict *const restrict file, FILE *const restrict fh,
                                          uint16_t *const restrict lineNum, struct TypeArray *const restrict types,
                                          const struct String *const restrict baseTypeName, const struct String *const restrict name) {
+  if (nullptr != get_type(&ActionTypes, name) || nullptr != get_type(&RoomTypes, name) || nullptr != get_type(&ScreenTypes, name)) {
+    // TODO: Add error
+    return false;
+  }
+
   struct FieldArray fields = {};
   for (process_spaces(); u8'\0' != **file; process_spaces()) {
     const char8_t *tokenStart = *file;
@@ -252,7 +258,7 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
     return false;
   }
 
-  struct Type type = { *name, fields };
+  struct Type type = { *name, true, fields };
   if (!add_type(types, &type)) {
     return false;
   }
@@ -277,11 +283,48 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
   return true;
 }
 
+[[nodiscard]] static bool transpile_parameters(const char8_t *restrict *const restrict file, uint16_t *const restrict lineNum,
+                                               const struct Type *const restrict type, struct StringArray *const restrict arguments) {
+  for (size_t i = 0; i < type->fields.count; ++i) {
+    const struct Field *field = type->fields.fields + i;
+
+    process_spaces();
+
+    if (type->isDerivedType || i != 0) {
+      if (!process_match(u8",")) {
+        return false;
+      }
+      process_spaces();
+    }
+
+    const char8_t *tokenStart = *file;
+    switch (field->type) {
+      case IntegerField:
+        if (!process_integer()) {
+          return false;
+        }
+        break;
+      case StringField:
+        if (!process_string()) {
+          return false;
+        }
+        break;
+    }
+
+    const struct String string = NEW_TOKEN_STRING();
+    if (!add_string(arguments, &string)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 // BaseType = Action | Room | Screen
 // BaseType name = Type([... [, ...[...]]]);
 [[nodiscard]] static bool transpile_variable(const char8_t *restrict *const restrict file, FILE *const restrict fh, FILE *const restrict fc,
                                              uint16_t *const restrict lineNum, const struct TypeArray *const restrict types,
-                                             const char8_t *const restrict capital_name, const struct String *const restrict baseType,
+                                             const char8_t *const restrict capital_name, const struct Type *const restrict baseType,
                                              const struct String *const restrict name) {
   process_spaces();
 
@@ -301,37 +344,12 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
      return false;
    }
 
-  struct StringArray args = {};
-  for (size_t i = 0; i < type->fields.count; ++i) {
-    const struct Field *field = type->fields.fields + i;
-
-    process_spaces();
-
-    if (i != 0) {
-      if (!process_match(u8",")) {
-        return false;
-      }
-      process_spaces();
-    }
-
-    tokenStart = *file;
-    switch (field->type) {
-      case IntegerField:
-        if (!process_integer()) {
-          return false;
-        }
-        break;
-      case StringField:
-        if (!process_string()) {
-          return false;
-        }
-        break;
-    }
-
-    const struct String string = NEW_TOKEN_STRING();
-    if (!add_string(&args, &string)) {
-      return false;
-    }
+  struct StringArray arguments = {};
+  if (!transpile_parameters(file, lineNum, baseType, &arguments)) {
+    return false;
+  }
+  if (type->isDerivedType && !transpile_parameters(file, lineNum, type, &arguments)) {
+    return false;
   }
 
   process_spaces();
@@ -344,15 +362,19 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
     return false;
   }
 
-  fprintf(fh, "extern const struct %.*s %.*s;\n\n", FSTRING(baseType), FSTRING(name));
+  fprintf(fh, "extern const struct %.*s %.*s;\n\n", FSTRING(&baseType->name), FSTRING(name));
 
-  fprintf(fc, "const struct %.*s %.*s = NEW_%s(", FSTRING(baseType), FSTRING(name), capital_name);
-  for (size_t i = 0; i < args.count; ++i) {
+  fprintf(fc, "const struct %.*s %.*s = NEW_", FSTRING(&baseType->name), FSTRING(name));
+  if (type->isDerivedType) {
+    fputs("EXT_", fc);
+  }
+  fprintf(fc, "%s(", capital_name);
+  for (size_t i = 0; i < arguments.count; ++i) {
     if (i != 0) {
       fputs(", ", fc);
     }
 
-    fprintf(fc, "%.*s", FSTRING(args.strings + i));
+    fprintf(fc, "%.*s", FSTRING(arguments.strings + i));
   }
   fputs(");\n\n", fc);
 
@@ -395,24 +417,26 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
     const char8_t *const exprStart = *file;
     const char8_t *tokenStart = *file;
 
+    const struct Type *baseType;
     struct TypeArray *types;
     const char8_t *capital_name;
     if (process_match(u8"Action")) {
+      baseType = &ActionType;
       types = &ActionTypes;
       capital_name = u8"ACTION";
     } else if (process_match(u8"Room")) {
+      baseType = &RoomType;
       types = &RoomTypes;
       capital_name = u8"ROOM";
     } else if (process_match(u8"Screen")) {
+      baseType = &ScreenType;
       types = &ScreenTypes;
       capital_name = u8"SCREEN";
     } else {
       EMIT_LEX_ERROR();
       goto cleanup;
     }
-    const struct String baseType = NEW_TOKEN_STRING();
 
-    // TODO: Require at least one
     process_spaces();
 
     tokenStart = *file;
@@ -423,11 +447,11 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 
     process_spaces();
     if (process_match(u8"{")) {
-      if (transpile_type(file, fh, lineNum, types, &baseType, &name)) {
+      if (transpile_type(file, fh, lineNum, types, &baseType->name, &name)) {
         continue;
       }
     } else if (process_match(u8"=")) {
-      if (transpile_variable(file, fh, fc, lineNum, types, capital_name, &baseType, &name)) {
+      if (transpile_variable(file, fh, fc, lineNum, types, capital_name, baseType, &name)) {
         continue;
       }
     }
