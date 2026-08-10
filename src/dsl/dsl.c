@@ -213,8 +213,8 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
      ...
  * }
  */
-[[nodiscard]] static bool transpile_type(const char8_t *restrict *restrict file, FILE *const restrict fh, FILE *const restrict fc, uint16_t *const restrict lineNum,
-                                         struct TypeArray *const restrict types, const char8_t *const restrict capital_name,
+[[nodiscard]] static bool transpile_type(const char8_t *restrict *const restrict file, FILE *const restrict fh,
+                                         uint16_t *const restrict lineNum, struct TypeArray *const restrict types,
                                          const struct String *const restrict baseTypeName, const struct String *const restrict name) {
   struct FieldArray fields = {};
   for (process_spaces(); u8'\0' != **file; process_spaces()) {
@@ -279,9 +279,10 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 
 // BaseType = Action | Room | Screen
 // BaseType name = Type([... [, ...[...]]]);
-[[nodiscard]] static bool transpile_variable(const char8_t *restrict *restrict file, FILE *const restrict fh, FILE *const restrict fc, uint16_t *const restrict lineNum,
-                                             const struct TypeArray *const restrict types, const char8_t *const restrict capital_name,
-                                             const struct String *const restrict baseType, const struct String *const restrict name) {
+[[nodiscard]] static bool transpile_variable(const char8_t *restrict *const restrict file, FILE *const restrict fh, FILE *const restrict fc,
+                                             uint16_t *const restrict lineNum, const struct TypeArray *const restrict types,
+                                             const char8_t *const restrict capital_name, const struct String *const restrict baseType,
+                                             const struct String *const restrict name) {
   process_spaces();
 
   const char8_t *tokenStart = *file;
@@ -359,11 +360,11 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 }
 
 // TODO: Restore single- and multi-line comments
-static bool transpile(const char8_t *restrict file_, const char *const restrict hPath, const char *const restrict cPath, const char *const restrict extensionName) {
+[[nodiscard]] static bool transpile(const char8_t *restrict pFile, const char *const restrict hPath, const char *const restrict cPath, const char *const restrict extensionName) {
   bool status = false;
   uint16_t lineNum_ = 0;
   uint16_t *const lineNum = &lineNum_;
-  const char8_t *restrict *const file = &file_;
+  const char8_t *restrict *const file = &pFile;
 
   FILE *const fh = fopen(hPath, "wb");
   if (nullptr == fh) {
@@ -386,6 +387,7 @@ static bool transpile(const char8_t *restrict file_, const char *const restrict 
 \n", extensionName, extensionName);
 
     fprintf(fc, "\
+#include \"backend.h\"\n\
 #include \"%s\"\n\n", hPath);
 
 
@@ -421,7 +423,7 @@ static bool transpile(const char8_t *restrict file_, const char *const restrict 
 
     process_spaces();
     if (process_match(u8"{")) {
-      if (transpile_type(file, fh, fc, lineNum, types, capital_name, &baseType, &name)) {
+      if (transpile_type(file, fh, lineNum, types, &baseType, &name)) {
         continue;
       }
     } else if (process_match(u8"=")) {
