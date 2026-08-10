@@ -48,7 +48,7 @@ if (varName ## s->count + 1 >= varName ## s->length) {                          
 #define EMIT_LEX_ERROR() EMIT_PROG_ERROR("%s:%hu:%td: Unexpected character: %c", inputPath, *lineNum + 1, *file - exprStart + 1, **file)
 
 
-#define NEW_STATIC_STRING(str) { str, sizeof str - 1 }
+#define NEW_STATIC_STRING(str) { u8 ## str, sizeof u8 ## str - 1 }
 #define NEW_TOKEN_STRING() { tokenStart, (size_t)(*file - tokenStart) }
 struct String {
   const char8_t *str;
@@ -56,15 +56,24 @@ struct String {
 };
 DYN_ARRAY_DEF(StringArray, struct String, string)
 
-enum FieldType {
-  IntegerField,
-  StringField
+enum CType {
+  BooleanType,
+  IntegerType,
+  MethodType,
+  StringType
 };
 
 struct Field {
-  enum FieldType type;
-  struct String typeName;
-  struct String fieldName;
+  enum CType type;
+  struct String name;
+  union {
+    struct {
+      struct String typeName;
+    } variable; // type != MethodType
+    struct {
+      enum CType returnType;
+    } method; // type == MethodType
+  };
 };
 DYN_ARRAY_DEF(FieldArray, struct Field, field)
 
@@ -75,31 +84,45 @@ struct Type {
 };
 DYN_ARRAY_DEF(TypeArray, struct Type, type)
 
-static struct Type ActionType = { NEW_STATIC_STRING(u8"Action") };
-static struct Field ActionField1 = { StringField };
+static struct Type ActionType = { NEW_STATIC_STRING("Action") };
+static struct Field ActionTitle = { StringType };
+static struct Field ActionVisibilityChecker = {
+  MethodType, NEW_STATIC_STRING("backend_default_action_visibility_checker"),
+  .method = { BooleanType }
+};
+static struct Field ActionTriggerHandler = {
+  MethodType, NEW_STATIC_STRING("backend_default_action_trigger_handler"),
+  .method = { BooleanType }
+};
 static struct TypeArray ActionTypes = {};
 
-static struct Type RoomType = { NEW_STATIC_STRING(u8"Room") };
-static struct Field RoomField1 = { IntegerField };
-static struct Field RoomField2 = { IntegerField };
-static struct Field RoomField3 = { StringField };
+static struct Type RoomType = { NEW_STATIC_STRING("Room") };
+static struct Field RoomX = { IntegerType };
+static struct Field RoomY = { IntegerType };
+static struct Field RoomBody = { StringType };
 static struct TypeArray RoomTypes = {};
 
-static struct Type ScreenType = { NEW_STATIC_STRING(u8"Screen") };
-static struct Field ScreenField1 = { StringField };
+static struct Type ScreenType = { NEW_STATIC_STRING("Screen") };
+// TODO: Support body generator method
+static struct Field ScreenBody = { StringType };
 static struct TypeArray ScreenTypes = {};
 
 static const struct String IntegerTypes[] = {
-  NEW_STATIC_STRING(u8"int8_t"),  NEW_STATIC_STRING(u8"int16_t"),  NEW_STATIC_STRING(u8"int32_t"),
-  NEW_STATIC_STRING(u8"uint8_t"), NEW_STATIC_STRING(u8"uint16_t"), NEW_STATIC_STRING(u8"uint32_t")
+  NEW_STATIC_STRING("int8_t"),  NEW_STATIC_STRING("int16_t"),  NEW_STATIC_STRING("int32_t"),
+  NEW_STATIC_STRING("uint8_t"), NEW_STATIC_STRING("uint16_t"), NEW_STATIC_STRING("uint32_t")
 };
 static const size_t IntegerTypeCount = sizeof IntegerTypes / sizeof *IntegerTypes;
 
 [[nodiscard]] static bool setup_type_arrays() {
- return add_field(&ActionType.fields, &ActionField1) && add_type(&ActionTypes, &ActionType) &&
-        add_field(&RoomType.fields, &RoomField1) && add_field(&RoomType.fields, &RoomField2) &&
-        add_field(&RoomType.fields, &RoomField3) && add_type(&RoomTypes, &RoomType) &&
-        add_field(&ScreenType.fields, &ScreenField1) && add_type(&ScreenTypes, &ScreenType);
+ return add_field(&ActionType.fields, &ActionTitle) &&
+        add_field(&ActionType.fields, &ActionVisibilityChecker) &&
+        add_field(&ActionType.fields, &ActionTriggerHandler) &&
+        add_type(&ActionTypes, &ActionType) &&
+
+        add_field(&RoomType.fields, &RoomX) && add_field(&RoomType.fields, &RoomY) &&
+        add_field(&RoomType.fields, &RoomBody) && add_type(&RoomTypes, &RoomType) &&
+
+        add_field(&ScreenType.fields, &ScreenBody) && add_type(&ScreenTypes, &ScreenType);
 }
 
 [[nodiscard]] static bool string_equals(const struct String *const restrict str1, const struct String *const restrict str2) {
@@ -209,8 +232,8 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 
 
 // BaseType = Action | Room | Screen
-/* BaseType name {
-     FieldTypeName FieldName;
+/* BaseType Type {
+     FieldType FieldName;
      ...
  * }
  */
@@ -230,6 +253,10 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
     }
     const struct String fieldTypeName = NEW_TOKEN_STRING();
 
+    // TODO: Allow bool fields
+    // TODO: Allow method fields
+    // TODO: Allow string fields
+    // TODO: Allow array fields of bools, integers and strings
     if (!type_is_integer(&fieldTypeName)) {
       return false;
     }
@@ -247,7 +274,7 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
       return false;
     }
 
-    struct Field field = { IntegerField, fieldTypeName, fieldName };
+    struct Field field = { IntegerType, fieldName, .variable = { fieldTypeName } };
     if (!add_field(&fields, &field)) {
       return false;
     }
@@ -271,10 +298,15 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 
   for (size_t i = 0; i < fields.count; ++i) {
     const struct Field *const field = fields.fields + i;
-    fprintf(fh, "  %.*s %.*s;\n",
-            FSTRING(&field->typeName),
-            FSTRING(&field->fieldName)
-           );
+    switch (field->type) {
+      case MethodType:
+        return false;
+      case BooleanType:
+      case IntegerType:
+      case StringType:
+        fprintf(fh, "  %.*s %.*s;\n", FSTRING(&field->variable.typeName), FSTRING(&field->name));
+        break;
+    }
   }
 
   fputs("};\n\n", fh);
@@ -287,6 +319,12 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
                                                const struct Type *const restrict type, struct StringArray *const restrict arguments) {
   for (size_t i = 0; i < type->fields.count; ++i) {
     const struct Field *field = type->fields.fields + i;
+    if (MethodType == field->type) {
+      if (!add_string(arguments, &field->name)) {
+        return false;
+      }
+      continue;
+    }
 
     process_spaces();
 
@@ -299,12 +337,16 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 
     const char8_t *tokenStart = *file;
     switch (field->type) {
-      case IntegerField:
+      case BooleanType:
+      case MethodType:
+        return false;
+      case IntegerType:
         if (!process_integer()) {
           return false;
         }
         break;
-      case StringField:
+      // TODO: Support multi line strings
+      case StringType:
         if (!process_string()) {
           return false;
         }
@@ -321,7 +363,7 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 }
 
 // BaseType = Action | Room | Screen
-// BaseType name = Type([... [, ...[...]]]);
+// BaseType VariableName = Type([... [, ... [...]]]);
 [[nodiscard]] static bool transpile_variable(const char8_t *restrict *const restrict file, FILE *const restrict fh, FILE *const restrict fc,
                                              uint16_t *const restrict lineNum, const struct TypeArray *const restrict types,
                                              const char8_t *const restrict capital_name, const struct Type *const restrict baseType,
@@ -344,6 +386,7 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
      return false;
    }
 
+  // TODO: Emit { } around baseType arguments if type->isDerivedType
   struct StringArray arguments = {};
   if (!transpile_parameters(file, lineNum, baseType, &arguments)) {
     return false;
@@ -382,6 +425,8 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 }
 
 // TODO: Restore single- and multi-line comments
+// BaseType Type { ... }
+// BaseType VariableName = Type(...);
 [[nodiscard]] static bool transpile(const char8_t *restrict pFile, const char *const restrict hPath, const char *const restrict cPath, const char *const restrict extensionName) {
   bool status = false;
   uint16_t lineNum_ = 0;

@@ -2,6 +2,6 @@ Action TestAction {
   uint8_t test;
 }
 
-Action a = TestAction("Test Action", 2);
-Room   b = Room(1, 2, "Test Room");
-Screen c = Screen("This is a test");
+Action QuitAction = TestAction("Quit Game", 2);
+Room   FirstRoom = Room(0, 0, "First Room!");
+Screen MainMenuScreen = Screen("Untitled text adventure game");
