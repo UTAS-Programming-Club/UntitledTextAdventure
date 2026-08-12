@@ -128,8 +128,7 @@ static const size_t IntegerTypeCount = sizeof IntegerTypes / sizeof *IntegerType
 
 static void free_type_array(const struct TypeArray *const array) {
   for (size_t i = 0; i < array->count; ++i) {
-    const struct Type *const type = array->types + i;
-    free(type->fields.fields);
+    free(array->types[i].fields.fields);
   }
 
   free(array->types);
@@ -273,7 +272,7 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
       process_spaces();
     }
 
-    struct String arrayItem;
+    struct String arrayItem = {};
     if (!process_argument(itemType, arrayItem)) {
       return false;
     }
@@ -488,6 +487,7 @@ type_failure:
       case ArrayCType:
         struct StringArray arrayItems = {};
         if (!process_array(field->arrayBaseType, arrayItems)) {
+          free(arrayItems.strings);
           return false;
         }
 
@@ -554,7 +554,7 @@ type_failure:
               fprintf(fc, "%s", capitalName);
               break;
           }
-          fprintf(fc, "(%.*s)", FSTRING(arrayItems.strings + i));
+          fprintf(fc, "(%.*s)", FSTRING(arrayItems.strings + j));
         }
         fputs(" };\n", fc);
 
@@ -641,7 +641,7 @@ type_failure:
 
 variable_cleanup:
   for (size_t i = 0; i < type->fields.count; ++i) {
-    if (ArrayCType == type->fields.fields[i].type) {
+    if (ArrayCType == type->fields.fields[i].type && arguments.count > i) {
       free((void *)arguments.strings[i].str);
     }
   }
