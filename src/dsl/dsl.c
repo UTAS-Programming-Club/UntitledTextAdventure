@@ -126,6 +126,15 @@ static const size_t IntegerTypeCount = sizeof IntegerTypes / sizeof *IntegerType
         add_type(&ScreenTypes, &ScreenType);
 }
 
+static void free_type_array(const struct TypeArray *const array) {
+  for (size_t i = 0; i < array->count; ++i) {
+    const struct Type *const type = array->types + i;
+    free(type->fields.fields);
+  }
+
+  free(array->types);
+}
+
 [[nodiscard]] static bool string_equals(const struct String *const restrict str1, const struct String *const restrict str2) {
   if (str1->strLen != str2->strLen) {
     return false;
@@ -453,7 +462,7 @@ type_failure:
 }
 
 [[nodiscard]] static bool transpile_parameters(const char8_t *restrict *const restrict file, FILE *const restrict fc,
-                                               uint16_t *const restrict lineNum,  const struct Type *const restrict type,
+                                               uint16_t *const restrict lineNum, const struct Type *const restrict type,
                                                struct StringArray *const restrict arguments) {
   for (size_t i = 0; i < type->fields.count; ++i) {
     const struct Field *field = type->fields.fields + i;
@@ -482,7 +491,6 @@ type_failure:
           return false;
         }
 
-        // TODO: Free this somewhere
         argument.strLen = (size_t)snprintf(nullptr, 0, "array%" PRIu16 "_%zu", *lineNum, i);
         if (0 > argument.strLen) {
           free(arrayItems.strings);
@@ -632,6 +640,11 @@ type_failure:
   status = true;
 
 variable_cleanup:
+  for (size_t i = 0; i < type->fields.count; ++i) {
+    if (ArrayCType == type->fields.fields[i].type) {
+      free((void *)arguments.strings[i].str);
+    }
+  }
   free(arguments.strings);
 
   return status;
@@ -783,9 +796,13 @@ int main(const int argc, const char *const argv[const static argc]) {
   status = status && setup_type_arrays();
   status = status && transpile(file, outputHPath, outputCPath, extensionName);
 
-  free(ActionTypes.types);
-  free(RoomTypes.types);
-  free(ScreenTypes.types);
+  free(ActionVariableNames.strings);
+  free(RoomVariableNames.strings);
+  free(ScreenVariableNames.strings);
+
+  free_type_array(&ActionTypes);
+  free_type_array(&RoomTypes);
+  free_type_array(&ScreenTypes);
 
   munmap(file, (size_t)st.st_size);
   close(fd);
