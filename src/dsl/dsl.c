@@ -1,8 +1,8 @@
 #include <ctype.h>     // for isalnum, isdigit, isspace
 #include <fcntl.h>     // for O_RDONLY, open
-#include <stdint.h>    // for uint16_t
-#include <stdio.h>     // for fprintf, size_t, stderr, FILE, fclose, fopen, fputs, printf
-#include <stdlib.h>    // for EXIT_FAILURE, free, realloc, EXIT_SUCCESS
+#include <inttypes.h>  // for uint16_t, PRIu16, uint_fast8_t
+#include <stdio.h>     // for size_t, fprintf, stderr, fputs, FILE, fclose, fopen, snprintf, printf
+#include <stdlib.h>    // for free, EXIT_FAILURE, realloc, EXIT_SUCCESS, malloc
 #include <string.h>    // for memcpy, strstr, strncmp, strcmp
 #include <sys/mman.h>  // for MAP_FAILED, MAP_PRIVATE, PROT_READ, mmap, munmap
 #include <sys/stat.h>  // for stat, fstat
@@ -44,67 +44,67 @@ if (varName ## s->count + 1 >= varName ## s->length) {                          
 }
 
 // TODO: Restore full error line reporting, also make sure unicode prints then (doesn't now unless only 1 byte)
-// TODO: Fix error with PRIu16
-#define EMIT_LEX_ERROR() EMIT_PROG_ERROR("%s:%hu:%td: Unexpected character: %c", inputPath, *lineNum + 1, *file - exprStart + 1, **file)
+#define EMIT_LEX_ERROR() EMIT_PROG_ERROR("%s:%" PRIu16 ":%td: Unexpected character: %c", inputPath, *lineNum + 1, *file - exprStart + 1, **file)
 
 
-#define NEW_STATIC_STRING(str) { u8 ## str, sizeof u8 ## str - 1 }
-#define NEW_TOKEN_STRING() { tokenStart, (size_t)(*file - tokenStart) }
+#define NEW_STATIC_STRING(str) (const struct String){ u8 ## str, sizeof u8 ## str - 1 }
+#define NEW_TOKEN_STRING() (const struct String){ tokenStart, (size_t)(*file - tokenStart) }
 struct String {
   const char8_t *str;
   size_t strLen;
 };
 DYN_ARRAY_DEF(StringArray, struct String, string)
 
+// TODO: Merge BooleanType & IntegerType (value types), and ActionType & RoomType & ScreenType (dsl types)?
 enum CType {
-  BooleanType,
-  IntegerType,
-  MethodType,
-  StringType
+  ArrayCType,   // ItemType[] where ItemType is any CType other than ArrayType,      only used for fields
+  BooleanCType, // bool in both dsl and C,                                           only used for function return types
+  IntegerCType, // One of IntegerTypes in both dsl and C,                            only used for fields
+  MethodCType,  // ReturnType Name() where ReturnType is BooleanType or IntegerType, only used for fields
+  StringCType,  // string in dsl and const char * in C,                              only used for fields
+
+  ActionCType,  // Only used for function parameters
+  RoomCType,    // Only used for function parameters
+  ScreenCType   // Only used for function parameters
 };
 
 struct Field {
   enum CType type;
-  struct String name;
-  union {
-    struct {
-      struct String typeName;
-    } variable; // type != MethodType
-    struct {
-      enum CType returnType;
-    } method; // type == MethodType
-  };
+  struct String name; // Only set if parent Type.isDerivedType or type is MethodType (functionName)
+
+  enum CType arrayBaseType; // Only set if type is ArrayCType
+  struct String internalTypeName; // integerTypeName if type or arrayBaseType is IntegerCType, returnTypeName if MethodCType, only set if parent Type.isDerivedType
 };
 DYN_ARRAY_DEF(FieldArray, struct Field, field)
 
 struct Type {
+  enum CType type; // Only allowed to be ActionCType, RoomCType & ScreenCType
   struct String name;
   bool isDerivedType;
   struct FieldArray fields;
 };
 DYN_ARRAY_DEF(TypeArray, struct Type, type)
 
-static struct Type ActionType = { NEW_STATIC_STRING("Action") };
-static struct Field ActionTitle = { StringType };
+static struct Type ActionType = { ActionCType, NEW_STATIC_STRING("Action") };
+static struct Field ActionTitle = { StringCType };
 static struct Field ActionVisibilityChecker = {
-  MethodType, NEW_STATIC_STRING("backend_default_action_visibility_checker"),
-  .method = { BooleanType }
+  MethodCType, NEW_STATIC_STRING("backend_default_action_visibility_checker"), BooleanCType
 };
 static struct Field ActionTriggerHandler = {
-  MethodType, NEW_STATIC_STRING("backend_default_action_trigger_handler"),
-  .method = { BooleanType }
+  MethodCType, NEW_STATIC_STRING("backend_default_action_trigger_handler"), BooleanCType
 };
 static struct TypeArray ActionTypes = {};
 
-static struct Type RoomType = { NEW_STATIC_STRING("Room") };
-static struct Field RoomX = { IntegerType };
-static struct Field RoomY = { IntegerType };
-static struct Field RoomBody = { StringType };
+static struct Type RoomType = { RoomCType, NEW_STATIC_STRING("Room") };
+static struct Field RoomX = { IntegerCType };
+static struct Field RoomY = { IntegerCType };
+static struct Field RoomBody = { StringCType };
 static struct TypeArray RoomTypes = {};
 
-static struct Type ScreenType = { NEW_STATIC_STRING("Screen") };
+static struct Type ScreenType = { ScreenCType, NEW_STATIC_STRING("Screen") };
 // TODO: Support body generator method
-static struct Field ScreenBody = { StringType };
+static struct Field ScreenBody = { StringCType };
+static struct Field ScreenActions = { ArrayCType, .arrayBaseType = ActionCType };
 static struct TypeArray ScreenTypes = {};
 
 static const struct String IntegerTypes[] = {
@@ -122,7 +122,8 @@ static const size_t IntegerTypeCount = sizeof IntegerTypes / sizeof *IntegerType
         add_field(&RoomType.fields, &RoomX) && add_field(&RoomType.fields, &RoomY) &&
         add_field(&RoomType.fields, &RoomBody) && add_type(&RoomTypes, &RoomType) &&
 
-        add_field(&ScreenType.fields, &ScreenBody) && add_type(&ScreenTypes, &ScreenType);
+        add_field(&ScreenType.fields, &ScreenBody) && add_field(&ScreenType.fields, &ScreenActions) &&
+        add_type(&ScreenTypes, &ScreenType);
 }
 
 [[nodiscard]] static bool string_equals(const struct String *const restrict str1, const struct String *const restrict str2) {
@@ -147,6 +148,52 @@ static const size_t IntegerTypeCount = sizeof IntegerTypes / sizeof *IntegerType
 [[nodiscard]] static bool type_is_integer(const struct String *type) {
   for (size_t i = 0; i < IntegerTypeCount; ++i) {
     if (string_equals(IntegerTypes + i, type)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+
+static struct StringArray ActionVariableNames = {};
+static struct StringArray RoomVariableNames = {};
+static struct StringArray ScreenVariableNames = {};
+
+[[nodiscard]] static struct StringArray *get_variable_names(const enum CType variableType) {
+  switch (variableType) {
+    case ActionCType:
+      return &ActionVariableNames;
+      break;
+    case RoomCType:
+      return &RoomVariableNames;
+      break;
+    case ScreenCType:
+      return &ScreenVariableNames;
+      break;
+    default:
+      return nullptr;
+  }
+}
+
+[[nodiscard]] static bool add_variable(const enum CType variableType, const struct String *const variableName) {
+  struct StringArray *const variableNames = get_variable_names(variableType);
+  if (nullptr == variableNames) {
+    return false;
+  }
+
+  return add_string(variableNames, variableName);
+}
+
+[[nodiscard]] static bool variable_exists(const enum CType variableType, const struct String *const restrict variableName) {
+  struct StringArray *const variableNames = get_variable_names(variableType);
+  if (nullptr == variableNames) {
+    return false;
+  }
+
+  for (size_t i = 0; i < variableNames->count; ++i) {
+    const struct String *storedVariableName = variableNames->strings + i;
+    if (string_equals(storedVariableName, variableName)) {
       return true;
     }
   }
@@ -195,19 +242,38 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
   return ranOnce;
 }
 
-#define process_string() process_string(file)
-[[nodiscard]] static bool (process_string)(const char8_t *restrict *const restrict file) {
-  if (!process_match(u8"\"")) {
+
+#define process_argument(expectedType, argument) process_argument(file, expectedType, &argument)
+[[nodiscard]] static bool (process_argument)(const char8_t *restrict *const restrict file, const enum CType argumentType, struct String *const restrict argument);
+
+#define process_array(itemType, arrayItems) process_array(file, lineNum, itemType, &arrayItems)
+[[nodiscard]] static bool (process_array)(const char8_t *restrict *const restrict file, uint16_t *const restrict lineNum,
+                                          const enum CType itemType, struct StringArray *const restrict arrayItems) {
+  if (!process_match(u8"{")) {
     return false;
   }
 
-  for (; u8'\0' != **file; ++*file) {
-    if (u8'"' == **file) {
-      break;
+  for (uint_fast8_t i = 0; i < 255 && u8'\0' != **file; ++i) {
+    process_spaces();
+
+    if (i != 0) {
+      if (!process_match(u8",")) {
+        break;
+      }
+
+      process_spaces();
+    }
+
+    struct String arrayItem;
+    if (!process_argument(itemType, arrayItem)) {
+      return false;
+    }
+    if (!add_string(arrayItems, &arrayItem)) {
+      return false;
     }
   }
 
-  if (!process_match(u8"\"")) {
+  if (!process_match(u8"}")) {
     return false;
   }
 
@@ -228,8 +294,68 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
   return ranOnce;
 }
 
-#define FSTRING(string) (int)(string)->strLen, (string)->str
+#define process_string() process_string(file)
+[[nodiscard]] static bool (process_string)(const char8_t *restrict *const restrict file) {
+  if (!process_match(u8"\"")) {
+    return false;
+  }
 
+  for (; u8'\0' != **file; ++*file) {
+    if (u8'"' == **file) {
+      break;
+    }
+  }
+
+  if (!process_match(u8"\"")) {
+    return false;
+  }
+
+  return true;
+}
+
+[[nodiscard]] static bool (process_argument)(const char8_t *restrict *const restrict file, const enum CType argumentType, struct String *const restrict argument) {
+  const char8_t *const tokenStart = *file;
+
+  bool isVariableType = false;
+  switch (argumentType) {
+    case ArrayCType:
+    case BooleanCType:
+    case MethodCType:
+      return false;
+    case IntegerCType:
+      if (!process_integer()) {
+        return false;
+      }
+      break;
+    // TODO: Support multi line strings
+    case StringCType:
+      if (!process_string()) {
+        return false;
+      }
+      break;
+    case ActionCType:
+    case RoomCType:
+    case ScreenCType:
+      isVariableType = true;
+      if (!process_identifier()) {
+        return false;
+      }
+      break;
+  }
+
+  *argument = NEW_TOKEN_STRING();
+
+  if (isVariableType) {
+    if (!variable_exists(argumentType, argument)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+
+#define FSTRING(string) (int)(string)->strLen, (string)->str
 
 // BaseType = Action | Room | Screen
 /* BaseType Type {
@@ -239,7 +365,7 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
  */
 [[nodiscard]] static bool transpile_type(const char8_t *restrict *const restrict file, FILE *const restrict fh,
                                          uint16_t *const restrict lineNum, struct TypeArray *const restrict types,
-                                         const struct String *const restrict baseTypeName, const struct String *const restrict name) {
+                                         const struct Type *const restrict baseType, const struct String *const restrict name) {
   if (nullptr != get_type(&ActionTypes, name) || nullptr != get_type(&RoomTypes, name) || nullptr != get_type(&ScreenTypes, name)) {
     // TODO: Add error
     return false;
@@ -258,53 +384,59 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
     // TODO: Allow string fields
     // TODO: Allow array fields of bools, integers and strings
     if (!type_is_integer(&fieldTypeName)) {
-      return false;
+      goto type_failure;
     }
 
     process_spaces();
 
     tokenStart = *file;
     if (!process_identifier()) {
-      return false;
+      goto type_failure;
     }
     const struct String fieldName = NEW_TOKEN_STRING();
 
     process_spaces();
     if (!process_match(u8";")) {
-      return false;
+      goto type_failure;
     }
 
-    struct Field field = { IntegerType, fieldName, .variable = { fieldTypeName } };
+    struct Field field = { IntegerCType, fieldName, .internalTypeName = fieldTypeName };
     if (!add_field(&fields, &field)) {
-      return false;
+      goto type_failure;
     }
   }
 
   process_spaces();
   if (!process_match(u8"}")) {
-    return false;
+    goto type_failure;
   }
 
-  struct Type type = { *name, true, fields };
+  struct Type type = { baseType->type, *name, true, fields };
   if (!add_type(types, &type)) {
-    return false;
+    goto type_failure;
   }
 
   fprintf(fh, "struct %.*s {\n"
               "  const struct %.*s base;\n\n",
           FSTRING(name),
-          FSTRING(baseTypeName)
+          FSTRING(&baseType->name)
   );
 
   for (size_t i = 0; i < fields.count; ++i) {
     const struct Field *const field = fields.fields + i;
     switch (field->type) {
-      case MethodType:
-        return false;
-      case BooleanType:
-      case IntegerType:
-      case StringType:
-        fprintf(fh, "  %.*s %.*s;\n", FSTRING(&field->variable.typeName), FSTRING(&field->name));
+      case ActionCType:
+      case ArrayCType:
+      case BooleanCType:
+      case MethodCType:
+      case RoomCType:
+      case ScreenCType:
+        goto type_failure;
+      case IntegerCType:
+        fprintf(fh, "  %.*s %.*s;\n", FSTRING(&field->internalTypeName), FSTRING(&field->name));
+        break;
+      case StringCType:
+        fprintf(fh, "  char *%.*s;\n", FSTRING(&field->name));
         break;
     }
   }
@@ -313,13 +445,19 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
   // TODO: Add typedef?
 
   return true;
+
+type_failure:
+  free(fields.fields);
+
+  return false;
 }
 
-[[nodiscard]] static bool transpile_parameters(const char8_t *restrict *const restrict file, uint16_t *const restrict lineNum,
-                                               const struct Type *const restrict type, struct StringArray *const restrict arguments) {
+[[nodiscard]] static bool transpile_parameters(const char8_t *restrict *const restrict file, FILE *const restrict fc,
+                                               uint16_t *const restrict lineNum,  const struct Type *const restrict type,
+                                               struct StringArray *const restrict arguments) {
   for (size_t i = 0; i < type->fields.count; ++i) {
     const struct Field *field = type->fields.fields + i;
-    if (MethodType == field->type) {
+    if (MethodCType == field->type) {
       if (!add_string(arguments, &field->name)) {
         return false;
       }
@@ -332,29 +470,96 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
       if (!process_match(u8",")) {
         return false;
       }
+
       process_spaces();
     }
 
-    const char8_t *tokenStart = *file;
+    struct String argument = {};
     switch (field->type) {
-      case BooleanType:
-      case MethodType:
-        return false;
-      case IntegerType:
-        if (!process_integer()) {
+      case ArrayCType:
+        struct StringArray arrayItems = {};
+        if (!process_array(field->arrayBaseType, arrayItems)) {
           return false;
         }
+
+        // TODO: Free this somewhere
+        argument.strLen = (size_t)snprintf(nullptr, 0, "array%" PRIu16 "_%zu", *lineNum, i);
+        if (0 > argument.strLen) {
+          free(arrayItems.strings);
+          return false;
+        }
+        argument.str = malloc(argument.strLen + 1);
+        if (nullptr == argument.str) {
+          free(arrayItems.strings);
+          return false;
+        }
+        argument.strLen = (size_t)snprintf((char *)argument.str, argument.strLen + 1, "array%" PRIu16 "_%zu", *lineNum, i);
+        if (0 > argument.strLen) {
+          free((void *)argument.str);
+          free(arrayItems.strings);
+          return false;
+        }
+
+        fputs("const ", fc);
+        const char8_t *capitalName;
+        switch (field->arrayBaseType) {
+          case ArrayCType:
+          case BooleanCType:
+          case IntegerCType:
+          case MethodCType:
+          case StringCType:
+            free((void *)argument.str);
+            free(arrayItems.strings);
+            return false;
+          case ActionCType:
+            fputs("Action", fc);
+            capitalName = u8"ACTION";
+            break;
+          case RoomCType:
+            fputs("Room", fc);
+            capitalName = u8"ROOM";
+            break;
+          case ScreenCType:
+            fputs("Screen", fc);
+            capitalName = u8"SCREEN";
+            break;
+        }
+        fprintf(fc, " %.*s = { ",  FSTRING(&argument));
+        for (size_t j = 0; j < arrayItems.count; ++j) {
+          if (0 != j) {
+            fputs(", ", fc);
+          }
+
+          fputs("USE_", fc);
+          switch (field->arrayBaseType) {
+            case ArrayCType:
+            case BooleanCType:
+            case IntegerCType:
+            case MethodCType:
+            case StringCType:
+              free((void *)argument.str);
+              free(arrayItems.strings);
+              return false;
+            case ActionCType:
+            case RoomCType:
+            case ScreenCType:
+              fprintf(fc, "%s", capitalName);
+              break;
+          }
+          fprintf(fc, "(%.*s)", FSTRING(arrayItems.strings + i));
+        }
+        fputs(" };\n", fc);
+
+        free(arrayItems.strings);
         break;
-      // TODO: Support multi line strings
-      case StringType:
-        if (!process_string()) {
+      default:
+        if (!process_argument(field->type, argument)) {
           return false;
         }
         break;
     }
 
-    const struct String string = NEW_TOKEN_STRING();
-    if (!add_string(arguments, &string)) {
+    if (!add_string(arguments, &argument)) {
       return false;
     }
   }
@@ -366,7 +571,7 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 // BaseType VariableName = Type([... [, ... [...]]]);
 [[nodiscard]] static bool transpile_variable(const char8_t *restrict *const restrict file, FILE *const restrict fh, FILE *const restrict fc,
                                              uint16_t *const restrict lineNum, const struct TypeArray *const restrict types,
-                                             const char8_t *const restrict capital_name, const struct Type *const restrict baseType,
+                                             const char8_t *const restrict capitalName, const struct Type *const restrict baseType,
                                              const struct String *const restrict name) {
   process_spaces();
 
@@ -386,32 +591,35 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
      return false;
    }
 
-  // TODO: Emit { } around baseType arguments if type->isDerivedType
+  bool status = false;
   struct StringArray arguments = {};
-  if (!transpile_parameters(file, lineNum, baseType, &arguments)) {
-    return false;
+  if (!transpile_parameters(file, fc, lineNum, baseType, &arguments)) {
+    goto variable_cleanup;
   }
-  if (type->isDerivedType && !transpile_parameters(file, lineNum, type, &arguments)) {
-    return false;
+  if (type->isDerivedType && !transpile_parameters(file, fc, lineNum, type, &arguments)) {
+    goto variable_cleanup;
   }
 
   process_spaces();
   if (!process_match(u8")")) {
-    return false;
+    goto variable_cleanup;
   }
 
   process_spaces();
   if (!process_match(u8";")) {
-    return false;
+    goto variable_cleanup;
   }
 
-  fprintf(fh, "extern const struct %.*s %.*s;\n\n", FSTRING(&baseType->name), FSTRING(name));
+  if (!add_variable(baseType->type, name)) {
+  }
 
-  fprintf(fc, "const struct %.*s %.*s = NEW_", FSTRING(&baseType->name), FSTRING(name));
+  fprintf(fh, "extern const struct %.*s %.*s;\n\n", FSTRING(&typeName), FSTRING(name));
+
+  fprintf(fc, "const struct %.*s %.*s = NEW_", FSTRING(&typeName), FSTRING(name));
   if (type->isDerivedType) {
     fputs("EXT_", fc);
   }
-  fprintf(fc, "%s(", capital_name);
+  fprintf(fc, "%s(", capitalName);
   for (size_t i = 0; i < arguments.count; ++i) {
     if (i != 0) {
       fputs(", ", fc);
@@ -421,7 +629,12 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
   }
   fputs(");\n\n", fc);
 
-  return true;
+  status = true;
+
+variable_cleanup:
+  free(arguments.strings);
+
+  return status;
 }
 
 // TODO: Restore single- and multi-line comments
@@ -464,19 +677,19 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 
     const struct Type *baseType;
     struct TypeArray *types;
-    const char8_t *capital_name;
+    const char8_t *capitalName;
     if (process_match(u8"Action")) {
       baseType = &ActionType;
       types = &ActionTypes;
-      capital_name = u8"ACTION";
+      capitalName = u8"ACTION";
     } else if (process_match(u8"Room")) {
       baseType = &RoomType;
       types = &RoomTypes;
-      capital_name = u8"ROOM";
+      capitalName = u8"ROOM";
     } else if (process_match(u8"Screen")) {
       baseType = &ScreenType;
       types = &ScreenTypes;
-      capital_name = u8"SCREEN";
+      capitalName = u8"SCREEN";
     } else {
       EMIT_LEX_ERROR();
       goto cleanup;
@@ -492,15 +705,15 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 
     process_spaces();
     if (process_match(u8"{")) {
-      if (transpile_type(file, fh, lineNum, types, &baseType->name, &name)) {
+      if (transpile_type(file, fh, lineNum, types, baseType, &name)) {
         continue;
       }
     } else if (process_match(u8"=")) {
-      if (transpile_variable(file, fh, fc, lineNum, types, capital_name, baseType, &name)) {
+      if (transpile_variable(file, fh, fc, lineNum, types, capitalName, baseType, &name)) {
         continue;
       }
     }
-    
+
     EMIT_LEX_ERROR();
     goto cleanup;
   }
@@ -570,15 +783,9 @@ int main(const int argc, const char *const argv[const static argc]) {
   status = status && setup_type_arrays();
   status = status && transpile(file, outputHPath, outputCPath, extensionName);
 
-  if (nullptr != ActionTypes.types) {
-    free(ActionTypes.types);
-  }
-  if (nullptr != RoomTypes.types) {
-    free(RoomTypes.types);
-  }
-  if (nullptr != ScreenTypes.types) {
-    free(ScreenTypes.types);
-  }
+  free(ActionTypes.types);
+  free(RoomTypes.types);
+  free(ScreenTypes.types);
 
   munmap(file, (size_t)st.st_size);
   close(fd);

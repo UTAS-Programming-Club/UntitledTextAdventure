@@ -2,6 +2,7 @@ Action TestAction {
   uint8_t test;
 }
 
-Action QuitAction = TestAction("Quit Game", 2);
+Action QuitAction = TestAction("Quit Game", 1);
+Action QuitAction2 = TestAction("Quit Game", 2);
 Room   FirstRoom = Room(0, 0, "First Room!");
-Screen MainMenuScreen = Screen("Untitled text adventure game");
+Screen MainMenuScreen = Screen("Untitled text adventure game", { QuitAction, QuitAction2 });
