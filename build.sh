@@ -4,8 +4,10 @@ set -e
 # Save for release builds, causes clang to ignore printf argument related warnings
 # -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3
 
+CC="${CC:-cc}"
+
 mkdir -p bin/
-clang-22 -O3 -Wall -Wformat -Wformat=2 -Wconversion -Wimplicit-fallthrough \
+$CC -O3 -Wall -Wformat -Wformat=2 -Wconversion -Wimplicit-fallthrough \
 -Werror=format-security \
 -D_GLIBCXX_ASSERTIONS \
 -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_FAST \
@@ -26,7 +28,7 @@ mkdir -p gen/
 ./bin/utatest2026-dsl src/coregame.uta gen/coregame.h gen/coregame.c Core
 ./bin/utatest2026-dsl src/ext1.uta gen/ext1.h gen/ext1.c Ext1
 
-clang-22 -O3 -Wall -Wformat -Wformat=2 -Wconversion -Wimplicit-fallthrough \
+$CC -O3 -Wall -Wformat -Wformat=2 -Wconversion -Wimplicit-fallthrough \
 -Werror=format-security \
 -D_GLIBCXX_ASSERTIONS \
 -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_FAST \

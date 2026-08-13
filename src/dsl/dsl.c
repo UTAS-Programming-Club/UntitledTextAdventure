@@ -13,7 +13,7 @@ const char *programName;
 const char *inputPath;
 
 #define EMIT_PROG_ERROR(error, ...) \
-  fprintf(stderr, "%s: \u001b[0;31merror\u001b[0m: " error "\n", programName __VA_OPT__(,) __VA_ARGS__)
+  fprintf(stderr, "%s: \x1b[0;31merror\x1b[0m: " error "\n", programName __VA_OPT__(,) __VA_ARGS__)
 
 #define DYN_ARRAY_DEF(typeName, baseTypeName, varName) struct typeName {                                            \
   baseTypeName *varName ## s;                                                                                       \
@@ -47,7 +47,7 @@ if (varName ## s->count + 1 >= varName ## s->length) {                          
 #define EMIT_LEX_ERROR() EMIT_PROG_ERROR("%s:%" PRIu16 ":%td: Unexpected character: %c", inputPath, *lineNum + 1, *file - exprStart + 1, **file)
 
 
-#define NEW_STATIC_STRING(str) (const struct String){ u8 ## str, sizeof u8 ## str - 1 }
+#define NEW_STATIC_STRING(str) { u8 ## str, sizeof u8 ## str - 1 }
 #define NEW_TOKEN_STRING() (const struct String){ tokenStart, (size_t)(*file - tokenStart) }
 struct String {
   const char8_t *str;
@@ -659,7 +659,7 @@ type_failure:
         }
 
         fputs("const ", fc);
-        const char8_t *capitalName;
+        const char8_t *capitalName = nullptr;
         switch (field->arrayBaseType) {
           case ArrayCType:
           case BooleanCType:
@@ -726,7 +726,7 @@ type_failure:
     }
 
     if (StringGeneratorCType == field->type) {
-      argument = NEW_STATIC_STRING("backend_default_screen_body_generator");
+      argument = (struct String)NEW_STATIC_STRING("backend_default_screen_body_generator");
       if (!add_string(arguments, &argument)) {
         return false;
       }
