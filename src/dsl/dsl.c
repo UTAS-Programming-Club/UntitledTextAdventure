@@ -57,16 +57,17 @@ DYN_ARRAY_DEF(StringArray, struct String, string)
 
 // TODO: Merge BooleanType & IntegerType (value types), and ActionType & RoomType & ScreenType (dsl types)?
 enum CType {
-  ArrayCType,   // ItemType[] where ItemType is any CType other than ArrayType,      only used for fields/function parameters
-  BooleanCType, // bool in both dsl and C,                                           only used for function return types
-  EnumCType,    // enum EnumName in both dsl and C,                                  only used for fields/function parameters
-  IntegerCType, // One of IntegerTypes in both dsl and C,                            only used for fields/function parameters
-  MethodCType,  // ReturnType Name() where ReturnType is BooleanType or IntegerType, only used for fields/function parameters
-  StringCType,  // string in dsl and const char * in C,                              only used for fields/function parameters
+  ArrayCType,           // ItemType[] where ItemType is any CType other than ArrayType,      only used for fields/function parameters
+  BooleanCType,         // bool in both dsl and C,                                           only used for function return types
+  EnumCType,            // enum EnumName in both dsl and C,                                  only used for fields/function parameters
+  IntegerCType,         // One of IntegerTypes in both dsl and C,                            only used for fields/function parameters
+  MethodCType,          // ReturnType Name() where ReturnType is BooleanType or IntegerType, only used for fields/function parameters
+  StringCType,          // string in dsl and const char * in C,                              only used for fields/function parameters
+  StringGeneratorCType, // string and (method) in dsl, const char * and const char *(*)(const struct GameInfo *const) in C, used for a pre defined function parameter
 
-  ActionCType,  // Only used for fields/function parameters
-  RoomCType,    // Only used for fields/function parameters
-  ScreenCType   // Only used for fields/function parameters
+  ActionCType,          // Only used for fields/function parameters
+  RoomCType,            // Only used for fields/function parameters
+  ScreenCType           // Only used for fields/function parameters
 };
 
 struct Enum {
@@ -110,7 +111,7 @@ static struct TypeArray RoomTypes = {};
 
 static struct Type ScreenType = { ScreenCType, NEW_STATIC_STRING("Screen") };
 // TODO: Support body generator method
-static struct Field ScreenBody = { StringCType };
+static struct Field ScreenBody = { StringGeneratorCType };
 static struct Field ScreenActions = { ArrayCType, .arrayBaseType = ActionCType };
 static struct TypeArray ScreenTypes = {};
 
@@ -397,6 +398,8 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
         return false;
       }
       break;
+    // TODO: Skip string if method exists
+    case StringGeneratorCType:
     // TODO: Support multi line strings
     case StringCType:
       if (!process_string()) {
@@ -582,6 +585,7 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
       case MethodCType:
       case RoomCType:
       case ScreenCType:
+      case StringGeneratorCType:
         goto type_failure;
       case EnumCType:
         fputs("enum ", fh);
@@ -606,9 +610,9 @@ type_failure:
   return false;
 }
 
-[[nodiscard]] static bool transpile_parameters(const char8_t *restrict *const restrict file, FILE *const restrict fc,
-                                               uint16_t *const restrict lineNum, const struct Type *const restrict type,
-                                               struct StringArray *const restrict arguments) {
+[[nodiscard]] static bool transpile_arguments(const char8_t *restrict *const restrict file, FILE *const restrict fc,
+                                              uint16_t *const restrict lineNum, const struct Type *const restrict type,
+                                              struct StringArray *const restrict arguments) {
   for (size_t i = 0; i < type->fields.count; ++i) {
     const struct Field *field = type->fields.fields + i;
     if (MethodCType == field->type) {
@@ -663,6 +667,7 @@ type_failure:
           case IntegerCType:
           case MethodCType:
           case StringCType:
+          case StringGeneratorCType:
             free((void *)argument.str);
             free(arrayItems.strings);
             return false;
@@ -693,6 +698,7 @@ type_failure:
             case IntegerCType:
             case MethodCType:
             case StringCType:
+            case StringGeneratorCType:
               free((void *)argument.str);
               free(arrayItems.strings);
               return false;
@@ -717,6 +723,13 @@ type_failure:
 
     if (!add_string(arguments, &argument)) {
       return false;
+    }
+
+    if (StringGeneratorCType == field->type) {
+      argument = NEW_STATIC_STRING("backend_default_screen_body_generator");
+      if (!add_string(arguments, &argument)) {
+        return false;
+      }
     }
   }
 
@@ -749,10 +762,10 @@ type_failure:
 
   bool status = false;
   struct StringArray arguments = {};
-  if (!transpile_parameters(file, fc, lineNum, baseType, &arguments)) {
+  if (!transpile_arguments(file, fc, lineNum, baseType, &arguments)) {
     goto variable_cleanup;
   }
-  if (type->isDerivedType && !transpile_parameters(file, fc, lineNum, type, &arguments)) {
+  if (type->isDerivedType && !transpile_arguments(file, fc, lineNum, type, &arguments)) {
     goto variable_cleanup;
   }
 
@@ -789,8 +802,12 @@ type_failure:
 
 variable_cleanup:
   for (size_t i = 0; i < type->fields.count; ++i) {
-    if (ArrayCType == type->fields.fields[i].type && arguments.count > i) {
+    const enum CType cType = type->fields.fields[i].type;
+    if (ArrayCType == cType && arguments.count > i) {
       free((void *)arguments.strings[i].str);
+    } else if (StringGeneratorCType == cType) {
+      // Skip over second arg for function pointer
+      ++i;
     }
   }
   free(arguments.strings);

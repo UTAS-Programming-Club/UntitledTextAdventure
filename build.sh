@@ -5,7 +5,7 @@ set -e
 # -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3
 
 mkdir -p bin/
-clang-22 -O3 -Wall -Wformat -Wformat=2 -Wconversion -Wimplicit-fallthrough \
+clang-22 -g -Wall -Wformat -Wformat=2 -Wconversion -Wimplicit-fallthrough \
 -Werror=format-security \
 -D_GLIBCXX_ASSERTIONS \
 -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_FAST \
