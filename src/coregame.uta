@@ -9,6 +9,12 @@ Action TestAction {
   enum ScreenDirection direction;
 }
 
+// This is a test single line comment
+
+/* This is a test multiline comment
+Action TestAction = TestAction("Missing second param");
+*/
+
 Action QuitAction = Action("Quit Game");
 Action TestAction = TestAction("Quit Game", North);
 Room   FirstRoom = Room(0, 0, "First Room!");

@@ -261,9 +261,32 @@ static struct EnumArray Enums = {};
 // TODO: Support unicode?
 #define process_spaces() process_spaces(file, lineNum)
 static void (process_spaces)(const char8_t *restrict *const restrict file, uint16_t *const restrict lineNum) {
+  bool inSingleLineComment = false;
+  bool inMultiLineComment = false;
   for (; u8'\0' != **file; ++*file) {
     if (u8'\n' == **file) {
+      inSingleLineComment = false;
       ++*lineNum;
+    // Single-line comments continue until end of line So don't bother checking anything else
+    } else if (inSingleLineComment) {
+      continue;
+    // Check for end of multi-line comment
+    } else if (u8'*' == **file && u8'/' == (*file)[1]) {
+      *file += 2;
+      inMultiLineComment = false;
+    // Multi-line comments continue until */ so don't bother checking anything else
+    } else if (inMultiLineComment) {
+      continue;
+    // Check for start of multi-line comment
+    } else if (u8'/' == **file && u8'*' == (*file)[1]) {
+      inMultiLineComment = true;
+      ++*file;
+      continue;
+    // Check for start of single-line comment
+    } else if (u8'/' == **file && u8'/' == (*file)[1]) {
+      inSingleLineComment = true;
+      ++*file;
+      continue;
     }
 
     if (!isspace(**file)) {
@@ -774,7 +797,6 @@ variable_cleanup:
   return status;
 }
 
-// TODO: Restore single- and multi-line comments
 // BaseType Type { ... }
 // BaseType VariableName = Type(...);
 [[nodiscard]] static bool transpile(const char8_t *restrict pFile, const char *const restrict hPath, const char *const restrict cPath, const char *const restrict extensionName) {
