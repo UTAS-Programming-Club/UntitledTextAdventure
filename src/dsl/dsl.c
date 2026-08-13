@@ -15,33 +15,33 @@ const char *inputPath;
 #define EMIT_PROG_ERROR(error, ...) \
   fprintf(stderr, "%s: \x1b[0;31merror\x1b[0m: " error "\n", programName __VA_OPT__(,) __VA_ARGS__)
 
-#define DYN_ARRAY_DEF(typeName, baseTypeName, varName) struct typeName {                                            \
-  baseTypeName *varName ## s;                                                                                       \
-  size_t count;                                                                                                     \
-  size_t length;                                                                                                    \
-};                                                                                                                  \
-                                                                                                                    \
-[[nodiscard]] static bool add_ ## varName(struct typeName *const varName ## s, const baseTypeName *const varName) { \
-if (varName ## s->count + 1 >= varName ## s->length) {                                                              \
-    size_t newLen = 2 * varName ## s->count;                                                                        \
-    if (0 == newLen) {                                                                                              \
-      newLen = 8;                                                                                                   \
-    }                                                                                                               \
-                                                                                                                    \
-    baseTypeName *newArr = realloc(varName ## s->varName ## s, newLen * sizeof *varName ## s->varName ## s);        \
-    if (nullptr == newArr) {                                                                                        \
-      EMIT_PROG_ERROR("An unrecoverable error occurred");                                                           \
-      return false;                                                                                                 \
-    }                                                                                                               \
-                                                                                                                    \
-    varName ## s->length = newLen;                                                                                  \
-    varName ## s->varName ## s = newArr;                                                                            \
-  }                                                                                                                 \
-                                                                                                                    \
-  memcpy(varName ## s->varName ## s + varName ## s->count, varName, sizeof *varName);                               \
-  ++varName ## s->count;                                                                                            \
-  return true;                                                                                                      \
-}
+#define DYN_ARRAY_DEF(typeName, baseTypeName, varName) struct typeName {                                              \
+    baseTypeName *varName ## s;                                                                                       \
+    size_t count;                                                                                                     \
+    size_t length;                                                                                                    \
+  };                                                                                                                  \
+                                                                                                                      \
+  [[nodiscard]] static bool add_ ## varName(struct typeName *const varName ## s, const baseTypeName *const varName) { \
+  if (varName ## s->count + 1 >= varName ## s->length) {                                                              \
+      size_t newLen = 2 * varName ## s->count;                                                                        \
+      if (0 == newLen) {                                                                                              \
+        newLen = 8;                                                                                                   \
+      }                                                                                                               \
+                                                                                                                      \
+      baseTypeName *newArr = realloc(varName ## s->varName ## s, newLen * sizeof *varName ## s->varName ## s);        \
+      if (nullptr == newArr) {                                                                                        \
+        EMIT_PROG_ERROR("An unrecoverable error occurred");                                                           \
+        return false;                                                                                                 \
+      }                                                                                                               \
+                                                                                                                      \
+      varName ## s->length = newLen;                                                                                  \
+      varName ## s->varName ## s = newArr;                                                                            \
+    }                                                                                                                 \
+                                                                                                                      \
+    memcpy(varName ## s->varName ## s + varName ## s->count, varName, sizeof *varName);                               \
+    ++varName ## s->count;                                                                                            \
+    return true;                                                                                                      \
+  }
 
 // TODO: Restore full error line reporting, also make sure unicode prints then (doesn't now unless only 1 byte)
 #define EMIT_LEX_ERROR() EMIT_PROG_ERROR("%s:%" PRIu16 ":%td: Unexpected character: %c", inputPath, *lineNum + 1, *file - exprStart + 1, **file)
@@ -441,7 +441,8 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
  *   ...
  * }
  */
-[[nodiscard]] static bool transpile_enum(const char8_t *restrict *const restrict file, FILE *const restrict fh, uint16_t *const restrict lineNum) {
+[[nodiscard]] static bool transpile_enum(const char8_t *restrict *const restrict file, FILE *const restrict fh, const struct String *const restrict namespace,
+                                         uint16_t *const restrict lineNum) {
   process_spaces();
 
   const char8_t *tokenStart = *file;
@@ -486,10 +487,9 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
     return false;
   }
 
-  // TODO: Add prefix to enum values
-  fprintf(fh, "enum %.*s {\n", FSTRING(&name));
+  fprintf(fh, "enum %.*s_%.*s {\n", FSTRING(namespace), FSTRING(&name));
   for (size_t i = 0; i < valueNames.count; ++i) {
-    fprintf(fh, "  %.*s,\n", FSTRING(valueNames.strings + i));
+    fprintf(fh, "  %.*s_%.*s_%.*s,\n", FSTRING(namespace), FSTRING(&name), FSTRING(valueNames.strings + i));
   }
   fputs("};\n\n", fh);
 
@@ -503,7 +503,7 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
  *   ...
  * }
  */
-[[nodiscard]] static bool transpile_type(const char8_t *restrict *const restrict file, FILE *const restrict fh,
+[[nodiscard]] static bool transpile_type(const char8_t *restrict *const restrict file, FILE *const restrict fh, const struct String *const restrict namespace,
                                          uint16_t *const restrict lineNum, struct TypeArray *const restrict types,
                                          const struct Type *const restrict baseType, const struct String *const restrict name) {
   if (nullptr != get_type(&ActionTypes, name) || nullptr != get_type(&RoomTypes, name) || nullptr != get_type(&ScreenTypes, name)) {
@@ -566,10 +566,9 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
     goto type_failure;
   }
 
-  // TODO: Add prefix to type name
-  fprintf(fh, "struct %.*s {\n"
+  fprintf(fh, "struct %.*s_%.*s {\n"
               "  const struct %.*s base;\n\n",
-          FSTRING(name),
+          FSTRING(namespace), FSTRING(name),
           FSTRING(&baseType->name)
   );
 
@@ -588,7 +587,7 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
       case StringGeneratorCType:
         goto type_failure;
       case EnumCType:
-        fputs("enum ", fh);
+        fprintf(fh, "enum %.*s_", FSTRING(namespace));
         [[fallthrough]];
       case IntegerCType:
         fprintf(fh, "%.*s %.*s;\n", FSTRING(&field->internalTypeName), FSTRING(&field->name));
@@ -610,7 +609,7 @@ type_failure:
   return false;
 }
 
-[[nodiscard]] static bool transpile_arguments(const char8_t *restrict *const restrict file, FILE *const restrict fc,
+[[nodiscard]] static bool transpile_arguments(const char8_t *restrict *const restrict file, FILE *const restrict fc, const struct String *const restrict namespace,
                                               uint16_t *const restrict lineNum, const struct Type *const restrict type,
                                               struct StringArray *const restrict arguments) {
   for (size_t i = 0; i < type->fields.count; ++i) {
@@ -658,7 +657,7 @@ type_failure:
           return false;
         }
 
-        fputs("const ", fc);
+        fputs("static const ", fc);
         const char8_t *capitalName = nullptr;
         switch (field->arrayBaseType) {
           case ArrayCType:
@@ -708,7 +707,7 @@ type_failure:
               fprintf(fc, "%s", capitalName);
               break;
           }
-          fprintf(fc, "(%.*s)", FSTRING(arrayItems.strings + j));
+          fprintf(fc, "(%.*s_%.*s)", FSTRING(namespace), FSTRING(arrayItems.strings + j));
         }
         fputs(" };\n", fc);
 
@@ -738,7 +737,7 @@ type_failure:
 
 // BaseType = Action | Room | Screen
 // BaseType VariableName = Type([... [, ... [...]]]);
-[[nodiscard]] static bool transpile_variable(const char8_t *restrict *const restrict file, FILE *const restrict fh, FILE *const restrict fc,
+[[nodiscard]] static bool transpile_variable(const char8_t *restrict *const restrict file, FILE *const restrict fh, FILE *const restrict fc, const struct String *const restrict namespace,
                                              uint16_t *const restrict lineNum, const struct TypeArray *const restrict types,
                                              const char8_t *const restrict capitalName, const struct Type *const restrict baseType,
                                              const struct String *const restrict name) {
@@ -755,17 +754,17 @@ type_failure:
     return false;
   }
 
-   process_spaces();
-   if (!process_match("(")) {
-     return false;
-   }
+  process_spaces();
+  if (!process_match("(")) {
+    return false;
+  }
 
   bool status = false;
   struct StringArray arguments = {};
-  if (!transpile_arguments(file, fc, lineNum, baseType, &arguments)) {
+  if (!transpile_arguments(file, fc, namespace, lineNum, baseType, &arguments)) {
     goto variable_cleanup;
   }
-  if (type->isDerivedType && !transpile_arguments(file, fc, lineNum, type, &arguments)) {
+  if (type->isDerivedType && !transpile_arguments(file, fc, namespace, lineNum, type, &arguments)) {
     goto variable_cleanup;
   }
 
@@ -783,26 +782,93 @@ type_failure:
     goto variable_cleanup;
   }
 
-  fprintf(fh, "extern const struct %.*s %.*s;\n\n", FSTRING(&typeName), FSTRING(name));
+  fputs("extern const struct ", fh);
+  if (type->isDerivedType) {
+    fprintf(fh, "%.*s_", FSTRING(namespace));
+  }
+  fprintf(fh, "%.*s %.*s_%.*s;\n\n", FSTRING(&typeName), FSTRING(namespace), FSTRING(name));
 
-  fprintf(fc, "const struct %.*s %.*s = NEW_", FSTRING(&typeName), FSTRING(name));
+  fputs("const struct ", fc);
+  if (type->isDerivedType) {
+    fprintf(fc, "%.*s_", FSTRING(namespace));
+  }
+  fprintf(fc, "%.*s %.*s_%.*s = NEW_", FSTRING(&typeName), FSTRING(namespace), FSTRING(name));
   if (type->isDerivedType) {
     fputs("EXT_", fc);
   }
   fprintf(fc, "%s(", capitalName);
-  for (size_t i = 0; i < arguments.count; ++i) {
-    if (i != 0) {
+  size_t j = 0;
+  for (size_t i = 0; i < baseType->fields.count && j < arguments.count; ++i, ++j) {
+    if (j != 0) {
       fputs(", ", fc);
     }
 
-    fprintf(fc, "%.*s", FSTRING(arguments.strings + i));
+    const struct Field *const field = baseType->fields.fields + i;
+    switch (field->type) {
+      case ArrayCType:
+      case BooleanCType:
+      case IntegerCType:
+      case MethodCType:
+      case StringCType:
+        break;
+      case StringGeneratorCType:
+        if (j + 1 == arguments.count) {
+          EMIT_PROG_ERROR();
+          return false;
+        }
+
+        fprintf(fc, "%.*s, ", FSTRING(arguments.strings + j));
+        ++j;
+        break;
+      case EnumCType:
+        fprintf(fc, "%.*s_%.*s_", FSTRING(namespace), FSTRING(&field->internalTypeName));
+        break;
+      case ActionCType:
+      case RoomCType:
+      case ScreenCType:
+        fprintf(fc, "%.*s_", FSTRING(namespace));
+        break;
+    }
+
+    fprintf(fc, "%.*s", FSTRING(arguments.strings + j));
   }
+  if (type->isDerivedType) {
+    for (size_t i = 0; i < type->fields.count && j < arguments.count; ++i, ++j) {
+      if (j != 0) {
+        fputs(", ", fc);
+      }
+
+      const struct Field *const field = type->fields.fields + i;
+      switch (field->type) {
+        case ArrayCType:
+        case BooleanCType:
+        case IntegerCType:
+        case MethodCType:
+        case StringCType:
+          break;
+        case StringGeneratorCType:
+          EMIT_PROG_ERROR();
+          return false;
+        case EnumCType:
+          fprintf(fc, "%.*s_%.*s_", FSTRING(namespace), FSTRING(&field->internalTypeName));
+          break;
+        case ActionCType:
+        case RoomCType:
+        case ScreenCType:
+          fprintf(fc, "%.*s_", FSTRING(namespace));
+          break;
+      }
+
+      fprintf(fc, "%.*s", FSTRING(arguments.strings + j));
+    }
+  }
+
   fputs(");\n\n", fc);
 
   status = true;
 
 variable_cleanup:
-  size_t j = 0;
+  j = 0;
   for (size_t i = 0; i < baseType->fields.count && j < arguments.count; ++i, ++j) {
     const enum CType cType = baseType->fields.fields[i].type;
     if (ArrayCType == cType) {
@@ -830,11 +896,35 @@ variable_cleanup:
 
 // BaseType Type { ... }
 // BaseType VariableName = Type(...);
-[[nodiscard]] static bool transpile(const char8_t *restrict pFile, const char *const restrict hPath, const char *const restrict cPath, const char *const restrict extensionName) {
+[[nodiscard]] static bool transpile(const char8_t *restrict pFile, const char *const restrict hPath, const char *const restrict cPath) {
   bool status = false;
   uint16_t lineNum_ = 0;
   uint16_t *const lineNum = &lineNum_;
   const char8_t *restrict *const file = &pFile;
+
+  process_spaces();
+
+  const char8_t *const exprStart = *file;
+  if (!process_match("namespace")) {
+    EMIT_LEX_ERROR();
+    return false;
+  }
+
+  process_spaces();
+
+  const char8_t *tokenStart = *file;
+  if (!process_identifier()) {
+    EMIT_LEX_ERROR();
+    return false;
+  }
+  const struct String namespace = NEW_TOKEN_STRING();
+
+  process_spaces();
+
+  if (!process_match(";")) {
+    EMIT_LEX_ERROR();
+    return false;
+  }
 
   FILE *const fh = fopen(hPath, "wb");
   if (nullptr == fh) {
@@ -850,11 +940,13 @@ variable_cleanup:
   }
 
   fprintf(fh, "\
-#ifndef UTA_GEN_%s_H\n\
-#define UTA_GEN_%s_H\n\
+#ifndef UTA_GEN_%.*s_H\n\
+#define UTA_GEN_%.*s_H\n\
 \n\
 #include <stdint.h>\n\
-\n", extensionName, extensionName);
+\n\
+#include \"backend.h\"\n\
+\n", FSTRING(&namespace), FSTRING(&namespace));
 
     fprintf(fc, "\
 #include \"backend.h\"\n\
@@ -862,9 +954,6 @@ variable_cleanup:
 
 
   for (process_spaces(); u8'\0' != **file; process_spaces()) {
-    const char8_t *const exprStart = *file;
-    const char8_t *tokenStart = *file;
-
     const struct Type *baseType;
     struct TypeArray *types;
     const char8_t *capitalName;
@@ -881,7 +970,7 @@ variable_cleanup:
       types = &ScreenTypes;
       capitalName = u8"SCREEN";
     } else if (process_match("enum")) {
-      if (!transpile_enum(file, fh, lineNum)) {
+      if (!transpile_enum(file, fh, &namespace, lineNum)) {
         EMIT_LEX_ERROR();
         goto cleanup;
       }
@@ -902,11 +991,11 @@ variable_cleanup:
 
     process_spaces();
     if (process_match("{")) {
-      if (transpile_type(file, fh, lineNum, types, baseType, &name)) {
+      if (transpile_type(file, fh, &namespace, lineNum, types, baseType, &name)) {
         continue;
       }
     } else if (process_match("=")) {
-      if (transpile_variable(file, fh, fc, lineNum, types, capitalName, baseType, &name)) {
+      if (transpile_variable(file, fh, fc, &namespace, lineNum, types, capitalName, baseType, &name)) {
         continue;
       }
     }
@@ -917,7 +1006,7 @@ variable_cleanup:
 
   status = true;
 
-  fprintf(fh, "#endif // UTA_GEN_%s_H\n", extensionName);
+  fprintf(fh, "#endif // UTA_GEN_%.*s_H\n", FSTRING(&namespace));
 
 cleanup:
   fclose(fc);
@@ -945,7 +1034,7 @@ int main(const int argc, const char *const argv[const static argc]) {
     return 1 == argc ? EXIT_FAILURE : EXIT_SUCCESS;
   }
 
-  if (5 != argc) {
+  if (4 != argc) {
     fprintf(stderr, USAGE, argv[0]);
     return EXIT_FAILURE;
   }
@@ -954,7 +1043,6 @@ int main(const int argc, const char *const argv[const static argc]) {
   inputPath                     = PATH_CHECK(1, ".uta", "input must be a uta source file");
   const char *const outputHPath = PATH_CHECK(2,   ".h", "output header must be a c header file");
   const char *const outputCPath = PATH_CHECK(3,   ".c", "output source must be a c source file");
-  const char *const extensionName = argv[4];
 
   int fd = open(inputPath, O_RDONLY);
   if (-1 == fd) {
@@ -978,7 +1066,7 @@ int main(const int argc, const char *const argv[const static argc]) {
   }
 
   status = status && setup_type_arrays();
-  status = status && transpile(file, outputHPath, outputCPath, extensionName);
+  status = status && transpile(file, outputHPath, outputCPath);
 
   for (size_t i = 0; i < Enums.count; ++i) {
     const struct Enum *const enumType = Enums.enumTypes + i;

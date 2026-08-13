@@ -9,22 +9,22 @@
 bool core_go_direction_visibility_checker(const struct GameInfo *const info, const struct Action *const action) {
   const struct GoDirectionAction *const this = (const struct GoDirectionAction *const )action;
   switch (this->direction) {
-    case ScreenDirection_North:
+    case Core_ScreenDirection_North:
       if (NULL != backend_get_map_room(info, info->x, info->y + 1)) {
         return true;
       }
       break;
-    case ScreenDirection_East:
+    case Core_ScreenDirection_East:
       if (NULL != backend_get_map_room(info, info->x + 1, info->y)) {
         return true;
       }
       break;
-    case ScreenDirection_South:
+    case Core_ScreenDirection_South:
       if (NULL != backend_get_map_room(info, info->x, info->y - 1)) {
         return true;
       }
       break;
-    case ScreenDirection_West:
+    case Core_ScreenDirection_West:
       if (NULL != backend_get_map_room(info, info->x - 1, info->y)) {
         return true;
       }
@@ -49,22 +49,22 @@ bool core_quit_game_action_handler(struct GameInfo *const info, const struct Act
 bool core_go_direction_action_handler(struct GameInfo *const info, const struct Action *const action) {
   const struct GoDirectionAction *const this = (const struct GoDirectionAction *const )action;
   switch (this->direction) {
-    case ScreenDirection_North:
+    case Core_ScreenDirection_North:
       if (NULL != backend_get_map_room(info, info->x, info->y + 1)) {
         ++info->y;
       }
       break;
-    case ScreenDirection_East:
+    case Core_ScreenDirection_East:
       if (NULL != backend_get_map_room(info, info->x + 1, info->y)) {
         ++info->x;
       }
       break;
-    case ScreenDirection_South:
+    case Core_ScreenDirection_South:
       if (NULL != backend_get_map_room(info, info->x, info->y - 1)) {
         --info->y;
       }
       break;
-    case ScreenDirection_West:
+    case Core_ScreenDirection_West:
       if (NULL != backend_get_map_room(info, info->x - 1, info->y)) {
         --info->x;
       }

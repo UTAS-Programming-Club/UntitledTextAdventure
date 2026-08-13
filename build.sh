@@ -25,8 +25,8 @@ $UTA_C_FLAGS \
 src/dsl/dsl.c -o bin/utatest2026-dsl
 
 mkdir -p gen/
-./bin/utatest2026-dsl src/coregame.uta gen/coregame.h gen/coregame.c Core
-./bin/utatest2026-dsl src/ext1.uta gen/ext1.h gen/ext1.c Ext1
+./bin/utatest2026-dsl src/coregame.uta gen/coregame.h gen/coregame.c
+./bin/utatest2026-dsl src/ext1.uta gen/ext1.h gen/ext1.c
 
 $CC -O3 -Wall -Wformat -Wformat=2 -Wconversion -Wimplicit-fallthrough \
 -Werror=format-security \
