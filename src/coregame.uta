@@ -17,5 +17,5 @@ Action TestAction = TestAction("Missing second param");
 
 Action QuitAction = Action("Quit Game");
 Action TestAction = TestAction("Quit Game", North);
-Room   FirstRoom = Room(0, 0, "First Room!");
+Room   FirstRoom  = Room(0, 0, "First Room!");
 Screen MainMenuScreen = Screen("Untitled text adventure game", { QuitAction, TestAction });
