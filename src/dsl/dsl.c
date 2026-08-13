@@ -780,6 +780,7 @@ type_failure:
   }
 
   if (!add_variable(baseType->type, name)) {
+    goto variable_cleanup;
   }
 
   fprintf(fh, "extern const struct %.*s %.*s;\n\n", FSTRING(&typeName), FSTRING(name));
@@ -801,13 +802,25 @@ type_failure:
   status = true;
 
 variable_cleanup:
-  for (size_t i = 0; i < type->fields.count; ++i) {
-    const enum CType cType = type->fields.fields[i].type;
-    if (ArrayCType == cType && arguments.count > i) {
-      free((void *)arguments.strings[i].str);
+  size_t j = 0;
+  for (size_t i = 0; i < baseType->fields.count && j < arguments.count; ++i, ++j) {
+    const enum CType cType = baseType->fields.fields[i].type;
+    if (ArrayCType == cType) {
+      free((void *)arguments.strings[j].str);
     } else if (StringGeneratorCType == cType) {
-      // Skip over second arg for function pointer
-      ++i;
+      // Skip over second argument used for function pointer
+      ++j;
+    }
+  }
+  if (type->isDerivedType) {
+    for (size_t i = 0; i < type->fields.count && j < arguments.count; ++i, ++j) {
+      const enum CType cType = type->fields.fields[i].type;
+      if (ArrayCType == cType) {
+        free((void *)arguments.strings[j].str);
+      } else if (StringGeneratorCType == cType) {
+        // Skip over second argument used for function pointer
+        ++j;
+      }
     }
   }
   free(arguments.strings);
@@ -966,6 +979,12 @@ int main(const int argc, const char *const argv[const static argc]) {
 
   status = status && setup_type_arrays();
   status = status && transpile(file, outputHPath, outputCPath, extensionName);
+
+  for (size_t i = 0; i < Enums.count; ++i) {
+    const struct Enum *const enumType = Enums.enumTypes + i;
+    free(enumType->valueNames.strings);
+  }
+  free(Enums.enumTypes);
 
   free(ActionVariableNames.strings);
   free(RoomVariableNames.strings);
