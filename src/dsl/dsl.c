@@ -57,16 +57,23 @@ DYN_ARRAY_DEF(StringArray, struct String, string)
 
 // TODO: Merge BooleanType & IntegerType (value types), and ActionType & RoomType & ScreenType (dsl types)?
 enum CType {
-  ArrayCType,   // ItemType[] where ItemType is any CType other than ArrayType,      only used for fields
+  ArrayCType,   // ItemType[] where ItemType is any CType other than ArrayType,      only used for fields/function parameters
   BooleanCType, // bool in both dsl and C,                                           only used for function return types
-  IntegerCType, // One of IntegerTypes in both dsl and C,                            only used for fields
-  MethodCType,  // ReturnType Name() where ReturnType is BooleanType or IntegerType, only used for fields
-  StringCType,  // string in dsl and const char * in C,                              only used for fields
+  EnumCType,    // enum EnumName in both dsl and C,                                  only used for fields/function parameters
+  IntegerCType, // One of IntegerTypes in both dsl and C,                            only used for fields/function parameters
+  MethodCType,  // ReturnType Name() where ReturnType is BooleanType or IntegerType, only used for fields/function parameters
+  StringCType,  // string in dsl and const char * in C,                              only used for fields/function parameters
 
-  ActionCType,  // Only used for function parameters
-  RoomCType,    // Only used for function parameters
-  ScreenCType   // Only used for function parameters
+  ActionCType,  // Only used for fields/function parameters
+  RoomCType,    // Only used for fields/function parameters
+  ScreenCType   // Only used for fields/function parameters
 };
+
+struct Enum {
+  struct String name;
+  struct StringArray valueNames;
+};
+DYN_ARRAY_DEF(EnumArray, struct Enum, enumType)
 
 struct Field {
   enum CType type;
@@ -210,8 +217,38 @@ static struct StringArray ScreenVariableNames = {};
 }
 
 
+static struct EnumArray Enums = {};
+
+[[nodiscard]] static const struct Enum *get_enum(const struct String *const enumName) {
+  for (size_t i = 0; i < Enums.count; ++i) {
+    const struct Enum *const enumType = Enums.enumTypes + i;
+    if (string_equals(&enumType->name, enumName)) {
+      return enumType;
+    }
+  }
+
+  return nullptr;
+}
+
+[[nodiscard]] static bool enum_value_exists(const struct String *const restrict enumName, const struct String *const restrict enumValueName) {
+  const struct Enum *const enumType = get_enum(enumName);
+  if (nullptr == enumType) {
+    return false;
+  }
+
+  const struct StringArray *const enumValueNames = &enumType->valueNames;
+  for (size_t i = 0; i < enumValueNames->count; ++i) {
+    if (string_equals(enumValueNames->strings + i, enumValueName)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+
 // TODO: Ensure this supports unicode
-#define process_match(match) process_match(file, sizeof match - 1, match)
+#define process_match(match) process_match(file, sizeof u8 ## match - 1, u8 ## match)
 [[nodiscard]] static bool (process_match)(const char8_t *restrict *const restrict file, size_t strLen, const char8_t match[const restrict static strLen]) {
   if (0 != strncmp((const char *)*file, (const char *)match, strLen)) {
     return false;
@@ -252,12 +289,12 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 
 
 #define process_argument(expectedType, argument) process_argument(file, expectedType, &argument)
-[[nodiscard]] static bool (process_argument)(const char8_t *restrict *const restrict file, const enum CType argumentType, struct String *const restrict argument);
+[[nodiscard]] static bool (process_argument)(const char8_t *restrict *const restrict file, const struct Field *const restrict expectedType, struct String *const restrict argument);
 
 #define process_array(itemType, arrayItems) process_array(file, lineNum, itemType, &arrayItems)
 [[nodiscard]] static bool (process_array)(const char8_t *restrict *const restrict file, uint16_t *const restrict lineNum,
-                                          const enum CType itemType, struct StringArray *const restrict arrayItems) {
-  if (!process_match(u8"{")) {
+                                          const struct Field *const restrict itemType, struct StringArray *const restrict arrayItems) {
+  if (!process_match("{")) {
     return false;
   }
 
@@ -265,7 +302,7 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
     process_spaces();
 
     if (i != 0) {
-      if (!process_match(u8",")) {
+      if (!process_match(",")) {
         break;
       }
 
@@ -281,7 +318,7 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
     }
   }
 
-  if (!process_match(u8"}")) {
+  if (!process_match("}")) {
     return false;
   }
 
@@ -304,7 +341,7 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 
 #define process_string() process_string(file)
 [[nodiscard]] static bool (process_string)(const char8_t *restrict *const restrict file) {
-  if (!process_match(u8"\"")) {
+  if (!process_match("\"")) {
     return false;
   }
 
@@ -314,18 +351,19 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
     }
   }
 
-  if (!process_match(u8"\"")) {
+  if (!process_match("\"")) {
     return false;
   }
 
   return true;
 }
 
-[[nodiscard]] static bool (process_argument)(const char8_t *restrict *const restrict file, const enum CType argumentType, struct String *const restrict argument) {
+[[nodiscard]] static bool (process_argument)(const char8_t *restrict *const restrict file, const struct Field *const restrict expectedType, struct String *const restrict argument) {
   const char8_t *const tokenStart = *file;
+  const enum CType type = ArrayCType == expectedType->type ? expectedType->arrayBaseType : expectedType->type;
 
   bool isVariableType = false;
-  switch (argumentType) {
+  switch (type) {
     case ArrayCType:
     case BooleanCType:
     case MethodCType:
@@ -345,6 +383,8 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
     case RoomCType:
     case ScreenCType:
       isVariableType = true;
+      [[fallthrough]];
+    case EnumCType:
       if (!process_identifier()) {
         return false;
       }
@@ -353,8 +393,12 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 
   *argument = NEW_TOKEN_STRING();
 
-  if (isVariableType) {
-    if (!variable_exists(argumentType, argument)) {
+  if (EnumCType == expectedType->type) {
+    if (!enum_value_exists(&expectedType->internalTypeName, argument)) {
+      return false;
+    }
+  } else if (isVariableType) {
+    if (!variable_exists(type, argument)) {
       return false;
     }
   }
@@ -365,10 +409,71 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 
 #define FSTRING(string) (int)(string)->strLen, (string)->str
 
+/* enum EnumType {
+ *   EnumValue,
+ *   ...
+ * }
+ */
+[[nodiscard]] static bool transpile_enum(const char8_t *restrict *const restrict file, FILE *const restrict fh, uint16_t *const restrict lineNum) {
+  process_spaces();
+
+  const char8_t *tokenStart = *file;
+  if (!process_identifier()) {
+    return false;
+  }
+  const struct String name = NEW_TOKEN_STRING();
+  if (nullptr != get_enum(&name)) {
+    return false;
+  }
+
+  process_spaces();
+
+  if (!process_match("{")) {
+    return false;
+  }
+
+  struct StringArray valueNames = {};
+  for (uint_fast8_t i = 0; i < 255 && u8'\0' != **file; ++i) {
+    process_spaces();
+
+    if (i != 0) {
+      if (!process_match(",")) {
+        break;
+      }
+
+      process_spaces();
+    }
+
+    tokenStart = *file;
+    if (!process_identifier()) {
+      break;
+    }
+    const struct String valueName = NEW_TOKEN_STRING();
+
+    if (!add_string(&valueNames, &valueName)) {
+      return false;
+    }
+  }
+
+  if (!process_match("}")) {
+    return false;
+  }
+
+  // TODO: Add prefix to enum values
+  fprintf(fh, "enum %.*s {\n", FSTRING(&name));
+  for (size_t i = 0; i < valueNames.count; ++i) {
+    fprintf(fh, "  %.*s,\n", FSTRING(valueNames.strings + i));
+  }
+  fputs("};\n\n", fh);
+
+  const struct Enum enumType = { name, valueNames };
+  return add_enumType(&Enums, &enumType);
+}
+
 // BaseType = Action | Room | Screen
 /* BaseType Type {
-     FieldType FieldName;
-     ...
+ *   FieldType FieldName;
+ *   ...
  * }
  */
 [[nodiscard]] static bool transpile_type(const char8_t *restrict *const restrict file, FILE *const restrict fh,
@@ -381,6 +486,12 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 
   struct FieldArray fields = {};
   for (process_spaces(); u8'\0' != **file; process_spaces()) {
+    enum CType type;
+    bool isEnum = process_match("enum");
+    if (isEnum) {
+      process_spaces();
+    }
+
     const char8_t *tokenStart = *file;
     if (!process_identifier()) {
       break;
@@ -391,7 +502,11 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
     // TODO: Allow method fields
     // TODO: Allow string fields
     // TODO: Allow array fields of bools, integers and strings
-    if (!type_is_integer(&fieldTypeName)) {
+    if (isEnum) {
+      type = EnumCType;
+    } else if (type_is_integer(&fieldTypeName)) {
+      type = IntegerCType;
+    } else {
       goto type_failure;
     }
 
@@ -404,18 +519,18 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
     const struct String fieldName = NEW_TOKEN_STRING();
 
     process_spaces();
-    if (!process_match(u8";")) {
+    if (!process_match(";")) {
       goto type_failure;
     }
 
-    struct Field field = { IntegerCType, fieldName, .internalTypeName = fieldTypeName };
+    struct Field field = { type, fieldName, .internalTypeName = fieldTypeName };
     if (!add_field(&fields, &field)) {
       goto type_failure;
     }
   }
 
   process_spaces();
-  if (!process_match(u8"}")) {
+  if (!process_match("}")) {
     goto type_failure;
   }
 
@@ -424,6 +539,7 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
     goto type_failure;
   }
 
+  // TODO: Add prefix to type name
   fprintf(fh, "struct %.*s {\n"
               "  const struct %.*s base;\n\n",
           FSTRING(name),
@@ -432,6 +548,9 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 
   for (size_t i = 0; i < fields.count; ++i) {
     const struct Field *const field = fields.fields + i;
+
+    fputs("  ", fh);
+
     switch (field->type) {
       case ActionCType:
       case ArrayCType:
@@ -440,11 +559,14 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
       case RoomCType:
       case ScreenCType:
         goto type_failure;
+      case EnumCType:
+        fputs("enum ", fh);
+        [[fallthrough]];
       case IntegerCType:
-        fprintf(fh, "  %.*s %.*s;\n", FSTRING(&field->internalTypeName), FSTRING(&field->name));
+        fprintf(fh, "%.*s %.*s;\n", FSTRING(&field->internalTypeName), FSTRING(&field->name));
         break;
       case StringCType:
-        fprintf(fh, "  char *%.*s;\n", FSTRING(&field->name));
+        fprintf(fh, "char *%.*s;\n", FSTRING(&field->name));
         break;
     }
   }
@@ -475,7 +597,7 @@ type_failure:
     process_spaces();
 
     if (type->isDerivedType || i != 0) {
-      if (!process_match(u8",")) {
+      if (!process_match(",")) {
         return false;
       }
 
@@ -486,7 +608,7 @@ type_failure:
     switch (field->type) {
       case ArrayCType:
         struct StringArray arrayItems = {};
-        if (!process_array(field->arrayBaseType, arrayItems)) {
+        if (!process_array(field, arrayItems)) {
           free(arrayItems.strings);
           return false;
         }
@@ -513,6 +635,7 @@ type_failure:
         switch (field->arrayBaseType) {
           case ArrayCType:
           case BooleanCType:
+          case EnumCType:
           case IntegerCType:
           case MethodCType:
           case StringCType:
@@ -532,7 +655,7 @@ type_failure:
             capitalName = u8"SCREEN";
             break;
         }
-        fprintf(fc, " %.*s = { ",  FSTRING(&argument));
+        fprintf(fc, " %.*s[] = { ",  FSTRING(&argument));
         for (size_t j = 0; j < arrayItems.count; ++j) {
           if (0 != j) {
             fputs(", ", fc);
@@ -542,6 +665,7 @@ type_failure:
           switch (field->arrayBaseType) {
             case ArrayCType:
             case BooleanCType:
+            case EnumCType:
             case IntegerCType:
             case MethodCType:
             case StringCType:
@@ -561,7 +685,7 @@ type_failure:
         free(arrayItems.strings);
         break;
       default:
-        if (!process_argument(field->type, argument)) {
+        if (!process_argument(field, argument)) {
           return false;
         }
         break;
@@ -584,7 +708,7 @@ type_failure:
   process_spaces();
 
   const char8_t *tokenStart = *file;
-    if (!process_identifier()) {
+  if (!process_identifier()) {
     return false;
   }
   const struct String typeName = NEW_TOKEN_STRING();
@@ -595,7 +719,7 @@ type_failure:
   }
 
    process_spaces();
-   if (!process_match(u8"(")) {
+   if (!process_match("(")) {
      return false;
    }
 
@@ -609,12 +733,12 @@ type_failure:
   }
 
   process_spaces();
-  if (!process_match(u8")")) {
+  if (!process_match(")")) {
     goto variable_cleanup;
   }
 
   process_spaces();
-  if (!process_match(u8";")) {
+  if (!process_match(";")) {
     goto variable_cleanup;
   }
 
@@ -691,18 +815,25 @@ variable_cleanup:
     const struct Type *baseType;
     struct TypeArray *types;
     const char8_t *capitalName;
-    if (process_match(u8"Action")) {
+    if (process_match("Action")) {
       baseType = &ActionType;
       types = &ActionTypes;
       capitalName = u8"ACTION";
-    } else if (process_match(u8"Room")) {
+    } else if (process_match("Room")) {
       baseType = &RoomType;
       types = &RoomTypes;
       capitalName = u8"ROOM";
-    } else if (process_match(u8"Screen")) {
+    } else if (process_match("Screen")) {
       baseType = &ScreenType;
       types = &ScreenTypes;
       capitalName = u8"SCREEN";
+    } else if (process_match("enum")) {
+      if (!transpile_enum(file, fh, lineNum)) {
+        EMIT_LEX_ERROR();
+        goto cleanup;
+      }
+
+      continue;
     } else {
       EMIT_LEX_ERROR();
       goto cleanup;
@@ -717,11 +848,11 @@ variable_cleanup:
     const struct String name = NEW_TOKEN_STRING();
 
     process_spaces();
-    if (process_match(u8"{")) {
+    if (process_match("{")) {
       if (transpile_type(file, fh, lineNum, types, baseType, &name)) {
         continue;
       }
-    } else if (process_match(u8"=")) {
+    } else if (process_match("=")) {
       if (transpile_variable(file, fh, fc, lineNum, types, capitalName, baseType, &name)) {
         continue;
       }

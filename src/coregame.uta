@@ -1,8 +1,15 @@
+enum ScreenDirection {
+  North,
+  East,
+  South,
+  West
+}
+
 Action TestAction {
-  uint8_t test;
+  enum ScreenDirection direction;
 }
 
 Action QuitAction = Action("Quit Game");
-Action TestAction = TestAction("Quit Game", 1);
+Action TestAction = TestAction("Quit Game", North);
 Room   FirstRoom = Room(0, 0, "First Room!");
 Screen MainMenuScreen = Screen("Untitled text adventure game", { QuitAction, TestAction });
