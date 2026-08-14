@@ -7,9 +7,6 @@
 #include "backend.h"  // for Action, GameInfo (ptr only)
 #include "gen/coregame.h"
 
-extern const struct GotoScreenAction CoreStartAction;
-extern const struct GotoScreenAction CoreGotoMainMenuAction;
-
 extern const uint8_t MapSizeX;
 extern const uint8_t MapSizeY;
 

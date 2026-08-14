@@ -7,7 +7,7 @@
 #include "gen/coregame.h"  // for Core_MainMenuScreen, Core_RoomScreen
 
 bool core_go_direction_visibility_checker(const struct GameInfo *const info, const struct Action *const action) {
-  const struct GoDirectionAction *const this = (const struct GoDirectionAction *const )action;
+  const struct Core_GoDirectionAction *const this = (const struct Core_GoDirectionAction *const)action;
   switch (this->direction) {
     case Core_ScreenDirection_North:
       if (NULL != backend_get_map_room(info, info->x, info->y + 1)) {
@@ -35,11 +35,11 @@ bool core_go_direction_visibility_checker(const struct GameInfo *const info, con
 }
 
 
-static bool core_goto_screen_action_handler(struct GameInfo *const info, const struct Action *const action) {
-  const struct GotoScreenAction *const this = (const struct GotoScreenAction *const )action;
+/*static bool core_goto_screen_action_handler(struct GameInfo *const info, const struct Action *const action) {
+  const struct Core_GotoScreenAction *const this = (const struct Core_GotoScreenAction *const)action;
   info->screen = this->screen;
   return true;
-}
+}*/
 
 bool core_quit_game_action_handler(struct GameInfo *const info, const struct Action *const action) {
   info->quit = true;
@@ -47,7 +47,7 @@ bool core_quit_game_action_handler(struct GameInfo *const info, const struct Act
 }
 
 bool core_go_direction_action_handler(struct GameInfo *const info, const struct Action *const action) {
-  const struct GoDirectionAction *const this = (const struct GoDirectionAction *const )action;
+  const struct Core_GoDirectionAction *const this = (const struct Core_GoDirectionAction *const)action;
   switch (this->direction) {
     case Core_ScreenDirection_North:
       if (NULL != backend_get_map_room(info, info->x, info->y + 1)) {
@@ -87,9 +87,6 @@ const char *core_room_screen_body_generator(const struct GameInfo *const info) {
 
   return room->body;
 }
-
-const struct GotoScreenAction CoreStartAction = NEW_EXT_ACTION("Start Game", backend_default_action_visibility_checker, core_goto_screen_action_handler, &Core_RoomScreen);
-const struct GotoScreenAction CoreGotoMainMenuAction = NEW_EXT_ACTION("Quit", backend_default_action_visibility_checker, core_goto_screen_action_handler, &Core_MainMenuScreen);
 
 const uint8_t MapSizeX = 3;
 const uint8_t MapSizeY = 2;

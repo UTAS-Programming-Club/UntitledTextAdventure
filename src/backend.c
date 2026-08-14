@@ -61,7 +61,7 @@ bool backend_setup(struct GameInfo *info) {
 
 bool backend_input(struct GameInfo *info, uint8_t actionId) {
   uint8_t currentActionId = 0;
-  const struct Action *action;
+  const struct Action *action = NULL;
   for (size_t actionIdx = 0; currentActionId <= actionId && actionIdx < info->screen->actionCount; ++actionIdx) {
     action = info->screen->actions[actionIdx];
     if (action->visibility_checker(info, action)) {

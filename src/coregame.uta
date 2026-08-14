@@ -7,22 +7,38 @@ enum ScreenDirection {
   West
 }
 
+Action QuitAction {
+  // TODO: Support core_quit_game_action_handler
+}
+
 Action GotoScreenAction {
   // TODO: Support base types as fields
   // Screen screen;
+
+  // TODO: Support core_goto_screen_action_handler
 }
 
 Action GoDirectionAction {
   enum ScreenDirection direction;
 
-  // TODO: support core_go_direction_visibility_checker && core_go_direction_action_handler
+  // TODO: Support core_go_direction_visibility_checker & core_go_direction_action_handler
 }
 
-Action QuitAction = Action("Quit Game");
+Screen RoomScreen {
+  // TODO: Support core_room_screen_body_generator
+}
+
+Action QuitAction = QuitAction("Quit Game");
+
 Action GoNorthAction = GoDirectionAction("Go North", North);
 Action GoEastAction = GoDirectionAction("Go East", East);
 Action GoSouthAction = GoDirectionAction("Go South", South);
 Action GoWestAction = GoDirectionAction("Go West", West);
 
+Action StartGameAction = GotoScreenAction("Start Game" /* RoomScreen */);
+Action GotoMainMenuAction = GotoScreenAction("Quit" /*, MainMenuScreen */);
+
 Room   FirstRoom  = Room(0, 0, "First Room!");
-Screen MainMenuScreen = Screen("Untitled text adventure game", { QuitAction /*, GoNorthAction, GoEastAction, GoSouthAction, GoWestAction */ });
+
+Screen MainMenuScreen = Screen("Untitled text adventure game", { StartGameAction, QuitAction });
+Screen RoomScreen = RoomScreen("Room screen!", { GoNorthAction, GoEastAction, GoSouthAction, GoWestAction, QuitAction });
