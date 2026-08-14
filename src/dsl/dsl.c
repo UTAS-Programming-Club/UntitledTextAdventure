@@ -44,6 +44,7 @@ const char *inputPath;
   }
 
 // TODO: Restore full error line reporting, also make sure unicode prints then (doesn't now unless only 1 byte)
+// TODO: Fix exprStart not being set properly
 #define EMIT_LEX_ERROR() EMIT_PROG_ERROR("%s:%" PRIu16 ":%td: Unexpected character: %c", inputPath, *lineNum + 1, *file - exprStart + 1, **file)
 
 
@@ -55,7 +56,7 @@ struct String {
 };
 DYN_ARRAY_DEF(StringArray, struct String, string)
 
-// TODO: Merge BooleanType & IntegerType (value types), and ActionType & RoomType & ScreenType (dsl types)?
+// TODO: Merge BooleanType & IntegerType (value types)?
 enum CType {
   ArrayCType,           // ItemType[] where ItemType is any CType other than ArrayType,      only used for fields/function parameters
   BooleanCType,         // bool in both dsl and C,                                           only used for function return types
@@ -64,10 +65,13 @@ enum CType {
   MethodCType,          // ReturnType Name() where ReturnType is BooleanType or IntegerType, only used for fields/function parameters
   StringCType,          // string in dsl and const char * in C,                              only used for fields/function parameters
   StringGeneratorCType, // string and (method) in dsl, const char * and const char *(*)(const struct GameInfo *const) in C, used for a pre defined function parameter
+  StructCType           // Action, Room and Screen in dsl, same with struct prefix in C,     only used for fields/function parameters
+};
 
-  ActionCType,          // Only used for fields/function parameters
-  RoomCType,            // Only used for fields/function parameters
-  ScreenCType           // Only used for fields/function parameters
+enum StructType {
+  ActionStructType,
+  RoomStructType,
+  ScreenStructType
 };
 
 struct Enum {
@@ -78,22 +82,32 @@ DYN_ARRAY_DEF(EnumArray, struct Enum, enumType)
 
 struct Field {
   enum CType type;
-  struct String name; // Only set if parent Type.isDerivedType or type is MethodType (functionName)
+  struct String name; // Only set if type is StructCType and parent Type.isDerivedType, or type is MethodType (functionName)
 
   enum CType arrayBaseType; // Only set if type is ArrayCType
-  struct String internalTypeName; // integerTypeName if type or arrayBaseType is IntegerCType, returnTypeName if MethodCType, only set if parent Type.isDerivedType
+  struct Type *arrayStructBaseType; // Only set if type is ArrayCType and arrayBaseType is StructCType
+  struct String internalTypeName; // Only set if type or arrayBaseType is IntegerCType (integerTypeName), or if type is MethodCType (returnTypeName)
 };
 DYN_ARRAY_DEF(FieldArray, struct Field, field)
 
 struct Type {
-  enum CType type; // Only allowed to be ActionCType, RoomCType & ScreenCType
+  enum StructType type;
   struct String name;
+  struct String *capitalBaseTypeName;
   bool isDerivedType;
   struct FieldArray fields;
 };
 DYN_ARRAY_DEF(TypeArray, struct Type, type)
 
-static struct Type ActionType = { ActionCType, NEW_STATIC_STRING("Action") };
+struct Variable {
+  struct String name;
+  enum StructType type;
+};
+DYN_ARRAY_DEF(VariableArray, struct Variable, variable)
+
+
+static struct String ActionCapitalTypeName = NEW_STATIC_STRING("ACTION");
+static struct Type ActionType = { ActionStructType, NEW_STATIC_STRING("Action"), &ActionCapitalTypeName };
 static struct Field ActionTitle = { StringCType };
 static struct Field ActionVisibilityChecker = {
   MethodCType, NEW_STATIC_STRING("backend_default_action_visibility_checker"), BooleanCType
@@ -101,19 +115,20 @@ static struct Field ActionVisibilityChecker = {
 static struct Field ActionTriggerHandler = {
   MethodCType, NEW_STATIC_STRING("backend_default_action_trigger_handler"), BooleanCType
 };
-static struct TypeArray ActionTypes = {};
 
-static struct Type RoomType = { RoomCType, NEW_STATIC_STRING("Room") };
+static struct String RoomCapitalTypeName = NEW_STATIC_STRING("ROOM");
+static struct Type RoomType = { RoomStructType, NEW_STATIC_STRING("Room"), &RoomCapitalTypeName };
 static struct Field RoomX = { IntegerCType };
 static struct Field RoomY = { IntegerCType };
 static struct Field RoomBody = { StringCType };
-static struct TypeArray RoomTypes = {};
 
-static struct Type ScreenType = { ScreenCType, NEW_STATIC_STRING("Screen") };
+static struct String ScreenCapitalTypeName = NEW_STATIC_STRING("SCREEN");
+static struct Type ScreenType = { ScreenStructType, NEW_STATIC_STRING("Screen"), &ScreenCapitalTypeName };
 // TODO: Support body generator method
 static struct Field ScreenBody = { StringGeneratorCType };
-static struct Field ScreenActions = { ArrayCType, .arrayBaseType = ActionCType };
-static struct TypeArray ScreenTypes = {};
+static struct Field ScreenActions = { ArrayCType, .arrayBaseType = StructCType, .arrayStructBaseType = &ActionType };
+
+static struct TypeArray Types = {};
 
 static const struct String IntegerTypes[] = {
   NEW_STATIC_STRING("int8_t"),  NEW_STATIC_STRING("int16_t"),  NEW_STATIC_STRING("int32_t"),
@@ -122,24 +137,16 @@ static const struct String IntegerTypes[] = {
 static const size_t IntegerTypeCount = sizeof IntegerTypes / sizeof *IntegerTypes;
 
 [[nodiscard]] static bool setup_type_arrays() {
- return add_field(&ActionType.fields, &ActionTitle) &&
-        add_field(&ActionType.fields, &ActionVisibilityChecker) &&
-        add_field(&ActionType.fields, &ActionTriggerHandler) &&
-        add_type(&ActionTypes, &ActionType) &&
+  return add_field(&ActionType.fields, &ActionTitle) &&
+         add_field(&ActionType.fields, &ActionVisibilityChecker) &&
+         add_field(&ActionType.fields, &ActionTriggerHandler) &&
+         add_type(&Types, &ActionType) &&
 
-        add_field(&RoomType.fields, &RoomX) && add_field(&RoomType.fields, &RoomY) &&
-        add_field(&RoomType.fields, &RoomBody) && add_type(&RoomTypes, &RoomType) &&
+         add_field(&RoomType.fields, &RoomX) && add_field(&RoomType.fields, &RoomY) &&
+         add_field(&RoomType.fields, &RoomBody) && add_type(&Types, &RoomType) &&
 
-        add_field(&ScreenType.fields, &ScreenBody) && add_field(&ScreenType.fields, &ScreenActions) &&
-        add_type(&ScreenTypes, &ScreenType);
-}
-
-static void free_type_array(const struct TypeArray *const array) {
-  for (size_t i = 0; i < array->count; ++i) {
-    free(array->types[i].fields.fields);
-  }
-
-  free(array->types);
+         add_field(&ScreenType.fields, &ScreenBody) && add_field(&ScreenType.fields, &ScreenActions) &&
+         add_type(&Types, &ScreenType);
 }
 
 [[nodiscard]] static bool string_equals(const struct String *const restrict str1, const struct String *const restrict str2) {
@@ -150,9 +157,9 @@ static void free_type_array(const struct TypeArray *const array) {
   return 0 == strncmp((const char *)str1->str, (const char *)str2->str, str1->strLen);
 }
 
-[[nodiscard]] static const struct Type *get_type(const struct TypeArray *const restrict types, const struct String *const restrict typeName) {
-  for (size_t i = 0; i < types->count; ++i) {
-    const struct Type *type = types->types + i;
+[[nodiscard]] static const struct Type *get_type(const struct String *const typeName) {
+  for (size_t i = 0; i < Types.count; ++i) {
+    const struct Type *type = Types.types + i;
     if (string_equals(&type->name, typeName)) {
       return type;
     }
@@ -172,49 +179,17 @@ static void free_type_array(const struct TypeArray *const array) {
 }
 
 
-static struct StringArray ActionVariableNames = {};
-static struct StringArray RoomVariableNames = {};
-static struct StringArray ScreenVariableNames = {};
+static struct VariableArray Variables = {};
 
-[[nodiscard]] static struct StringArray *get_variable_names(const enum CType variableType) {
-  switch (variableType) {
-    case ActionCType:
-      return &ActionVariableNames;
-      break;
-    case RoomCType:
-      return &RoomVariableNames;
-      break;
-    case ScreenCType:
-      return &ScreenVariableNames;
-      break;
-    default:
-      return nullptr;
-  }
-}
-
-[[nodiscard]] static bool add_variable(const enum CType variableType, const struct String *const variableName) {
-  struct StringArray *const variableNames = get_variable_names(variableType);
-  if (nullptr == variableNames) {
-    return false;
-  }
-
-  return add_string(variableNames, variableName);
-}
-
-[[nodiscard]] static bool variable_exists(const enum CType variableType, const struct String *const restrict variableName) {
-  struct StringArray *const variableNames = get_variable_names(variableType);
-  if (nullptr == variableNames) {
-    return false;
-  }
-
-  for (size_t i = 0; i < variableNames->count; ++i) {
-    const struct String *storedVariableName = variableNames->strings + i;
-    if (string_equals(storedVariableName, variableName)) {
-      return true;
+[[nodiscard]] static const struct Variable *get_variable(const struct String *const variableName) {
+  for (size_t i = 0; i < Variables.count; ++i) {
+    const struct Variable *const variable = Variables.variables + i;
+    if (string_equals(&variable->name, variableName)) {
+      return variable;
     }
   }
 
-  return false;
+  return nullptr;
 }
 
 
@@ -406,9 +381,7 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
         return false;
       }
       break;
-    case ActionCType:
-    case RoomCType:
-    case ScreenCType:
+    case StructCType:
       isVariableType = true;
       [[fallthrough]];
     case EnumCType:
@@ -425,7 +398,8 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
       return false;
     }
   } else if (isVariableType) {
-    if (!variable_exists(type, argument)) {
+    const struct Variable *const variable = get_variable(argument);
+    if (nullptr == variable || variable->type != expectedType->arrayStructBaseType->type) {
       return false;
     }
   }
@@ -503,10 +477,10 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
  *   ...
  * }
  */
-[[nodiscard]] static bool transpile_type(const char8_t *restrict *const restrict file, FILE *const restrict fh, const struct String *const restrict namespace,
-                                         uint16_t *const restrict lineNum, struct TypeArray *const restrict types,
+[[nodiscard]] static bool transpile_type(const char8_t *restrict *const restrict file, FILE *const restrict fh,
+                                         const struct String *const restrict namespace, uint16_t *const restrict lineNum,
                                          const struct Type *const restrict baseType, const struct String *const restrict name) {
-  if (nullptr != get_type(&ActionTypes, name) || nullptr != get_type(&RoomTypes, name) || nullptr != get_type(&ScreenTypes, name)) {
+  if (nullptr != get_type(name)) {
     // TODO: Add error
     return false;
   }
@@ -561,8 +535,8 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
     goto type_failure;
   }
 
-  struct Type type = { baseType->type, *name, true, fields };
-  if (!add_type(types, &type)) {
+  struct Type type = { baseType->type, *name, baseType->capitalBaseTypeName, true, fields };
+  if (!add_type(&Types, &type)) {
     goto type_failure;
   }
 
@@ -578,13 +552,11 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
     fputs("  ", fh);
 
     switch (field->type) {
-      case ActionCType:
       case ArrayCType:
       case BooleanCType:
       case MethodCType:
-      case RoomCType:
-      case ScreenCType:
       case StringGeneratorCType:
+      case StructCType:
         goto type_failure;
       case EnumCType:
         fprintf(fh, "enum %.*s_", FSTRING(namespace));
@@ -658,7 +630,6 @@ type_failure:
         }
 
         fputs("static const ", fc);
-        const char8_t *capitalName = nullptr;
         switch (field->arrayBaseType) {
           case ArrayCType:
           case BooleanCType:
@@ -670,17 +641,8 @@ type_failure:
             free((void *)argument.str);
             free(arrayItems.strings);
             return false;
-          case ActionCType:
-            fputs("Action", fc);
-            capitalName = u8"ACTION";
-            break;
-          case RoomCType:
-            fputs("Room", fc);
-            capitalName = u8"ROOM";
-            break;
-          case ScreenCType:
-            fputs("Screen", fc);
-            capitalName = u8"SCREEN";
+          case StructCType:
+            fprintf(fc, "%.*s", FSTRING(&field->arrayStructBaseType->name));
             break;
         }
         fprintf(fc, " %.*s[] = { ",  FSTRING(&argument));
@@ -689,25 +651,7 @@ type_failure:
             fputs(", ", fc);
           }
 
-          fputs("USE_", fc);
-          switch (field->arrayBaseType) {
-            case ArrayCType:
-            case BooleanCType:
-            case EnumCType:
-            case IntegerCType:
-            case MethodCType:
-            case StringCType:
-            case StringGeneratorCType:
-              free((void *)argument.str);
-              free(arrayItems.strings);
-              return false;
-            case ActionCType:
-            case RoomCType:
-            case ScreenCType:
-              fprintf(fc, "%s", capitalName);
-              break;
-          }
-          fprintf(fc, "(%.*s_%.*s)", FSTRING(namespace), FSTRING(arrayItems.strings + j));
+          fprintf(fc, "USE_%.*s(%.*s_%.*s)", FSTRING(field->arrayStructBaseType->capitalBaseTypeName), FSTRING(namespace), FSTRING(arrayItems.strings + j));
         }
         fputs(" };\n", fc);
 
@@ -737,10 +681,9 @@ type_failure:
 
 // BaseType = Action | Room | Screen
 // BaseType VariableName = Type([... [, ... [...]]]);
-[[nodiscard]] static bool transpile_variable(const char8_t *restrict *const restrict file, FILE *const restrict fh, FILE *const restrict fc, const struct String *const restrict namespace,
-                                             uint16_t *const restrict lineNum, const struct TypeArray *const restrict types,
-                                             const char8_t *const restrict capitalName, const struct Type *const restrict baseType,
-                                             const struct String *const restrict name) {
+[[nodiscard]] static bool transpile_variable(const char8_t *restrict *const restrict file, FILE *const restrict fh, FILE *const restrict fc,
+                                             const struct String *const restrict namespace, uint16_t *const restrict lineNum,
+                                             const struct Type *const restrict baseType, const struct String *const restrict name) {
   process_spaces();
 
   const char8_t *tokenStart = *file;
@@ -748,7 +691,7 @@ type_failure:
     return false;
   }
   const struct String typeName = NEW_TOKEN_STRING();
-  const struct Type *type = get_type(types, &typeName);
+  const struct Type *type = get_type(&typeName);
   if (nullptr == type) {
     // TODO: Add error
     return false;
@@ -778,7 +721,8 @@ type_failure:
     goto variable_cleanup;
   }
 
-  if (!add_variable(baseType->type, name)) {
+  const struct Variable variable = { *name, baseType->type };
+  if (!add_variable(&Variables, &variable)) {
     goto variable_cleanup;
   }
 
@@ -796,7 +740,7 @@ type_failure:
   if (type->isDerivedType) {
     fputs("EXT_", fc);
   }
-  fprintf(fc, "%s(", capitalName);
+  fprintf(fc, "%.*s(", FSTRING(baseType->capitalBaseTypeName));
   size_t j = 0;
   for (size_t i = 0; i < baseType->fields.count && j < arguments.count; ++i, ++j) {
     if (j != 0) {
@@ -823,9 +767,7 @@ type_failure:
       case EnumCType:
         fprintf(fc, "%.*s_%.*s_", FSTRING(namespace), FSTRING(&field->internalTypeName));
         break;
-      case ActionCType:
-      case RoomCType:
-      case ScreenCType:
+      case StructCType:
         fprintf(fc, "%.*s_", FSTRING(namespace));
         break;
     }
@@ -847,14 +789,12 @@ type_failure:
         case StringCType:
           break;
         case StringGeneratorCType:
-          EMIT_PROG_ERROR();
+          EMIT_PROG_ERROR("An unrecoverable error occurred");
           return false;
         case EnumCType:
           fprintf(fc, "%.*s_%.*s_", FSTRING(namespace), FSTRING(&field->internalTypeName));
           break;
-        case ActionCType:
-        case RoomCType:
-        case ScreenCType:
+        case StructCType:
           fprintf(fc, "%.*s_", FSTRING(namespace));
           break;
       }
@@ -926,6 +866,7 @@ variable_cleanup:
     return false;
   }
 
+
   FILE *const fh = fopen(hPath, "wb");
   if (nullptr == fh) {
     EMIT_PROG_ERROR("unable to open %s", hPath);
@@ -943,6 +884,7 @@ variable_cleanup:
 #ifndef UTA_GEN_%.*s_H\n\
 #define UTA_GEN_%.*s_H\n\
 \n\
+#include <stddef.h>\n\
 #include <stdint.h>\n\
 \n\
 #include \"backend.h\"\n\
@@ -955,20 +897,12 @@ variable_cleanup:
 
   for (process_spaces(); u8'\0' != **file; process_spaces()) {
     const struct Type *baseType;
-    struct TypeArray *types;
-    const char8_t *capitalName;
     if (process_match("Action")) {
       baseType = &ActionType;
-      types = &ActionTypes;
-      capitalName = u8"ACTION";
     } else if (process_match("Room")) {
       baseType = &RoomType;
-      types = &RoomTypes;
-      capitalName = u8"ROOM";
     } else if (process_match("Screen")) {
       baseType = &ScreenType;
-      types = &ScreenTypes;
-      capitalName = u8"SCREEN";
     } else if (process_match("enum")) {
       if (!transpile_enum(file, fh, &namespace, lineNum)) {
         EMIT_LEX_ERROR();
@@ -991,11 +925,11 @@ variable_cleanup:
 
     process_spaces();
     if (process_match("{")) {
-      if (transpile_type(file, fh, &namespace, lineNum, types, baseType, &name)) {
+      if (transpile_type(file, fh, &namespace, lineNum, baseType, &name)) {
         continue;
       }
     } else if (process_match("=")) {
-      if (transpile_variable(file, fh, fc, &namespace, lineNum, types, capitalName, baseType, &name)) {
+      if (transpile_variable(file, fh, fc, &namespace, lineNum, baseType, &name)) {
         continue;
       }
     }
@@ -1006,7 +940,32 @@ variable_cleanup:
 
   status = true;
 
-  fprintf(fh, "#endif // UTA_GEN_%.*s_H\n", FSTRING(&namespace));
+  fprintf(fh, "\
+extern const struct Room *const %.*s_Rooms[];\n\
+extern const size_t %.*s_RoomCount;\n\
+\n\
+#endif // UTA_GEN_%.*s_H\n",
+  FSTRING(&namespace), FSTRING(&namespace), FSTRING(&namespace));
+
+  fprintf(fc, "const struct Room *const %.*s_Rooms[] = { ", FSTRING(&namespace));
+  bool printedFirst = false;
+  for (size_t i = 0; i < Variables.count; ++i) {
+    const struct Variable *const variable = Variables.variables + i;
+    if (RoomStructType != variable->type) {
+      continue;
+    }
+
+    if (printedFirst) {
+      fputs(", ", fc);
+    }
+    printedFirst = true;
+
+    fprintf(fc, "&%.*s_%.*s", FSTRING(&namespace), FSTRING(&variable->name));
+  }
+  fprintf(fc, "\
+ };\n\
+const size_t %.*s_RoomCount = ARR_COUNT(%.*s_Rooms);\n",
+  FSTRING(&namespace), FSTRING(&namespace));
 
 cleanup:
   fclose(fc);
@@ -1074,13 +1033,12 @@ int main(const int argc, const char *const argv[const static argc]) {
   }
   free(Enums.enumTypes);
 
-  free(ActionVariableNames.strings);
-  free(RoomVariableNames.strings);
-  free(ScreenVariableNames.strings);
+  free(Variables.variables);
 
-  free_type_array(&ActionTypes);
-  free_type_array(&RoomTypes);
-  free_type_array(&ScreenTypes);
+  for (size_t i = 0; i < Types.count; ++i) {
+    free(Types.types[i].fields.fields);
+  }
+  free(Types.types);
 
   munmap(file, (size_t)st.st_size);
   close(fd);

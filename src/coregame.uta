@@ -7,17 +7,22 @@ enum ScreenDirection {
   West
 }
 
-Action TestAction {
-  enum ScreenDirection direction;
+Action GotoScreenAction {
+  // TODO: Support base types as fields
+  // Screen screen;
 }
 
-// This is a test single line comment
+Action GoDirectionAction {
+  enum ScreenDirection direction;
 
-/* This is a test multiline comment
-Action TestAction = TestAction("Missing second param");
-*/
+  // TODO: support core_go_direction_visibility_checker && core_go_direction_action_handler
+}
 
 Action QuitAction = Action("Quit Game");
-Action TestAction = TestAction("Quit Game", North);
+Action GoNorthAction = GoDirectionAction("Go North", North);
+Action GoEastAction = GoDirectionAction("Go East", East);
+Action GoSouthAction = GoDirectionAction("Go South", South);
+Action GoWestAction = GoDirectionAction("Go West", West);
+
 Room   FirstRoom  = Room(0, 0, "First Room!");
-Screen MainMenuScreen = Screen("Untitled text adventure game", { QuitAction, TestAction });
+Screen MainMenuScreen = Screen("Untitled text adventure game", { QuitAction /*, GoNorthAction, GoEastAction, GoSouthAction, GoWestAction */ });
