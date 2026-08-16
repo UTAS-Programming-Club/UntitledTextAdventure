@@ -10,6 +10,33 @@ enum ScreenDirection {
 Action GoDirectionAction {
   enum ScreenDirection direction;
 
+  override bool IsVisible(const GameInfo info) {
+    switch (this.direction) {
+      case Core_ScreenDirection_North:
+        if (NULL != backend_get_map_room(info, info.x, info.y + 1)) {
+          return true;
+        }
+        break;
+      case Core_ScreenDirection_East:
+        if (NULL != backend_get_map_room(info, info.x + 1, info.y)) {
+          return true;
+        }
+        break;
+      case Core_ScreenDirection_South:
+        if (NULL != backend_get_map_room(info, info.x, info.y - 1)) {
+          return true;
+        }
+        break;
+      case Core_ScreenDirection_West:
+        if (NULL != backend_get_map_room(info, info.x - 1, info.y)) {
+          return true;
+        }
+        break;
+    }
+
+    return false;
+  }
+
   override bool HandleAction(GameInfo info) {
     switch (this.direction) {
       case Core_ScreenDirection_North:
@@ -36,8 +63,6 @@ Action GoDirectionAction {
 
     return true;
   }
-
-  // TODO: Support core_go_direction_visibility_checker & core_go_direction_action_handler
 }
 
 Action GotoScreenAction {
@@ -71,8 +96,9 @@ Action GotoMainMenuAction = GotoScreenAction("Quit" /*, MainMenuScreen */);
 Action QuitAction = QuitAction("Quit Game");
 
 
-Room   FirstRoom  = Room(0, 0, "First Room!");
+Room FirstRoom = Room(0, 0, "First Room!");
 
 
+// TODO: Support multi-line strings
 Screen MainMenuScreen = Screen("Untitled text adventure game", { StartGameAction, QuitAction });
 Screen RoomScreen = RoomScreen("Room screen!", { GoNorthAction, GoEastAction, GoSouthAction, GoWestAction, QuitAction });

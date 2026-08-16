@@ -140,7 +140,7 @@ struct Field {
 			enum FieldType baseType;
 			struct Type *structBaseType; // Only set if arrayBaseType is StructType
 		} array; // Only set if type is ArrayType
-		struct String methodBody; // Only set if type is MethodName and only on override methods
+		bool methodConstGameInfo; // Only set if type is MethodName
 	};
 };
 DYN_ARRAY_DEF(FieldArray, struct Field, field)
@@ -214,7 +214,7 @@ static struct VariableArray Variables = {};
 static struct String ActionCapitalTypeName = NEW_STATIC_STRING("ACTION");
 static struct Type ActionType = { ActionStructType, NEW_STATIC_STRING("Action"), &ActionCapitalTypeName };
 static struct Field ActionTitle = { StringType };
-static struct Field ActionIsVisible = { MethodType, NEW_STATIC_STRING("IsVisible") };
+static struct Field ActionIsVisible = { MethodType, NEW_STATIC_STRING("IsVisible"), .methodConstGameInfo = true };
 static struct Field ActionHandleAction = { MethodType, NEW_STATIC_STRING("HandleAction") };
 
 static struct String RoomCapitalTypeName = NEW_STATIC_STRING("ROOM");
@@ -385,7 +385,7 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 
 #define process_method_body() process_method_body(file)
 [[nodiscard]] static bool (process_method_body)(const char8_t *restrict *const restrict file) {
-	uint8_t depth = 0;
+	uint_fast8_t depth = 0;
   for (; u8'\0' != **file; ++*file) {
 		if (u8'{' == **file) {
       if (255 == depth) {
@@ -544,7 +544,7 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 }
 
 // override keyword already processed in transpile_type
-/* override bool MethodName(Gameinfo info) {
+/* override bool MethodName([const] Gameinfo info) {
  *   CFunctionBody
  * }
  */
@@ -582,6 +582,14 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 
 	process_spaces();
 
+  if (method->methodConstGameInfo) {
+    if (!process_match("const")) {
+      return false;
+    }
+
+    process_spaces();
+  }
+
 	if (!process_match("GameInfo")) {
 		return false;
 	}
@@ -617,13 +625,17 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 	}
 
 	fprintf(fc, "\
-static bool %.*s_%.*s_%.*s(struct GameInfo *const info, const struct %.*s *const base) {\n\
+static bool %.*s_%.*s_%.*s(",
+		FSTRING(namespace), FSTRING(typeName), FSTRING(&name));
+  if (method->methodConstGameInfo) {
+    fputs("const ", fc);
+  }
+	fprintf(fc, "struct GameInfo *const info, const struct %.*s *const base) {\n\
 		const struct %.*s_%.*s *const this = (const struct %.*s_%.*s *const)base;\n\
 		(void)this;\n\
 \n\
 		",
-		FSTRING(namespace), FSTRING(typeName), FSTRING(&name), FSTRING(&baseType->name),
-		FSTRING(namespace), FSTRING(typeName), FSTRING(namespace), FSTRING(typeName));
+		FSTRING(&baseType->name), FSTRING(namespace), FSTRING(typeName), FSTRING(namespace), FSTRING(typeName));
 
 	static const struct String infoAccess = NEW_STATIC_STRING("info.");
 	static const struct String thisAccess = NEW_STATIC_STRING("this.");
