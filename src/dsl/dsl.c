@@ -194,14 +194,15 @@ static struct TypeArray Types = {};
 struct Variable {
 	struct String name;
 	enum StructType type;
+	bool defined;
 };
 DYN_ARRAY_DEF(VariableArray, struct Variable, variable)
 
 static struct VariableArray Variables = {};
 
-[[nodiscard]] static const struct Variable *get_variable(const struct String *const variableName) {
+[[nodiscard]] static struct Variable *get_variable(const struct String *const variableName) {
 	for (size_t i = 0; i < Variables.count; ++i) {
-		const struct Variable *const variable = Variables.variables + i;
+		struct Variable *const variable = Variables.variables + i;
 		if (string_equals(&variable->name, variableName)) {
 			return variable;
 		}
@@ -972,9 +973,18 @@ type_failure:
 		goto variable_cleanup;
 	}
 
-	const struct Variable variable = { *name, baseType->type };
-	if (!add_variable(&Variables, &variable)) {
-		goto variable_cleanup;
+	struct Variable *const existingVariable = get_variable(name);
+	if (nullptr != existingVariable) {
+		if (existingVariable->type != baseType->type || existingVariable->defined) {
+			return false;
+		}
+
+		existingVariable->defined = true;
+	} else {
+		const struct Variable variable = { *name, baseType->type, true };
+		if (!add_variable(&Variables, &variable)) {
+			goto variable_cleanup;
+		}
 	}
 
 	fputs("extern const struct ", fh);
@@ -1112,7 +1122,7 @@ variable_cleanup:
 
 // namespace NamespaceName;
 // BaseType TypeName { ... }
-// BaseType VariableName = TypeName(...);
+// BaseType VariableName [= TypeName(...)];
 [[nodiscard]] static bool transpile(
 	const char8_t *restrict pFile, const char *const restrict hPath, const char *const restrict cPath
 ) {
@@ -1210,6 +1220,13 @@ variable_cleanup:
 		} else if (process_match("=")) {
 			if (transpile_variable(file, fh, fc, &namespace, lineNum, baseType, &name)) {
 				continue;
+			}
+		} else if (process_match(";")) {
+			if (!get_variable(&name)) {
+				const struct Variable variable = { name, baseType->type, false };
+				if (add_variable(&Variables,&variable)) {
+					continue;
+				}
 			}
 		}
 

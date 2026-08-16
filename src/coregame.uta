@@ -66,9 +66,6 @@ Action GoDirectionAction {
 }
 
 Action GotoScreenAction {
-}
-
-Action GotoScreenAction2 {
   Screen screen;
 
   override bool HandleAction(GameInfo info) {
@@ -89,13 +86,17 @@ Screen RoomScreen {
 }
 
 
+Screen MainMenuScreen;
+Screen RoomScreen;
+
+
 Action GoNorthAction = GoDirectionAction("Go North", North);
 Action GoEastAction = GoDirectionAction("Go East", East);
 Action GoSouthAction = GoDirectionAction("Go South", South);
 Action GoWestAction = GoDirectionAction("Go West", West);
 
-// TODO: Add forward decl support
-Action StartGameAction = GotoScreenAction("Start Game" /* RoomScreen */);
+Action StartGameAction = GotoScreenAction("Start Game", RoomScreen);
+Action GotoMainMenuAction = GotoScreenAction("Quit", MainMenuScreen);
 
 Action QuitAction = QuitAction("Quit Game");
 
@@ -105,7 +106,4 @@ Room FirstRoom = Room(0, 0, "First Room!");
 
 // TODO: Support multi-line strings
 Screen MainMenuScreen = Screen("Untitled text adventure game", { StartGameAction, QuitAction });
-
-Action GotoMainMenuAction = GotoScreenAction2("Quit", MainMenuScreen);
-
 Screen RoomScreen = RoomScreen("Room screen!", { GoNorthAction, GoEastAction, GoSouthAction, GoWestAction, GotoMainMenuAction });
