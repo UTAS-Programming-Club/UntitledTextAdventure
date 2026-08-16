@@ -12,11 +12,11 @@ const char *backend_default_screen_body_generator(const struct GameInfo *info) {
   return info->screen->body;
 }
 
-bool backend_default_action_visibility_checker(const struct GameInfo *info, const struct Action *action) {
+bool backend_default_Action_IsVisible(const struct GameInfo *info, const struct Action *action) {
   return true;
 }
 
-bool backend_default_action_trigger_handler(struct GameInfo *info, const struct Action *action) {
+bool backend_default_Action_HandleAction(struct GameInfo *info, const struct Action *action) {
   return true;
 }
 

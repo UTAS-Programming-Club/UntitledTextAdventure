@@ -1,6 +1,6 @@
 #include <ctype.h>     // for isalnum, isdigit, isspace
 #include <fcntl.h>     // for O_RDONLY, open
-#include <inttypes.h>  // for uint16_t, PRIu16, uint_fast8_t
+#include <inttypes.h>  // for PRIu16, uint16_t, uint_fast8_t
 #include <stdio.h>     // for size_t, fprintf, stderr, fputs, FILE, fclose, fopen, snprintf, printf
 #include <stdlib.h>    // for free, EXIT_FAILURE, realloc, EXIT_SUCCESS, malloc
 #include <string.h>    // for memcpy, strstr, strncmp, strcmp
@@ -56,97 +56,8 @@ struct String {
 };
 DYN_ARRAY_DEF(StringArray, struct String, string)
 
-// TODO: Merge BooleanType & IntegerType (value types)?
-enum CType {
-  ArrayCType,           // ItemType[] where ItemType is any CType other than ArrayType,      only used for fields/function parameters
-  BooleanCType,         // bool in both dsl and C,                                           only used for function return types
-  EnumCType,            // enum EnumName in both dsl and C,                                  only used for fields/function parameters
-  IntegerCType,         // One of IntegerTypes in both dsl and C,                            only used for fields/function parameters
-  MethodCType,          // ReturnType Name() where ReturnType is BooleanType or IntegerType, only used for fields/function parameters
-  StringCType,          // string in dsl and const char * in C,                              only used for fields/function parameters
-  StringGeneratorCType, // string and (method) in dsl, const char * and const char *(*)(const struct GameInfo *const) in C, used for a pre defined function parameter
-  StructCType           // Action, Room and Screen in dsl, same with struct prefix in C,     only used for fields/function parameters
-};
-
-enum StructType {
-  ActionStructType,
-  RoomStructType,
-  ScreenStructType
-};
-
-struct Enum {
-  struct String name;
-  struct StringArray valueNames;
-};
-DYN_ARRAY_DEF(EnumArray, struct Enum, enumType)
-
-struct Field {
-  enum CType type;
-  struct String name; // Only set if type is StructCType and parent Type.isDerivedType, or type is MethodType (functionName)
-
-  enum CType arrayBaseType; // Only set if type is ArrayCType
-  struct Type *arrayStructBaseType; // Only set if type is ArrayCType and arrayBaseType is StructCType
-  struct String internalTypeName; // Only set if type or arrayBaseType is IntegerCType (integerTypeName), or if type is MethodCType (returnTypeName)
-};
-DYN_ARRAY_DEF(FieldArray, struct Field, field)
-
-struct Type {
-  enum StructType type;
-  struct String name;
-  struct String *capitalBaseTypeName;
-  bool isDerivedType;
-  struct FieldArray fields;
-};
-DYN_ARRAY_DEF(TypeArray, struct Type, type)
-
-struct Variable {
-  struct String name;
-  enum StructType type;
-};
-DYN_ARRAY_DEF(VariableArray, struct Variable, variable)
-
-
-static struct String ActionCapitalTypeName = NEW_STATIC_STRING("ACTION");
-static struct Type ActionType = { ActionStructType, NEW_STATIC_STRING("Action"), &ActionCapitalTypeName };
-static struct Field ActionTitle = { StringCType };
-static struct Field ActionVisibilityChecker = {
-  MethodCType, NEW_STATIC_STRING("backend_default_action_visibility_checker"), BooleanCType
-};
-static struct Field ActionTriggerHandler = {
-  MethodCType, NEW_STATIC_STRING("backend_default_action_trigger_handler"), BooleanCType
-};
-
-static struct String RoomCapitalTypeName = NEW_STATIC_STRING("ROOM");
-static struct Type RoomType = { RoomStructType, NEW_STATIC_STRING("Room"), &RoomCapitalTypeName };
-static struct Field RoomX = { IntegerCType };
-static struct Field RoomY = { IntegerCType };
-static struct Field RoomBody = { StringCType };
-
-static struct String ScreenCapitalTypeName = NEW_STATIC_STRING("SCREEN");
-static struct Type ScreenType = { ScreenStructType, NEW_STATIC_STRING("Screen"), &ScreenCapitalTypeName };
-// TODO: Support body generator method
-static struct Field ScreenBody = { StringGeneratorCType };
-static struct Field ScreenActions = { ArrayCType, .arrayBaseType = StructCType, .arrayStructBaseType = &ActionType };
-
-static struct TypeArray Types = {};
-
-static const struct String IntegerTypes[] = {
-  NEW_STATIC_STRING("int8_t"),  NEW_STATIC_STRING("int16_t"),  NEW_STATIC_STRING("int32_t"),
-  NEW_STATIC_STRING("uint8_t"), NEW_STATIC_STRING("uint16_t"), NEW_STATIC_STRING("uint32_t")
-};
-static const size_t IntegerTypeCount = sizeof IntegerTypes / sizeof *IntegerTypes;
-
-[[nodiscard]] static bool setup_type_arrays() {
-  return add_field(&ActionType.fields, &ActionTitle) &&
-         add_field(&ActionType.fields, &ActionVisibilityChecker) &&
-         add_field(&ActionType.fields, &ActionTriggerHandler) &&
-         add_type(&Types, &ActionType) &&
-
-         add_field(&RoomType.fields, &RoomX) && add_field(&RoomType.fields, &RoomY) &&
-         add_field(&RoomType.fields, &RoomBody) && add_type(&Types, &RoomType) &&
-
-         add_field(&ScreenType.fields, &ScreenBody) && add_field(&ScreenType.fields, &ScreenActions) &&
-         add_type(&Types, &ScreenType);
+[[nodiscard]] static bool string_starts_with(const struct String *const restrict str1, const struct String *const restrict str2) {
+  return 0 == strncmp((const char *)str1->str, (const char *)str2->str, str2->strLen);
 }
 
 [[nodiscard]] static bool string_equals(const struct String *const restrict str1, const struct String *const restrict str2) {
@@ -154,23 +65,13 @@ static const size_t IntegerTypeCount = sizeof IntegerTypes / sizeof *IntegerType
     return false;
   }
 
-  return 0 == strncmp((const char *)str1->str, (const char *)str2->str, str1->strLen);
+  return string_starts_with(str1, str2);
 }
 
-[[nodiscard]] static const struct Type *get_type(const struct String *const typeName) {
-  for (size_t i = 0; i < Types.count; ++i) {
-    const struct Type *type = Types.types + i;
-    if (string_equals(&type->name, typeName)) {
-      return type;
-    }
-  }
-
-  return nullptr;
-}
-
-[[nodiscard]] static bool type_is_integer(const struct String *type) {
-  for (size_t i = 0; i < IntegerTypeCount; ++i) {
-    if (string_equals(IntegerTypes + i, type)) {
+// TODO: Return index and use to simplify get_ functions
+[[nodiscard]] static bool string_exists(const struct StringArray *const restrict strings, const struct String *const restrict string) {
+  for (size_t i = 0; i < strings->count; ++i) {
+    if (string_equals(strings->strings + i, string)) {
       return true;
     }
   }
@@ -179,19 +80,11 @@ static const size_t IntegerTypeCount = sizeof IntegerTypes / sizeof *IntegerType
 }
 
 
-static struct VariableArray Variables = {};
-
-[[nodiscard]] static const struct Variable *get_variable(const struct String *const variableName) {
-  for (size_t i = 0; i < Variables.count; ++i) {
-    const struct Variable *const variable = Variables.variables + i;
-    if (string_equals(&variable->name, variableName)) {
-      return variable;
-    }
-  }
-
-  return nullptr;
-}
-
+struct Enum {
+  struct String name;
+  struct StringArray valueNames;
+};
+DYN_ARRAY_DEF(EnumArray, struct Enum, enumType)
 
 static struct EnumArray Enums = {};
 
@@ -212,9 +105,142 @@ static struct EnumArray Enums = {};
     return false;
   }
 
-  const struct StringArray *const enumValueNames = &enumType->valueNames;
-  for (size_t i = 0; i < enumValueNames->count; ++i) {
-    if (string_equals(enumValueNames->strings + i, enumValueName)) {
+  return string_exists(&enumType->valueNames, enumValueName);
+}
+
+
+// TODO: Merge BooleanType & IntegerType (value types)?
+enum FieldType {
+  ArrayType,           // ItemType[] where ItemType is any Type other than ArrayType or MethodType, only used for fields/function parameters
+  BooleanType,         // bool in both dsl and C,                                                   only used for function return types
+  EnumType,            // enum EnumName in both dsl and C,                                          only used for fields/function parameters
+  IntegerType,         // One of IntegerTypes in both dsl and C,                                    only used for fields/function parameters
+  MethodType,          // ReturnType Name() where ReturnType is BooleanType or StringType,          only used for fields/function parameters
+  StringType,          // string in dsl and const char * in C,                                      only used for fields/function parameters
+  StringGeneratorType, // string and (method) in dsl, const char * and const char *(*)(const struct GameInfo *const) in C, used for a pre defined function parameter
+  StructType           // Action, Room and Screen in dsl, same with struct prefix in C,             only used for fields/function parameters
+};
+
+struct Field {
+  enum FieldType type;
+  struct String name; // If type is StructType then only set if parent Type.isDerivedType
+
+  struct String internalTypeName; // Only set if type or arrayBaseType is IntegerType (integerTypeName), or type is MethodType (returnTypeName)
+  union {
+    struct {
+      enum FieldType baseType;
+      struct Type *structBaseType; // Only set if arrayBaseType is StructType
+    } array; // Only set if type is ArrayType
+    struct String methodBody; // Only set if type is MethodName and only on override methods
+  };
+};
+DYN_ARRAY_DEF(FieldArray, struct Field, field)
+
+[[nodiscard]] static const struct Field *get_field(const struct FieldArray *const restrict fields, const struct String *const restrict fieldName) {
+  for (size_t i = 0; i < fields->count; ++i) {
+    const struct Field *field = fields->fields + i;
+    if (string_equals(&field->name, fieldName)) {
+      return field;
+    }
+  }
+
+  return nullptr;
+}
+
+
+enum StructType {
+  ActionStructType,
+  RoomStructType,
+  ScreenStructType
+};
+
+struct Type {
+  enum StructType type;
+  struct String name;
+  // TODO: Remove?
+  struct String *capitalBaseTypeName;
+  struct FieldArray fields;
+
+  bool isDerivedType;
+  struct StringArray overridenMethodNames; // Only set if isDerivedType
+};
+DYN_ARRAY_DEF(TypeArray, struct Type, type)
+
+static struct TypeArray Types = {};
+
+[[nodiscard]] static const struct Type *get_type(const struct String *const typeName) {
+  for (size_t i = 0; i < Types.count; ++i) {
+    const struct Type *type = Types.types + i;
+    if (string_equals(&type->name, typeName)) {
+      return type;
+    }
+  }
+
+  return nullptr;
+}
+
+
+struct Variable {
+  struct String name;
+  enum StructType type;
+};
+DYN_ARRAY_DEF(VariableArray, struct Variable, variable)
+
+static struct VariableArray Variables = {};
+
+[[nodiscard]] static const struct Variable *get_variable(const struct String *const variableName) {
+  for (size_t i = 0; i < Variables.count; ++i) {
+    const struct Variable *const variable = Variables.variables + i;
+    if (string_equals(&variable->name, variableName)) {
+      return variable;
+    }
+  }
+
+  return nullptr;
+}
+
+
+static struct String ActionCapitalTypeName = NEW_STATIC_STRING("ACTION");
+static struct Type ActionType = { ActionStructType, NEW_STATIC_STRING("Action"), &ActionCapitalTypeName };
+static struct Field ActionTitle = { StringType };
+static struct Field ActionIsVisible = { MethodType, NEW_STATIC_STRING("IsVisible") };
+static struct Field ActionHandleAction = { MethodType, NEW_STATIC_STRING("HandleAction") };
+
+static struct String RoomCapitalTypeName = NEW_STATIC_STRING("ROOM");
+static struct Type RoomType = { RoomStructType, NEW_STATIC_STRING("Room"), &RoomCapitalTypeName };
+static struct Field RoomX = { IntegerType };
+static struct Field RoomY = { IntegerType };
+static struct Field RoomBody = { StringType };
+
+static struct String ScreenCapitalTypeName = NEW_STATIC_STRING("SCREEN");
+static struct Type ScreenType = { ScreenStructType, NEW_STATIC_STRING("Screen"), &ScreenCapitalTypeName };
+static struct Field ScreenBody = { StringGeneratorType };
+static struct Field ScreenActions = { ArrayType, .array = { StructType, &ActionType } };
+
+[[nodiscard]] static bool setup_type_arrays() {
+  return add_field(&ActionType.fields, &ActionTitle) &&
+         add_field(&ActionType.fields, &ActionIsVisible) &&
+         add_field(&ActionType.fields, &ActionHandleAction) &&
+         add_type(&Types, &ActionType) &&
+
+         add_field(&RoomType.fields, &RoomX) && add_field(&RoomType.fields, &RoomY) &&
+         add_field(&RoomType.fields, &RoomBody) && add_type(&Types, &RoomType) &&
+
+         add_field(&ScreenType.fields, &ScreenBody) &&
+         add_field(&ScreenType.fields, &ScreenActions) &&
+         add_type(&Types, &ScreenType);
+}
+
+
+static const struct String IntegerTypes[] = {
+  NEW_STATIC_STRING("int8_t"),  NEW_STATIC_STRING("int16_t"),  NEW_STATIC_STRING("int32_t"),
+  NEW_STATIC_STRING("uint8_t"), NEW_STATIC_STRING("uint16_t"), NEW_STATIC_STRING("uint32_t")
+};
+static const size_t IntegerTypeCount = sizeof IntegerTypes / sizeof *IntegerTypes;
+
+[[nodiscard]] static bool type_is_integer(const struct String *type) {
+  for (size_t i = 0; i < IntegerTypeCount; ++i) {
+    if (string_equals(IntegerTypes + i, type)) {
       return true;
     }
   }
@@ -339,6 +365,19 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
   return ranOnce;
 }
 
+#define process_method_body() process_method_body(file)
+[[nodiscard]] static bool (process_method_body)(const char8_t *restrict *const restrict file) {
+  for (; u8'\0' != **file; ++*file) {
+    if (u8'}' == **file) {
+      // Consume }
+      ++*file;
+      return true;
+    }
+  }
+
+  return false;
+}
+
 #define process_string() process_string(file)
 [[nodiscard]] static bool (process_string)(const char8_t *restrict *const restrict file) {
   if (!process_match("\"")) {
@@ -360,31 +399,31 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 
 [[nodiscard]] static bool (process_argument)(const char8_t *restrict *const restrict file, const struct Field *const restrict expectedType, struct String *const restrict argument) {
   const char8_t *const tokenStart = *file;
-  const enum CType type = ArrayCType == expectedType->type ? expectedType->arrayBaseType : expectedType->type;
+  const enum FieldType type = ArrayType == expectedType->type ? expectedType->array.baseType : expectedType->type;
 
   bool isVariableType = false;
   switch (type) {
-    case ArrayCType:
-    case BooleanCType:
-    case MethodCType:
+    case ArrayType:
+    case BooleanType:
+    case MethodType:
       return false;
-    case IntegerCType:
+    case IntegerType:
       if (!process_integer()) {
         return false;
       }
       break;
     // TODO: Skip string if method exists
-    case StringGeneratorCType:
+    case StringGeneratorType:
     // TODO: Support multi line strings
-    case StringCType:
+    case StringType:
       if (!process_string()) {
         return false;
       }
       break;
-    case StructCType:
+    case StructType:
       isVariableType = true;
       [[fallthrough]];
-    case EnumCType:
+    case EnumType:
       if (!process_identifier()) {
         return false;
       }
@@ -393,13 +432,13 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 
   *argument = NEW_TOKEN_STRING();
 
-  if (EnumCType == expectedType->type) {
+  if (EnumType == expectedType->type) {
     if (!enum_value_exists(&expectedType->internalTypeName, argument)) {
       return false;
     }
   } else if (isVariableType) {
     const struct Variable *const variable = get_variable(argument);
-    if (nullptr == variable || variable->type != expectedType->arrayStructBaseType->type) {
+    if (nullptr == variable || variable->type != expectedType->array.structBaseType->type) {
       return false;
     }
   }
@@ -410,13 +449,14 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 
 #define FSTRING(string) (int)(string)->strLen, (string)->str
 
+// enum keyword already processed in transpile
 /* enum EnumType {
  *   EnumValue,
  *   ...
  * }
  */
-[[nodiscard]] static bool transpile_enum(const char8_t *restrict *const restrict file, FILE *const restrict fh, const struct String *const restrict namespace,
-                                         uint16_t *const restrict lineNum) {
+[[nodiscard]] static bool transpile_enum(const char8_t *restrict *const restrict file, FILE *const restrict fh,
+                                         const struct String *const restrict namespace, uint16_t *const restrict lineNum) {
   process_spaces();
 
   const char8_t *tokenStart = *file;
@@ -471,13 +511,118 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
   return add_enumType(&Enums, &enumType);
 }
 
+// override keyword already processed in transpile_type
+/* override bool MethodName(Gameinfo info) {
+ *   CFunctionBody
+ * }
+ */
+[[nodiscard]] static bool transpile_method(const char8_t *restrict *const restrict file, FILE *const restrict fh, FILE *const restrict fc,
+                                           const struct String *const restrict namespace, uint16_t *const restrict lineNum,
+                                           const struct Type *const restrict baseType, const struct String *const restrict typeName,
+                                           struct StringArray *const restrict methods) {
+  process_spaces();
+
+  // TODO: Support returning strings for GetBody
+  if (!process_match("bool")) {
+    return false;
+  }
+
+  process_spaces();
+
+  const char8_t *tokenStart = *file;
+  if (!process_identifier()) {
+    return false;
+  }
+  const struct String name = NEW_TOKEN_STRING();
+
+  const struct Field *const method = get_field(&baseType->fields, &name);
+  if (nullptr == method || MethodType != method->type) {
+    return false;
+  }
+
+  process_spaces();
+
+  if (!process_match("(")) {
+    return false;
+  }
+
+  process_spaces();
+
+  if (!process_match("GameInfo")) {
+    return false;
+  }
+
+  process_spaces();
+
+  if (!process_match("info")) {
+    return false;
+  }
+
+  process_spaces();
+
+  if (!process_match(")")) {
+    return false;
+  }
+
+  process_spaces();
+
+  if (!process_match("{")) {
+    return false;
+  }
+
+  process_spaces();
+
+  tokenStart = *file;
+  if (!process_method_body()) {
+    return false;
+  }
+  struct String body = NEW_TOKEN_STRING();
+
+  if (!add_string(methods, &name)) {
+    return false;
+  }
+
+  fprintf(fc, "\
+static bool %.*s_%.*s_%.*s(struct GameInfo *const info, const struct %.*s *const base) {\n\
+    const struct %.*s *const this = (const struct %.*s *const)base;\n\
+    (void)this;\n\
+\n\
+    ",
+    FSTRING(namespace), FSTRING(typeName), FSTRING(&name), FSTRING(&baseType->name),
+    FSTRING(typeName), FSTRING(typeName));
+
+  static const struct String infoAccess = NEW_STATIC_STRING("info.");
+
+  // - 1 to skip closing }
+  while (0 < body.strLen - 1) {
+    size_t writtenCount;
+    if (string_starts_with(&body, &infoAccess)) {
+      fputs("info->", fc);
+      writtenCount = 5;
+    } else {
+      fputc(*body.str, fc);
+      writtenCount = 1;
+    }
+
+    body.str += writtenCount;
+    body.strLen -= writtenCount;
+  }
+
+  fputs("\n}\n\n", fc);
+
+  return true;
+}
+
 // BaseType = Action | Room | Screen
 /* BaseType Type {
  *   FieldType FieldName;
  *   ...
+ *
+ *   override bool MethodName(...) { ... }
+ *   ...
  * }
  */
-[[nodiscard]] static bool transpile_type(const char8_t *restrict *const restrict file, FILE *const restrict fh,
+[[nodiscard]] static bool transpile_type(const char8_t *restrict *const restrict file, FILE *const restrict fh, FILE *const restrict fc,
                                          const struct String *const restrict namespace, uint16_t *const restrict lineNum,
                                          const struct Type *const restrict baseType, const struct String *const restrict name) {
   if (nullptr != get_type(name)) {
@@ -486,8 +631,23 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
   }
 
   struct FieldArray fields = {};
+  struct StringArray overridenMethodNames = {};
+  bool finishedFields = false;
   for (process_spaces(); u8'\0' != **file; process_spaces()) {
-    enum CType type;
+    bool isMethod = process_match("override");;
+    finishedFields |= isMethod;
+    if (finishedFields) {
+      if (!isMethod) {
+        break;
+      }
+
+      if (!transpile_method(file, fh, fc, namespace, lineNum, baseType, name, &overridenMethodNames)) {
+        goto type_failure;
+      }
+
+      continue;
+    }
+
     bool isEnum = process_match("enum");
     if (isEnum) {
       process_spaces();
@@ -503,10 +663,11 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
     // TODO: Allow method fields
     // TODO: Allow string fields
     // TODO: Allow array fields of bools, integers and strings
+    enum FieldType type;
     if (isEnum) {
-      type = EnumCType;
+      type = EnumType;
     } else if (type_is_integer(&fieldTypeName)) {
-      type = IntegerCType;
+      type = IntegerType;
     } else {
       goto type_failure;
     }
@@ -535,7 +696,7 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
     goto type_failure;
   }
 
-  struct Type type = { baseType->type, *name, baseType->capitalBaseTypeName, true, fields };
+  struct Type type = { baseType->type, *name, baseType->capitalBaseTypeName, fields, true, overridenMethodNames };
   if (!add_type(&Types, &type)) {
     goto type_failure;
   }
@@ -552,19 +713,19 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
     fputs("  ", fh);
 
     switch (field->type) {
-      case ArrayCType:
-      case BooleanCType:
-      case MethodCType:
-      case StringGeneratorCType:
-      case StructCType:
+      case ArrayType:
+      case BooleanType:
+      case MethodType:
+      case StringGeneratorType:
+      case StructType:
         goto type_failure;
-      case EnumCType:
+      case EnumType:
         fprintf(fh, "enum %.*s_", FSTRING(namespace));
         [[fallthrough]];
-      case IntegerCType:
+      case IntegerType:
         fprintf(fh, "%.*s %.*s;\n", FSTRING(&field->internalTypeName), FSTRING(&field->name));
         break;
-      case StringCType:
+      case StringType:
         fprintf(fh, "char *%.*s;\n", FSTRING(&field->name));
         break;
     }
@@ -581,12 +742,12 @@ type_failure:
   return false;
 }
 
-[[nodiscard]] static bool transpile_arguments(const char8_t *restrict *const restrict file, FILE *const restrict fc, const struct String *const restrict namespace,
-                                              uint16_t *const restrict lineNum, const struct Type *const restrict type,
-                                              struct StringArray *const restrict arguments) {
+[[nodiscard]] static bool transpile_arguments(const char8_t *restrict *const restrict file, FILE *const restrict fc,
+                                              const struct String *const restrict namespace, uint16_t *const restrict lineNum,
+                                              const struct Type *const restrict type, struct StringArray *const restrict arguments) {
   for (size_t i = 0; i < type->fields.count; ++i) {
     const struct Field *field = type->fields.fields + i;
-    if (MethodCType == field->type) {
+    if (MethodType == field->type) {
       if (!add_string(arguments, &field->name)) {
         return false;
       }
@@ -605,7 +766,7 @@ type_failure:
 
     struct String argument = {};
     switch (field->type) {
-      case ArrayCType:
+      case ArrayType:
         struct StringArray arrayItems = {};
         if (!process_array(field, arrayItems)) {
           free(arrayItems.strings);
@@ -630,19 +791,19 @@ type_failure:
         }
 
         fputs("static const ", fc);
-        switch (field->arrayBaseType) {
-          case ArrayCType:
-          case BooleanCType:
-          case EnumCType:
-          case IntegerCType:
-          case MethodCType:
-          case StringCType:
-          case StringGeneratorCType:
+        switch (field->array.baseType) {
+          case ArrayType:
+          case BooleanType:
+          case EnumType:
+          case IntegerType:
+          case MethodType:
+          case StringType:
+          case StringGeneratorType:
             free((void *)argument.str);
             free(arrayItems.strings);
             return false;
-          case StructCType:
-            fprintf(fc, "%.*s", FSTRING(&field->arrayStructBaseType->name));
+          case StructType:
+            fprintf(fc, "%.*s", FSTRING(&field->array.structBaseType->name));
             break;
         }
         fprintf(fc, " %.*s[] = { ",  FSTRING(&argument));
@@ -651,7 +812,7 @@ type_failure:
             fputs(", ", fc);
           }
 
-          fprintf(fc, "USE_%.*s(%.*s_%.*s)", FSTRING(field->arrayStructBaseType->capitalBaseTypeName), FSTRING(namespace), FSTRING(arrayItems.strings + j));
+          fprintf(fc, "USE_%.*s(%.*s_%.*s)", FSTRING(field->array.structBaseType->capitalBaseTypeName), FSTRING(namespace), FSTRING(arrayItems.strings + j));
         }
         fputs(" };\n", fc);
 
@@ -668,7 +829,7 @@ type_failure:
       return false;
     }
 
-    if (StringGeneratorCType == field->type) {
+    if (StringGeneratorType == field->type) {
       argument = (struct String)NEW_STATIC_STRING("backend_default_screen_body_generator");
       if (!add_string(arguments, &argument)) {
         return false;
@@ -749,13 +910,20 @@ type_failure:
 
     const struct Field *const field = baseType->fields.fields + i;
     switch (field->type) {
-      case ArrayCType:
-      case BooleanCType:
-      case IntegerCType:
-      case MethodCType:
-      case StringCType:
+      case ArrayType:
+      case BooleanType:
+      case IntegerType:
+      case StringType:
         break;
-      case StringGeneratorCType:
+      case MethodType:
+        if (type->isDerivedType && string_exists(&type->overridenMethodNames, &field->name)) {
+          fprintf(fc, "%.*s_%.*s", FSTRING(namespace), FSTRING(&type->name));
+        } else {
+          fprintf(fc, "backend_default_%.*s", FSTRING(&baseType->name));
+        }
+        fputc('_', fc);
+        break;
+      case StringGeneratorType:
         if (j + 1 == arguments.count) {
           EMIT_PROG_ERROR();
           return false;
@@ -764,10 +932,10 @@ type_failure:
         fprintf(fc, "%.*s, ", FSTRING(arguments.strings + j));
         ++j;
         break;
-      case EnumCType:
+      case EnumType:
         fprintf(fc, "%.*s_%.*s_", FSTRING(namespace), FSTRING(&field->internalTypeName));
         break;
-      case StructCType:
+      case StructType:
         fprintf(fc, "%.*s_", FSTRING(namespace));
         break;
     }
@@ -782,19 +950,19 @@ type_failure:
 
       const struct Field *const field = type->fields.fields + i;
       switch (field->type) {
-        case ArrayCType:
-        case BooleanCType:
-        case IntegerCType:
-        case MethodCType:
-        case StringCType:
+        case ArrayType:
+        case BooleanType:
+        case IntegerType:
+        case MethodType:
+        case StringType:
           break;
-        case StringGeneratorCType:
+        case StringGeneratorType:
           EMIT_PROG_ERROR("An unrecoverable error occurred");
           return false;
-        case EnumCType:
+        case EnumType:
           fprintf(fc, "%.*s_%.*s_", FSTRING(namespace), FSTRING(&field->internalTypeName));
           break;
-        case StructCType:
+        case StructType:
           fprintf(fc, "%.*s_", FSTRING(namespace));
           break;
       }
@@ -810,20 +978,20 @@ type_failure:
 variable_cleanup:
   j = 0;
   for (size_t i = 0; i < baseType->fields.count && j < arguments.count; ++i, ++j) {
-    const enum CType cType = baseType->fields.fields[i].type;
-    if (ArrayCType == cType) {
+    const enum FieldType fieldType = baseType->fields.fields[i].type;
+    if (ArrayType == fieldType) {
       free((void *)arguments.strings[j].str);
-    } else if (StringGeneratorCType == cType) {
+    } else if (StringGeneratorType == fieldType) {
       // Skip over second argument used for function pointer
       ++j;
     }
   }
   if (type->isDerivedType) {
     for (size_t i = 0; i < type->fields.count && j < arguments.count; ++i, ++j) {
-      const enum CType cType = type->fields.fields[i].type;
-      if (ArrayCType == cType) {
+      const enum FieldType fieldType = type->fields.fields[i].type;
+      if (ArrayType == fieldType) {
         free((void *)arguments.strings[j].str);
-      } else if (StringGeneratorCType == cType) {
+      } else if (StringGeneratorType == fieldType) {
         // Skip over second argument used for function pointer
         ++j;
       }
@@ -834,8 +1002,9 @@ variable_cleanup:
   return status;
 }
 
-// BaseType Type { ... }
-// BaseType VariableName = Type(...);
+// namespace NamespaceName;
+// BaseType TypeName { ... }
+// BaseType VariableName = TypeName(...);
 [[nodiscard]] static bool transpile(const char8_t *restrict pFile, const char *const restrict hPath, const char *const restrict cPath) {
   bool status = false;
   uint16_t lineNum_ = 0;
@@ -925,7 +1094,7 @@ variable_cleanup:
 
     process_spaces();
     if (process_match("{")) {
-      if (transpile_type(file, fh, &namespace, lineNum, baseType, &name)) {
+      if (transpile_type(file, fh, fc, &namespace, lineNum, baseType, &name)) {
         continue;
       }
     } else if (process_match("=")) {
@@ -1036,7 +1205,9 @@ int main(const int argc, const char *const argv[const static argc]) {
   free(Variables.variables);
 
   for (size_t i = 0; i < Types.count; ++i) {
-    free(Types.types[i].fields.fields);
+    const struct Type *const type = Types.types + i;
+    free(type->fields.fields);
+    free(type->overridenMethodNames.strings);
   }
   free(Types.types);
 
