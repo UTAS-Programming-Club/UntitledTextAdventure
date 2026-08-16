@@ -47,6 +47,7 @@ struct Room {
 #define NEW_SCREEN(body, body_generator,  actions) { body, body_generator, ARR_COUNT(actions), actions }
 #define NEW_EXT_SCREEN(body, body_generator, actions, ...)   \
   { NEW_SCREEN(body, body_generator, actions), __VA_ARGS__ }
+#define USE_SCREEN(screen) (const struct Screen *)&screen
 typedef const struct Screen *const Screen;
 struct Screen {
   // Backend only, do not modify

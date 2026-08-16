@@ -138,7 +138,7 @@ struct Field {
 	union {
 		struct {
 			enum FieldType baseType;
-			struct Type *structBaseType; // Only set if arrayBaseType is StructType
+			const struct Type *structBaseType; // Only set if arrayBaseType is StructType
 		} array; // Only set if type is ArrayType
 		bool methodConstGameInfo; // Only set if type is MethodName
 	};
@@ -169,7 +169,7 @@ struct Type {
 	enum StructType type;
 	struct String name;
 	// TODO: Remove?
-	struct String *capitalBaseTypeName;
+	const struct String *capitalBaseTypeName;
 	struct FieldArray fields;
 
 	bool isDerivedType;
@@ -211,22 +211,22 @@ static struct VariableArray Variables = {};
 }
 
 
-static struct String ActionCapitalTypeName = NEW_STATIC_STRING("ACTION");
+static const struct String ActionCapitalTypeName = NEW_STATIC_STRING("ACTION");
 static struct Type ActionType = { ActionStructType, NEW_STATIC_STRING("Action"), &ActionCapitalTypeName };
-static struct Field ActionTitle = { StringType };
-static struct Field ActionIsVisible = { MethodType, NEW_STATIC_STRING("IsVisible"), .methodConstGameInfo = true };
-static struct Field ActionHandleAction = { MethodType, NEW_STATIC_STRING("HandleAction") };
+static const struct Field ActionTitle = { StringType };
+static const struct Field ActionIsVisible = { MethodType, NEW_STATIC_STRING("IsVisible"), .methodConstGameInfo = true };
+static const struct Field ActionHandleAction = { MethodType, NEW_STATIC_STRING("HandleAction") };
 
-static struct String RoomCapitalTypeName = NEW_STATIC_STRING("ROOM");
+static const struct String RoomCapitalTypeName = NEW_STATIC_STRING("ROOM");
 static struct Type RoomType = { RoomStructType, NEW_STATIC_STRING("Room"), &RoomCapitalTypeName };
-static struct Field RoomX = { IntegerType };
-static struct Field RoomY = { IntegerType };
-static struct Field RoomBody = { StringType };
+static const struct Field RoomX = { IntegerType };
+static const struct Field RoomY = { IntegerType };
+static const struct Field RoomBody = { StringType };
 
-static struct String ScreenCapitalTypeName = NEW_STATIC_STRING("SCREEN");
+static const struct String ScreenCapitalTypeName = NEW_STATIC_STRING("SCREEN");
 static struct Type ScreenType = { ScreenStructType, NEW_STATIC_STRING("Screen"), &ScreenCapitalTypeName };
-static struct Field ScreenBody = { StringGeneratorType };
-static struct Field ScreenActions = { ArrayType, .array = { StructType, &ActionType } };
+static const struct Field ScreenBody = { StringGeneratorType };
+static const struct Field ScreenActions = { ArrayType, .array = { StructType, &ActionType } };
 
 [[nodiscard]] static bool setup_type_arrays() {
 	return add_field(&ActionType.fields, &ActionTitle) &&
@@ -383,11 +383,15 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 	return ranOnce;
 }
 
-#define process_method_body() process_method_body(file)
-[[nodiscard]] static bool (process_method_body)(const char8_t *restrict *const restrict file) {
+#define process_method_body() process_method_body(file, lineNum)
+[[nodiscard]] static bool (process_method_body)(
+	const char8_t *restrict *const restrict file, uint16_t *const restrict lineNum
+) {
 	uint_fast8_t depth = 0;
 	for (; u8'\0' != **file; ++*file) {
-		if (u8'{' == **file) {
+		if (u8'\n' == **file) {
+			++*lineNum;
+		} else if (u8'{' == **file) {
 			if (255 == depth) {
 				return false;
 			}
@@ -468,7 +472,8 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 		}
 	} else if (isVariableType) {
 		const struct Variable *const variable = get_variable(argument);
-		if (nullptr == variable || variable->type != expectedType->array.structBaseType->type) {
+		if (nullptr == variable || nullptr == expectedType->array.structBaseType ||
+				variable->type != expectedType->array.structBaseType->type) {
 			return false;
 		}
 	}
@@ -727,11 +732,16 @@ static bool %.*s_%.*s_%.*s(",
 		const struct String fieldTypeName = NEW_TOKEN_STRING();
 
 		// TODO: Allow bool fields
-		// TODO: Allow method fields
 		// TODO: Allow string fields
 		// TODO: Allow array fields of bools, integers and strings
 		enum FieldType type;
-		if (isEnum) {
+		const struct Type *const structBaseType = get_type(&fieldTypeName);
+		if (nullptr != structBaseType) {
+			if (structBaseType->isDerivedType) {
+				return false;
+			}
+			type = StructType;
+		} else if (isEnum) {
 			type = EnumType;
 		} else if (type_is_integer(&fieldTypeName)) {
 			type = IntegerType;
@@ -752,7 +762,9 @@ static bool %.*s_%.*s_%.*s(",
 			goto type_failure;
 		}
 
-		struct Field field = { type, fieldName, .internalTypeName = fieldTypeName };
+		struct Field field = {
+			type, fieldName, .internalTypeName = fieldTypeName, .array = { .structBaseType = structBaseType }
+		};
 		if (!add_field(&fields, &field)) {
 			goto type_failure;
 		}
@@ -777,15 +789,17 @@ static bool %.*s_%.*s_%.*s(",
 	for (size_t i = 0; i < fields.count; ++i) {
 		const struct Field *const field = fields.fields + i;
 
-		fputs("  ", fh);
+		fputs("  const ", fh);
 
 		switch (field->type) {
 			case ArrayType:
 			case BooleanType:
 			case MethodType:
 			case StringGeneratorType:
-			case StructType:
 				goto type_failure;
+			case StructType:
+				fprintf(fh, "struct %.*s *const %.*s;\n", FSTRING(&field->internalTypeName), FSTRING(&field->name));
+				break;
 			case EnumType:
 				fprintf(fh, "enum %.*s_", FSTRING(namespace));
 				[[fallthrough]];
@@ -1001,7 +1015,7 @@ type_failure:
 				break;
 			case StringGeneratorType:
 				if (j + 1 == arguments.count) {
-					EMIT_PROG_ERROR();
+					EMIT_PROG_ERROR("An unrecoverable error occurred");
 					return false;
 				}
 
@@ -1012,11 +1026,20 @@ type_failure:
 				fprintf(fc, "%.*s_%.*s_", FSTRING(namespace), FSTRING(&field->internalTypeName));
 				break;
 			case StructType:
-				fprintf(fc, "%.*s_", FSTRING(namespace));
+				const struct Type *const type = get_type(&field->internalTypeName);
+				if (nullptr == type) {
+					EMIT_PROG_ERROR("An unrecoverable error occurred");
+					return false;
+				}
+
+				fprintf(fc, "USE_%.*s(%.*s_", FSTRING(type->capitalBaseTypeName), FSTRING(namespace));
 				break;
 		}
 
 		fprintf(fc, "%.*s", FSTRING(arguments.strings + j));
+		if (StructType == field->type) {
+			fputc(')', fc);
+		}
 	}
 	if (type->isDerivedType) {
 		for (size_t i = 0; i < type->fields.count && j < arguments.count; ++i, ++j) {
@@ -1039,11 +1062,20 @@ type_failure:
 					fprintf(fc, "%.*s_%.*s_", FSTRING(namespace), FSTRING(&field->internalTypeName));
 					break;
 				case StructType:
-					fprintf(fc, "%.*s_", FSTRING(namespace));
+					const struct Type *const type = get_type(&field->internalTypeName);
+					if (nullptr == type) {
+						EMIT_PROG_ERROR("An unrecoverable error occurred");
+						return false;
+					}
+
+					fprintf(fc, "USE_%.*s(%.*s_", FSTRING(type->capitalBaseTypeName), FSTRING(namespace));
 					break;
 			}
 
 			fprintf(fc, "%.*s", FSTRING(arguments.strings + j));
+			if (StructType == field->type) {
+				fputc(')', fc);
+			}
 		}
 	}
 

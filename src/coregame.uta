@@ -66,10 +66,15 @@ Action GoDirectionAction {
 }
 
 Action GotoScreenAction {
-  // TODO: Support base types as fields
-  // Screen screen;
+}
 
-  // TODO: Support core_goto_screen_action_handler
+Action GotoScreenAction2 {
+  Screen screen;
+
+  override bool HandleAction(GameInfo info) {
+    info.screen = this.screen;
+    return true;
+  }
 }
 
 Action QuitAction {
@@ -91,7 +96,6 @@ Action GoWestAction = GoDirectionAction("Go West", West);
 
 // TODO: Add forward decl support
 Action StartGameAction = GotoScreenAction("Start Game" /* RoomScreen */);
-Action GotoMainMenuAction = GotoScreenAction("Quit" /*, MainMenuScreen */);
 
 Action QuitAction = QuitAction("Quit Game");
 
@@ -101,4 +105,7 @@ Room FirstRoom = Room(0, 0, "First Room!");
 
 // TODO: Support multi-line strings
 Screen MainMenuScreen = Screen("Untitled text adventure game", { StartGameAction, QuitAction });
-Screen RoomScreen = RoomScreen("Room screen!", { GoNorthAction, GoEastAction, GoSouthAction, GoWestAction, QuitAction });
+
+Action GotoMainMenuAction = GotoScreenAction2("Quit", MainMenuScreen);
+
+Screen RoomScreen = RoomScreen("Room screen!", { GoNorthAction, GoEastAction, GoSouthAction, GoWestAction, GotoMainMenuAction });
