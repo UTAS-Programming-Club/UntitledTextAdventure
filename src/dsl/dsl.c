@@ -385,11 +385,20 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 
 #define process_method_body() process_method_body(file)
 [[nodiscard]] static bool (process_method_body)(const char8_t *restrict *const restrict file) {
-	for (; u8'\0' != **file; ++*file) {
-		if (u8'}' == **file) {
-			// Consume }
-			++*file;
-			return true;
+	uint8_t depth = 0;
+  for (; u8'\0' != **file; ++*file) {
+		if (u8'{' == **file) {
+      if (255 == depth) {
+        return false;
+      }
+      ++depth;
+    } else if (u8'}' == **file) {
+      if (0 < depth) {
+        --depth;
+      } else {
+        ++*file;
+        return true;
+      }
 		}
 	}
 
@@ -609,22 +618,41 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 
 	fprintf(fc, "\
 static bool %.*s_%.*s_%.*s(struct GameInfo *const info, const struct %.*s *const base) {\n\
-		const struct %.*s *const this = (const struct %.*s *const)base;\n\
+		const struct %.*s_%.*s *const this = (const struct %.*s_%.*s *const)base;\n\
 		(void)this;\n\
 \n\
 		",
 		FSTRING(namespace), FSTRING(typeName), FSTRING(&name), FSTRING(&baseType->name),
-		FSTRING(typeName), FSTRING(typeName));
+		FSTRING(namespace), FSTRING(typeName), FSTRING(namespace), FSTRING(typeName));
 
 	static const struct String infoAccess = NEW_STATIC_STRING("info.");
+	static const struct String thisAccess = NEW_STATIC_STRING("this.");
 
 	// - 1 to skip closing }
-	while (0 < body.strLen - 1) {
+  --body.strLen;
+	while (0 < body.strLen) {
 		size_t writtenCount;
 		if (string_starts_with(&body, &infoAccess)) {
 			fputs("info->", fc);
-			writtenCount = 5;
-		} else {
+			writtenCount = infoAccess.strLen;
+    } else if (string_starts_with(&body, &thisAccess)) {
+      const char8_t *const fieldNameStr = body.str + thisAccess.strLen;
+      const char8_t *str = fieldNameStr;
+      if (!(process_identifier)(&str)) {
+        return false;
+      }
+      const struct String fieldName = { fieldNameStr, (size_t)(str - fieldNameStr) };
+
+      if (nullptr != get_field(&baseType->fields, &fieldName)) {
+        fputs("base", fc);
+      // If not base field then assume part of child
+      } else {
+        fputs("this", fc);
+      }
+
+      fprintf(fc, "->");
+			writtenCount = thisAccess.strLen;
+    } else {
 			fputc(*body.str, fc);
 			writtenCount = 1;
 		}

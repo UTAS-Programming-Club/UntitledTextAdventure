@@ -41,44 +41,6 @@ bool core_go_direction_visibility_checker(const struct GameInfo *const info, con
   return true;
 }*/
 
-bool core_quit_game_action_handler(struct GameInfo *const info, const struct Action *const action) {
-  info->quit = true;
-  return true;
-}
-
-bool core_go_direction_action_handler(struct GameInfo *const info, const struct Action *const action) {
-  const struct Core_GoDirectionAction *const this = (const struct Core_GoDirectionAction *const)action;
-  switch (this->direction) {
-    case Core_ScreenDirection_North:
-      if (NULL != backend_get_map_room(info, info->x, info->y + 1)) {
-        ++info->y;
-      }
-      break;
-    case Core_ScreenDirection_East:
-      if (NULL != backend_get_map_room(info, info->x + 1, info->y)) {
-        ++info->x;
-      }
-      break;
-    case Core_ScreenDirection_South:
-      if (NULL != backend_get_map_room(info, info->x, info->y - 1)) {
-        --info->y;
-      }
-      break;
-    case Core_ScreenDirection_West:
-      if (NULL != backend_get_map_room(info, info->x - 1, info->y)) {
-        --info->x;
-      }
-      break;
-  }
-
-  return true;
-}
-
-bool core_test_action_handler(struct GameInfo *const info, const struct Action *const action) {
-  info->quit = true;
-  return true;
-}
-
 const char *core_room_screen_body_generator(const struct GameInfo *const info) {
   const struct Room *const room = backend_get_map_room(info, info->x, info->y);
   if (NULL == room) {

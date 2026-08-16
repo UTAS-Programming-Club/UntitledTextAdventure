@@ -10,6 +10,33 @@ enum ScreenDirection {
 Action GoDirectionAction {
   enum ScreenDirection direction;
 
+  override bool HandleAction(GameInfo info) {
+    switch (this.direction) {
+      case Core_ScreenDirection_North:
+        if (NULL != backend_get_map_room(info, info.x, info.y + 1)) {
+          ++info.y;
+        }
+        break;
+      case Core_ScreenDirection_East:
+        if (NULL != backend_get_map_room(info, info.x + 1, info.y)) {
+          ++info.x;
+        }
+        break;
+      case Core_ScreenDirection_South:
+        if (NULL != backend_get_map_room(info, info.x, info.y - 1)) {
+          --info.y;
+        }
+        break;
+      case Core_ScreenDirection_West:
+        if (NULL != backend_get_map_room(info, info.x - 1, info.y)) {
+          --info.x;
+        }
+        break;
+    }
+
+    return true;
+  }
+
   // TODO: Support core_go_direction_visibility_checker & core_go_direction_action_handler
 }
 
