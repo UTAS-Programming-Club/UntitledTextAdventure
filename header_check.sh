@@ -2,6 +2,7 @@
 set -eu
 
 IWYU="${IWYU:-../C/include-what-you-use/build/bin/include-what-you-use}"
+UTA_C_FLAGS="${UTA_C_FLAGS:-}"
 
 CFLAGS="-O3 -Wall -Wformat -Wformat=2 -Wconversion -Wimplicit-fallthrough \
 -Werror=format-security \
@@ -22,14 +23,14 @@ CFLAGS="-O3 -Wall -Wformat -Wformat=2 -Wconversion -Wimplicit-fallthrough \
 
 test_dsl_src()
 (
-  # shellcheck disable=SC2086
-  "$IWYU" -std=c23 $CFLAGS $UTA_C_FLAGS "$1"
+	# shellcheck disable=SC2086
+	"$IWYU" -std=c23 $CFLAGS $UTA_C_FLAGS "$1"
 )
 
 test_game_src()
 (
-  # shellcheck disable=SC2086
-  "$IWYU" --std=c99 -I . $CFLAGS $UTA_C_FLAGS "$1"
+	# shellcheck disable=SC2086
+	"$IWYU" --std=c99 -I . $CFLAGS $UTA_C_FLAGS "$1"
 )
 
 test_dsl_src src/dsl/dsl.c
