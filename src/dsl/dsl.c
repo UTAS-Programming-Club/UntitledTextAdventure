@@ -386,19 +386,19 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 #define process_method_body() process_method_body(file)
 [[nodiscard]] static bool (process_method_body)(const char8_t *restrict *const restrict file) {
 	uint_fast8_t depth = 0;
-  for (; u8'\0' != **file; ++*file) {
+	for (; u8'\0' != **file; ++*file) {
 		if (u8'{' == **file) {
-      if (255 == depth) {
-        return false;
-      }
-      ++depth;
-    } else if (u8'}' == **file) {
-      if (0 < depth) {
-        --depth;
-      } else {
-        ++*file;
-        return true;
-      }
+			if (255 == depth) {
+				return false;
+			}
+			++depth;
+		} else if (u8'}' == **file) {
+			if (0 < depth) {
+				--depth;
+			} else {
+				++*file;
+				return true;
+			}
 		}
 	}
 
@@ -582,13 +582,13 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 
 	process_spaces();
 
-  if (method->methodConstGameInfo) {
-    if (!process_match("const")) {
-      return false;
-    }
+	if (method->methodConstGameInfo) {
+		if (!process_match("const")) {
+			return false;
+		}
 
-    process_spaces();
-  }
+		process_spaces();
+	}
 
 	if (!process_match("GameInfo")) {
 		return false;
@@ -627,9 +627,9 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 	fprintf(fc, "\
 static bool %.*s_%.*s_%.*s(",
 		FSTRING(namespace), FSTRING(typeName), FSTRING(&name));
-  if (method->methodConstGameInfo) {
-    fputs("const ", fc);
-  }
+	if (method->methodConstGameInfo) {
+		fputs("const ", fc);
+	}
 	fprintf(fc, "struct GameInfo *const info, const struct %.*s *const base) {\n\
 		const struct %.*s_%.*s *const this = (const struct %.*s_%.*s *const)base;\n\
 		(void)this;\n\
@@ -641,30 +641,30 @@ static bool %.*s_%.*s_%.*s(",
 	static const struct String thisAccess = NEW_STATIC_STRING("this.");
 
 	// - 1 to skip closing }
-  --body.strLen;
+	--body.strLen;
 	while (0 < body.strLen) {
 		size_t writtenCount;
 		if (string_starts_with(&body, &infoAccess)) {
 			fputs("info->", fc);
 			writtenCount = infoAccess.strLen;
-    } else if (string_starts_with(&body, &thisAccess)) {
-      const char8_t *const fieldNameStr = body.str + thisAccess.strLen;
-      const char8_t *str = fieldNameStr;
-      if (!(process_identifier)(&str)) {
-        return false;
-      }
-      const struct String fieldName = { fieldNameStr, (size_t)(str - fieldNameStr) };
+		} else if (string_starts_with(&body, &thisAccess)) {
+			const char8_t *const fieldNameStr = body.str + thisAccess.strLen;
+			const char8_t *str = fieldNameStr;
+			if (!(process_identifier)(&str)) {
+				return false;
+			}
+			const struct String fieldName = { fieldNameStr, (size_t)(str - fieldNameStr) };
 
-      if (nullptr != get_field(&baseType->fields, &fieldName)) {
-        fputs("base", fc);
-      // If not base field then assume part of child
-      } else {
-        fputs("this", fc);
-      }
+			if (nullptr != get_field(&baseType->fields, &fieldName)) {
+				fputs("base", fc);
+			// If not base field then assume part of child
+			} else {
+				fputs("this", fc);
+			}
 
-      fprintf(fc, "->");
+			fprintf(fc, "->");
 			writtenCount = thisAccess.strLen;
-    } else {
+		} else {
 			fputc(*body.str, fc);
 			writtenCount = 1;
 		}
