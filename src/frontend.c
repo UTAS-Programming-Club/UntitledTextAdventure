@@ -21,7 +21,7 @@ int main(void) {
   }
 
   while (!game.quit) {
-    const char *body = game.screen->body_generator(&game);
+    const char *body = game.screen->body_generator(&game, game.screen);
     if (NULL == body) {
       fputs("Error in body_generator\n", stderr);
       result = EXIT_FAILURE;

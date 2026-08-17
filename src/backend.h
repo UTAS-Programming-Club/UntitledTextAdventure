@@ -54,7 +54,7 @@ struct Screen {
   const char *body;
 
   // Frontend & Backend, do not modify
-  const char *(*body_generator)(const struct GameInfo *info);
+  const char *(*body_generator)(const struct GameInfo *info, const struct Screen *screen);
 
   size_t actionCount;
   const struct Action *const *actions;
@@ -63,7 +63,7 @@ struct Screen {
 bool backend_default_Action_IsVisible(const struct GameInfo *info, const struct Action *action);
 bool backend_default_Action_HandleAction(struct GameInfo *info, const struct Action *action);
 
-const char *backend_default_screen_body_generator(const struct GameInfo *info);
+const char *backend_default_Screen_GetBody(const struct GameInfo *info, const struct Screen *screen);
 
 bool backend_register_extension(struct GameInfo *info, size_t roomCount, const struct Room *const rooms[static roomCount]);
 

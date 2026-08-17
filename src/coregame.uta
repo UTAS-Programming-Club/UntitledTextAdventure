@@ -82,7 +82,15 @@ Action QuitAction {
 }
 
 Screen RoomScreen {
-  // TODO: Support core_room_screen_body_generator
+  override string GetBody(const GameInfo info) {
+    // TODO: Add pointer during codegen
+    const struct Room *const room = backend_get_map_room(info, info.x, info.y);
+    if (NULL == room) {
+      return NULL;
+    }
+
+    return room->body;
+  }
 }
 
 
@@ -106,4 +114,4 @@ Room FirstRoom = Room(0, 0, "First Room!");
 
 // TODO: Support multi-line strings
 Screen MainMenuScreen = Screen("Untitled text adventure game", { StartGameAction, QuitAction });
-Screen RoomScreen = RoomScreen("Room screen!", { GoNorthAction, GoEastAction, GoSouthAction, GoWestAction, GotoMainMenuAction });
+Screen RoomScreen = RoomScreen({ GoNorthAction, GoEastAction, GoSouthAction, GoWestAction, GotoMainMenuAction });

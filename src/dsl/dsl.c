@@ -132,15 +132,13 @@ enum FieldType {
 
 struct Field {
 	enum FieldType type;
-	struct String name; // If type is StructType then only set if parent Type.isDerivedType
+	struct String name; // Only set if type is MethodName/StringGeneratorType or parent Type.isDerivedType
 
 	struct String internalTypeName; // Only set if type or arrayBaseType is IntegerType (integerTypeName), or type is MethodType (returnTypeName)
+	enum FieldType baseType; // Only set if type is ArrayType (baseType) or MethodType/StringGeneratorType (returnType)
 	union {
-		struct {
-			enum FieldType baseType;
-			const struct Type *structBaseType; // Only set if arrayBaseType is StructType
-		} array; // Only set if type is ArrayType
-		bool methodConstGameInfo; // Only set if type is MethodName
+		const struct Type *arrayStructBaseType; // Only set if type is ArrayType and arrayBaseType is StructType
+		bool methodConstGameInfo; // Only set if type is MethodName/StringGeneratorType
 	};
 };
 DYN_ARRAY_DEF(FieldArray, struct Field, field)
@@ -215,8 +213,12 @@ static struct VariableArray Variables = {};
 static const struct String ActionCapitalTypeName = NEW_STATIC_STRING("ACTION");
 static struct Type ActionType = { ActionStructType, NEW_STATIC_STRING("Action"), &ActionCapitalTypeName };
 static const struct Field ActionTitle = { StringType };
-static const struct Field ActionIsVisible = { MethodType, NEW_STATIC_STRING("IsVisible"), .methodConstGameInfo = true };
-static const struct Field ActionHandleAction = { MethodType, NEW_STATIC_STRING("HandleAction") };
+static const struct Field ActionIsVisible = {
+	MethodType, NEW_STATIC_STRING("IsVisible"), .baseType = BooleanType, .methodConstGameInfo = true
+};
+static const struct Field ActionHandleAction = {
+	MethodType, NEW_STATIC_STRING("HandleAction"), .baseType = BooleanType
+};
 
 static const struct String RoomCapitalTypeName = NEW_STATIC_STRING("ROOM");
 static struct Type RoomType = { RoomStructType, NEW_STATIC_STRING("Room"), &RoomCapitalTypeName };
@@ -226,20 +228,19 @@ static const struct Field RoomBody = { StringType };
 
 static const struct String ScreenCapitalTypeName = NEW_STATIC_STRING("SCREEN");
 static struct Type ScreenType = { ScreenStructType, NEW_STATIC_STRING("Screen"), &ScreenCapitalTypeName };
-static const struct Field ScreenBody = { StringGeneratorType };
-static const struct Field ScreenActions = { ArrayType, .array = { StructType, &ActionType } };
+static const struct Field ScreenBody = {
+	StringGeneratorType, NEW_STATIC_STRING("GetBody"), .baseType = StringType, .methodConstGameInfo = true
+};
+static const struct Field ScreenActions = { ArrayType, .baseType = StructType, .arrayStructBaseType = &ActionType };
 
 [[nodiscard]] static bool setup_type_arrays() {
-	return add_field(&ActionType.fields, &ActionTitle) &&
-				 add_field(&ActionType.fields, &ActionIsVisible) &&
-				 add_field(&ActionType.fields, &ActionHandleAction) &&
-				 add_type(&Types, &ActionType) &&
+	return add_field(&ActionType.fields, &ActionTitle) && add_field(&ActionType.fields, &ActionIsVisible) &&
+				 add_field(&ActionType.fields, &ActionHandleAction) && add_type(&Types, &ActionType) &&
 
 				 add_field(&RoomType.fields, &RoomX) && add_field(&RoomType.fields, &RoomY) &&
 				 add_field(&RoomType.fields, &RoomBody) && add_type(&Types, &RoomType) &&
 
-				 add_field(&ScreenType.fields, &ScreenBody) &&
-				 add_field(&ScreenType.fields, &ScreenActions) &&
+				 add_field(&ScreenType.fields, &ScreenBody) && add_field(&ScreenType.fields, &ScreenActions) &&
 				 add_type(&Types, &ScreenType);
 }
 
@@ -434,7 +435,7 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 	struct String *const restrict argument
 ) {
 	const char8_t *const tokenStart = *file;
-	const enum FieldType type = ArrayType == expectedType->type ? expectedType->array.baseType : expectedType->type;
+	const enum FieldType type = ArrayType == expectedType->type ? expectedType->baseType : expectedType->type;
 
 	bool isVariableType = false;
 	switch (type) {
@@ -447,7 +448,6 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 				return false;
 			}
 			break;
-		// TODO: Skip string if method exists
 		case StringGeneratorType:
 		// TODO: Support multi line strings
 		case StringType:
@@ -473,8 +473,8 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 		}
 	} else if (isVariableType) {
 		const struct Variable *const variable = get_variable(argument);
-		if (nullptr == variable || nullptr == expectedType->array.structBaseType ||
-				variable->type != expectedType->array.structBaseType->type) {
+		if (nullptr == variable || nullptr == expectedType->arrayStructBaseType ||
+				variable->type != expectedType->arrayStructBaseType->type) {
 			return false;
 		}
 	}
@@ -550,7 +550,7 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 }
 
 // override keyword already processed in transpile_type
-/* override bool MethodName([const] Gameinfo info) {
+/* override [bool, string] MethodName([const] Gameinfo info) {
  *   CFunctionBody
  * }
  */
@@ -562,8 +562,17 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 ) {
 	process_spaces();
 
-	// TODO: Support returning strings for GetBody
-	if (!process_match("bool")) {
+	enum FieldType returnType;
+	enum FieldType secondaryMethodType = MethodType;
+	const char *returnTypeName;
+	if (process_match("bool")) {
+		returnType = BooleanType;
+		returnTypeName = "bool ";
+	} else if (process_match("string")) {
+		returnType = StringType;
+		secondaryMethodType = StringGeneratorType;
+		returnTypeName = "const char *";
+	} else {
 		return false;
 	}
 
@@ -576,7 +585,8 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 	const struct String name = NEW_TOKEN_STRING();
 
 	const struct Field *const method = get_field(&baseType->fields, &name);
-	if (nullptr == method || MethodType != method->type) {
+	if (nullptr == method || method->baseType != returnType ||
+			(MethodType != method->type && method->type != secondaryMethodType)) {
 		return false;
 	}
 
@@ -631,8 +641,8 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 	}
 
 	fprintf(fc, "\
-static bool %.*s_%.*s_%.*s(",
-		FSTRING(namespace), FSTRING(typeName), FSTRING(&name));
+static %s%.*s_%.*s_%.*s(",
+		returnTypeName, FSTRING(namespace), FSTRING(typeName), FSTRING(&name));
 	if (method->methodConstGameInfo) {
 		fputs("const ", fc);
 	}
@@ -763,9 +773,7 @@ static bool %.*s_%.*s_%.*s(",
 			goto type_failure;
 		}
 
-		struct Field field = {
-			type, fieldName, .internalTypeName = fieldTypeName, .array = { .structBaseType = structBaseType }
-		};
+		struct Field field = { type, fieldName, .internalTypeName = fieldTypeName, .arrayStructBaseType = structBaseType };
 		if (!add_field(&fields, &field)) {
 			goto type_failure;
 		}
@@ -826,11 +834,12 @@ type_failure:
 
 [[nodiscard]] static bool transpile_arguments(
 	const char8_t *restrict *const restrict file, FILE *const restrict fc, const struct String *const restrict namespace,
-	uint16_t *const restrict lineNum, const struct Type *const restrict type,
-	struct StringArray *const restrict arguments
+	uint16_t *const restrict lineNum, const struct FieldArray *const restrict fields, bool isDerivedType,
+	const struct Type *const restrict type, struct StringArray *const restrict arguments
 ) {
-	for (size_t i = 0; i < type->fields.count; ++i) {
-		const struct Field *field = type->fields.fields + i;
+	size_t processedArguments = 0;
+	for (size_t i = 0; i < fields->count; ++i) {
+		const struct Field *field = fields->fields + i;
 		if (MethodType == field->type) {
 			if (!add_string(arguments, &field->name)) {
 				return false;
@@ -840,7 +849,7 @@ type_failure:
 
 		process_spaces();
 
-		if (type->isDerivedType || i != 0) {
+		if (isDerivedType || processedArguments != 0) {
 			if (!process_match(",")) {
 				return false;
 			}
@@ -849,6 +858,7 @@ type_failure:
 		}
 
 		struct String argument = {};
+		bool methodOverridden = false;
 		switch (field->type) {
 			case ArrayType:
 				struct StringArray arrayItems = {};
@@ -877,7 +887,7 @@ type_failure:
 				}
 
 				fputs("static const ", fc);
-				switch (field->array.baseType) {
+				switch (field->baseType) {
 					case ArrayType:
 					case BooleanType:
 					case EnumType:
@@ -889,7 +899,7 @@ type_failure:
 						free(arrayItems.strings);
 						return false;
 					case StructType:
-						fprintf(fc, "%.*s", FSTRING(&field->array.structBaseType->name));
+						fprintf(fc, "%.*s", FSTRING(&field->arrayStructBaseType->name));
 						break;
 				}
 				fprintf(fc, " %.*s[] = { ",  FSTRING(&argument));
@@ -899,18 +909,28 @@ type_failure:
 					}
 
 					fprintf(fc, "USE_%.*s(%.*s_%.*s)",
-						FSTRING(field->array.structBaseType->capitalBaseTypeName), FSTRING(namespace),
+						FSTRING(field->arrayStructBaseType->capitalBaseTypeName), FSTRING(namespace),
 						FSTRING(arrayItems.strings + j)
 					);
 				}
 				fputs(" };\n", fc);
 
 				free(arrayItems.strings);
+				++processedArguments;
 				break;
+			case StringGeneratorType:
+				methodOverridden = string_exists(&type->overridenMethodNames, &field->name);
+				if (methodOverridden) {
+					argument = (const struct String)NEW_STATIC_STRING("NULL");
+					break;
+				}
+				[[fallthrough]];
 			default:
 				if (!process_argument(field, argument)) {
 					return false;
 				}
+
+				++processedArguments;
 				break;
 		}
 
@@ -919,7 +939,33 @@ type_failure:
 		}
 
 		if (StringGeneratorType == field->type) {
-			argument = (struct String)NEW_STATIC_STRING("backend_default_screen_body_generator");
+			const struct String defaultNamespace = NEW_STATIC_STRING("backend_default");
+			const struct String *methodNamespace;
+			if (methodOverridden) {
+				methodNamespace = namespace;
+			} else {
+				methodNamespace = &defaultNamespace;
+			}
+
+			argument.strLen = (size_t)snprintf(
+				nullptr, 0, "%.*s_%.*s_%.*s", FSTRING(methodNamespace), FSTRING(&type->name), FSTRING(&field->name)
+			);
+			if (0 > argument.strLen) {
+				return false;
+			}
+			argument.str = malloc(argument.strLen + 1);
+			if (nullptr == argument.str) {
+				return false;
+			}
+			argument.strLen = (size_t)snprintf(
+				(char *)argument.str, argument.strLen + 1, "%.*s_%.*s_%.*s",
+				FSTRING(methodNamespace), FSTRING(&type->name), FSTRING(&field->name)
+			);
+			if (0 > argument.strLen) {
+				free((void *)argument.str);
+				return false;
+			}
+
 			if (!add_string(arguments, &argument)) {
 				return false;
 			}
@@ -956,10 +1002,11 @@ type_failure:
 
 	bool status = false;
 	struct StringArray arguments = {};
-	if (!transpile_arguments(file, fc, namespace, lineNum, baseType, &arguments)) {
+	if (!transpile_arguments(file, fc, namespace, lineNum, &baseType->fields, false, type, &arguments)) {
 		goto variable_cleanup;
 	}
-	if (type->isDerivedType && !transpile_arguments(file, fc, namespace, lineNum, type, &arguments)) {
+	if (type->isDerivedType &&
+      !transpile_arguments(file, fc, namespace, lineNum, &type->fields, true, type, &arguments)) {
 		goto variable_cleanup;
 	}
 

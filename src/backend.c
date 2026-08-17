@@ -4,7 +4,7 @@
 #include "coregame2.h"     // for MapSizeX, MapSizeY
 #include "gen/coregame.h"  // for Core_MainMenuScreen, Core_RoomCount, Core_Rooms
 
-const char *backend_default_screen_body_generator(const struct GameInfo *info) {
+const char *backend_default_Screen_GetBody(const struct GameInfo *const info, const struct Screen *const screen) {
   if (NULL == info || NULL == info->screen) {
     return NULL;
   }
@@ -12,11 +12,11 @@ const char *backend_default_screen_body_generator(const struct GameInfo *info) {
   return info->screen->body;
 }
 
-bool backend_default_Action_IsVisible(const struct GameInfo *info, const struct Action *action) {
+bool backend_default_Action_IsVisible(const struct GameInfo *const info, const struct Action *const action) {
   return true;
 }
 
-bool backend_default_Action_HandleAction(struct GameInfo *info, const struct Action *action) {
+bool backend_default_Action_HandleAction(struct GameInfo *const info, const struct Action *const action) {
   return true;
 }
 
