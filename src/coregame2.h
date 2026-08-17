@@ -10,6 +10,4 @@
 extern const uint8_t MapSizeX;
 extern const uint8_t MapSizeY;
 
-const char *core_room_screen_body_generator(const struct GameInfo *const info);
-
 #endif // UTA_COREGAME2_H
