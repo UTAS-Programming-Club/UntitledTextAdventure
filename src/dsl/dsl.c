@@ -364,11 +364,7 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 		}
 	}
 
-	if (!process_match("}")) {
-		return false;
-	}
-
-	return true;
+	return process_match("}");
 }
 
 #define process_integer() process_integer(file)
@@ -402,8 +398,7 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 			if (0 < depth) {
 				--depth;
 			} else {
-				++*file;
-				return true;
+        return process_match("}");
 			}
 		}
 	}
@@ -417,17 +412,16 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 		return false;
 	}
 
+  char8_t previousChar = '\0';
 	for (; u8'\0' != **file; ++*file) {
-		if (u8'"' == **file) {
+		if (u8'\\' != previousChar && u8'"' == **file) {
 			break;
 		}
+
+    previousChar = **file;
 	}
 
-	if (!process_match("\"")) {
-		return false;
-	}
-
-	return true;
+	return process_match("\"");
 }
 
 [[nodiscard]] static bool (process_argument)(
@@ -484,6 +478,18 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 
 
 #define FSTRING(string) (int)(string)->strLen, (string)->str
+
+static void write_string(FILE *const restrict f, const struct String *const restrict string) {
+  for (size_t i = 0; i < string->strLen; ++i) {
+    const char8_t chr = string->str[i];
+    if (u8'\n' == chr) {
+      fputs("\\", f);
+    }
+
+    fputc(chr, f);
+  }
+}
+
 
 // enum keyword already processed in transpile
 /* enum EnumType {
@@ -1060,8 +1066,10 @@ type_failure:
 			case ArrayType:
 			case BooleanType:
 			case IntegerType:
-			case StringType:
 				break;
+      case StringType:
+        write_string(fc, arguments.strings + j);
+        continue;
 			case MethodType:
 				if (type->isDerivedType && string_exists(&type->overridenMethodNames, &field->name)) {
 					fprintf(fc, "%.*s_%.*s", FSTRING(namespace), FSTRING(&type->name));
@@ -1076,7 +1084,8 @@ type_failure:
 					return false;
 				}
 
-				fprintf(fc, "%.*s, ", FSTRING(arguments.strings + j));
+        write_string(fc, arguments.strings + j);
+        fputs(", ", fc);
 				++j;
 				break;
 			case EnumType:
@@ -1110,8 +1119,10 @@ type_failure:
 				case BooleanType:
 				case IntegerType:
 				case MethodType:
-				case StringType:
-					break;
+          break;
+        case StringType:
+          write_string(fc, arguments.strings + j);
+          continue;
 				case StringGeneratorType:
 					EMIT_PROG_ERROR("An unrecoverable error occurred");
 					return false;

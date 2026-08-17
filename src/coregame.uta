@@ -112,6 +112,10 @@ Action QuitAction = QuitAction("Quit Game");
 Room FirstRoom = Room(0, 0, "First Room!");
 
 
-// TODO: Support multi-line strings
-Screen MainMenuScreen = Screen("Untitled text adventure game", { StartGameAction, QuitAction });
+Screen MainMenuScreen = Screen("
+Untitled text adventure game\n
+----------------------------\n
+By the UTAS Programming Club\n
+\n
+Currently unimplemented :(", { StartGameAction, QuitAction });
 Screen RoomScreen = RoomScreen({ GoNorthAction, GoEastAction, GoSouthAction, GoWestAction, GotoMainMenuAction });
