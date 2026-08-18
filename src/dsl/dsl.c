@@ -665,6 +665,7 @@ static %s%.*s_%.*s_%.*s(",
 	// - 1 to skip closing }
 	--body.strLen;
 	struct VariableArray structVariables = {};
+	bool status = false;
 	while (0 < body.strLen) {
 		size_t writtenCount;
 		if (string_starts_with(&body, &infoAccess)) {
@@ -674,7 +675,7 @@ static %s%.*s_%.*s_%.*s(",
 			const char8_t *const fieldNameStr = body.str + thisAccess.strLen;
 			const char8_t *str = fieldNameStr;
 			if (!(process_identifier)(&str)) {
-				return false;
+				goto method_cleanup;
 			}
 			const struct String fieldName = { fieldNameStr, (size_t)(str - fieldNameStr) };
 
@@ -695,12 +696,12 @@ static %s%.*s_%.*s_%.*s(",
 					const char8_t *const variableName = body.str + type->name.strLen + 1;
 					const char8_t *str = variableName;
 					if (!(process_identifier)(&str)) {
-						return false;
+						goto method_cleanup;
 					}
 					const struct Variable variable = { { variableName, (size_t)(str - variableName) }, type, true };
 
 					if (!add_variable(&structVariables, &variable)) {
-						return false;
+						goto method_cleanup;
 					}
 					skipCharPrint = true;
 
@@ -724,7 +725,7 @@ static %s%.*s_%.*s_%.*s(",
 						const char8_t *const fieldNameStr = body.str + structVariable->name.strLen + 1;
 						const char8_t *str = fieldNameStr;
 						if (!(process_identifier)(&str)) {
-							return false;
+							goto method_cleanup;
 						}
 						const struct String fieldName = { fieldNameStr, (size_t)(str - fieldNameStr) };
 
@@ -749,7 +750,12 @@ static %s%.*s_%.*s_%.*s(",
 
 	fputs("\n}\n\n", fc);
 
-	return true;
+  status = true;
+
+method_cleanup:
+	free(structVariables.variables);
+
+	return status;
 }
 
 // BaseType = Action | Room | Screen
@@ -885,6 +891,7 @@ static %s%.*s_%.*s_%.*s(",
 	return true;
 
 type_failure:
+  free(overridenMethodNames.strings);
 	free(fields.fields);
 
 	return false;
@@ -1081,7 +1088,7 @@ type_failure:
 	struct Variable *const existingVariable = get_variable(name);
 	if (nullptr != existingVariable) {
 		if (existingVariable->type->type != baseType->type || existingVariable->defined) {
-			return false;
+			goto variable_cleanup;
 		}
 
 		existingVariable->defined = true;
@@ -1133,7 +1140,7 @@ type_failure:
 			case StringGeneratorType:
 				if (j + 1 == arguments.count) {
 					EMIT_PROG_ERROR("An unrecoverable error occurred");
-					return false;
+					goto variable_cleanup;
 				}
 
 				write_string(fc, arguments.strings + j);
@@ -1147,7 +1154,7 @@ type_failure:
 				const struct Type *const type = get_type(&field->internalTypeName);
 				if (nullptr == type) {
 					EMIT_PROG_ERROR("An unrecoverable error occurred");
-					return false;
+					goto variable_cleanup;
 				}
 
 				fprintf(fc, "USE_%.*s(%.*s_", FSTRING(type->capitalBaseTypeName), FSTRING(namespace));
@@ -1177,7 +1184,7 @@ type_failure:
 					continue;
 				case StringGeneratorType:
 					EMIT_PROG_ERROR("An unrecoverable error occurred");
-					return false;
+					goto variable_cleanup;
 				case EnumType:
 					fprintf(fc, "%.*s_%.*s_", FSTRING(namespace), FSTRING(&field->internalTypeName));
 					break;
@@ -1185,7 +1192,7 @@ type_failure:
 					const struct Type *const type = get_type(&field->internalTypeName);
 					if (nullptr == type) {
 						EMIT_PROG_ERROR("An unrecoverable error occurred");
-						return false;
+						goto variable_cleanup;
 					}
 
 					fprintf(fc, "USE_%.*s(%.*s_", FSTRING(type->capitalBaseTypeName), FSTRING(namespace));
@@ -1212,6 +1219,7 @@ variable_cleanup:
 		} else if (StringGeneratorType == fieldType) {
 			// Skip over second argument used for function pointer
 			++j;
+			free((void *)arguments.strings[j].str);
 		}
 	}
 	if (type->isDerivedType) {
@@ -1220,6 +1228,7 @@ variable_cleanup:
 			if (ArrayType == fieldType) {
 				free((void *)arguments.strings[j].str);
 			} else if (StringGeneratorType == fieldType) {
+				// This should not occur
 				// Skip over second argument used for function pointer
 				++j;
 			}
