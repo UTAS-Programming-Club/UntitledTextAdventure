@@ -12,6 +12,7 @@ Action GoDirectionAction {
 
   override bool IsVisible(const GameInfo info) {
     switch (this.direction) {
+      // TODO: Simplify enum value access to at least ScreenDirection.X ideally just X
       case Core_ScreenDirection_North:
         if (NULL != backend_get_map_room(info, info.x, info.y + 1)) {
           return true;
@@ -84,12 +85,12 @@ Action QuitAction {
 Screen RoomScreen {
   override string GetBody(const GameInfo info) {
     // TODO: Add pointer during codegen
-    const struct Room *const room = backend_get_map_room(info, info.x, info.y);
+    const Room room = backend_get_map_room(info, info.x, info.y);
     if (NULL == room) {
       return NULL;
     }
 
-    return room->body;
+    return room.body;
   }
 }
 

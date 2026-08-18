@@ -16,8 +16,8 @@ const char *inputPath;
 	fprintf(stderr, "%s: \x1b[0;31merror\x1b[0m: " error "\n", programName __VA_OPT__(,) __VA_ARGS__)
 
 #define DYN_ARRAY_DEF(typeName, baseTypeName, varName) struct typeName {																							\
-		baseTypeName *varName ## s;																																											 	\
-		size_t count;																																																		 	\
+		baseTypeName *varName ## s;																																												\
+		size_t count;																																																			\
 		size_t length;																																																		\
 	};																																																									\
 																																																											\
@@ -25,8 +25,8 @@ const char *inputPath;
 	if (varName ## s->count + 1 >= varName ## s->length) {																															\
 			size_t newLen = 2 * varName ## s->count;																																				\
 			if (0 == newLen) {																																															\
-				newLen = 8;																																																	 	\
-			}																																																							 	\
+				newLen = 8;																																																		\
+			}																																																								\
 																																																											\
 			baseTypeName *newArr = realloc(varName ## s->varName ## s, newLen * sizeof *varName ## s->varName ## s);				\
 			if (nullptr == newArr) {																																												\
@@ -132,7 +132,7 @@ enum FieldType {
 
 struct Field {
 	enum FieldType type;
-	struct String name; // Only set if type is MethodName/StringGeneratorType or parent Type.isDerivedType
+	struct String name; // TODO: Make sure this is always set
 
 	struct String internalTypeName; // Only set if type or arrayBaseType is IntegerType (integerTypeName), or type is MethodType (returnTypeName)
 	enum FieldType baseType; // Only set if type is ArrayType (baseType) or MethodType/StringGeneratorType (returnType)
@@ -191,7 +191,7 @@ static struct TypeArray Types = {};
 
 struct Variable {
 	struct String name;
-	enum StructType type;
+	const struct Type *type;
 	bool defined;
 };
 DYN_ARRAY_DEF(VariableArray, struct Variable, variable)
@@ -212,7 +212,7 @@ static struct VariableArray Variables = {};
 
 static const struct String ActionCapitalTypeName = NEW_STATIC_STRING("ACTION");
 static struct Type ActionType = { ActionStructType, NEW_STATIC_STRING("Action"), &ActionCapitalTypeName };
-static const struct Field ActionTitle = { StringType };
+static const struct Field ActionTitle = { StringType, NEW_STATIC_STRING("title") };
 static const struct Field ActionIsVisible = {
 	MethodType, NEW_STATIC_STRING("IsVisible"), .baseType = BooleanType, .methodConstGameInfo = true
 };
@@ -222,9 +222,9 @@ static const struct Field ActionHandleAction = {
 
 static const struct String RoomCapitalTypeName = NEW_STATIC_STRING("ROOM");
 static struct Type RoomType = { RoomStructType, NEW_STATIC_STRING("Room"), &RoomCapitalTypeName };
-static const struct Field RoomX = { IntegerType };
-static const struct Field RoomY = { IntegerType };
-static const struct Field RoomBody = { StringType };
+static const struct Field RoomX = { IntegerType, NEW_STATIC_STRING("x") };
+static const struct Field RoomY = { IntegerType, NEW_STATIC_STRING("y") };
+static const struct Field RoomBody = { StringType, NEW_STATIC_STRING("body") };
 
 static const struct String ScreenCapitalTypeName = NEW_STATIC_STRING("SCREEN");
 static struct Type ScreenType = { ScreenStructType, NEW_STATIC_STRING("Screen"), &ScreenCapitalTypeName };
@@ -398,7 +398,7 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 			if (0 < depth) {
 				--depth;
 			} else {
-        return process_match("}");
+				return process_match("}");
 			}
 		}
 	}
@@ -412,13 +412,13 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 		return false;
 	}
 
-  char8_t previousChar = '\0';
+	char8_t previousChar = '\0';
 	for (; u8'\0' != **file; ++*file) {
 		if (u8'\\' != previousChar && u8'"' == **file) {
 			break;
 		}
 
-    previousChar = **file;
+		previousChar = **file;
 	}
 
 	return process_match("\"");
@@ -468,7 +468,7 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 	} else if (isVariableType) {
 		const struct Variable *const variable = get_variable(argument);
 		if (nullptr == variable || nullptr == expectedType->arrayStructBaseType ||
-				variable->type != expectedType->arrayStructBaseType->type) {
+				variable->type->type != expectedType->arrayStructBaseType->type) {
 			return false;
 		}
 	}
@@ -480,14 +480,14 @@ static void (process_spaces)(const char8_t *restrict *const restrict file, uint1
 #define FSTRING(string) (int)(string)->strLen, (string)->str
 
 static void write_string(FILE *const restrict f, const struct String *const restrict string) {
-  for (size_t i = 0; i < string->strLen; ++i) {
-    const char8_t chr = string->str[i];
-    if (u8'\n' == chr) {
-      fputs("\\", f);
-    }
+	for (size_t i = 0; i < string->strLen; ++i) {
+		const char8_t chr = string->str[i];
+		if (u8'\n' == chr) {
+			fputs("\\", f);
+		}
 
-    fputc(chr, f);
-  }
+		fputc(chr, f);
+	}
 }
 
 
@@ -664,6 +664,7 @@ static %s%.*s_%.*s_%.*s(",
 
 	// - 1 to skip closing }
 	--body.strLen;
+	struct VariableArray structVariables = {};
 	while (0 < body.strLen) {
 		size_t writtenCount;
 		if (string_starts_with(&body, &infoAccess)) {
@@ -687,8 +688,59 @@ static %s%.*s_%.*s_%.*s(",
 			fprintf(fc, "->");
 			writtenCount = thisAccess.strLen;
 		} else {
-			fputc(*body.str, fc);
-			writtenCount = 1;
+			bool skipCharPrint = false;
+			for (size_t i = 0; i < Types.count; ++i) {
+				const struct Type *type = Types.types + i;
+				if (string_starts_with(&body, &type->name) && isspace(body.str[-1]) && isspace(body.str[type->name.strLen])) {
+					const char8_t *const variableName = body.str + type->name.strLen + 1;
+					const char8_t *str = variableName;
+					if (!(process_identifier)(&str)) {
+						return false;
+					}
+					const struct Variable variable = { { variableName, (size_t)(str - variableName) }, type, true };
+
+					if (!add_variable(&structVariables, &variable)) {
+						return false;
+					}
+					skipCharPrint = true;
+
+					fputs("struct ", fc);
+					if (type->isDerivedType) {
+						fprintf(fc, "%.*s_", FSTRING(namespace));
+					}
+
+					fprintf(fc, "%.*s *const %.*s", FSTRING(&type->name), FSTRING(&variable.name));
+					writtenCount = type->name.strLen + variable.name.strLen + 1;
+				}
+			}
+
+			if (!skipCharPrint) {
+				for (size_t i = 0; i < structVariables.count; ++i) {
+					const struct Variable *structVariable = structVariables.variables + i;
+					if (string_starts_with(&body, &structVariable->name) && isspace(body.str[-1]) &&
+							u8'.' == body.str[structVariable->name.strLen]) {
+						skipCharPrint = true;
+
+						const char8_t *const fieldNameStr = body.str + structVariable->name.strLen + 1;
+						const char8_t *str = fieldNameStr;
+						if (!(process_identifier)(&str)) {
+							return false;
+						}
+						const struct String fieldName = { fieldNameStr, (size_t)(str - fieldNameStr) };
+
+						fprintf(fc, "%.*s->", FSTRING(&structVariable->name));
+						if (nullptr == get_field(&structVariable->type->fields, &fieldName)) {
+							fputs("base.", fc);
+						}
+						writtenCount = structVariable->name.strLen + 1;
+					}
+				}
+			}
+
+			if (!skipCharPrint) {
+				fputc(*body.str, fc);
+				writtenCount = 1;
+			}
 		}
 
 		body.str += writtenCount;
@@ -1012,7 +1064,7 @@ type_failure:
 		goto variable_cleanup;
 	}
 	if (type->isDerivedType &&
-      !transpile_arguments(file, fc, namespace, lineNum, &type->fields, true, type, &arguments)) {
+			!transpile_arguments(file, fc, namespace, lineNum, &type->fields, true, type, &arguments)) {
 		goto variable_cleanup;
 	}
 
@@ -1028,13 +1080,13 @@ type_failure:
 
 	struct Variable *const existingVariable = get_variable(name);
 	if (nullptr != existingVariable) {
-		if (existingVariable->type != baseType->type || existingVariable->defined) {
+		if (existingVariable->type->type != baseType->type || existingVariable->defined) {
 			return false;
 		}
 
 		existingVariable->defined = true;
 	} else {
-		const struct Variable variable = { *name, baseType->type, true };
+		const struct Variable variable = { *name, baseType, true };
 		if (!add_variable(&Variables, &variable)) {
 			goto variable_cleanup;
 		}
@@ -1067,9 +1119,9 @@ type_failure:
 			case BooleanType:
 			case IntegerType:
 				break;
-      case StringType:
-        write_string(fc, arguments.strings + j);
-        continue;
+			case StringType:
+				write_string(fc, arguments.strings + j);
+				continue;
 			case MethodType:
 				if (type->isDerivedType && string_exists(&type->overridenMethodNames, &field->name)) {
 					fprintf(fc, "%.*s_%.*s", FSTRING(namespace), FSTRING(&type->name));
@@ -1084,8 +1136,8 @@ type_failure:
 					return false;
 				}
 
-        write_string(fc, arguments.strings + j);
-        fputs(", ", fc);
+				write_string(fc, arguments.strings + j);
+				fputs(", ", fc);
 				++j;
 				break;
 			case EnumType:
@@ -1119,10 +1171,10 @@ type_failure:
 				case BooleanType:
 				case IntegerType:
 				case MethodType:
-          break;
-        case StringType:
-          write_string(fc, arguments.strings + j);
-          continue;
+					break;
+				case StringType:
+					write_string(fc, arguments.strings + j);
+					continue;
 				case StringGeneratorType:
 					EMIT_PROG_ERROR("An unrecoverable error occurred");
 					return false;
@@ -1281,7 +1333,7 @@ variable_cleanup:
 			}
 		} else if (process_match(";")) {
 			if (!get_variable(&name)) {
-				const struct Variable variable = { name, baseType->type, false };
+				const struct Variable variable = { name, baseType, false };
 				if (add_variable(&Variables,&variable)) {
 					continue;
 				}
@@ -1305,7 +1357,7 @@ extern const size_t %.*s_RoomCount;\n\
 	bool printedFirst = false;
 	for (size_t i = 0; i < Variables.count; ++i) {
 		const struct Variable *const variable = Variables.variables + i;
-		if (RoomStructType != variable->type) {
+		if (RoomStructType != variable->type->type) {
 			continue;
 		}
 
