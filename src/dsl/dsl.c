@@ -668,6 +668,7 @@ static %s%.*s_%.*s_%.*s(",
 	bool status = false;
 	while (0 < body.strLen) {
 		size_t writtenCount;
+		// this.field -> (base | this)->field
 		if (string_starts_with(&body, &infoAccess)) {
 			fputs("info->", fc);
 			writtenCount = infoAccess.strLen;
@@ -690,6 +691,7 @@ static %s%.*s_%.*s_%.*s(",
 			writtenCount = thisAccess.strLen;
 		} else {
 			bool skipCharPrint = false;
+			// StructType var -> struct (Namespace_)?StructType *const var
 			for (size_t i = 0; i < Types.count; ++i) {
 				const struct Type *type = Types.types + i;
 				if (string_starts_with(&body, &type->name) && isspace(body.str[-1]) && isspace(body.str[type->name.strLen])) {
@@ -715,6 +717,8 @@ static %s%.*s_%.*s_%.*s(",
 				}
 			}
 
+			// TODO: Support var.(field.)+field
+			// var.field -> var->(base->)?field
 			if (!skipCharPrint) {
 				for (size_t i = 0; i < structVariables.count; ++i) {
 					const struct Variable *structVariable = structVariables.variables + i;
@@ -738,6 +742,21 @@ static %s%.*s_%.*s_%.*s(",
 				}
 			}
 
+			// TODO: Allow EnumValue without Enum.?
+			// Enum.EnumValue -> Namespace_Enum_EnumValue
+			if (!skipCharPrint) {
+				for (size_t i = 0; i < Enums.count; ++i) {
+					const struct Enum *const enumType = Enums.enumTypes + i;
+					if (string_starts_with(&body, &enumType->name) && isspace(body.str[-1]) &&
+							u8'.' == body.str[enumType->name.strLen]) {
+							fprintf(fc, "%.*s_%.*s_", FSTRING(namespace), FSTRING(&enumType->name));
+
+							skipCharPrint = true;
+							writtenCount = enumType->name.strLen + 1;
+					}
+				}
+			}
+
 			if (!skipCharPrint) {
 				fputc(*body.str, fc);
 				writtenCount = 1;
@@ -750,7 +769,7 @@ static %s%.*s_%.*s_%.*s(",
 
 	fputs("\n}\n\n", fc);
 
-  status = true;
+	status = true;
 
 method_cleanup:
 	free(structVariables.variables);
@@ -891,7 +910,7 @@ method_cleanup:
 	return true;
 
 type_failure:
-  free(overridenMethodNames.strings);
+	free(overridenMethodNames.strings);
 	free(fields.fields);
 
 	return false;
