@@ -24,7 +24,7 @@ CFLAGS="-O3 -Wall -Wformat -Wformat=2 -Wconversion -Wimplicit-fallthrough \
 UTA_C_FLAGS="${UTA_C_FLAGS:-}"
 
 mkdir -p bin/
-# shellcheck disable=SC2086
+# shellcheck disable=SC2250,SC2086
 "$CC" -std=c23 $CFLAGS $UTA_C_FLAGS \
 src/dsl/dsl.c -o bin/utatest2026-dsl
 
@@ -32,6 +32,26 @@ mkdir -p gen/
 ./bin/utatest2026-dsl src/coregame.uta gen/coregame.h gen/coregame.c
 ./bin/utatest2026-dsl src/ext1.uta gen/ext1.h gen/ext1.c
 
-# shellcheck disable=SC2086
+mkdir -p tmp/
+for rlsrc in third_party/raylib/src/*.c; do
+  # shellcheck disable=SC2250
+  if [ ! -f "$rlsrc".o ]; then
+    "$CC" -std=c23 -I . \
+     -D_GNU_SOURCE -DPLATFORM_DESKTOP_GLFW -DGRAPHICS_API_OPENGL_33 \
+     -Wno-missing-braces -Werror=pointer-arith -fno-strict-aliasing \
+     -std=c99 -fPIC -O1 -Werror=implicit-function-declaration \
+     -D_GLFW_X11 \
+     -I third_party/raylib/src/external/glfw/include/ \
+    "$rlsrc" -c -o "$rlsrc".o
+  fi
+done
+
+# shellcheck disable=SC2250,SC2086
 "$CC" -std=c23 -I . $CFLAGS $UTA_C_FLAGS \
 src/frontend.c src/backend.c src/coregame2.c gen/coregame.c gen/ext1.c -o bin/utatest2026
+
+# shellcheck disable=SC2250,SC2086
+"$CC" -std=c23 -I . $CFLAGS $UTA_C_FLAGS \
+-I third_party/raylib/src/ \
+third_party/raylib/src/*.c.o -lm -lX11 \
+src/guifrontend.c src/backend.c src/coregame2.c gen/coregame.c gen/ext1.c -o bin/utatest2026gui

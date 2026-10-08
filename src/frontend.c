@@ -1,5 +1,5 @@
 #include <inttypes.h>  // for uint8_t, SCNu8
-#include <stdio.h>     // for fputs, stderr, putchar, NULL, printf, puts, scanf, size_t
+#include <stdio.h>     // for fputs, stderr, putchar, printf, puts, scanf, size_t
 #include <stdlib.h>    // for EXIT_FAILURE, EXIT_SUCCESS
 
 #include "backend.h"   // for GameInfo, Screen, backend_cleanup, Action, backend_input, backend_register_extension, backend_setup
@@ -7,7 +7,7 @@
 
 int main(void) {
   int result = EXIT_SUCCESS;
-  struct GameInfo game;
+  struct GameInfo game = {};
   if (!backend_setup(&game)) {
     fputs("Error in backend_setup\n", stderr);
     backend_cleanup(&game);
@@ -21,8 +21,8 @@ int main(void) {
   }
 
   while (!game.quit) {
-    const char *body = game.screen->body_generator(&game, game.screen);
-    if (NULL == body) {
+    const char *const body = game.screen->body_generator(&game, game.screen);
+    if (nullptr == body) {
       fputs("Error in body_generator\n", stderr);
       result = EXIT_FAILURE;
       break;
