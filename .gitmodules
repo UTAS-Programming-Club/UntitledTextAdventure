@@ -1,3 +1,6 @@
 [submodule "third_party/raylib"]
 	path = third_party/raylib
 	url = https://github.com/raysan5/raylib.git
+[submodule "third_party/libschrift"]
+	path = third_party/libschrift
+	url = https://github.com/tomolt/libschrift.git

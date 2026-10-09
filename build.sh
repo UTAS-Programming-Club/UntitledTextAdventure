@@ -52,6 +52,8 @@ src/frontend.c src/backend.c src/coregame2.c gen/coregame.c gen/ext1.c -o bin/ut
 
 # shellcheck disable=SC2250,SC2086
 "$CC" -std=c23 -I . $CFLAGS $UTA_C_FLAGS \
+-I third_party/libschrift/ \
 -I third_party/raylib/src/ \
+third_party/libschrift/schrift.c \
 third_party/raylib/src/*.c.o -lm -lX11 \
 src/guifrontend.c src/backend.c src/coregame2.c gen/coregame.c gen/ext1.c -o bin/utatest2026gui
