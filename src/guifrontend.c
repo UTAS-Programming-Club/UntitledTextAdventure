@@ -1,9 +1,9 @@
-#include <inttypes.h>  // for uint8_t
+#include <inttypes.h>  // for uint32_t, uint_fast8_t
 #include <locale.h>    // for LC_ALL, setlocale
-#include <raylib.h>    // for WHITE, PIXELFORMAT_UNCOMPRESSED_GRAYSCALE, BLACK, BeginDrawing, ClearBackground, CloseWindow, Color, DrawTexture, EndDrawing, GetCharPressed, Image, InitWindow, LoadTextureFromImage, Texture2D, WindowShouldClose
-#include <schrift.h>   // for SFT_LMetrics, SFT_Image, SFT, SFT_GMetrics, SFT_Kerning, SFT_Glyph, sft_freefont, sft_lmetrics, SFT_DOWNWARD_Y, SFT_UChar, sft_gmetrics, sft_kerning, sft_loadfile, sft_lookup, sft_render
+#include <raylib.h>    // for WHITE, Image, PIXELFORMAT_UNCOMPRESSED_GRAYSCALE, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8, BLACK, BLANK, BeginDrawing, ClearBackground, CloseWindow, Color, DrawTexture, EndDrawing, GetCharPressed, ImageClearBackground, ImageDrawImage, InitWindow, LoadTextureFromImage, Texture2D, UnloadTexture, UpdateTexture, WindowShouldClose
+#include <schrift.h>   // for SFT_LMetrics, SFT_Image, SFT, SFT_GMetrics, SFT_Kerning, sft_freefont, SFT_Glyph, sft_lmetrics, SFT_DOWNWARD_Y, SFT_UChar, sft_gmetrics, sft_kerning, sft_loadfile, sft_lookup, sft_render
 #include <stdio.h>     // for fputs, stderr, size_t
-#include <stdlib.h>    // for EXIT_FAILURE, EXIT_SUCCESS
+#include <stdlib.h>    // for EXIT_FAILURE, EXIT_SUCCESS, free, malloc
 #include <string.h>    // for strlen
 #include <uchar.h>     // for mbrtoc32
 #include <wchar.h>     // for mbstate_t
@@ -12,7 +12,7 @@
 #include "gen/ext1.h"  // for Ext1_RoomCount, Ext1_Rooms
 
 // Based on https://github.com/lhf/libschrift-show/blob/83af300/show.c
-static bool SchriftDrawText(SFT *sft, const char *const text, const int posX, const int posY, const Color colour, int *finalX, int *finalY) {
+static bool SchriftDrawText(SFT *const sft, Image *const textImage, const char *const text, const int posX, const int posY, const Color colour, int *const finalX, int *const finalY) {
   const size_t textLen = strlen(text);
 
   SFT_LMetrics lmtx;
@@ -74,10 +74,7 @@ static bool SchriftDrawText(SFT *sft, const char *const text, const int posX, co
       1,
       PIXELFORMAT_UNCOMPRESSED_GRAYSCALE,
     };
-    Texture2D texture = LoadTextureFromImage(rlImg);
-    DrawTexture(texture, (int)(x + mtx.leftSideBearing), (int)y + mtx.yOffset, colour);
-    // TODO: Fix issues with removing this, will be fixed when caching the screen between frames anyway
-    // UnloadTexture(texture);
+    ImageDrawImage(textImage, rlImg, (int)(x + mtx.leftSideBearing), (int)(y + mtx.yOffset), colour);
 
     x += mtx.advanceWidth;
     oldGid = gid;
@@ -130,63 +127,101 @@ int main() {
     return EXIT_FAILURE;
   }
 
-  InitWindow(1280, 720, "Untitled Text Adventure");
+  constexpr int width = 1280;
+  constexpr int height = 720;
 
+  InitWindow(width, height, "Untitled Text Adventure");
+
+  // TODO: Use PIXELFORMAT_UNCOMPRESSED_R8G8B8 to save space?
+  uint32_t *textBuffer = malloc(width * height * sizeof textBuffer);
+  if (nullptr == textBuffer) {
+    fputs("Error in malloc\n", stderr);
+    sft_freefont(sft.font);
+    backend_cleanup(&game);
+    return EXIT_FAILURE;
+  }
+  Image textImage = {
+    textBuffer,
+    width,
+    height,
+    1,
+    PIXELFORMAT_UNCOMPRESSED_R8G8B8A8,
+  };
+  Texture2D textTexture = LoadTextureFromImage(textImage);
+
+  bool updateText = true;
   while (!game.quit && !WindowShouldClose()) {
-    const char *const body = game.screen->body_generator(&game, game.screen);
-    if (nullptr == body) {
-      fputs("Error in body_generator\n", stderr);
-      result = EXIT_FAILURE;
-      break;
+    if (updateText) {
+      updateText = false;
+
+      ImageClearBackground(&textImage, BLANK);
+
+      const char *const body = game.screen->body_generator(&game, game.screen);
+      if (nullptr == body) {
+        fputs("Error in body_generator\n", stderr);
+        result = EXIT_FAILURE;
+        break;
+      }
+
+      int textY = 0;
+
+      if (!SchriftDrawText(&sft, &textImage, body, 10, textY, WHITE, nullptr, &textY)) {
+        fputs("Error in SchriftDrawText\n", stderr);
+        result = EXIT_FAILURE;
+        break;
+      }
+
+      textY += (int)(lmtx.ascender + lmtx.descender + lmtx.lineGap);
+      uint_fast8_t id = 0;
+      for (size_t i = 0; i < game.screen->actionCount; ++i) {
+        const struct Action *action = game.screen->actions[i];
+        if (!action->visibility_checker(&game, action)) {
+          continue;
+        }
+
+        int textX;
+        const char digitStr[] = { (char)('0' + id + 1), ':', ' ', '\0' };
+        if (!SchriftDrawText(&sft, &textImage, digitStr, 10, textY, WHITE, &textX, nullptr)) {
+          fputs("Error in SchriftDrawText\n", stderr);
+          result = EXIT_FAILURE;
+          game.quit = true;
+          break;
+        }
+        if (!SchriftDrawText(&sft, &textImage, action->title, textX, textY, WHITE, nullptr, &textY)) {
+          fputs("Error in SchriftDrawText\n", stderr);
+          result = EXIT_FAILURE;
+          game.quit = true;
+          break;
+        }
+
+        ++id;
+      }
+
+      UpdateTexture(textTexture, textBuffer);
     }
 
     unsigned char input = (unsigned char)GetCharPressed();
-    if (0 != input && !backend_input(&game, input - '1')) {
-      fputs("Error in backend_input", stderr);
-      result = EXIT_FAILURE;
-      break;
+    if (0 != input) {
+      if (!backend_input(&game, input - '1')) {
+        fputs("Error in backend_input", stderr);
+        result = EXIT_FAILURE;
+        break;
+      }
+
+      updateText = true;
     }
 
     BeginDrawing();
 
     ClearBackground(BLACK);
 
-    int textY = 0;
-    if (!SchriftDrawText(&sft, body, 10, textY, WHITE, nullptr, &textY)) {
-      fputs("Error in SchriftDrawText\n", stderr);
-      result = EXIT_FAILURE;
-      break;
-    }
-
-    textY += (int)(lmtx.ascender + lmtx.descender + lmtx.lineGap);
-    uint8_t id = 0;
-    for (size_t i = 0; i < game.screen->actionCount; ++i) {
-      const struct Action *action = game.screen->actions[i];
-      if (!action->visibility_checker(&game, action)) {
-        continue;
-      }
-
-      int textX;
-      const char digitStr[] = { (char)('0' + id + 1), ':', ' ', '\0' };
-      if (!SchriftDrawText(&sft, digitStr, 10, textY, WHITE, &textX, nullptr)) {
-        fputs("Error in SchriftDrawText\n", stderr);
-        result = EXIT_FAILURE;
-        game.quit = true;
-        break;
-      }
-      if (!SchriftDrawText(&sft, action->title, textX, textY, WHITE, nullptr, &textY)) {
-        fputs("Error in SchriftDrawText\n", stderr);
-        result = EXIT_FAILURE;
-        game.quit = true;
-        break;
-      }
-
-      ++id;
-    }
+    DrawTexture(textTexture, 0, 0, WHITE);
 
     EndDrawing();
   }
 
+  UnloadTexture(textTexture);
+  free(textBuffer);
   CloseWindow();
   sft_freefont(sft.font);
   backend_cleanup(&game);
