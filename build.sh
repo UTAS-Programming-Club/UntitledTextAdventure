@@ -23,14 +23,7 @@ CFLAGS="-O3 -Wall -Wformat -Wformat=2 -Wconversion -Wimplicit-fallthrough \
 -pedantic -I src/"
 UTA_C_FLAGS="${UTA_C_FLAGS:-}"
 
-mkdir -p bin/
-# shellcheck disable=SC2250,SC2086
-"$CC" -std=c23 $CFLAGS $UTA_C_FLAGS \
-src/dsl/dsl.c -o bin/utatest2026-dsl
-
-mkdir -p gen/
-./bin/utatest2026-dsl src/coregame.uta gen/coregame.h gen/coregame.c
-./bin/utatest2026-dsl src/ext1.uta gen/ext1.h gen/ext1.c
+./scripts/setup.sh
 
 mkdir -p tmp/
 for rlsrc in third_party/raylib/src/*.c; do
