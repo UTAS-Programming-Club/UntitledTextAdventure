@@ -48,9 +48,10 @@ if(LIBPNG_FOUND)
 endif()
 
 include_directories(${GSKIT_EXTERNAL_INCLUDES})
-# include_directories(third_party/libschrift/)
 include_directories(../)
 include_directories(../../)
+include_directories(../../third_party/libschrift/)
+include_directories(../../third_party/LoadBMP/)
 
 set(CMAKE_EXECUTABLE_SUFFIX .elf)
 
@@ -59,6 +60,7 @@ add_executable(uta
 	../coregame2.c
 	../../gen/coregame.c
 	../../gen/ext1.c
+	../../schrift.c
 	ps2frontend.c
 )
 target_link_libraries(uta

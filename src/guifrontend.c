@@ -1,19 +1,22 @@
-#include <inttypes.h>  // for uint32_t, uint_fast8_t
-#include <locale.h>    // for LC_ALL, setlocale
-#include <raylib.h>    // for WHITE, Image, PIXELFORMAT_UNCOMPRESSED_GRAYSCALE, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8, BLACK, BLANK, BeginDrawing, ClearBackground, CloseWindow, Color, DrawTexture, EndDrawing, GetCharPressed, ImageClearBackground, ImageDrawImage, InitWindow, LoadTextureFromImage, Texture2D, UnloadTexture, UpdateTexture, WindowShouldClose
-#include <schrift.h>   // for SFT_LMetrics, SFT_Image, SFT, SFT_GMetrics, SFT_Kerning, sft_freefont, SFT_Glyph, sft_lmetrics, SFT_DOWNWARD_Y, SFT_UChar, sft_gmetrics, sft_kerning, sft_loadfile, sft_lookup, sft_render
-#include <stdio.h>     // for fputs, stderr, size_t
-#include <stdlib.h>    // for EXIT_FAILURE, EXIT_SUCCESS, free, malloc
-#include <string.h>    // for strlen
-#include <uchar.h>     // for mbrtoc32
-#include <wchar.h>     // for mbstate_t
+#include <inttypes.h>            // for uint16_t, uint32_t, uint8_t, uint_fast8_t
+#include <raylib.h>              // for WHITE, Image, PIXELFORMAT_UNCOMPRESSED_GRAYSCALE, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8, BLACK, BLANK, BeginDrawing, ClearBackground, CloseWindow, Color, DrawTexture, EndDrawing, GetCharPressed, ImageClearBackground, ImageDrawImage, InitWindow, LoadTextureFromImage, Texture2D, UnloadTexture, UpdateTexture, WindowShouldClose
+#include <schrift.h>             // for SFT_LMetrics, SFT_Image, SFT, SFT_GMetrics, SFT_Kerning, sft_freefont, SFT_Glyph, sft_lmetrics, SFT_DOWNWARD_Y, SFT_UChar, sft_gmetrics, sft_kerning, sft_loadfile, sft_lookup, sft_render
+#include <stdio.h>               // for fputs, stderr, size_t
+#include <stdlib.h>              // for EXIT_FAILURE, EXIT_SUCCESS, free, malloc
+#include <string.h>              // for strlen
+#include <util/utf8_to_utf32.h>  // for utf8_to_utf32
 
-#include "backend.h"   // for GameInfo, Screen, Action, backend_cleanup, backend_input, backend_register_extension, backend_setup
-#include "gen/ext1.h"  // for Ext1_RoomCount, Ext1_Rooms
+#include "backend.h"             // for GameInfo, backend_cleanup, Screen, Action, backend_input, backend_register_extension, backend_setup
+#include "gen/ext1.h"            // for Ext1_RoomCount, Ext1_Rooms
 
 // Based on https://github.com/lhf/libschrift-show/blob/83af300/show.c
-static bool SchriftDrawText(SFT *const sft, Image *const textImage, const char *const text, const int posX, const int posY, const Color colour, int *const finalX, int *const finalY) {
+static bool SchriftDrawText(SFT *const sft, Image *const textImage, const char *const text, const uint16_t posX, const uint16_t posY, const Color colour, uint16_t *const finalX, uint16_t *const finalY) {
   const size_t textLen = strlen(text);
+  SFT_UChar codePoints[textLen];
+  int codePointCount = utf8_to_utf32((const uint8_t *)text, codePoints, (int)textLen + 1);
+  if (0 == codePointCount) {
+    return false;
+  }
 
   SFT_LMetrics lmtx;
   if (0 > sft_lmetrics(sft, &lmtx)) {
@@ -24,24 +27,16 @@ static bool SchriftDrawText(SFT *const sft, Image *const textImage, const char *
   double y = posY + lmtx.ascender + lmtx.lineGap;
   SFT_Glyph oldGid = 0;
 
-  size_t consumedBytes = 0;
-  for (size_t i = 0; i < textLen; i += consumedBytes) {
+  for (size_t i = 0; i < codePointCount; ++i) {
     if ('\n' == text[i]) {
       x = posX;
-      y += (int)(lmtx.ascender + lmtx.descender + lmtx.lineGap);
+      y += lmtx.ascender + lmtx.descender + lmtx.lineGap;
       oldGid = 0;
       continue;
     }
 
-    SFT_UChar codePoint;
-    mbstate_t state = {};
-    consumedBytes = mbrtoc32(&codePoint, text + i, textLen - i, &state);
-    if (0 > consumedBytes) {
-      return false;
-    }
-
     SFT_Glyph gid;
-    if (0 > sft_lookup(sft, codePoint, &gid)) {
+    if (0 > sft_lookup(sft, codePoints[i], &gid)) {
       return false;
     }
 
@@ -74,25 +69,23 @@ static bool SchriftDrawText(SFT *const sft, Image *const textImage, const char *
       1,
       PIXELFORMAT_UNCOMPRESSED_GRAYSCALE,
     };
-    ImageDrawImage(textImage, rlImg, (int)(x + mtx.leftSideBearing), (int)(y + mtx.yOffset), colour);
+    ImageDrawImage(textImage, rlImg, (uint16_t)(x + mtx.leftSideBearing), (uint16_t)(y + mtx.yOffset), colour);
 
     x += mtx.advanceWidth;
     oldGid = gid;
   }
 
   if (nullptr != finalX) {
-    *finalX = (int)x;
+    *finalX = (uint16_t)x;
   }
   if (nullptr != finalY) {
-    *finalY = (int)y;
+    *finalY = (uint16_t)y;
   }
 
   return true;
 }
 
 int main() {
-  setlocale(LC_ALL, "en_AU.utf8");
-
   int result = EXIT_SUCCESS;
   struct GameInfo game = {};
   if (!backend_setup(&game)) {
@@ -127,8 +120,8 @@ int main() {
     return EXIT_FAILURE;
   }
 
-  constexpr int width = 1280;
-  constexpr int height = 720;
+  constexpr uint16_t width = 1280;
+  constexpr uint16_t height = 720;
 
   InitWindow(width, height, "Untitled Text Adventure");
 
@@ -151,6 +144,17 @@ int main() {
 
   bool updateText = true;
   while (!game.quit && !WindowShouldClose()) {
+    unsigned char input = (unsigned char)GetCharPressed();
+    if (0 != input) {
+      if (!backend_input(&game, input - '1')) {
+        fputs("Error in backend_input", stderr);
+        result = EXIT_FAILURE;
+        break;
+      }
+
+      updateText = true;
+    }
+
     if (updateText) {
       updateText = false;
 
@@ -163,7 +167,7 @@ int main() {
         break;
       }
 
-      int textY = 0;
+      uint16_t textY = 0;
 
       if (!SchriftDrawText(&sft, &textImage, body, 10, textY, WHITE, nullptr, &textY)) {
         fputs("Error in SchriftDrawText\n", stderr);
@@ -171,7 +175,7 @@ int main() {
         break;
       }
 
-      textY += (int)(lmtx.ascender + lmtx.descender + lmtx.lineGap);
+      textY += (uint16_t)(lmtx.ascender + lmtx.descender + lmtx.lineGap);
       uint_fast8_t id = 0;
       for (size_t i = 0; i < game.screen->actionCount; ++i) {
         const struct Action *action = game.screen->actions[i];
@@ -179,7 +183,7 @@ int main() {
           continue;
         }
 
-        int textX;
+        uint16_t textX;
         const char digitStr[] = { (char)('0' + id + 1), ':', ' ', '\0' };
         if (!SchriftDrawText(&sft, &textImage, digitStr, 10, textY, WHITE, &textX, nullptr)) {
           fputs("Error in SchriftDrawText\n", stderr);
@@ -198,17 +202,6 @@ int main() {
       }
 
       UpdateTexture(textTexture, textBuffer);
-    }
-
-    unsigned char input = (unsigned char)GetCharPressed();
-    if (0 != input) {
-      if (!backend_input(&game, input - '1')) {
-        fputs("Error in backend_input", stderr);
-        result = EXIT_FAILURE;
-        break;
-      }
-
-      updateText = true;
     }
 
     BeginDrawing();
