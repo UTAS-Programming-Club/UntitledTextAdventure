@@ -11,7 +11,7 @@
 #include <util/utf8_to_utf32.h>  // for utf8_to_utf32
 
 #define LOADBMP_IMPLEMENTATION
-#include "loadbmp.h"
+#include <loadbmp.h>
 
 #include "backend.h"   // for GameInfo, Screen, Action, backend_cleanup, backend_input, backend_register_extension, backend_setup
 #include "gen/ext1.h"  // for Ext1_RoomCount, Ext1_Rooms
@@ -210,9 +210,6 @@ int main(int argc, char *argv[static argc]) {
 
 	gsKit_init_screen(gsGlobal);
 	gsKit_mode_switch(gsGlobal, GS_PERSISTENT);
-
-	GSFONT *gsFont = gsKit_init_font(GSKIT_FTYPE_BMP_DAT, "dejavu.bmp");
-	gsKit_font_upload(gsGlobal, gsFont);
 
 	int port = 0; // 0 -> Connector 1, 1 -> Connector 2
 	int slot = 0; // Always zero if not using multitap
