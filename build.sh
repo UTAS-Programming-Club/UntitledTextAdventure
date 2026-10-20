@@ -20,12 +20,13 @@ CFLAGS="-O3 -Wall -Wformat -Wformat=2 -Wconversion -Wimplicit-fallthrough \
 -fcf-protection=full \
 -fno-delete-null-pointer-checks -fno-strict-overflow -fno-strict-aliasing -ftrivial-auto-var-init=zero \
 -Werror=implicit -Werror=incompatible-pointer-types -Werror=int-conversion \
--pedantic -I src/"
+-pedantic -I . -I src/ -I out/gen/"
 UTA_C_FLAGS="${UTA_C_FLAGS:-}"
+
+COMMON_FILES="src/backend.c src/coregame2.c out/gen/coregame.c out/gen/ext1.c"
 
 ./scripts/setup.sh
 
-mkdir -p tmp/
 for rlsrc in third_party/raylib/src/*.c; do
   # shellcheck disable=SC2250
   if [ ! -f "$rlsrc".o ]; then
@@ -39,14 +40,15 @@ for rlsrc in third_party/raylib/src/*.c; do
   fi
 done
 
-# shellcheck disable=SC2250,SC2086
-"$CC" -std=c23 -I . $CFLAGS $UTA_C_FLAGS \
-src/frontend.c src/backend.c src/coregame2.c gen/coregame.c gen/ext1.c -o bin/utatest2026
 
 # shellcheck disable=SC2250,SC2086
-"$CC" -std=c23 -I . $CFLAGS $UTA_C_FLAGS \
+"$CC" -std=c23 $CFLAGS $UTA_C_FLAGS \
+src/frontends/text.c $COMMON_FILES -o out/bin/utatest2026-text
+
+# shellcheck disable=SC2250,SC2086
+"$CC" -std=c23 $CFLAGS $UTA_C_FLAGS \
 -I third_party/libschrift/ \
 -I third_party/raylib/src/ \
 third_party/libschrift/schrift.c \
 third_party/raylib/src/*.c.o -lm -lX11 \
-src/guifrontend.c src/backend.c src/coregame2.c gen/coregame.c gen/ext1.c -o bin/utatest2026gui
+src/frontends/gui.c $COMMON_FILES -o out/bin/utatest2026-gui

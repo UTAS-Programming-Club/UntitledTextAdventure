@@ -7,7 +7,7 @@
 #include <util/utf8_to_utf32.h>  // for utf8_to_utf32
 
 #include "backend.h"             // for GameInfo, Screen, Action, backend_cleanup, backend_input, backend_register_extension, backend_setup
-#include "gen/ext1.h"            // for Ext1_RoomCount, Ext1_Rooms
+#include "ext1.h"                // for Ext1_RoomCount, Ext1_Rooms
 
 // Based on https://github.com/lhf/libschrift-show/blob/83af300/show.c
 static bool SchriftDrawText(SFT *const sft, Image *const textImage, const char *const text, const uint16_t posX, const uint16_t posY, const Color colour, uint16_t *const finalX, uint16_t *const finalY) {

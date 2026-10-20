@@ -5,7 +5,7 @@
 #include <stdint.h>   // for uint8_t
 
 #include "backend.h"  // for Action, GameInfo (ptr only)
-#include "gen/coregame.h"
+#include "coregame.h"
 
 extern const uint8_t MapSizeX;
 extern const uint8_t MapSizeY;

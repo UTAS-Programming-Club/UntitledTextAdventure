@@ -1,8 +1,8 @@
-#include <stdlib.h>        // for calloc, free
+#include <stdlib.h>    // for calloc, free
 
 #include "backend.h"
-#include "coregame2.h"     // for MapSizeX, MapSizeY
-#include "gen/coregame.h"  // for Core_MainMenuScreen, Core_RoomCount, Core_Rooms
+#include "coregame2.h" // for MapSizeX, MapSizeY
+#include "coregame.h"  // for Core_MainMenuScreen, Core_RoomCount, Core_Rooms
 
 const char *backend_default_Screen_GetBody(const struct GameInfo *const info, const struct Screen *const screen) {
   if (NULL == info || NULL == info->screen) {

@@ -23,11 +23,11 @@ CFLAGS="-O3 -Wall -Wformat -Wformat=2 -Wconversion -Wimplicit-fallthrough \
 -pedantic -I src/"
 UTA_C_FLAGS="${UTA_C_FLAGS:-}"
 
-mkdir -p bin/
+mkdir -p out/bin/
 # shellcheck disable=SC2250,SC2086
 "$CC" -std=c23 $CFLAGS $UTA_C_FLAGS \
-src/dsl/dsl.c -o bin/utatest2026-dsl
+src/dsl/dsl.c -o out/bin/utatest2026-dsl
 
-mkdir -p gen/
-./bin/utatest2026-dsl src/coregame.uta gen/coregame.h gen/coregame.c
-./bin/utatest2026-dsl src/ext1.uta gen/ext1.h gen/ext1.c
+mkdir -p out/gen/
+out/bin/utatest2026-dsl src/coregame.uta out/gen/coregame.h out/gen/coregame.c
+out/bin/utatest2026-dsl src/ext1.uta out/gen/ext1.h out/gen/ext1.c

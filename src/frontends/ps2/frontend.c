@@ -20,7 +20,7 @@
 #include <loadbmp.h>             // for LOADBMP_RGB, loadbmp_encode_file
 
 #include "backend.h"             // for GameInfo, Screen, Action, backend_input, backend_register_extension, backend_setup
-#include "gen/ext1.h"            // for Ext1_RoomCount, Ext1_Rooms
+#include "ext1.h"                // for Ext1_RoomCount, Ext1_Rooms
 
 static char padBuf[256] __attribute__((aligned(64)));
 

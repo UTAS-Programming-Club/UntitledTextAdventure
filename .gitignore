@@ -1,6 +1,5 @@
 nppBackup/
 
-/bin/
-/gen/
-/ps2build/
-/ps2dev/
+/out/
+/src/frontends/ps2/schrift.c
+/third_party/ps2dev/
