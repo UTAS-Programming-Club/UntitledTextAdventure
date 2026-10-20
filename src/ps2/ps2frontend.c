@@ -1,20 +1,26 @@
 // Based on https://github.com/ps2dev/ps2sdk/blob/f556130/ee/rpc/pad/samples/pad/pad.c
 // and https://github.com/ps2dev/gsKit/blob/8ef73d0/examples/font/font.c
 
-#include <gsKit.h>
-#include <gsToolkit.h>
-#include <kernel.h>
-#include <libpad.h>
-#include <loadfile.h>
-#include <schrift.h>
-#include <stdio.h>
+#include <gsKit.h>							 // for DMA_CHANNEL_GIF, D_CTRL_MFD_OFF, D_CTRL_RCYC_8, D_CTRL_RELE_OFF, D_CTRL_STD_OFF, D_CTRL_STS_UNSPEC, dmaKit_chan_init, dmaKit_init
+																 //     gsKit_clear, gsKit_mode_switch, gsKit_queue_exec, gsKit_sync_flip, gsKit_vram_clear
+																 //     GS_SETREG_RGBA, GS_SETTING_ON, GSGLOBAL, GSTEXTURE, GS_BLEND_FRONT2BACK, GS_FRAME, GS_MODE_DTV_480P, GS_NONINTERLACED, GS_PERSISTENT, GS_PSMZ_16, GS_PSM_CT16, gsKit_init_global, gsKit_init_screen
+																 //     gsKit_prim_sprite_texture
+#include <gsToolkit.h>           // for gsKit_texture_bmp
+#include <kernel.h>              // for SleepThread
+#include <libpad.h>              // for padGetState, PAD_STATE_FINDCTP1, PAD_STATE_STABLE, padButtonStatus, PAD_CROSS, PAD_DOWN, PAD_MMODE_LOCK, PAD_STATE_DISCONN, PAD_TYPE_DIGITAL, PAD_UP, padInit, padPortOpen, padRead, padSetMainMode, padStateInt2String
+#include <loadfile.h>            // for SifLoadModule
+#include <schrift.h>             // for SFT_Image, SFT_LMetrics, SFT_GMetrics, SFT, SFT_Kerning, SFT_Glyph, sft_lmetrics, SFT_DOWNWARD_Y, SFT_UChar, sft_gmetrics, sft_kerning, sft_loadfile, sft_lookup, sft_render
+#include <stdint.h>              // for uint16_t, uint64_t, uint8_t, uint32_t, uint_fast8_t
+#include <stdio.h>               // for size_t, stderr, fputs, printf, fprintf
+#include <stdlib.h>              // for EXIT_FAILURE, EXIT_SUCCESS, malloc
+#include <string.h>              // for memset, strlen
 #include <util/utf8_to_utf32.h>  // for utf8_to_utf32
 
 #define LOADBMP_IMPLEMENTATION
-#include <loadbmp.h>
+#include <loadbmp.h>             // for LOADBMP_RGB, loadbmp_encode_file
 
-#include "backend.h"   // for GameInfo, Screen, Action, backend_cleanup, backend_input, backend_register_extension, backend_setup
-#include "gen/ext1.h"  // for Ext1_RoomCount, Ext1_Rooms
+#include "backend.h"             // for GameInfo, Screen, Action, backend_input, backend_register_extension, backend_setup
+#include "gen/ext1.h"            // for Ext1_RoomCount, Ext1_Rooms
 
 static char padBuf[256] __attribute__((aligned(64)));
 
@@ -22,7 +28,7 @@ constexpr uint16_t ScreenWidth = 720;
 constexpr uint16_t ScreenHeight = 480;
 
 // Based on https://github.com/raysan5/raylib/blob/656d42c4/src/rtextures.c#L4062-L4212
-static void imageDrawImage(unsigned char *const dst, const SFT_Image *const src, const uint16_t posX, const uint16_t posY, const uint64_t tint) {
+static void imageDrawImage(uint8_t *const dst, const SFT_Image *const src, const uint16_t posX, const uint16_t posY, const uint64_t tint) {
 	if (nullptr == src || nullptr == dst || nullptr == src->pixels || 0 == src->width || 0 == src->height ||
 		posX + src->width >= ScreenWidth || posY + src->height >= ScreenHeight) {
 		return;
@@ -57,7 +63,7 @@ static void imageDrawImage(unsigned char *const dst, const SFT_Image *const src,
 
 
 // Based on https://github.com/lhf/libschrift-show/blob/83af300/show.c
-static bool schriftDrawText(SFT *const sft, unsigned char *const dst, const char *const text, const uint16_t posX, const uint16_t posY, const uint64_t colour, uint16_t *const finalX, uint16_t *const finalY) {
+static bool schriftDrawText(SFT *const sft, uint8_t *const textImage, const char *const text, const uint16_t posX, const uint16_t posY, const uint64_t colour, uint16_t *const finalX, uint16_t *const finalY) {
 	const size_t textLen = strlen(text);
 	SFT_UChar codePoints[textLen];
 	int codePointCount = utf8_to_utf32((const uint8_t *)text, codePoints, (int)textLen + 1);
@@ -109,7 +115,7 @@ static bool schriftDrawText(SFT *const sft, unsigned char *const dst, const char
 			return false;
 		}
 
-		imageDrawImage(dst, &img, (uint16_t)(x + mtx.leftSideBearing), (uint16_t)(y + mtx.yOffset), colour);
+		imageDrawImage(textImage, &img, (uint16_t)(x + mtx.leftSideBearing), (uint16_t)(y + mtx.yOffset), colour);
 
 		x += mtx.advanceWidth;
 		oldGid = gid;
@@ -126,18 +132,20 @@ static bool schriftDrawText(SFT *const sft, unsigned char *const dst, const char
 }
 
 
-static void loadModules(void) {
+static bool loadModules() {
 	int ret = SifLoadModule("rom0:SIO2MAN", 0, nullptr);
-	if (ret < 0) {
-		printf("sifLoadModule sio failed: %d\n", ret);
-		SleepThread();
+	if (0 > ret) {
+		fprintf(stderr, "sifLoadModule sio failed: %d\n", ret);
+		return false;
 	}
 
 	ret = SifLoadModule("rom0:PADMAN", 0, nullptr);
-	if (ret < 0) {
-		printf("sifLoadModule pad failed: %d\n", ret);
-		SleepThread();
+	if (0 > ret) {
+		fprintf(stderr, "sifLoadModule pad failed: %d\n", ret);
+		return false;
 	}
+
+	return true;
 }
 
 
@@ -185,7 +193,37 @@ static int getPadState(int port, int slot, struct padButtonStatus *buttons) {
 }
 
 
-int main(int argc, char *argv[static argc]) {
+int main() {
+	int result = EXIT_FAILURE;
+
+	struct GameInfo game = {};
+	if (!backend_setup(&game)) {
+		fputs("Error in backend_setup\n", stderr);
+		goto cleanup_backend;
+	}
+
+	if (!backend_register_extension(&game, Ext1_RoomCount, Ext1_Rooms)) {
+		fputs("Error in backend_register_extension\n", stderr);
+		goto cleanup_backend;
+	}
+
+	SFT sft = {
+		.xScale = 20,
+		.yScale = 20,
+		.flags  = SFT_DOWNWARD_Y,
+	};
+	sft.font = sft_loadfile("AtkinsonHyperlegibleMono-VariableFont_wght.ttf");
+	if (nullptr == sft.font) {
+		fputs("Error in sft_loadfile\n", stderr);
+		goto cleanup_backend;
+	}
+
+	SFT_LMetrics lmtx;
+	if (0 > sft_lmetrics(&sft, &lmtx)) {
+		fputs("Error in sft_lmetrics\n", stderr);
+		goto cleanup_font;
+	}
+
 	GSGLOBAL *gsGlobal = gsKit_init_global();
 
 	dmaKit_init(D_CTRL_RELE_OFF,D_CTRL_MFD_OFF, D_CTRL_STS_UNSPEC,
@@ -217,57 +255,33 @@ int main(int argc, char *argv[static argc]) {
 	size_t selectedId = 0;
 	struct padButtonStatus buttons;
 	uint32_t oldPadState = 0;
-	loadModules();
+	if (!loadModules()) {
+		fputs("loadModules failed!\n", stderr);
+		goto cleanup_font;
+	}
 	padInit(0);
 
 	int ret = padPortOpen(port, slot, padBuf);
 	if(0 == ret) {
-		printf("padOpenPort failed: %d\n", ret);
-		SleepThread();
+		fprintf(stderr, "padOpenPort failed: %d\n", ret);
+		goto cleanup_font;
 	}
 
 	if(!initializePad(port, slot)) {
-		printf("pad initalization failed!\n");
-		SleepThread();
-	}
-
-	struct GameInfo game;
-	if (!backend_setup(&game)) {
-		puts("Error in backend_setup");
-		backend_cleanup(&game);
-		SleepThread();
-	}
-
-	if (!backend_register_extension(&game, Ext1_RoomCount, Ext1_Rooms)) {
-		puts("Error in backend_register_extension");
-		backend_cleanup(&game);
-		SleepThread();
-	}
-
-	SFT sft = {
-		.xScale = 20,
-		.yScale = 20,
-		.flags  = SFT_DOWNWARD_Y,
-	};
-	sft.font = sft_loadfile("AtkinsonHyperlegibleMono-VariableFont_wght.ttf");
-	if (nullptr == sft.font) {
-		puts("Error in sft_loadfile\n");
-		backend_cleanup(&game);
-		return EXIT_FAILURE;
-	}
-
-	SFT_LMetrics lmtx;
-	if (0 > sft_lmetrics(&sft, &lmtx)) {
-		puts("Error in sft_lmetrics\n");
-		sft_freefont(sft.font);
-		backend_cleanup(&game);
-		return EXIT_FAILURE;
+		fputs("pad initalization failed!\n", stderr);
+		goto cleanup_font;
 	}
 
 	unsigned char *const bmp = malloc(3 * ScreenWidth * ScreenHeight);
+	if (nullptr == bmp) {
+		fputs("malloc failed!\n", stderr);
+		goto cleanup_font;
+	}
 	GSTEXTURE Bitmap = { 0 };
 
-	bool needDraw = true;
+	result = EXIT_SUCCESS;
+
+	bool updateText = true;
 	while(!game.quit) {
 		if (0 != getPadState(port, slot, &buttons)) {
 			int padState = 0xffff ^ buttons.btns;
@@ -279,8 +293,8 @@ int main(int argc, char *argv[static argc]) {
 					const struct Action *action = game.screen->actions[i];
 					if (action->visibility_checker(&game, action)) {
 						selectedIdx = i;
-					  --selectedId;
-						needDraw = true;
+						--selectedId;
+						updateText = true;
 						break;
 					}
 				}
@@ -290,14 +304,15 @@ int main(int argc, char *argv[static argc]) {
 					if (action->visibility_checker(&game, action)) {
 						selectedIdx = i;
 						++selectedId;
-						needDraw = true;
+						updateText = true;
 						break;
 					}
 				}
 			} else if (PAD_CROSS & newPadState) {
 				if (!backend_input(&game, selectedId)) {
-					puts("Error in backend_input");
-					SleepThread();
+					fputs("Error in backend_input\n", stderr);
+					result = EXIT_FAILURE;
+					break;
 				}
 
 				selectedId = 0;
@@ -308,25 +323,26 @@ int main(int argc, char *argv[static argc]) {
 						break;
 					}
 				}
-				needDraw = true;
+				updateText = true;
 			}
 		}
 
-		if (needDraw) {
-			needDraw = false;
+		if (updateText) {
+			updateText = false;
 
 			memset(bmp, 0, 3 * ScreenWidth * ScreenHeight);
 
 			const char *const body = game.screen->body_generator(&game, game.screen);
 			if (nullptr == body) {
-				puts("Error in body_generator");
+				fputs("Error in body_generator\n", stderr);
+				result = EXIT_FAILURE;
 				break;
 			}
 
 			uint16_t textY = 0;
-
 			if (!schriftDrawText(&sft, bmp, body, 10, textY, White, nullptr, &textY)) {
-				puts("Error in schriftDrawText");
+				fputs("Error in schriftDrawText\n", stderr);
+				result = EXIT_FAILURE;
 				break;
 			}
 
@@ -340,13 +356,13 @@ int main(int argc, char *argv[static argc]) {
 
 				uint16_t textX = 10;
 				if (selectedIdx == i && !schriftDrawText(&sft, bmp, "> ", textX, textY, White, &textX, nullptr)) {
-					puts("Error in SchriftDrawText");
+					fputs("Error in schriftDrawText\n", stderr);
 					game.quit = true;
 					break;
 				}
 
 				if (!schriftDrawText(&sft, bmp, action->title, textX, textY, White, nullptr, &textY)) {
-					puts("Error in SchriftDrawText");
+					fputs("Error in schriftDrawText\n", stderr);
 					game.quit = true;
 					break;
 				}
@@ -354,11 +370,17 @@ int main(int argc, char *argv[static argc]) {
 				++id;
 			}
 
+			if (game.quit) {
+				result = EXIT_FAILURE;
+				break;
+			}
+
 			loadbmp_encode_file("screen.bmp", bmp, ScreenWidth, ScreenHeight, LOADBMP_RGB);
 
 			gsKit_vram_clear(gsGlobal);
 			gsKit_texture_bmp(gsGlobal, &Bitmap, "screen.bmp");
 
+			// TODO: Check if this is needed
 			gsKit_clear(gsGlobal, Black);
 
 			gsKit_prim_sprite_texture(gsGlobal,	&Bitmap, 0, 0, 0, 0,
@@ -371,14 +393,20 @@ int main(int argc, char *argv[static argc]) {
 		gsKit_sync_flip(gsGlobal);
 	}
 
+	// free(bmp);
+
+cleanup_font:
+	// sft_freefont(sft.font);
+
+cleanup_backend:
+	// backend_cleanup(&game);
+
+	printf("Exited with %i\n", result);
+
 	// Loop and allow `ps2client reset` to re-enter bootloader
 	SleepThread();
 	while (true) {
 	}
 
-	// free(bmp);
-	// backend_cleanup(&game);
-	// sft_freefont(sft.font);
-
-	return EXIT_SUCCESS;
+	return result;
 }
