@@ -52,7 +52,6 @@ include_directories(../../)
 include_directories(../../../)
 include_directories(../../../out/gen/)
 include_directories(../../../third_party/libschrift/)
-include_directories(../../../third_party/LoadBMP/)
 
 set(CMAKE_EXECUTABLE_SUFFIX .elf)
 

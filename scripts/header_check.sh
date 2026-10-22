@@ -39,9 +39,9 @@ test_src_c99 src/backend.c
 read -r IGNORE
 test_src_c99 src/coregame2.c
 read -r IGNORE
-test_src_c23 src/frontends/textfrontend.c
+test_src_c23 src/frontends/text.c
 read -r IGNORE
-test_src_c23 src/frontends/guifrontend.c "-I third_party/raylib/src/ -I third_party/libschrift/"
+test_src_c23 src/frontends/gui.c "-I third_party/raylib/src/ -I third_party/libschrift/"
 # shellcheck disable=SC2034
 read -r IGNORE
-"$IWYU" src/frontends/ps2/frontend.c -std=c23 -Xiwyu --update_comments -Xiwyu --max_line_length=1000 -I third_party/raylib/src -I . -I src/ -I out/gen/ -I third_party/libschrift -I third_party/ps2dev/gsKit/include -I third_party/ps2dev/ps2sdk/common/include -D _EE -I third_party/ps2dev/ps2sdk/ee/include -I third_party/LoadBMP
+"$IWYU" src/frontends/ps2/frontend.c -std=c23 -Xiwyu --update_comments -Xiwyu --max_line_length=1000 -I third_party/raylib/src -I . -I src/ -I out/gen/ -I third_party/libschrift -I third_party/ps2dev/gsKit/include -I third_party/ps2dev/ps2sdk/common/include -D _EE -I third_party/ps2dev/ps2sdk/ee/include

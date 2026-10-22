@@ -2,19 +2,18 @@
 // and https://github.com/ps2dev/gsKit/blob/8ef73d0/examples/font/font.c
 
 #include <gsKit.h>							 // for DMA_CHANNEL_GIF, D_CTRL_MFD_OFF, D_CTRL_RCYC_8, D_CTRL_RELE_OFF, D_CTRL_STD_OFF, D_CTRL_STS_UNSPEC, dmaKit_chan_init, dmaKit_init
-																 //     gsKit_clear, gsKit_mode_switch, gsKit_queue_exec, gsKit_sync_flip, gsKit_vram_clear
-																 //     GS_SETREG_RGBA, GS_SETTING_ON, GSGLOBAL, GSTEXTURE, GS_BLEND_FRONT2BACK, GS_FRAME, GS_MODE_DTV_480P, GS_NONINTERLACED, GS_PERSISTENT, GS_PSMZ_16, GS_PSM_CT16, gsKit_init_global, gsKit_init_screen
-																 //     gsKit_prim_sprite_texture
-#include <gsToolkit.h>           // for gsKit_texture_bmp
+																 //     GS_FILTER_NEAREST, gsKit_clear, gsKit_mode_switch, gsKit_queue_exec, gsKit_sync_flip, gsKit_vram_clear
+																 //     GSGLOBAL, GSTEXTURE, GS_SETREG_RGBA, GS_SETTING_ON, GS_BLEND_FRONT2BACK, GS_FRAME, GS_MODE_DTV_480P, GS_NONINTERLACED, GS_PERSISTENT, GS_PSMZ_16, GS_PSM_CT16, GS_PSM_CT24, gsKit_init_global, gsKit_init_screen
+																 //     gsKit_prim_sprite_texture, gsKit_texture_size_ee
 #include <kernel.h>              // for SleepThread
 #include <libpad.h>              // for padGetState, PAD_STATE_FINDCTP1, PAD_STATE_STABLE, padButtonStatus, PAD_CROSS, PAD_DOWN, PAD_MMODE_LOCK, PAD_STATE_DISCONN, PAD_TYPE_DIGITAL, PAD_UP, padInit, padPortOpen, padRead, padSetMainMode, padStateInt2String
 #include <loadfile.h>            // for SifLoadModule
-#include <malloc.h>
+#include <malloc.h>              // for memalign
 #include <schrift.h>             // for SFT_Image, SFT_LMetrics, SFT_GMetrics, SFT, SFT_Kerning, SFT_Glyph, sft_lmetrics, SFT_DOWNWARD_Y, SFT_UChar, sft_gmetrics, sft_kerning, sft_loadfile, sft_lookup, sft_render
 #include <stdint.h>              // for uint16_t, uint64_t, uint8_t, uint32_t, uint_fast8_t
 #include <stdio.h>               // for size_t, stderr, fputs, printf, fprintf
 #include <stdlib.h>              // for EXIT_FAILURE, EXIT_SUCCESS, malloc
-#include <string.h>              // for memset, strlen
+#include <string.h>              // for memcpy, memset, strlen
 #include <util/utf8_to_utf32.h>  // for utf8_to_utf32
 
 #include "backend.h"             // for GameInfo, Screen, Action, backend_input, backend_register_extension, backend_setup
@@ -137,7 +136,7 @@ int gsKit_texture_framebuffer(GSGLOBAL *gsGlobal, GSTEXTURE *Texture, const uint
 	Texture->Filter = GS_FILTER_NEAREST;
 	Texture->PSM = GS_PSM_CT24;
 	Texture->VramClut = 0;
-	Texture->Clut = NULL;
+	Texture->Clut = nullptr;
 
 	uint32_t TextureSize = gsKit_texture_size_ee(Texture->Width, Texture->Height, Texture->PSM);
 	Texture->Mem = memalign(128, TextureSize);
