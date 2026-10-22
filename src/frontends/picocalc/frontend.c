@@ -1,9 +1,9 @@
 #include <hardware/clocks.h>
+#include <i2ckbd.h>
+#include <lcdspi.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <i2ckbd.h>
-#include <lcdspi.h>
 
 #include "backend.h"
 #include "ext1.h"

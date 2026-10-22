@@ -9,6 +9,7 @@
 #include <kernel.h>              // for SleepThread
 #include <libpad.h>              // for padGetState, PAD_STATE_FINDCTP1, PAD_STATE_STABLE, padButtonStatus, PAD_CROSS, PAD_DOWN, PAD_MMODE_LOCK, PAD_STATE_DISCONN, PAD_TYPE_DIGITAL, PAD_UP, padInit, padPortOpen, padRead, padSetMainMode, padStateInt2String
 #include <loadfile.h>            // for SifLoadModule
+#include <malloc.h>
 #include <schrift.h>             // for SFT_Image, SFT_LMetrics, SFT_GMetrics, SFT, SFT_Kerning, SFT_Glyph, sft_lmetrics, SFT_DOWNWARD_Y, SFT_UChar, sft_gmetrics, sft_kerning, sft_loadfile, sft_lookup, sft_render
 #include <stdint.h>              // for uint16_t, uint64_t, uint8_t, uint32_t, uint_fast8_t
 #include <stdio.h>               // for size_t, stderr, fputs, printf, fprintf
@@ -16,11 +17,10 @@
 #include <string.h>              // for memset, strlen
 #include <util/utf8_to_utf32.h>  // for utf8_to_utf32
 
-#define LOADBMP_IMPLEMENTATION
-#include <loadbmp.h>             // for LOADBMP_RGB, loadbmp_encode_file
-
 #include "backend.h"             // for GameInfo, Screen, Action, backend_input, backend_register_extension, backend_setup
 #include "ext1.h"                // for Ext1_RoomCount, Ext1_Rooms
+
+extern int gsKit_texture_finish(GSGLOBAL *gsGlobal, GSTEXTURE *Texture);
 
 static char padBuf[256] __attribute__((aligned(64)));
 
@@ -129,6 +129,22 @@ static bool schriftDrawText(SFT *const sft, uint8_t *const textImage, const char
 	}
 
 	return true;
+}
+
+int gsKit_texture_framebuffer(GSGLOBAL *gsGlobal, GSTEXTURE *Texture, const uint8_t *imageData, const size_t imageSize) {
+	Texture->Width = ScreenWidth;
+	Texture->Height = ScreenHeight;
+	Texture->Filter = GS_FILTER_NEAREST;
+	Texture->PSM = GS_PSM_CT24;
+	Texture->VramClut = 0;
+	Texture->Clut = NULL;
+
+	uint32_t TextureSize = gsKit_texture_size_ee(Texture->Width, Texture->Height, Texture->PSM);
+	Texture->Mem = memalign(128, TextureSize);
+
+	memcpy(Texture->Mem, imageData, imageSize);
+
+	return gsKit_texture_finish(gsGlobal, Texture);
 }
 
 
@@ -272,7 +288,8 @@ int main() {
 		goto cleanup_font;
 	}
 
-	unsigned char *const bmp = malloc(3 * ScreenWidth * ScreenHeight);
+	const size_t bmpSize = 3 * ScreenWidth * ScreenHeight;
+	unsigned char *const bmp = malloc(bmpSize);
 	if (nullptr == bmp) {
 		fputs("malloc failed!\n", stderr);
 		goto cleanup_font;
@@ -330,7 +347,7 @@ int main() {
 		if (updateText) {
 			updateText = false;
 
-			memset(bmp, 0, 3 * ScreenWidth * ScreenHeight);
+			memset(bmp, 0, bmpSize);
 
 			const char *const body = game.screen->body_generator(&game, game.screen);
 			if (nullptr == body) {
@@ -357,12 +374,14 @@ int main() {
 				uint16_t textX = 10;
 				if (selectedIdx == i && !schriftDrawText(&sft, bmp, "> ", textX, textY, White, &textX, nullptr)) {
 					fputs("Error in schriftDrawText\n", stderr);
+					result = EXIT_FAILURE;
 					game.quit = true;
 					break;
 				}
 
 				if (!schriftDrawText(&sft, bmp, action->title, textX, textY, White, nullptr, &textY)) {
 					fputs("Error in schriftDrawText\n", stderr);
+					result = EXIT_FAILURE;
 					game.quit = true;
 					break;
 				}
@@ -371,14 +390,11 @@ int main() {
 			}
 
 			if (game.quit) {
-				result = EXIT_FAILURE;
 				break;
 			}
 
-			loadbmp_encode_file("screen.bmp", bmp, ScreenWidth, ScreenHeight, LOADBMP_RGB);
-
 			gsKit_vram_clear(gsGlobal);
-			gsKit_texture_bmp(gsGlobal, &Bitmap, "screen.bmp");
+			gsKit_texture_framebuffer(gsGlobal, &Bitmap, bmp, bmpSize);
 
 			// TODO: Check if this is needed
 			gsKit_clear(gsGlobal, Black);

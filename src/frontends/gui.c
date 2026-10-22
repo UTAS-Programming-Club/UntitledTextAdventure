@@ -182,11 +182,13 @@ int main() {
 				const char digitStr[] = { (char)('0' + id + 1), ':', ' ', '\0' };
 				if (!SchriftDrawText(&sft, &textImage, digitStr, 10, textY, WHITE, &textX, nullptr)) {
 					fputs("Error in SchriftDrawText\n", stderr);
+					result = EXIT_FAILURE;
 					game.quit = true;
 					break;
 				}
 				if (!SchriftDrawText(&sft, &textImage, action->title, textX, textY, WHITE, nullptr, &textY)) {
 					fputs("Error in SchriftDrawText\n", stderr);
+					result = EXIT_FAILURE;
 					game.quit = true;
 					break;
 				}
@@ -195,7 +197,6 @@ int main() {
 			}
 
 			if (game.quit) {
-				result = EXIT_FAILURE;
 				break;
 			}
 

@@ -4,9 +4,6 @@
 [submodule "third_party/libschrift"]
 	path = third_party/libschrift
 	url = https://github.com/tomolt/libschrift.git
-[submodule "third_party/LoadBMP"]
-	path = third_party/LoadBMP
-	url = https://github.com/vallentin/LoadBMP.git
 [submodule "third_party/pico-sdk"]
 	path = third_party/pico-sdk
 	url = https://github.com/raspberrypi/pico-sdk.git
