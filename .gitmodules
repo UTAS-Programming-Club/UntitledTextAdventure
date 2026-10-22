@@ -7,3 +7,9 @@
 [submodule "third_party/LoadBMP"]
 	path = third_party/LoadBMP
 	url = https://github.com/vallentin/LoadBMP.git
+[submodule "third_party/pico-sdk"]
+	path = third_party/pico-sdk
+	url = https://github.com/raspberrypi/pico-sdk.git
+[submodule "third_party/PicoCalc"]
+	path = third_party/PicoCalc
+	url = https://github.com/clockworkpi/PicoCalc.git
