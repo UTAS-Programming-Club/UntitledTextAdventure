@@ -10,3 +10,6 @@
 [submodule "third_party/PicoCalc"]
 	path = third_party/PicoCalc
 	url = https://github.com/clockworkpi/PicoCalc.git
+[submodule "third_party/vdpm"]
+	path = third_party/vdpm
+	url = https://github.com/vitasdk/vdpm.git

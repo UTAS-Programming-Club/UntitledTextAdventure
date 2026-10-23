@@ -42,6 +42,8 @@ read -r IGNORE
 test_src_c23 src/frontends/text.c
 read -r IGNORE
 test_src_c23 src/frontends/gui.c "-I third_party/raylib/src/ -I third_party/libschrift/"
+read -r IGNORE
+"$IWYU" src/frontends/ps2/frontend.c -std=c23 -Xiwyu --update_comments -Xiwyu --max_line_length=1000 -I third_party/raylib/src/ -I . -I src/ -I out/gen/ -I third_party/libschrift/ -I third_party/ps2dev/gsKit/include/ -I third_party/ps2dev/ps2sdk/common/include/ -D _EE -I third_party/ps2dev/ps2sdk/ee/include/
 # shellcheck disable=SC2034
 read -r IGNORE
-"$IWYU" src/frontends/ps2/frontend.c -std=c23 -Xiwyu --update_comments -Xiwyu --max_line_length=1000 -I third_party/raylib/src -I . -I src/ -I out/gen/ -I third_party/libschrift -I third_party/ps2dev/gsKit/include -I third_party/ps2dev/ps2sdk/common/include -D _EE -I third_party/ps2dev/ps2sdk/ee/include
+"$IWYU" src/frontends/vita/frontend.c -std=c23 -Xiwyu --update_comments -Xiwyu --max_line_length=1000 -D "__GLIBC_USE(...)" -I third_party/vitasdk/arm-vita-eabi/include/ -I . -I src/ -I out/gen/

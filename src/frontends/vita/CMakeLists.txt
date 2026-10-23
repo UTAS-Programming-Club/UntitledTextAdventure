@@ -15,7 +15,8 @@ endif()
 
 ## Define project parameters here
 # Name of the project
-project(uta)
+project(uta C)
+set(CMAKE_C_STANDARD 23)
 
 # This line adds Vita helper macros, must go after project definition in order
 # to build Vita specific artifacts (self/vpk).
@@ -39,8 +40,9 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
 
 # Add any additional include paths here
 include_directories(
-	../
-	../../
+  ../../
+  ../../../
+  ../../../out/gen/
 )
 
 # Add any additional library paths here
@@ -52,10 +54,10 @@ link_directories(
 ## Build and link
 # Add all the files needed to compile here
 add_executable(${PROJECT_NAME}
-  ../backend.c
-  ../coregame2.c
-  ../../gen/coregame.c
-  ../../gen/ext1.c
+  ../../backend.c
+  ../../coregame2.c
+  ../../../out/gen/coregame.c
+  ../../../out/gen/ext1.c
   frontend.c
 )
 

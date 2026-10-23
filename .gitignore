@@ -3,3 +3,4 @@ nppBackup/
 /out/
 /src/frontends/ps2/schrift.c
 /third_party/ps2dev/
+/third_party/vitasdk/

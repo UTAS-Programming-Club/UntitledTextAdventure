@@ -11,9 +11,11 @@ set(CMAKE_CXX_STANDARD 23)
 # initialize the Raspberry Pi Pico SDK
 pico_sdk_init()
 
-include_directories(../../)
-include_directories(../../../)
-include_directories(../../../out/gen/)
+include_directories(
+  ../../
+  ../../../
+  ../../../out/gen/
+)
 
 add_subdirectory(../../../third_party/PicoCalc/Code/picocalc_kbd_tester/i2ckbd/ i2ckbd/)
 add_subdirectory(../../../third_party/PicoCalc/Code/picocalc_kbd_tester/lcdspi/ lcdspi/)

@@ -47,11 +47,13 @@ if(LIBPNG_FOUND)
 	add_definitions(-DHAVE_LIBPNG)
 endif()
 
-include_directories(${GSKIT_EXTERNAL_INCLUDES})
-include_directories(../../)
-include_directories(../../../)
-include_directories(../../../out/gen/)
-include_directories(../../../third_party/libschrift/)
+include_directories(
+	${GSKIT_EXTERNAL_INCLUDES}
+  ../../
+  ../../../
+  ../../../out/gen/
+	../../../third_party/libschrift/
+)
 
 set(CMAKE_EXECUTABLE_SUFFIX .elf)
 

@@ -1,18 +1,15 @@
-#include <inttypes.h>  // for uint8_t, SCNu8
-#include <stdio.h>     // for fputs, stderr, putchar, printf, puts, scanf, size_t
-#include <stdlib.h>    // for EXIT_FAILURE, EXIT_SUCCESS
+#include <inttypes.h>                // for uint8_t
+#include <psp2/ctrl.h>               // for sceCtrlPeekBufferPositive, SceCtrlButtons, SceCtrlData
+#include <psp2/kernel/processmgr.h>  // for sceKernelExitProcess
+#include <stdio.h>                   // for fputs, stderr, size_t
+#include <stdlib.h>                  // for EXIT_FAILURE, EXIT_SUCCESS
+#include <string.h>                  // for memset
+#include <vita2d.h>                  // for RGBA8, vita2d_pvf_draw_text, vita2d_clear_screen, vita2d_end_drawing, vita2d_fini, vita2d_free_pgf, vita2d_free_pvf, vita2d_init, vita2d_load_default_pgf, vita2d_load_default_pvf, vita2d_pgf, vita2d_pgf_draw_text, vita2d_pvf, vita2d_set_clear_color, vita2d_start_drawing, vita2d_swap_buffers
 
-#include "backend.h"   // for GameInfo, Screen, backend_cleanup, Action, backend_input, backend_register_extension, backend_setup
-#include "gen/ext1.h"  // for Ext1_RoomCount, Ext1_Rooms
+#include "backend.h"                 // for GameInfo, Screen, Action, backend_cleanup, backend_input, backend_register_extension, backend_setup
+#include "ext1.h"                    // for Ext1_RoomCount, Ext1_Rooms
 
-#include <string.h>
-
-#include <psp2/ctrl.h>
-#include <psp2/kernel/processmgr.h>
-
-#include <vita2d.h>
-
-int main(void) {
+int main() {
   int result = EXIT_SUCCESS;
 
   SceCtrlData pad;
