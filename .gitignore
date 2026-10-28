@@ -2,5 +2,11 @@ nppBackup/
 
 /out/
 /src/frontends/ps2/schrift.c
+/third_party/dkp/
 /third_party/ps2dev/
 /third_party/vitasdk/
+
+# TODO: Move these to /out/ds/
+/src/frontends/ds/build/
+/src/frontends/ds/ds.elf
+/src/frontends/ds/ds.nds

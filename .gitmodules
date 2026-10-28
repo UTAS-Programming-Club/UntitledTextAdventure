@@ -13,3 +13,33 @@
 [submodule "third_party/vdpm"]
 	path = third_party/vdpm
 	url = https://github.com/vitasdk/vdpm.git
+[submodule "third_party/dkp-buildscripts"]
+	path = third_party/dkp-buildscripts
+	url = https://github.com/devkitPro/buildscripts.git
+[submodule "third_party/calico"]
+	path = third_party/calico
+	url = https://github.com/devkitPro/calico.git
+[submodule "third_party/catnip"]
+	path = third_party/catnip
+	url = https://github.com/devkitPro/catnip.git
+[submodule "third_party/pacman-packages"]
+	path = third_party/pacman-packages
+	url = https://github.com/devkitPro/pacman-packages.git
+[submodule "third_party/libnds"]
+	path = third_party/libnds
+	url = https://github.com/devkitPro/libnds.git
+[submodule "third_party/general-tools"]
+	path = third_party/general-tools
+	url = https://github.com/devkitPro/general-tools.git
+[submodule "third_party/grit"]
+	path = third_party/grit
+	url = https://github.com/devkitPro/grit.git
+[submodule "third_party/ndstool"]
+	path = third_party/ndstool
+	url = https://github.com/devkitPro/ndstool.git
+[submodule "third_party/default-arm7"]
+	path = third_party/default-arm7
+	url = https://github.com/devkitPro/default-arm7.git
+[submodule "third_party/maxmod"]
+	path = third_party/maxmod
+	url = https://github.com/devkitPro/maxmod.git

@@ -1,0 +1,74 @@
+diff --git a/build-crtls.sh b/build-crtls.sh
+index 4a8e493..5464909 100755
+--- a/build-crtls.sh
++++ b/build-crtls.sh
+@@ -19,7 +19,9 @@ fi
+ cd ${_prefix}-rules-${_rules_ver}
+ 
+ if [ ! -f installed-${_prefix}-rules ]; then
+-  $MAKE install || touch installed-${_prefix}-rules
++  $MAKE DESTDIR=$INSTALLDIR install || touch installed-${_prefix}-rules
++  cp -r $INSTALLDIR/opt/devkitpro/* $INSTALLDIR/
++  rm -r $INSTALLDIR/opt/
+ fi
+ 
+ #---------------------------------------------------------------------------------
+@@ -35,6 +37,8 @@ if [ $VERSION -ne 3 ]; then
+   cd ${_prefix}-crtls-${_crtls_ver}
+ 
+   if [ ! -f installed-${_prefix}-crtls ]; then
+-    $MAKE install || touch installed-${_prefix}-crtls
++    $MAKE DESTDIR=$INSTALLDIR install || touch installed-${_prefix}-crtls
++    cp -r $INSTALLDIR/opt/devkitpro/* $INSTALLDIR/
++    rm -r $INSTALLDIR/opt/
+   fi
+ fi
+diff --git a/build-devkit.sh b/build-devkit.sh
+index 00dd456..ff251aa 100755
+--- a/build-devkit.sh
++++ b/build-devkit.sh
+@@ -96,7 +96,7 @@ fi
+ #
+ # See https://github.com/devkitPro/pacman and https://devkitpro.org/wiki/devkitPro_pacman
+ #---------------------------------------------------------------------------------
+-INSTALLDIR=/opt/devkitpro
++INSTALLDIR=$PWD/../dkp
+ 
+ [ ! -z "$INSTALLDIR" ] && mkdir -p $INSTALLDIR && touch $INSTALLDIR/nonexistantfile && rm $INSTALLDIR/nonexistantfile || exit 1;
+ 
+@@ -185,7 +185,7 @@ fi
+ patchdir=$(pwd)/patches
+ scriptdir=$(pwd)/$basedir/scripts
+ 
+-archives="binutils-${BINUTILS_VER}.tar.xz gcc-${GCC_VER}.tar.xz newlib-${NEWLIB_VER}.tar.gz"
++archives="https://github.com/devkitPro/buildscripts/releases/download/sources/binutils-${BINUTILS_VER}.tar.xz https://github.com/devkitPro/buildscripts/releases/download/sources/gcc-${GCC_VER}.tar.xz https://github.com/devkitPro/buildscripts/releases/download/sources/newlib-${NEWLIB_VER}.tar.gz"
+ 
+ if [ $VERSION -eq 2 ]; then
+ 	archives="binutils-${MN_BINUTILS_VER}.tar.bz2 $archives"
+@@ -193,7 +193,7 @@ fi
+ 
+ if [ "$BUILD_DKPRO_SKIP_CRTLS" != "1" ]; then
+ 	if [ $VERSION -eq 1 ]; then
+-		archives="devkitarm-rules-$DKARM_RULES_VER.tar.gz devkitarm-crtls-$DKARM_CRTLS_VER.tar.gz $archives"
++		archives="https://github.com/devkitpro/devkitarm-rules/archive/refs/tags/v$DKARM_RULES_VER.tar.gz https://github.com/devkitpro/devkitarm-crtls/archive/refs/tags/v$DKARM_CRTLS_VER.tar.gz $archives"
+ 	fi
+ 
+ 	if [ $VERSION -eq 2 ]; then
+@@ -216,7 +216,7 @@ for archive in $archives
+ do
+ 	echo $archive
+ 	if [ ! -f $archive ]; then
+-		$FETCH https://downloads.devkitpro.org/$archive || { echo "Error: Failed to download $archive"; exit 1; }
++		$FETCH $archive || { echo "Error: Failed to download $archive"; exit 1; }
+ 	fi
+ done
+ 
+@@ -249,6 +249,8 @@ if [ $VERSION -eq 2 ]; then . ${BUILDSCRIPTDIR}/build-mn10200-binutils.sh || { e
+ 
+ 
+ if [ "$BUILD_DKPRO_SKIP_CRTLS" != "1" ]; then
++  mv ${BUILDSCRIPTDIR}/v$DKARM_RULES_VER.tar.gz ${BUILDSCRIPTDIR}/devkitarm-rules-$DKARM_RULES_VER.tar.gz
++  mv ${BUILDSCRIPTDIR}/v$DKARM_CRTLS_VER.tar.gz ${BUILDSCRIPTDIR}/devkitarm-crtls-$DKARM_CRTLS_VER.tar.gz
+   . ${BUILDSCRIPTDIR}/build-crtls.sh || { echo "Error building crtls & rules"; exit 1; };
+ fi
+ 

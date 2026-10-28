@@ -14,5 +14,5 @@ if [ ! -d third_party/vitasdk/ ]; then
 fi
 
 # don't think I need anything else?
-cmake -S src/frontends/vita -B out/vita/ -DCMAKE_BUILD_TYPE=Release
+cmake -S src/frontends/vita/ -B out/vita/ -DCMAKE_BUILD_TYPE=Release
 cmake --build out/vita/
