@@ -23,11 +23,19 @@ CFLAGS="-O3 -Wall -Wformat -Wformat=2 -Wconversion -Wimplicit-fallthrough \
 -pedantic -I src/"
 UTA_C_FLAGS="${UTA_C_FLAGS:-}"
 
+if [ ! -f third_party/re2c/re2c ]; then
+    (cd third_party/re2c/ && autoreconf -i -W all && ./configure --disable-shared)
+    make -C ./third_party/re2c/ CFLAGS="-D _DEFAULT_SOURCE"
+fi
+
+mkdir -p out/gen/
+./third_party/re2c/re2c src/dsl/lexer.c -o out/gen/lexer.gen.c
+
 mkdir -p out/bin/
 # shellcheck disable=SC2250,SC2086
 "$CC" -std=c23 $CFLAGS $UTA_C_FLAGS \
-src/dsl/dsl.c -o out/bin/utatest2026-dsl
+src/dsl/dsl.c src/dsl/parser.c out/gen/lexer.gen.c -o out/bin/utatest2026-dsl
 
-mkdir -p out/gen/
-out/bin/utatest2026-dsl src/coregame.uta out/gen/coregame.h out/gen/coregame.c
-out/bin/utatest2026-dsl src/ext1.uta out/gen/ext1.h out/gen/ext1.c
+# out/bin/utatest2026-dsl src/coregame.uta out/gen/coregame.h out/gen/coregame.c
+# out/bin/utatest2026-dsl src/ext1.uta out/gen/ext1.h out/gen/ext1.c
+out/bin/utatest2026-dsl src/test.uta out/gen/test.h out/gen/test.c

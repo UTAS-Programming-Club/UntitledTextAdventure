@@ -43,3 +43,6 @@
 [submodule "third_party/maxmod"]
 	path = third_party/maxmod
 	url = https://github.com/devkitPro/maxmod.git
+[submodule "third_party/re2c"]
+	path = third_party/re2c
+	url = https://github.com/skvadrik/re2c.git
