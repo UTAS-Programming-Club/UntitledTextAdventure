@@ -2,10 +2,11 @@ namespace TestNamespace;
 
 enum TestEnum {
   TestEnumValue,
+  TestEnumValue2
 }
 
 // Single line comment
-Action TestAction { // End of line single line comment Action
+/*Action TestAction { // End of line single line comment Action
   enum TestEnum testEnumField;
   Screen testScreenField;
 
@@ -34,7 +35,7 @@ Action TestAction { // End of line single line comment Action
       continue;/* Multi
 line
 comment
-*/  }
+*//*  }
 
     uint testUnsignedInt = 5000000;
     string testString = "Test String";
@@ -49,4 +50,4 @@ Action TestActionVariable = TestAction(TestEnumValue, TestScreenDefinition);
 
 Screen TestScreenVariable = TestScreenDefinition("
 This is a\n // not a comment
-multiline string", { TestActionVariable, TestActionVariable });
+multiline string", { TestActionVariable, TestActionVariable });*/

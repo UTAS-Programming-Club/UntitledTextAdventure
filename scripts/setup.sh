@@ -34,7 +34,7 @@ mkdir -p out/gen/
 mkdir -p out/bin/
 # shellcheck disable=SC2250,SC2086
 "$CC" -std=c23 $CFLAGS $UTA_C_FLAGS \
-src/dsl/dsl.c src/dsl/parser.c out/gen/lexer.gen.c -o out/bin/utatest2026-dsl
+src/dsl/dsl.c out/gen/lexer.gen.c src/dsl/parser.c src/dsl/codegen.c -o out/bin/utatest2026-dsl
 
 # out/bin/utatest2026-dsl src/coregame.uta out/gen/coregame.h out/gen/coregame.c
 # out/bin/utatest2026-dsl src/ext1.uta out/gen/ext1.h out/gen/ext1.c

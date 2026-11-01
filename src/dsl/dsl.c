@@ -36,9 +36,9 @@ int main(const int argc, const char *const argv[const restrict static argc + 1])
 
 	const char *path, *ext;
 	state->inputPath	 = PATH_CHECK(1, ".uta", "input must be a uta source file");
-	// const char *const outputHPath = PATH_CHECK(2,	 ".h", "output header must be a c header file");
-	// const char *const outputCPath = PATH_CHECK(3,	 ".c", "output source must be a c source file");
-	// const char *const extensionName = argv[4];
+	const char *const outputHPath = PATH_CHECK(2,	 ".h", "output header must be a c header file");
+	const char *const outputCPath = PATH_CHECK(3,	 ".c", "output source must be a c source file");
+	const char *const extensionName = argv[4];
 
 	int fd = open(state->inputPath, O_RDONLY);
 	if (-1 == fd) {
@@ -63,8 +63,7 @@ int main(const int argc, const char *const argv[const restrict static argc + 1])
 
 	status = status && lex(state, file);
 	status = status && parse(state);
-
-	// status = status && codegen(&exprs, outputHPath, outputCPath, extensionName);
+	status = status && codegen(state, outputHPath, outputCPath, extensionName);
 
 	/*for (size_t i = 0; i < exprs.count; ++i) {
 		const struct Expression *const expr = exprs.exprs + i;

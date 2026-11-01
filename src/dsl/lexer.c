@@ -17,7 +17,7 @@
   continue
 
 
-DYN_ARRAY_IMPL(TokenInfo, struct Token, token)
+DYN_ARRAY_IMPL(TokenArray, struct Token, token)
 
 
 [[nodiscard]] static bool lex_int(struct State *const restrict state, const char8_t *str, const char8_t *const expectedEnd, uint64_t *const restrict value) {
@@ -60,6 +60,7 @@ DYN_ARRAY_IMPL(TokenInfo, struct Token, token)
         }
 
         // White space and comments
+        // TODO: Support recursive multi line comments?
         mcm = "/*" ([^\x00*] | ("*" [^\x00/]))* "*""/";
         scm = "//" [^\x00\n]*;
         wsp = ([ \t\v\r] | scm)+;
