@@ -49,6 +49,9 @@ comment
   return false;*/
 }
 
+Action TestAction2 {
+}
+
 /*Screen TestScreenDefinition;
 
 Action TestActionVariable = TestAction(TestEnumValue, TestScreenDefinition);

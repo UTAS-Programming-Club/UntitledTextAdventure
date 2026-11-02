@@ -59,10 +59,15 @@
 DYN_ARRAY_IMPL(StringArray, struct String, string)
 DYN_ARRAY_IMPL(ExpressionArray, struct Expression, expr)
 
+[[nodiscard]] static bool string_compare(const struct String *const string1, const struct String *const string2) {
+	return string1->len == string2->len &&
+				 0 == strncmp((const char *)string1->str, (const char *)string2->str, string2->len);
+}
+
 [[nodiscard]] static bool contains_string(const struct State *const restrict state, const struct StringArray *const restrict array, const struct String *const restrict string) {
 	for (size_t i = 0; i < array->count; ++i) {
 		const struct String *const restrict currentString = array->strings + i;
-		if (currentString->len == string->len && 0 == strncmp((const char *)currentString->str, (const char *)string->str, string->len)) {
+		if (string_compare(currentString, string)) {
 			return true;
 		}
 	}
@@ -73,7 +78,7 @@ DYN_ARRAY_IMPL(ExpressionArray, struct Expression, expr)
 [[nodiscard]] static bool contains_expr(const struct State *const restrict state, const struct ExpressionArray *const restrict array, const struct String *const restrict exprName) {
 	for (size_t i = 0; i < array->count; ++i) {
 		const struct String *const restrict currentExprName = &array->exprs[i].name->string;
-		if (currentExprName->len == exprName->len && 0 == strncmp((const char *)currentExprName->str, (const char *)exprName->str, exprName->len)) {
+		if (string_compare(currentExprName, exprName)) {
 			return true;
 		}
 	}
@@ -144,6 +149,10 @@ static const char *get_token_string(enum TokenType token) {
 	const struct Token *const restrict idSuperClassName = GET_TOKEN();
 
 	const struct Token *const restrict idClassName = REQUIRE_TOKEN(IdentifierToken);
+	if (contains_expr(state, &state->exprs, &idClassName->string)) {
+		REPEATED_ID_ERROR();
+		return false;
+	}
 
 	PARSE_BLOCK {
 		case OpenCurlyToken:
