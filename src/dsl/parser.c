@@ -21,6 +21,7 @@
 
 #define ADDITIONAL_TOKENS_ERROR() EMIT_PARSE_ERROR(GET_TOKEN(), "Additional token(s) were expected")
 #define UNEXPECTED_TOKEN_ERROR()  EMIT_PARSE_ERROR(GET_TOKEN(), "An unxpected token %s was encountered", get_token_string(GET_TOKEN()->type))
+#define REPEATED_ID_ERROR() EMIT_PARSE_ERROR(GET_TOKEN(), "Repeated identifier is not allowed")
 
 #define DEFAULT_PARSE_ERROR() \
 	default:                    \
@@ -57,6 +58,28 @@
 
 DYN_ARRAY_IMPL(StringArray, struct String, string)
 DYN_ARRAY_IMPL(ExpressionArray, struct Expression, expr)
+
+[[nodiscard]] static bool contains_string(const struct State *const restrict state, const struct StringArray *const restrict array, const struct String *const restrict string) {
+	for (size_t i = 0; i < array->count; ++i) {
+		const struct String *const restrict currentString = array->strings + i;
+		if (currentString->len == string->len && 0 == strncmp((const char *)currentString->str, (const char *)string->str, string->len)) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+[[nodiscard]] static bool contains_expr(const struct State *const restrict state, const struct ExpressionArray *const restrict array, const struct String *const restrict exprName) {
+	for (size_t i = 0; i < array->count; ++i) {
+		const struct String *const restrict currentExprName = &array->exprs[i].name->string;
+		if (currentExprName->len == exprName->len && 0 == strncmp((const char *)currentExprName->str, (const char *)exprName->str, exprName->len)) {
+			return true;
+		}
+	}
+
+	return false;
+}
 
 
 static const char *get_token_string(enum TokenType token) {
@@ -149,12 +172,22 @@ static const char *get_token_string(enum TokenType token) {
  */
 [[nodiscard]] static bool parse_enumdef(struct State *const restrict state, ssize_t *const restrict idx) {
 	const struct Token *const restrict idEnumName = REQUIRE_TOKEN(IdentifierToken);
+	if (contains_expr(state, &state->exprs, &idEnumName->string)) {
+		REPEATED_ID_ERROR();
+		return false;
+	}
+
 	REQUIRE_TOKEN(OpenCurlyToken);
 
 	struct StringArray idEnumValueNames = {};
 	while(true) {
 		const struct Token *restrict idEnumValueName = REQUIRE_TOKEN(IdentifierToken);
+		if (contains_string(state, &idEnumValueNames, &idEnumValueName->string)) {
+			REPEATED_ID_ERROR();
+			return false;
+		}
 		if (!add_string(state, &idEnumValueNames, &idEnumValueName->string)) {
+			// TODO: Add an error
 			return false;
 		}
 

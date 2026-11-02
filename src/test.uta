@@ -5,9 +5,14 @@ enum TestEnum {
   TestEnumValue2
 }
 
+enum TestEnum2 {
+  TestEnumValue,
+  TestEnumValue2
+}
+
 // Single line comment
-/*Action TestAction { // End of line single line comment Action
-  enum TestEnum testEnumField;
+Action TestAction { // End of line single line comment Action
+  /*enum TestEnum testEnumField;
   Screen testScreenField;
 
   override bool IsVisible(const GameInfo info) {
@@ -41,10 +46,10 @@ comment
     string testString = "Test String";
   }
 
-  return false;
+  return false;*/
 }
 
-Screen TestScreenDefinition;
+/*Screen TestScreenDefinition;
 
 Action TestActionVariable = TestAction(TestEnumValue, TestScreenDefinition);
 
