@@ -117,6 +117,30 @@ static const char *get_token_string(enum TokenType token) {
 }
 
 
+[[nodiscard]] static bool parse_classdef(struct State *const restrict state, ssize_t *const restrict idx) {
+	const struct Token *const restrict idSuperClassName = GET_TOKEN();
+
+	const struct Token *const restrict idClassName = REQUIRE_TOKEN(IdentifierToken);
+
+	PARSE_BLOCK {
+		case OpenCurlyToken:
+			break;
+		case SemiColonToken:
+			// TODO: Support definition
+		DEFAULT_PARSE_ERROR();
+	};
+
+	REQUIRE_TOKEN(CloseCurlyToken);
+
+	const struct Expression expr = {
+		ClassDefinitionExpression,
+		.name = idClassName,
+		.superName = idSuperClassName,
+	};
+
+	return add_expr(state, &state->exprs, &expr);
+}
+
 // enum keyword already processed in parse
 /* enum idEnumName {
  *   idEnumValueName,
@@ -167,14 +191,18 @@ static const char *get_token_string(enum TokenType token) {
 
 	while(i < state->tokens.count - 1) {
 		PARSE_BLOCK {
-			// case ActionTypeToken:
+			case ActionTypeToken:
+			case RoomTypeToken:
+			case ScreenTypeToken:
+				if (!parse_classdef(state, idx)) {
+					return false;
+				}
+				break;
 			case EnumTypeToken:
 				if (!parse_enumdef(state, idx)) {
 					return false;
 				}
 				break;
-			// case RoomTypeToken:
-			// case ScreenTypeToken:
 			DEFAULT_PARSE_ERROR();
 		}
 	}

@@ -9,6 +9,31 @@
 
 struct State; // Load bearing
 
+// Fix musl C 23 deficiencies
+#if !defined(__STDC_VERSION_UCHAR_H__) || __STDC_VERSION_UCHAR_H__ < 202311L
+typedef unsigned char char8_t;
+#endif
+
+// Based on https://github.com/jart/cosmopolitan/blob/5ddb5c2/libc/integral/c.inc#L493-L507
+#ifndef unreachable
+#  ifdef __x86_64__
+#    define unreachable()    \
+  do {                       \
+    __asm__("ud2");          \
+    __builtin_unreachable(); \
+  } while (0)
+#  elif defined(__aarch64__)
+#    define unreachable()    \
+  do {                       \
+    __asm__("udf\t#0");      \
+    __builtin_unreachable(); \
+  } while (0)
+#  else
+#    define unreachable() __builtin_trap()
+#  endif
+#endif
+
+
 #define EMIT_PROG_ERROR(error, ...) \
 	fprintf(stderr, "%s: \x1b[0;31merror\x1b[0m: " error "\n", state->programName __VA_OPT__(,) __VA_ARGS__)
 
@@ -122,13 +147,17 @@ DYN_ARRAY_DEF(TokenArray, struct Token, token)
 enum ExpressionType {
 	NamespaceExpression,
 	EnumDefinitionExpression,
+	ClassDefinitionExpression
 };
 
 struct Expression {
 	enum ExpressionType type;
 	const struct Token *name;
 
-	const struct StringArray strings; // EnumDefinitionExpression(idEnumValueNames)
+	union {
+		const struct Token *superName; // ClassDefinitionExpression
+		const struct StringArray strings; // EnumDefinitionExpression(idEnumValueNames)
+	};
 };
 DYN_ARRAY_DEF(ExpressionArray, struct Expression, expr)
 

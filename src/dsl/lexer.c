@@ -156,13 +156,22 @@ DYN_ARRAY_IMPL(TokenArray, struct Token, token)
           NEW_TOKEN(EnumTypeToken);
         }
         "Action" {
-          NEW_TOKEN(ActionTypeToken);
+          NEW_TOKEN(
+            ActionTypeToken,
+            .string = { start, (size_t)(input - start) }
+          );
         }
         "Room" {
-          NEW_TOKEN(RoomTypeToken);
+          NEW_TOKEN(
+            RoomTypeToken,
+            .string = { start, (size_t)(input - start) }
+          );
         }
         "Screen" {
-          NEW_TOKEN(ScreenTypeToken);
+          NEW_TOKEN(
+            ScreenTypeToken,
+            .string = { start, (size_t)(input - start) }
+          );
         }
         "GameInfo" {
           NEW_TOKEN(GameInfoTypeToken);

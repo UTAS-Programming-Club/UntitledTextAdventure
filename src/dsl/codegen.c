@@ -16,6 +16,9 @@
 			}
 			puts(")");
 			break;
+		case ClassDefinitionExpression:
+			printf("CLASS: %.*s %.*s\n", FSTRING(expr->superName->string), FSTRING(expr->name->string));
+			break;
 		}
 	}
 

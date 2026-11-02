@@ -7,9 +7,10 @@ export DEVKITPRO="$PWD/third_party/dkp"
 export DEVKITARM="$DEVKITPRO/devkitARM"
 
 if [ ! -d "$DEVKITPRO/" ]; then
-  patch third_party/dkp-buildscripts/ src/frontends/ds/dkp-buildscripts.diff
+  git -C third_party/dkp-buildscripts/ apply ../../src/frontends/ds/dkp-buildscripts.diff
   (
     cd third_party/dkp-buildscripts/
+    # TODO: Add script with configure answers to skip interactive questions
     ./build-devkit.sh
   )
 
