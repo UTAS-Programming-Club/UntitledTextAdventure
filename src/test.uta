@@ -49,8 +49,7 @@ comment
   return false;*/
 }
 
-Action TestAction2 {
-}
+Action TestAction2;
 
 /*Screen TestScreenDefinition;
 

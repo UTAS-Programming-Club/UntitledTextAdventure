@@ -145,23 +145,19 @@ static const char *get_token_string(enum TokenType token) {
 }
 
 
-[[nodiscard]] static bool parse_classdef(struct State *const restrict state, ssize_t *const restrict idx) {
-	const struct Token *const restrict idSuperClassName = GET_TOKEN();
-
-	const struct Token *const restrict idClassName = REQUIRE_TOKEN(IdentifierToken);
-	if (contains_expr(state, &state->exprs, &idClassName->string)) {
-		REPEATED_ID_ERROR();
-		return false;
-	}
-
-	PARSE_BLOCK {
-		case OpenCurlyToken:
-			break;
-		case SemiColonToken:
-			// TODO: Support definition
-		DEFAULT_PARSE_ERROR();
+[[nodiscard]] static bool parse_classdecl(struct State *const restrict state, ssize_t *const restrict idx,
+																					const struct Token *const restrict idSuperClassName, const struct Token *const restrict idClassName) {
+	const struct Expression expr = {
+		ClassDeclarationExpression,
+		.name = idClassName,
+		.superName = idSuperClassName,
 	};
 
+	return add_expr(state, &state->exprs, &expr);
+}
+
+[[nodiscard]] static bool parse_classdef(struct State *const restrict state, ssize_t *const restrict idx,
+																					const struct Token *const restrict idSuperClassName, const struct Token *const restrict idClassName) {
 	REQUIRE_TOKEN(CloseCurlyToken);
 
 	const struct Expression expr = {
@@ -171,6 +167,23 @@ static const char *get_token_string(enum TokenType token) {
 	};
 
 	return add_expr(state, &state->exprs, &expr);
+}
+
+[[nodiscard]] static bool parse_class(struct State *const restrict state, ssize_t *const restrict idx) {
+	const struct Token *const restrict idSuperClassName = GET_TOKEN();
+	const struct Token *const restrict idClassName = REQUIRE_TOKEN(IdentifierToken);
+	if (contains_expr(state, &state->exprs, &idClassName->string)) {
+		REPEATED_ID_ERROR();
+		return false;
+	}
+
+	PARSE_BLOCK {
+		case OpenCurlyToken:
+			return parse_classdef(state, idx, idSuperClassName, idClassName);
+		case SemiColonToken:
+			return parse_classdecl(state, idx, idSuperClassName, idClassName);
+		DEFAULT_PARSE_ERROR();
+	};
 }
 
 // enum keyword already processed in parse
@@ -236,7 +249,7 @@ static const char *get_token_string(enum TokenType token) {
 			case ActionTypeToken:
 			case RoomTypeToken:
 			case ScreenTypeToken:
-				if (!parse_classdef(state, idx)) {
+				if (!parse_class(state, idx)) {
 					return false;
 				}
 				break;
